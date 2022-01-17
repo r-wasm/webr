@@ -1,0 +1,584 @@
+diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/extra/xdr/rpc/xdr.h R-4.1.2_web/src/extra/xdr/rpc/xdr.h
+--- R-4.1.2/src/extra/xdr/rpc/xdr.h	2018-09-25 08:46:43.000000000 +0000
++++ R-4.1.2_web/src/extra/xdr/rpc/xdr.h	2022-01-13 11:58:52.556848557 +0000
+@@ -176,12 +176,20 @@
+ #define	xdr_inline(xdrs, len)				\
+ 	(*(xdrs)->x_ops->x_inline)(xdrs, len)
+ 
++/*
+ #define	XDR_DESTROY(xdrs)				\
+ 	if ((xdrs)->x_ops->x_destroy) 			\
+ 		(*(xdrs)->x_ops->x_destroy)(xdrs)
+ #define	xdr_destroy(xdrs)				\
+ 	if ((xdrs)->x_ops->x_destroy) 			\
+ 		(*(xdrs)->x_ops->x_destroy)(xdrs)
++*/
++#define	XDR_DESTROY(xdrs)				\
++	if (0) 			\
++		(*(xdrs)->x_ops->x_destroy)(xdrs)
++#define	xdr_destroy(xdrs)				\
++	if (0) 			\
++		(*(xdrs)->x_ops->x_destroy)(xdrs)
+ 
+ /*
+  * Support struct for discriminated unions.
+diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/library/grid/src/gpar.c R-4.1.2_web/src/library/grid/src/gpar.c
+--- R-4.1.2/src/library/grid/src/gpar.c	2021-04-19 22:02:04.000000000 +0000
++++ R-4.1.2_web/src/library/grid/src/gpar.c	2022-01-14 15:47:01.284960796 +0000
+@@ -314,7 +314,7 @@
+      */
+     if (Rf_inherits(gpFillSXP(gp), "GridPattern")) {
+         if (Rf_inherits(gpFillSXP(gp), "GridResolvedPattern")) {
+-            SEXP fillRef = getListElement(gpFillSXP(gp), "ref");
++            SEXP fillRef = getListElementGrid(gpFillSXP(gp), "ref");
+             gc->fill = R_TRANWHITE;
+             gc->patternFill = fillRef;
+         } else {
+@@ -481,7 +481,7 @@
+         combineAlpha(gpAlpha2(gp, i, gpIsScalar), gpCol2(gp, i, gpIsScalar));
+     if (Rf_inherits(gpFillSXP(gp), "GridPattern")) {
+         if (Rf_inherits(gpFillSXP(gp), "GridResolvedPattern")) {
+-            SEXP fillRef = getListElement(gpFillSXP(gp), "ref");
++            SEXP fillRef = getListElementGrid(gpFillSXP(gp), "ref");
+             gcCache->fill = gc->fill = R_TRANWHITE;
+             gcCache->patternFill = gc->patternFill = fillRef;
+         } else {
+diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/library/grid/src/grid.c R-4.1.2_web/src/library/grid/src/grid.c
+--- R-4.1.2/src/library/grid/src/grid.c	2021-04-19 22:02:04.000000000 +0000
++++ R-4.1.2_web/src/library/grid/src/grid.c	2022-01-14 15:46:30.864960731 +0000
+@@ -429,7 +429,7 @@
+      */
+     {
+         SEXP vpgp = PROTECT(VECTOR_ELT(pushedvp, VP_GP));
+-        SEXP fill = getListElement(vpgp, "fill");
++        SEXP fill = getListElementGrid(vpgp, "fill");
+         if (fill != R_NilValue) {
+             /* Do not keep resolved fill because cannot release it
+                * (until grid.newpage()) 
+@@ -438,7 +438,7 @@
+             /* Record the resolved fill for subsequent up/down/pop */
+             SET_VECTOR_ELT(VECTOR_ELT(pushedvp, PVP_GPAR),
+                            GP_FILL,
+-                           getListElement(vpgp, "fill"));
++                           getListElementGrid(vpgp, "fill"));
+             /* Ensure that the "current" gpar has the resolved fill too */
+             setGridStateElement(dd, GSS_GPAR, VECTOR_ELT(pushedvp, PVP_GPAR));
+         }
+@@ -2498,7 +2498,7 @@
+     if (!LOGICAL(o)[0] && draw) {
+         if (resolvedFill != R_NilValue &&
+             Rf_inherits(resolvedFill, "GridGrobPattern")) {
+-            SEXP patternRef = getListElement(resolvedFill, "index");
++            SEXP patternRef = getListElementGrid(resolvedFill, "index");
+             dd->dev->releasePattern(patternRef, dd->dev);
+         }
+         UNPROTECT(1); /* resolvedFill */
+@@ -2848,7 +2848,7 @@
+     GEMode(0, dd);
+     if (resolvedFill != R_NilValue &&
+         Rf_inherits(resolvedFill, "GridGrobPattern")) {
+-        SEXP patternRef = getListElement(resolvedFill, "index");
++        SEXP patternRef = getListElementGrid(resolvedFill, "index");
+         dd->dev->releasePattern(patternRef, dd->dev);
+     }
+     UNPROTECT(1); /* resolvedFill */
+@@ -2966,7 +2966,7 @@
+ 	GEMode(0, dd);
+         if (resolvedFill != R_NilValue &&
+             Rf_inherits(resolvedFill, "GridGrobPattern")) {
+-            SEXP patternRef = getListElement(resolvedFill, "index");
++            SEXP patternRef = getListElementGrid(resolvedFill, "index");
+             dd->dev->releasePattern(patternRef, dd->dev);
+         }
+         UNPROTECT(1); /* resolvedFill */
+@@ -3213,7 +3213,7 @@
+ 	GEMode(0, dd);
+         if (resolvedFill != R_NilValue &&
+             Rf_inherits(resolvedFill, "GridGrobPattern")) {
+-            SEXP patternRef = getListElement(resolvedFill, "index");
++            SEXP patternRef = getListElementGrid(resolvedFill, "index");
+             dd->dev->releasePattern(patternRef, dd->dev);
+         }
+         UNPROTECT(1); /* resolvedFill */
+@@ -3332,7 +3332,7 @@
+     GEMode(0, dd);
+     if (resolvedFill != R_NilValue &&
+         Rf_inherits(resolvedFill, "GridGrobPattern")) {
+-        SEXP patternRef = getListElement(resolvedFill, "index");
++        SEXP patternRef = getListElementGrid(resolvedFill, "index");
+         dd->dev->releasePattern(patternRef, dd->dev);
+     }
+     UNPROTECT(1); /* resolvedFill */
+@@ -3876,7 +3876,7 @@
+     GEMode(0, dd);
+     if (resolvedFill != R_NilValue &&
+         Rf_inherits(resolvedFill, "GridGrobPattern")) {
+-        SEXP patternRef = getListElement(resolvedFill, "index");
++        SEXP patternRef = getListElementGrid(resolvedFill, "index");
+         dd->dev->releasePattern(patternRef, dd->dev);
+     }
+     UNPROTECT(1); /* resolvedFill */
+diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/library/grid/src/grid.h R-4.1.2_web/src/library/grid/src/grid.h
+--- R-4.1.2/src/library/grid/src/grid.h	2021-04-19 22:02:04.000000000 +0000
++++ R-4.1.2_web/src/library/grid/src/grid.h	2022-01-14 15:46:18.884960706 +0000
+@@ -462,7 +462,7 @@
+ 		   double *hadj, double *vadj);
+ 
+ /* From util.c */
+-SEXP getListElement(SEXP list, char *str);
++SEXP getListElementGrid(SEXP list, char *str);
+ 
+ void setListElement(SEXP list, char *str, SEXP value);
+ 
+diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/library/grid/src/unit.c R-4.1.2_web/src/library/grid/src/unit.c
+--- R-4.1.2/src/library/grid/src/unit.c	2021-04-19 22:02:04.000000000 +0000
++++ R-4.1.2_web/src/library/grid/src/unit.c	2022-01-14 15:46:43.576960758 +0000
+@@ -232,14 +232,14 @@
+ 		    PROTECT(findGrobFn = findFun(install("findGrobinDL"), 
+ 						 R_gridEvalEnv));
+ 		    PROTECT(R_fcall0 = lang2(findGrobFn, 
+-					     getListElement(grob, "name")));
++					     getListElementGrid(grob, "name")));
+ 		    grob = eval(R_fcall0, R_gridEvalEnv);
+ 		} else {
+ 		    PROTECT(findGrobFn =findFun(install("findGrobinChildren"), 
+ 						R_gridEvalEnv));
+ 		    PROTECT(R_fcall0 = lang3(findGrobFn, 
+-					     getListElement(grob, "name"),
+-					     getListElement(savedgrob, 
++					     getListElementGrid(grob, "name"),
++					     getListElementGrid(savedgrob, 
+ 							    "children")));
+ 		    grob = eval(R_fcall0, R_gridEvalEnv);
+ 		}
+@@ -278,14 +278,14 @@
+ 		    PROTECT(findGrobFn = findFun(install("findGrobinDL"), 
+ 						 R_gridEvalEnv));
+ 		    PROTECT(R_fcall0 = lang2(findGrobFn, 
+-					     getListElement(grob, "name")));
++					     getListElementGrid(grob, "name")));
+ 		    grob = eval(R_fcall0, R_gridEvalEnv);
+ 		} else {
+ 		    PROTECT(findGrobFn =findFun(install("findGrobinChildren"), 
+ 						R_gridEvalEnv));
+ 		    PROTECT(R_fcall0 = lang3(findGrobFn, 
+-					     getListElement(grob, "name"),
+-					     getListElement(savedgrob, 
++					     getListElementGrid(grob, "name"),
++					     getListElementGrid(savedgrob, 
+ 							    "children")));
+ 		    grob = eval(R_fcall0, R_gridEvalEnv);
+ 		}
+@@ -414,14 +414,14 @@
+ 	    PROTECT(findGrobFn = findFun(install("findGrobinDL"), 
+ 					 R_gridEvalEnv));
+ 	    PROTECT(R_fcall0 = lang2(findGrobFn, 
+-				     getListElement(grob, "name")));
++				     getListElementGrid(grob, "name")));
+ 	    PROTECT(grob = eval(R_fcall0, R_gridEvalEnv));
+ 	} else {
+ 	    PROTECT(findGrobFn = findFun(install("findGrobinChildren"), 
+ 					 R_gridEvalEnv));
+ 	    PROTECT(R_fcall0 = lang3(findGrobFn, 
+-				     getListElement(grob, "name"),
+-				     getListElement(savedgrob, "children")));
++				     getListElementGrid(grob, "name"),
++				     getListElementGrid(savedgrob, "children")));
+ 	    PROTECT(grob = eval(R_fcall0, R_gridEvalEnv));
+ 	}
+ 	/*
+diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/library/grid/src/util.c R-4.1.2_web/src/library/grid/src/util.c
+--- R-4.1.2/src/library/grid/src/util.c	2018-09-25 08:45:08.000000000 +0000
++++ R-4.1.2_web/src/library/grid/src/util.c	2022-01-14 15:46:54.040960781 +0000
+@@ -24,7 +24,7 @@
+ /* Get the list element named str, or return NULL.
+  * Copied from the Writing R Extensions manual (which copied it from nls)
+  */
+-SEXP getListElement(SEXP list, char *str)
++SEXP getListElementGrid(SEXP list, char *str)
+ {
+   SEXP elmt = R_NilValue;
+   SEXP names = getAttrib(list, R_NamesSymbol);
+diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/main/Rstrptime.h R-4.1.2_web/src/main/Rstrptime.h
+--- R-4.1.2/src/main/Rstrptime.h	2021-04-19 22:02:06.000000000 +0000
++++ R-4.1.2_web/src/main/Rstrptime.h	2022-01-12 11:43:33.820062492 +0000
+@@ -40,7 +40,7 @@
+ static int locale_strings_set = 0;
+ static int locale_w_strings_set = 0;
+ static void get_locale_strings(void);
+-static void get_locale_w_strings(void);
++//static void get_locale_w_strings(void);
+ 
+ 
+ #ifdef HAVE_STRINGS_H
+@@ -276,7 +276,8 @@
+ 	case L'a':
+ 	case L'A':
+ 	    /* Match day of week.  */
+-#if defined(HAVE_WCSFTIME)
++//#if defined(HAVE_WCSFTIME)
++#if 0
+ 	    if(!locale_w_strings_set) get_locale_w_strings();
+ #endif
+ 	/* try full name first */
+@@ -298,7 +299,8 @@
+ 	case L'B':
+ 	case L'h':
+ 	    /* Match month name.  */
+-#if defined(HAVE_WCSFTIME)
++//#if defined(HAVE_WCSFTIME)
++#if 0
+ 	    if(!locale_w_strings_set) get_locale_w_strings();
+ #endif
+ 	    /* try full name first */
+@@ -388,7 +390,8 @@
+ 	  break;
+ 	case L'p':
+ 	  /* Match locale's equivalent of AM/PM.  */
+-#if defined(HAVE_WCSFTIME)
++//#if defined(HAVE_WCSFTIME)
++#if 0
+ 	  if(!locale_w_strings_set) get_locale_w_strings();
+ #endif
+ 	  if (!w_match_string (w_am_pm[0], rp)) {
+@@ -1240,7 +1243,8 @@
+     locale_strings_set = 1;
+ }
+ 
+-#if defined(HAVE_WCSTOD) && defined(HAVE_WCSFTIME)
++//#if defined(HAVE_WCSTOD) && defined(HAVE_WCSFTIME)
++#if 0
+ static void get_locale_w_strings(void)
+ {
+     int i;
+diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/main/arithmetic.c R-4.1.2_web/src/main/arithmetic.c
+--- R-4.1.2/src/main/arithmetic.c	2021-10-15 22:15:01.000000000 +0000
++++ R-4.1.2_web/src/main/arithmetic.c	2022-01-11 16:25:07.659912454 +0000
+@@ -63,6 +63,19 @@
+    macOS had it for x86_64 even in 11.0, but not for arm64.
+  */
+ #ifndef __cplusplus
++#define DOMAIN 1
++#define SING 2
++#define OVERFLOW 3
++#define UNDERFLOW 4
++#define TLOSS 5
++#define PLOSS 6
++struct exception {
++	int    type;      /* Exception type */
++	char  *name;      /* Name of function causing exception */
++	double arg1;      /* 1st argument to function */
++	double arg2;      /* 2nd argument to function */
++	double retval;    /* Function return value */
++};
+ int matherr(struct exception *exc)
+ {
+     switch (exc->type) {
+diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/main/connections.c R-4.1.2_web/src/main/connections.c
+--- R-4.1.2/src/main/connections.c	2021-07-02 22:15:02.000000000 +0000
++++ R-4.1.2_web/src/main/connections.c	2022-01-11 16:44:41.643937785 +0000
+@@ -4277,21 +4277,12 @@
+ 	if (!strcmp(what, "integer") || !strcmp(what, "int")) {
+ 	    sizedef = sizeof(int); mode = 1;
+ 
+-#if (SIZEOF_LONG == 8) && (SIZEOF_LONG > SIZEOF_INT)
+-#  define CASE_LONG_ETC case sizeof(long):
+-#elif (SIZEOF_LONG_LONG == 8) && (SIZEOF_LONG_LONG > SIZEOF_INT)
+-#  define CASE_LONG_ETC case sizeof(_lli_t):
+-#else
+-#  define CASE_LONG_ETC
+-#endif
+-
+ #define CHECK_INT_SIZES(SIZE, DEF) do {					\
+ 	    if(SIZE == NA_INTEGER) SIZE = DEF;				\
+ 	    switch (SIZE) {						\
+ 	    case sizeof(signed char):					\
+ 	    case sizeof(short):						\
+ 	    case sizeof(int):						\
+-	    CASE_LONG_ETC						\
+ 		break;							\
+ 	    default:							\
+ 		error(_("size %d is unknown on this machine"), SIZE);	\
+@@ -4569,25 +4560,6 @@
+ 	    case sizeof(int):
+ 		memcpy(buf, INTEGER(object), size * len);
+ 		break;
+-#if SIZEOF_LONG == 8
+-	    case sizeof(long):
+-	    {
+-		for (i = 0, j = 0; i < len; i++, j += size) {
+-		    long l1 = (long) INTEGER(object)[i];
+-		    memcpy(buf + j, &l1, size);
+-		}
+-		break;
+-	    }
+-#elif SIZEOF_LONG_LONG == 8
+-	    case sizeof(_lli_t):
+-	    {
+-		for (i = 0, j = 0; i < len; i++, j += size) {
+-		    _lli_t ll1 = (_lli_t) INTEGER(object)[i];
+-		    memcpy(buf + j, &ll1, size);
+-		}
+-		break;
+-	    }
+-#endif
+ 	    case 2:
+ 	    {
+ 		for (i = 0, j = 0; i < len; i++, j += size) {
+diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/main/devices.c R-4.1.2_web/src/main/devices.c
+--- R-4.1.2/src/main/devices.c	2021-04-19 22:02:06.000000000 +0000
++++ R-4.1.2_web/src/main/devices.c	2022-01-14 10:49:15.886477961 +0000
+@@ -39,12 +39,14 @@
+ 
+ int baseRegisterIndex = -1;
+ 
++/*
+ GPar* dpptr(pGEDevDesc dd) {
+     if (baseRegisterIndex == -1)
+ 	error(_("the base graphics system is not registered"));
+     baseSystemState *bss = dd->gesd[baseRegisterIndex]->systemSpecific;
+     return &(bss->dp);
+ }
++*/
+ 
+ static SEXP R_INLINE getSymbolValue(SEXP symbol)
+ {
+diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/main/envir.c R-4.1.2_web/src/main/envir.c
+--- R-4.1.2/src/main/envir.c	2021-04-23 22:15:01.000000000 +0000
++++ R-4.1.2_web/src/main/envir.c	2022-01-14 10:35:02.520139147 +0000
+@@ -915,11 +915,12 @@
+ 	}
+ 	return(tmp);
+     }
+-
+     if (HASHTAB(rho) == R_NilValue) {
+ 	frame = FRAME(rho);
+-	while (frame != R_NilValue && TAG(frame) != symbol)
++	while (frame != R_NilValue && TAG(frame) != symbol){
+ 	    frame = CDR(frame);
++            if (frame == 0x3ff00000) return R_NilValue;
++        }
+ 	return frame;
+     }
+     else {
+diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/main/main.c R-4.1.2_web/src/main/main.c
+--- R-4.1.2/src/main/main.c     2021-09-30 09:22:47.000000000 +0000
++++ R-4.1.2_web/src/main/main.c 2022-01-17 09:34:10.478595223 +0000
+@@ -300,6 +299,33 @@
+     return(0);
+ }
+
++
++#ifdef __EMSCRIPTEN__
++#include <emscripten.h>
++#include <emscripten/html5.h>
++struct EM_userdata {
++   SEXP rho;
++   int savestack;
++   int browselevel;
++   R_ReplState *state;
++};
++
++void EM_repl_mainloop(void* userData) {
++    SEXP rho = ((struct EM_userdata*) userData)->rho;
++    int savestack = ((struct EM_userdata*) userData)->savestack;
++    int browselevel = ((struct EM_userdata*) userData)->browselevel;
++    R_ReplState *state = ((struct EM_userdata*) userData)->state;
++    int status;
++
++    status = Rf_ReplIteration(rho, savestack, browselevel, state);
++    if(status < 0) {
++       if (state->status == PARSE_INCOMPLETE)
++         error(_("unexpected end of input"));
++       return;
++    }
++}
++#endif
++
+ static void R_ReplConsole(SEXP rho, int savestack, int browselevel)
+ {
+     int status;
+@@ -312,6 +338,14 @@
+     state.bufp = state.buf;
+     if(R_Verbose)
+        REprintf(" >R_ReplConsole(): before \"for(;;)\" {main.c}\n");
++#ifdef __EMSCRIPTEN__
++    struct EM_userdata userData;
++    userData.rho = rho;
++    userData.savestack = savestack;
++    userData.browselevel = browselevel;
++    userData.state = &state;
++    emscripten_set_main_loop_arg((em_arg_callback_func)EM_repl_mainloop, (void*)&userData, 0,  1);
++#else
+     for(;;) {
+        status = Rf_ReplIteration(rho, savestack, browselevel, &state);
+        if(status < 0) {
+@@ -320,6 +354,7 @@
+          return;
+        }
+     }
++#endif
+ }
+
+
+@@ -647,7 +682,7 @@
+ #ifdef HAVE_STACK_T
+ static stack_t sigstk;
+ #else
+-static struct sigaltstack sigstk;
++//static struct sigaltstack sigstk;
+ #endif
+ static void *signal_stack;
+
+@@ -667,8 +702,8 @@
+            sigstk.ss_sp = signal_stack;
+            sigstk.ss_size = SIGSTKSZ + R_USAGE;
+            sigstk.ss_flags = 0;
+-           if(sigaltstack(&sigstk, NULL) < 0)
+-               warning("failed to set alternate signal stack");
++           //if(sigaltstack(&sigstk, NULL) < 0)
++           //  warning("failed to set alternate signal stack");
+        } else
+            warning("failed to allocate alternate signal stack");
+        sa.sa_sigaction = sigactionSegv;
+diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/unix/dynload.c R-4.1.2_web/src/unix/dynload.c
+--- R-4.1.2/src/unix/dynload.c	2021-04-19 22:02:06.000000000 +0000
++++ R-4.1.2_web/src/unix/dynload.c	2022-01-13 21:58:17.099380100 +0000
+@@ -79,14 +79,15 @@
+     int openFlag = 0;
+ 
+     openFlag = computeDLOpenFlag(asLocal, now);
+-    handle = (void *) dlopen(path,openFlag);
++    //handle = (void *) dlopen(path,openFlag);
++    handle = (void*) path;
+ 
+     return(handle);
+ }
+ 
+ static void closeLibrary(HINSTANCE handle)
+ {
+-    dlclose(handle);
++    //dlclose(handle);
+ }
+ 
+  /*
+@@ -200,7 +201,8 @@
+ static DL_FUNC R_local_dlsym(DllInfo *info, char const *name)
+ {
+     fn_ptr tmp;
+-    tmp.p = dlsym(info->handle, name);
++    //tmp.p = dlsym(info->handle, name);
++    tmp.p = dlsym(RTLD_DEFAULT, name);
+     return tmp.fn;
+ }
+ 
+diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/unix/sys-std.c R-4.1.2_web/src/unix/sys-std.c
+--- R-4.1.2/src/unix/sys-std.c	2021-09-28 22:15:01.000000000 +0000
++++ R-4.1.2_web/src/unix/sys-std.c	2022-01-11 16:16:27.395901228 +0000
+@@ -1326,7 +1326,6 @@
+     */
+ 
+ 
+-
+ int attribute_hidden Rstd_ChooseFile(int _new, char *buf, int len)
+ {
+     size_t namelen;
+@@ -1334,7 +1333,7 @@
+     R_ReadConsole("Enter file name: ", (unsigned char *)buf, len, 0);
+     namelen = strlen(buf);
+     bufp = &buf[namelen - 1];
+-    while (bufp >= buf && isspace((int)*bufp))
++    while (bufp >= buf && ((char)*bufp == ' ' || (char)*bufp == '\t' ))
+ 	*bufp-- = '\0';
+     return (int) strlen(buf);
+ }
+diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/unix/sys-unix.c R-4.1.2_web/src/unix/sys-unix.c
+--- R-4.1.2/src/unix/sys-unix.c	2021-04-19 22:02:06.000000000 +0000
++++ R-4.1.2_web/src/unix/sys-unix.c	2022-01-12 16:33:53.612438356 +0000
+@@ -237,7 +237,8 @@
+     /* docs say this is rounded to the nearest ms */
+     double et = currentTime() - StartTime;
+     data[2] = 1e-3 * rint(1000*et);
+-#ifdef HAVE_GETRUSAGE
++//#ifdef HAVE_GETRUSAGE
++#if 0
+     /* all known current OSes */
+     struct rusage self, children;
+     getrusage(RUSAGE_SELF, &self);
+@@ -445,8 +446,8 @@
+     sigprocmask(SIG_BLOCK, &ss, &unblocked_ss);
+ 
+     int saveerrno = errno;
+-    while((wres = waitpid(tost.child_pid, wstatus, WNOHANG)) == 0)
+-	sigsuspend(&unblocked_ss);
++    //while((wres = waitpid(tost.child_pid, wstatus, WNOHANG)) == 0)
++    //    sigsuspend(&unblocked_ss);
+ 
+     if (errno == EINTR)
+ 	/* EINTR is not really an error but expected situation here, however,
+diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/unix/system.c R-4.1.2_web/src/unix/system.c
+--- R-4.1.2/src/unix/system.c   2021-04-20 22:15:01.000000000 +0000
++++ R-4.1.2_web/src/unix/system.c       2022-01-17 09:09:52.456881478 +0000
+@@ -142,9 +142,9 @@
+ #  include <sys/time.h>
+ # endif
+ # include <sys/resource.h>
+-# ifdef HAVE_LIBC_STACK_END
+-extern void * __libc_stack_end;
+-# endif
++//# ifdef HAVE_LIBC_STACK_END
++//extern void * __libc_stack_end;
++//# endif
+ # ifdef HAVE_KERN_USRSTACK
+ #  include <unistd.h>
+ #  include <sys/types.h>
+@@ -231,7 +231,7 @@
+ #endif
+        if (lim != RLIM_INFINITY) R_CStackLimit = (uintptr_t) lim;
+     }
+-#if defined(HAVE_LIBC_STACK_END)
++/*#if defined(HAVE_LIBC_STACK_END)
+     {
+        R_CStackStart = (uintptr_t) __libc_stack_end;
+        /* The libc stack end is not exactly at the stack start, so one
+@@ -242,9 +242,9 @@
+           directly is pthread_getattr_np; it doesn't provide the exact stack
+           start, either, but provides a matching stack size smaller than
+           the one obtained from getrlimit. However, pthread_getattr_np
+-          may have not worked properly on old Linux distributions. */
++          may have not worked properly on old Linux distributions.
+
+-       /* based on GDB relocatable.c */
++       /* based on GDB relocatable.c
+        FILE *f;
+        f = fopen("/proc/self/maps", "r");
+        if (f) {
+@@ -256,14 +256,14 @@
+                    R_CStackStart >= (uintptr_t)start &&
+                    R_CStackStart < (uintptr_t)end) {
+
+-                   /* would this be ok for R_CStackDir == -1? */
++                   //would this be ok for R_CStackDir == -1?
+                    R_CStackStart = (uintptr_t) ((R_CStackDir == 1) ? end : start);
+                    break;
+                }
+                for(c = getc(f); c != '\n' && c != EOF; c = getc(f));
+                if (c == EOF) {
+-                   /* could also abort here, but R will usually work with
+-                      R_CStackStart set just for __libc_stack_end */
++                   // could also abort here, but R will usually work with
++                      R_CStackStart set just for __libc_stack_end
+                    fprintf(stderr, "WARNING: Error parsing /proc/self/maps!\n");
+                    break;
+                }
+@@ -271,7 +271,9 @@
+            fclose(f);
+        }
+     }
+-#elif defined(HAVE_KERN_USRSTACK)
++*/
++//#elif defined(HAVE_KERN_USRSTACK)
++#if defined(HAVE_KERN_USRSTACK)
+     {
+        /* Borrowed from mzscheme/gc/os_dep.c */
+        int nm[2] = {CTL_KERN, KERN_USRSTACK};

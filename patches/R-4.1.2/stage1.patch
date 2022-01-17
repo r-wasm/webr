@@ -1,0 +1,12 @@
+diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/library/base/R/unix/system.unix.R R-4.1.2_web/src/library/base/R/unix/system.unix.R
+--- R-4.1.2/src/library/base/R/unix/system.unix.R   2020-03-26 23:02:06.000000000 +0000
++++ R-4.1.2_web/src/library/base/R/unix/system.unix.R       2022-01-13 17:19:18.720962557 +0000
+@@ -34,6 +34,8 @@
+         stop("'ignore.stderr' must be TRUE or FALSE")
+     if(!is.logical(wait) || is.na(wait))
+         stop("'wait' must be TRUE or FALSE")
++    message("system() unsupported on this system.")
++    return(c("",""))
+
+     if(ignore.stdout) command <- paste(command, ">/dev/null")
+     if(ignore.stderr) command <- paste(command, "2>/dev/null")
