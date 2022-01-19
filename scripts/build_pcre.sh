@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 PCRE_VERSION=10.39
 

@@ -5,7 +5,7 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
          stop("'ignore.stderr' must be TRUE or FALSE")
      if(!is.logical(wait) || is.na(wait))
          stop("'wait' must be TRUE or FALSE")
-+    message("system() unsupported on this system.")
++    #message("system() unsupported on this system.")
 +    return(c("",""))
 
      if(ignore.stdout) command <- paste(command, ">/dev/null")

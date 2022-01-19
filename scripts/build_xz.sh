@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 XZ_VERSION=5.2.5
 

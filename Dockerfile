@@ -34,4 +34,5 @@ ENV LIBRARY_PATH="/app/lib:${LIBRARY_PATH}"
  
 COPY scripts /app/scripts
 COPY patches /app/patches
-COPY emterm /app/emterm
+
+ENTRYPOINT build_R.sh

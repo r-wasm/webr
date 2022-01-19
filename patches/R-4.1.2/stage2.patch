@@ -1,3 +1,26 @@
+diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/main/errors.c R-4.1.2_web/src/main/errors.c
+--- R-4.1.2/src/main/errors.c	2021-10-15 23:15:01.000000000 +0100
++++ R-4.1.2_web/src/main/errors.c	2022-01-19 14:55:18.937957523 +0000
+@@ -1075,7 +1075,8 @@
+ 	}
+     }
+ 
+-    R_jumpctxt(R_ToplevelContext, 0, NULL);
++    //R_jumpctxt(R_ToplevelContext, 0, NULL);
++    R_jumpctxt(R_ToplevelContext, 1, NULL);
+ }
+ 
+ void NORET jump_to_toplevel()
+@@ -1490,7 +1491,8 @@
+     if (c != R_ToplevelContext)
+ 	warning(_("top level inconsistency?"));
+ 
+-    R_jumpctxt(R_ToplevelContext, CTXT_TOPLEVEL, NULL);
++    //R_jumpctxt(R_ToplevelContext, CTXT_TOPLEVEL, NULL);
++    R_jumpctxt(R_ToplevelContext, 1, NULL);
+ }
+ #endif
+
 diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/extra/xdr/rpc/xdr.h R-4.1.2_web/src/extra/xdr/rpc/xdr.h
 --- R-4.1.2/src/extra/xdr/rpc/xdr.h	2018-09-25 08:46:43.000000000 +0000
 +++ R-4.1.2_web/src/extra/xdr/rpc/xdr.h	2022-01-13 11:58:52.556848557 +0000
@@ -362,66 +385,77 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
      }
      else {
 diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/main/main.c R-4.1.2_web/src/main/main.c
---- R-4.1.2/src/main/main.c     2021-09-30 09:22:47.000000000 +0000
-+++ R-4.1.2_web/src/main/main.c 2022-01-17 09:34:10.478595223 +0000
-@@ -300,6 +299,33 @@
+--- R-4.1.2/src/main/main.c	2021-09-30 10:22:47.000000000 +0100
++++ R-4.1.2_web/src/main/main.c	2022-01-19 15:08:07.182116383 +0000
+@@ -300,26 +300,51 @@
      return(0);
  }
-
+ 
 +
-+#ifdef __EMSCRIPTEN__
 +#include <emscripten.h>
-+#include <emscripten/html5.h>
-+struct EM_userdata {
-+   SEXP rho;
-+   int savestack;
-+   int browselevel;
-+   R_ReplState *state;
-+};
++#include <emscripten/fetch.h>
 +
-+void EM_repl_mainloop(void* userData) {
-+    SEXP rho = ((struct EM_userdata*) userData)->rho;
-+    int savestack = ((struct EM_userdata*) userData)->savestack;
-+    int browselevel = ((struct EM_userdata*) userData)->browselevel;
-+    R_ReplState *state = ((struct EM_userdata*) userData)->state;
-+    int status;
++R_ReplState global_repl_state_async;
++SEXP global_rho_async;
++int global_savestack_async;
++int global_browselevel_async;
 +
-+    status = Rf_ReplIteration(rho, savestack, browselevel, state);
-+    if(status < 0) {
-+       if (state->status == PARSE_INCOMPLETE)
-+         error(_("unexpected end of input"));
-+       return;
++void repl_read_success(emscripten_fetch_t *fetch) {
++    memset(global_repl_state_async.buf, 0, CONSOLE_BUFFER_SIZE+1);
++    strncpy((char*)(global_repl_state_async.buf), fetch->data, CONSOLE_BUFFER_SIZE+1);
++    global_repl_state_async.buf[fetch->numBytes] = '\n';
++    global_repl_state_async.buf[fetch->numBytes+1] = '\0';
++    emscripten_fetch_close(fetch);
++    if(SETJMP(R_ToplevelContext->cjmpbuf) > 0){
++        R_IoBufferReadReset(&R_ConsoleIob);
++	R_IoBufferWriteReset(&R_ConsoleIob);
++	memset(global_repl_state_async.buf, 0, CONSOLE_BUFFER_SIZE+1);
 +    }
++    global_repl_state_async.bufp = global_repl_state_async.buf;
++    while(Rf_ReplIteration(global_rho_async, global_savestack_async, global_browselevel_async, &global_repl_state_async) >= 0);
 +}
-+#endif
++
++void repl_read_fail(emscripten_fetch_t *fetch) {
++    emscripten_fetch_close(fetch);
++}
 +
  static void R_ReplConsole(SEXP rho, int savestack, int browselevel)
  {
-     int status;
-@@ -312,6 +338,14 @@
-     state.bufp = state.buf;
-     if(R_Verbose)
-        REprintf(" >R_ReplConsole(): before \"for(;;)\" {main.c}\n");
-+#ifdef __EMSCRIPTEN__
-+    struct EM_userdata userData;
-+    userData.rho = rho;
-+    userData.savestack = savestack;
-+    userData.browselevel = browselevel;
-+    userData.state = &state;
-+    emscripten_set_main_loop_arg((em_arg_callback_func)EM_repl_mainloop, (void*)&userData, 0,  1);
-+#else
-     for(;;) {
-        status = Rf_ReplIteration(rho, savestack, browselevel, &state);
-        if(status < 0) {
-@@ -320,6 +354,7 @@
-          return;
-        }
-     }
-+#endif
+-    int status;
+-    R_ReplState state = { PARSE_NULL, 1, 0, "", NULL};
++    global_repl_state_async.status = PARSE_NULL;
++    global_repl_state_async.prompt_type = 1;
++    global_repl_state_async.browselevel = 0;
++    global_repl_state_async.bufp = NULL;
+ 
+     R_IoBufferWriteReset(&R_ConsoleIob);
+-    state.buf[0] = '\0';
+-    state.buf[CONSOLE_BUFFER_SIZE] = '\0';
+-    /* stopgap measure if line > CONSOLE_BUFFER_SIZE chars */
+-    state.bufp = state.buf;
+-    if(R_Verbose)
+-	REprintf(" >R_ReplConsole(): before \"for(;;)\" {main.c}\n");
+-    for(;;) {
+-	status = Rf_ReplIteration(rho, savestack, browselevel, &state);
+-	if(status < 0) {
+-	  if (state.status == PARSE_INCOMPLETE)
+-	    error(_("unexpected end of input"));
+-	  return;
+-	}
+-    }
++
++    global_repl_state_async.buf[0] = '\0';
++    global_repl_state_async.buf[CONSOLE_BUFFER_SIZE] = '\0';
++    global_repl_state_async.bufp = global_repl_state_async.buf;
++    global_rho_async = rho;
++    global_savestack_async = savestack;
++    global_browselevel_async = browselevel;
++
++    Rf_ReplIteration(global_rho_async, global_savestack_async, global_browselevel_async, &global_repl_state_async);
  }
-
-
-@@ -647,7 +682,7 @@
+ 
+ 
+@@ -647,7 +672,7 @@
  #ifdef HAVE_STACK_T
  static stack_t sigstk;
  #else
@@ -429,18 +463,27 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
 +//static struct sigaltstack sigstk;
  #endif
  static void *signal_stack;
-
-@@ -667,8 +702,8 @@
-            sigstk.ss_sp = signal_stack;
-            sigstk.ss_size = SIGSTKSZ + R_USAGE;
-            sigstk.ss_flags = 0;
--           if(sigaltstack(&sigstk, NULL) < 0)
--               warning("failed to set alternate signal stack");
+ 
+@@ -667,8 +692,8 @@
+ 	    sigstk.ss_sp = signal_stack;
+ 	    sigstk.ss_size = SIGSTKSZ + R_USAGE;
+ 	    sigstk.ss_flags = 0;
+-	    if(sigaltstack(&sigstk, NULL) < 0)
+-		warning("failed to set alternate signal stack");
 +           //if(sigaltstack(&sigstk, NULL) < 0)
 +           //  warning("failed to set alternate signal stack");
-        } else
-            warning("failed to allocate alternate signal stack");
-        sa.sa_sigaction = sigactionSegv;
+ 	} else
+ 	    warning("failed to allocate alternate signal stack");
+ 	sa.sa_sigaction = sigactionSegv;
+@@ -1128,7 +1153,7 @@
+ 	check_session_exit();
+     R_GlobalContext = R_ToplevelContext = R_SessionContext = &R_Toplevel;
+     R_ReplConsole(R_GlobalEnv, 0, 0);
+-    end_Rmainloop(); /* must go here */
++    // end_Rmainloop(); /* must go here */
+ }
+ 
+ void mainloop(void)
 diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/unix/dynload.c R-4.1.2_web/src/unix/dynload.c
 --- R-4.1.2/src/unix/dynload.c	2021-04-19 22:02:06.000000000 +0000
 +++ R-4.1.2_web/src/unix/dynload.c	2022-01-13 21:58:17.099380100 +0000
@@ -473,17 +516,62 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
  }
  
 diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/unix/sys-std.c R-4.1.2_web/src/unix/sys-std.c
---- R-4.1.2/src/unix/sys-std.c	2021-09-28 22:15:01.000000000 +0000
-+++ R-4.1.2_web/src/unix/sys-std.c	2022-01-11 16:16:27.395901228 +0000
-@@ -1326,7 +1326,6 @@
-     */
+--- R-4.1.2/src/unix/sys-std.c	2021-09-28 23:15:01.000000000 +0100
++++ R-4.1.2_web/src/unix/sys-std.c	2022-01-19 13:26:13.705584920 +0000
+@@ -49,6 +49,7 @@
+ #include <R_ext/Riconv.h>
+ #include <R_ext/Print.h> // for REprintf
+ #include <R_ext/RS.h> // for Calloc
++#include "Parse.h"
  
+ #define __SYSTEM__
+ /* includes <sys/select.h> and <sys/time.h> */
+@@ -949,6 +950,12 @@
+ /* Fill a text buffer from stdin or with user typed console input. */
+ static void *cd = NULL;
  
--
- int attribute_hidden Rstd_ChooseFile(int _new, char *buf, int len)
- {
-     size_t namelen;
-@@ -1334,7 +1333,7 @@
++
++#include <emscripten/fetch.h>
++#include <emscripten.h>
++void repl_read_success(emscripten_fetch_t *fetch);
++void repl_read_fail(emscripten_fetch_t *fetch);
++
+ int attribute_hidden
+ Rstd_ReadConsole(const char *prompt, unsigned char *buf, int len,
+ 		 int addtohistory)
+@@ -1026,8 +1033,8 @@
+ 	else
+ #endif /* HAVE_LIBREADLINE */
+ 	{
+-	    fputs(prompt, stdout);
+-	    fflush(stdout);
++           //fputs(prompt, stdout);
++           //fflush(stdout);
+ 	}
+ 
+ 	if(R_InputHandlers == NULL)
+@@ -1085,10 +1092,16 @@
+ 		else
+ #endif /* HAVE_LIBREADLINE */
+ 		{
+-		    if(fgets((char *)buf, len, stdin) == NULL)
+-			return 0;
+-		    else
+-			return 1;
++                    char scr[1024];
++                    sprintf(scr, "___terminal::read::%s", prompt);
++                    emscripten_fetch_attr_t attr;
++                    emscripten_fetch_attr_init(&attr);
++                    strcpy(attr.requestMethod, "GET");
++                    attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
++                    attr.onsuccess = repl_read_success;
++                    attr.onerror = repl_read_fail;
++                    emscripten_fetch(&attr, scr);
++                    return 0;
+ 		}
+ 	    }
+ 	}
+@@ -1334,7 +1347,7 @@
      R_ReadConsole("Enter file name: ", (unsigned char *)buf, len, 0);
      namelen = strlen(buf);
      bufp = &buf[namelen - 1];
@@ -517,68 +605,13 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
      if (errno == EINTR)
  	/* EINTR is not really an error but expected situation here, however,
 diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/unix/system.c R-4.1.2_web/src/unix/system.c
---- R-4.1.2/src/unix/system.c   2021-04-20 22:15:01.000000000 +0000
-+++ R-4.1.2_web/src/unix/system.c       2022-01-17 09:09:52.456881478 +0000
-@@ -142,9 +142,9 @@
- #  include <sys/time.h>
- # endif
- # include <sys/resource.h>
--# ifdef HAVE_LIBC_STACK_END
--extern void * __libc_stack_end;
--# endif
-+//# ifdef HAVE_LIBC_STACK_END
-+//extern void * __libc_stack_end;
-+//# endif
- # ifdef HAVE_KERN_USRSTACK
- #  include <unistd.h>
- #  include <sys/types.h>
-@@ -231,7 +231,7 @@
- #endif
-        if (lim != RLIM_INFINITY) R_CStackLimit = (uintptr_t) lim;
+--- R-4.1.2/src/unix/system.c	2021-04-20 23:15:01.000000000 +0100
++++ R-4.1.2_web/src/unix/system.c	2022-01-19 15:21:14.958574421 +0000
+@@ -133,6 +133,7 @@
      }
--#if defined(HAVE_LIBC_STACK_END)
-+/*#if defined(HAVE_LIBC_STACK_END)
-     {
-        R_CStackStart = (uintptr_t) __libc_stack_end;
-        /* The libc stack end is not exactly at the stack start, so one
-@@ -242,9 +242,9 @@
-           directly is pthread_getattr_np; it doesn't provide the exact stack
-           start, either, but provides a matching stack size smaller than
-           the one obtained from getrlimit. However, pthread_getattr_np
--          may have not worked properly on old Linux distributions. */
-+          may have not worked properly on old Linux distributions.
-
--       /* based on GDB relocatable.c */
-+       /* based on GDB relocatable.c
-        FILE *f;
-        f = fopen("/proc/self/maps", "r");
-        if (f) {
-@@ -256,14 +256,14 @@
-                    R_CStackStart >= (uintptr_t)start &&
-                    R_CStackStart < (uintptr_t)end) {
-
--                   /* would this be ok for R_CStackDir == -1? */
-+                   //would this be ok for R_CStackDir == -1?
-                    R_CStackStart = (uintptr_t) ((R_CStackDir == 1) ? end : start);
-                    break;
-                }
-                for(c = getc(f); c != '\n' && c != EOF; c = getc(f));
-                if (c == EOF) {
--                   /* could also abort here, but R will usually work with
--                      R_CStackStart set just for __libc_stack_end */
-+                   // could also abort here, but R will usually work with
-+                      R_CStackStart set just for __libc_stack_end
-                    fprintf(stderr, "WARNING: Error parsing /proc/self/maps!\n");
-                    break;
-                }
-@@ -271,7 +271,9 @@
-            fclose(f);
-        }
-     }
--#elif defined(HAVE_KERN_USRSTACK)
-+*/
-+//#elif defined(HAVE_KERN_USRSTACK)
-+#if defined(HAVE_KERN_USRSTACK)
-     {
-        /* Borrowed from mzscheme/gc/os_dep.c */
-        int nm[2] = {CTL_KERN, KERN_USRSTACK};
+ }
+ 
++#undef HAVE_GETRLIMIT
+ #if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_GETRLIMIT)
+ /*
+   Needed by AIX and formerly by macOS (but not by POSIX).
