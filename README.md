@@ -16,6 +16,10 @@ Clone the repo into a new directory, `cd` into the directory, then run `make`.
 A `build` directory is created and when finished contains the R WASM binaries
 and an `index.html` file setup to present an R REPL.
 
+## Demo
+
+A demo of the R REPL output can be found at https://www.mas.ncl.ac.uk/~ngs54/webR/
+
 [^1]: https://www.r-project.org/
 [^2]: https://emscripten.org/
 [^3]: https://chrz.de/2020/04/21/fortran-in-the-browser/
