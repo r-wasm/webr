@@ -35,4 +35,4 @@ ENV LIBRARY_PATH="/app/lib:${LIBRARY_PATH}"
 COPY scripts /app/scripts
 COPY patches /app/patches
 
-ENTRYPOINT build_R.sh
+CMD ["/app/scripts/build_R.sh"]
