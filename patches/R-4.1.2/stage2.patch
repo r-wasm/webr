@@ -402,12 +402,14 @@ diff -ur R-4.1.2_web/src/library/stats/src/ppr.f R-4.1.2/src/library/stats/src/p
      R_CheckUserInterrupt();
  }
 diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/main/main.c R-4.1.2_web/src/main/main.c
---- R-4.1.2/src/main/main.c	2021-09-30 10:22:47.000000000 +0100
-+++ R-4.1.2_web/src/main/main.c	2022-01-19 15:08:07.182116383 +0000
-@@ -300,26 +300,51 @@
+--- R-4.1.2/src/main/main.c 2021-09-30 10:22:47.000000000 +0100                                                                                                                                                                               +++ R-4.1.2_web/src/main/main.c 2022-01-21 17:29:19.381163092 +0000                                                                                                                                                                           @@ -206,7 +206,7 @@                                                                                                                                                                                                                                /* clear warnings that might have accumulated during a jump to top level */                                                                                                                                                                   if (R_CollectWarnings)                                                                                                                                                                                                                         PrintWarnings();                                                                                                                                                                                                                        -                                                                                                                                                                                                                                             +
+     if(!*state->bufp) {
+          R_Busy(0);
+          if (R_ReadConsole(R_PromptString(browselevel, state->prompt_type),
+@@ -300,26 +300,68 @@
      return(0);
  }
- 
+
 +
 +#include <emscripten.h>
 +#include <emscripten/fetch.h>
@@ -417,6 +419,23 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
 +int global_savestack_async;
 +int global_browselevel_async;
 +
++int EMSCRIPTEN_KEEPALIVE run_R_from_JS(unsigned char* evalString, unsigned int n) {
++    R_IoBufferReadReset(&R_ConsoleIob);
++    R_IoBufferWriteReset(&R_ConsoleIob);
++    if(SETJMP(R_ToplevelContext->cjmpbuf) > 0){
++        return -1;
++    }
++    unsigned char * buf = (unsigned char *) malloc(n+2);
++    strncpy((char*) buf, (char*)evalString, n);
++    buf[n] = '\n';
++    buf[n+1] = '\0';
++    global_repl_state_async.bufp = buf;
++    while(*global_repl_state_async.bufp && Rf_ReplIteration(global_rho_async, global_savestack_async, global_browselevel_async, &global_repl_state_async) >= 0);
++    free(buf);
++    free(evalString);
++    return 0;
++}
++
 +void repl_read_success(emscripten_fetch_t *fetch) {
 +    memset(global_repl_state_async.buf, 0, CONSOLE_BUFFER_SIZE+1);
 +    strncpy((char*)(global_repl_state_async.buf), fetch->data, CONSOLE_BUFFER_SIZE+1);
@@ -425,8 +444,8 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
 +    emscripten_fetch_close(fetch);
 +    if(SETJMP(R_ToplevelContext->cjmpbuf) > 0){
 +        R_IoBufferReadReset(&R_ConsoleIob);
-+	R_IoBufferWriteReset(&R_ConsoleIob);
-+	memset(global_repl_state_async.buf, 0, CONSOLE_BUFFER_SIZE+1);
++     R_IoBufferWriteReset(&R_ConsoleIob);
++     memset(global_repl_state_async.buf, 0, CONSOLE_BUFFER_SIZE+1);
 +    }
 +    global_repl_state_async.bufp = global_repl_state_async.buf;
 +    while(Rf_ReplIteration(global_rho_async, global_savestack_async, global_browselevel_async, &global_repl_state_async) >= 0);
@@ -444,21 +463,21 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
 +    global_repl_state_async.prompt_type = 1;
 +    global_repl_state_async.browselevel = 0;
 +    global_repl_state_async.bufp = NULL;
- 
+
      R_IoBufferWriteReset(&R_ConsoleIob);
 -    state.buf[0] = '\0';
 -    state.buf[CONSOLE_BUFFER_SIZE] = '\0';
 -    /* stopgap measure if line > CONSOLE_BUFFER_SIZE chars */
 -    state.bufp = state.buf;
 -    if(R_Verbose)
--	REprintf(" >R_ReplConsole(): before \"for(;;)\" {main.c}\n");
+-     REprintf(" >R_ReplConsole(): before \"for(;;)\" {main.c}\n");
 -    for(;;) {
--	status = Rf_ReplIteration(rho, savestack, browselevel, &state);
--	if(status < 0) {
--	  if (state.status == PARSE_INCOMPLETE)
--	    error(_("unexpected end of input"));
--	  return;
--	}
+-     status = Rf_ReplIteration(rho, savestack, browselevel, &state);
+-     if(status < 0) {
+-       if (state.status == PARSE_INCOMPLETE)
+-         error(_("unexpected end of input"));
+-       return;
+-     }
 -    }
 +
 +    global_repl_state_async.buf[0] = '\0';
@@ -470,9 +489,9 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
 +
 +    Rf_ReplIteration(global_rho_async, global_savestack_async, global_browselevel_async, &global_repl_state_async);
  }
- 
- 
-@@ -647,7 +672,7 @@
+
+
+@@ -647,7 +689,7 @@
  #ifdef HAVE_STACK_T
  static stack_t sigstk;
  #else
@@ -480,26 +499,26 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
 +//static struct sigaltstack sigstk;
  #endif
  static void *signal_stack;
- 
-@@ -667,8 +692,8 @@
- 	    sigstk.ss_sp = signal_stack;
- 	    sigstk.ss_size = SIGSTKSZ + R_USAGE;
- 	    sigstk.ss_flags = 0;
--	    if(sigaltstack(&sigstk, NULL) < 0)
--		warning("failed to set alternate signal stack");
+
+@@ -667,8 +709,8 @@
+          sigstk.ss_sp = signal_stack;
+          sigstk.ss_size = SIGSTKSZ + R_USAGE;
+          sigstk.ss_flags = 0;
+-         if(sigaltstack(&sigstk, NULL) < 0)
+-       warning("failed to set alternate signal stack");
 +           //if(sigaltstack(&sigstk, NULL) < 0)
 +           //  warning("failed to set alternate signal stack");
- 	} else
- 	    warning("failed to allocate alternate signal stack");
- 	sa.sa_sigaction = sigactionSegv;
-@@ -1128,7 +1153,7 @@
- 	check_session_exit();
+      } else
+          warning("failed to allocate alternate signal stack");
+      sa.sa_sigaction = sigactionSegv;
+@@ -1128,7 +1170,7 @@
+      check_session_exit();
      R_GlobalContext = R_ToplevelContext = R_SessionContext = &R_Toplevel;
      R_ReplConsole(R_GlobalEnv, 0, 0);
 -    end_Rmainloop(); /* must go here */
 +    // end_Rmainloop(); /* must go here */
  }
- 
+
  void mainloop(void)
 diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/unix/dynload.c R-4.1.2_web/src/unix/dynload.c
 --- R-4.1.2/src/unix/dynload.c	2021-04-19 22:02:06.000000000 +0000
