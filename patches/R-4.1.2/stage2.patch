@@ -711,4 +711,101 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
       }
      } else {
       /* Do the hash table thing */
+--- R-4.1.2/src/main/dotcode.c  2021-04-19 23:02:06.000000000 +0100
++++ R-4.1.2_web/src/main/dotcode.c      2022-01-27 13:27:17.724512747 +0000
+@@ -585,11 +585,49 @@
+ typedef DL_FUNC VarFun;
+ #endif
+
++#include <emscripten.h>
++EM_JS(SEXP, call_trampoline, (VarFun func,
++        void*   a0, void*  a1, void*  a2, void*  a3, void*  a4, void*  a5 , void* a6, void*  a7, void*  a8, void*  a9,
++        void*  a10, void* a11, void* a12, void* a13, void* a14, void* a15, void* a16, void* a17, void* a18, void* a19,
++        void*  a20, void* a21, void* a22, void* a23, void* a24, void* a25, void* a26, void* a27, void* a28, void* a29,
++        void*  a30, void* a31, void* a32, void* a33, void* a34, void* a35, void* a36, void* a37, void* a38, void* a39,
++        void*  a40, void* a41, void* a42, void* a43, void* a44, void* a45, void* a46, void* a47, void* a48, void* a49,
++        void*  a50, void* a51, void* a52, void* a53, void* a54, void* a55, void* a56, void* a57, void* a58, void* a59,
++        void*  a60, void* a61, void* a62, void* a63, void* a64
++    ), {
++    return wasmTable.get(func)(
++        a0,  a1,  a2,  a3,  a4,  a5 , a6,  a7,  a8,  a9,
++       a10, a11, a12, a13, a14, a15, a16, a17, a18, a19,
++       a20, a21, a22, a23, a24, a25, a26, a27, a28, a29,
++       a30, a31, a32, a33, a34, a35, a36, a37, a38, a39,
++       a40, a41, a42, a43, a44, a45, a46, a47, a48, a49,
++       a50, a51, a52, a53, a54, a55, a56, a57, a58, a59,
++       a60, a61, a62, a63, a64
++    );
++});
++
++
+ SEXP attribute_hidden R_doDotCall(DL_FUNC ofun, int nargs, SEXP *cargs,
+                                  SEXP call) {
+     VarFun fun = NULL;
+     SEXP retval = R_NilValue;  /* -Wall */
+     fun = (VarFun) ofun;
++    retval = call_trampoline(fun,
++        cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++        cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
++        cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
++        cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
++        cargs[20], cargs[21], cargs[22], cargs[23], cargs[24],
++        cargs[25], cargs[26], cargs[27], cargs[28], cargs[29],
++        cargs[30], cargs[31], cargs[32], cargs[33], cargs[34],
++        cargs[35], cargs[36], cargs[37], cargs[38], cargs[39],
++        cargs[40], cargs[41], cargs[42], cargs[43], cargs[44],
++        cargs[45], cargs[46], cargs[47], cargs[48], cargs[49],
++        cargs[50], cargs[51], cargs[52], cargs[53], cargs[54],
++        cargs[55], cargs[56], cargs[57], cargs[58], cargs[59],
++        cargs[60], cargs[61], cargs[62], cargs[63], cargs[64]
++    );
++    /*
+     switch (nargs) {
+     case 0:
+        retval = (SEXP)ofun();
+@@ -1243,6 +1281,7 @@
+     default:
+        errorcall(call, _("too many arguments, sorry"));
+     }
++*/
+     return check_retval(call, retval);
+ }
+
+@@ -1792,10 +1831,26 @@
+        if (nprotect) UNPROTECT(nprotect);
+     }
+
++    call_trampoline(fun,
++        cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++        cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
++        cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
++        cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
++        cargs[20], cargs[21], cargs[22], cargs[23], cargs[24],
++        cargs[25], cargs[26], cargs[27], cargs[28], cargs[29],
++        cargs[30], cargs[31], cargs[32], cargs[33], cargs[34],
++        cargs[35], cargs[36], cargs[37], cargs[38], cargs[39],
++        cargs[40], cargs[41], cargs[42], cargs[43], cargs[44],
++        cargs[45], cargs[46], cargs[47], cargs[48], cargs[49],
++        cargs[50], cargs[51], cargs[52], cargs[53], cargs[54],
++        cargs[55], cargs[56], cargs[57], cargs[58], cargs[59],
++        cargs[60], cargs[61], cargs[62], cargs[63], cargs[64]
++    );
++/*
+     switch (nargs) {
+     case 0:
+-       /* Silicon graphics C chokes here */
+-       /* if there is no argument to fun. */
++       // Silicon graphics C chokes here
++       // if there is no argument to fun.
+        fun(0);
+        break;
+     case 1:
+@@ -2386,6 +2441,7 @@
+     default:
+        errorcall(call, _("too many arguments, sorry"));
+     }
++*/
+
+     for (na = 0, pa = args ; pa != R_NilValue ; pa = CDR(pa), na++) {
+        void *p = cargs[na];
 
