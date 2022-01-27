@@ -224,7 +224,8 @@ pushd src/modules/lapack
 emfc -c dlamch.f -o dlamch.o
 emfc -c dlapack.f -o dlapack.o
 emfc -c cmplx.f -o cmplx.o
-emar -cr libRlapack.a dlamch.o dlapack.o cmplx.o
+emcc -fPIC -std=gnu11 -I. -I../../../src/include -I/usr/local/include -DHAVE_CONFIG_H -g -Os -c Lapack.c -o Lapack.o
+emar -cr libRlapack.a dlamch.o dlapack.o cmplx.o Lapack.o
 popd
 
 pushd src/library/tools/src
