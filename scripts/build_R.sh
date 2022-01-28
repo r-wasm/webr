@@ -29,6 +29,9 @@ popd
 # Build R for web with emscripten
 cd "/app/build/R-${R_VERSION}"
 patch --ignore-whitespace -p1 < "/app/patches/R-${R_VERSION}/stage2.patch"
+sed -i 's/x86_64-pc-linux-gnu/wasm32-emscripten/' src/include/config.h
+sed -i 's/x86_64/wasm32/' src/include/config.h
+sed -i 's/linux-gnu/emscripten/' src/include/config.h
 
 pushd src/extra/blas
 emfc -c cmplxblas.f -o cmplxblas.o
