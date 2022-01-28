@@ -808,4 +808,15 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
 
      for (na = 0, pa = args ; pa != R_NilValue ; pa = CDR(pa), na++) {
         void *p = cargs[na];
+--- R-4.1.2/src/main/memory.c   2021-04-23 23:15:01.000000000 +0100
++++ R-4.1.2_web/src/main/memory.c       2022-01-28 14:19:58.494170006 +0000
+@@ -604,7 +604,7 @@
+    some ways, but will create more floating garbage and add a bit to
+    the execution time, though the difference is probably marginal on
+    both counts.*/
+-/*#define EXPEL_OLD_TO_NEW*/
++#define EXPEL_OLD_TO_NEW
+ static struct {
+     SEXP Old[NUM_OLD_GENERATIONS], New, Free;
+     SEXPREC OldPeg[NUM_OLD_GENERATIONS], NewPeg;
 
