@@ -9,6 +9,8 @@ R_VERSION=4.1.2
 
 cd /app/build
 
+rm -rf "R-${R_VERSION}"
+rm -f "R-${R_VERSION}.tar.gz"
 wget "https://cran.r-project.org/src/base/R-4/R-${R_VERSION}.tar.gz"
 tar xvf "R-${R_VERSION}.tar.gz"
 cd "R-${R_VERSION}"
@@ -18,12 +20,14 @@ patch -p1 < "/app/patches/R-${R_VERSION}/stage1.patch"
 FC=gfortran-4.6 CXX=clang++ CC=clang ./configure --prefix=$HOME/webR/R-4.1.2 --with-x=no --with-readline=no --with-jpeglib=no --with-cairo=no --disable-openmp --with-recommended-packages=no --enable-R-profiling=no --with-pcre2 --disable-nls --enable-byte-compiled-packages=no
 make R
 
+cp -a "/app/build/R-${R_VERSION}" "/app/build/R-${R_VERSION}_orig"
+
 mkdir -p /app/build/root/usr/lib/R
 cp -a etc /app/build/root/usr/lib/R/etc
 sed -i 's/x86_64-pc-linux-gnu/wasm32-emscripten/g' /app/build/root/usr/lib/R/etc/Renviron
 cp -a library /app/build/root/usr/lib/R/library
 pushd /app/build/root/usr/lib/R/library
-find -type f -name '*.so' -exec rm -f {} \; -exec touch {} \;
+find -type f -name '*.so' -exec rm -f {} \;
 popd
 
 # Build R for web with emscripten
@@ -232,145 +236,163 @@ emar -cr libRlapack.a dlamch.o dlapack.o cmplx.o Lapack.o
 popd
 
 pushd src/library/tools/src
-emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden -fpic  -g -Os  -c text.c -o text.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden -fpic  -g -Os  -c init.c -o init.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden -fpic  -g -Os  -c Rmd5.c -o Rmd5.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden -fpic  -g -Os  -c md5.c -o md5.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden -fpic  -g -Os  -c signals.c -o signals.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden -fpic  -g -Os  -c install.c -o install.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden -fpic  -g -Os  -c getfmts.c -o getfmts.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden -fpic  -g -Os  -c http.c -o http.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden -fpic  -g -Os  -c gramLatex.c -o gramLatex.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden -fpic  -g -Os  -c gramRd.c -o gramRd.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden -fpic  -g -Os  -c pdscan.c -o pdscan.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden  -g -Os  -c text.c -o text.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden  -g -Os  -c init.c -o init.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden  -g -Os  -c Rmd5.c -o Rmd5.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden  -g -Os  -c md5.c -o md5.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden  -g -Os  -c signals.c -o signals.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden  -g -Os  -c install.c -o install.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden  -g -Os  -c getfmts.c -o getfmts.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden  -g -Os  -c http.c -o http.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden  -g -Os  -c gramLatex.c -o gramLatex.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden  -g -Os  -c gramRd.c -o gramRd.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden  -g -Os  -c pdscan.c -o pdscan.o
 emar -cr tools.a text.o init.o Rmd5.o md5.o signals.o install.o getfmts.o http.o gramLatex.o gramRd.o pdscan.o
+emcc -g -Os -s SIDE_MODULE=2 -o tools.so text.o init.o Rmd5.o md5.o signals.o install.o getfmts.o http.o gramLatex.o gramRd.o pdscan.o
+cp tools.so /app/build/root/usr/lib/R/library/tools/libs/
 popd
 
 pushd src/library/grid/src
-emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c clippath.c -o clippath.o
-emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c gpar.c -o gpar.o
-emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c grid.c -o grid.o
-emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c just.c -o just.o
-emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c layout.c -o layout.o
-emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c mask.c -o mask.o
-emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c matrix.c -o matrix.o
-emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c register.c -o register.o
-emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c state.c -o state.o
-emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c unit.c -o unit.o
-emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c util.c -o util.o
-emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c viewport.c -o viewport.o
+emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include -fvisibility=hidden -g -Os  -c clippath.c -o clippath.o
+emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include -fvisibility=hidden -g -Os  -c gpar.c -o gpar.o
+emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include -fvisibility=hidden -g -Os  -c grid.c -o grid.o
+emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include -fvisibility=hidden -g -Os  -c just.c -o just.o
+emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include -fvisibility=hidden -g -Os  -c layout.c -o layout.o
+emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include -fvisibility=hidden -g -Os  -c mask.c -o mask.o
+emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include -fvisibility=hidden -g -Os  -c matrix.c -o matrix.o
+emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include -fvisibility=hidden -g -Os  -c register.c -o register.o
+emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include -fvisibility=hidden -g -Os  -c state.c -o state.o
+emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include -fvisibility=hidden -g -Os  -c unit.c -o unit.o
+emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include -fvisibility=hidden -g -Os  -c util.c -o util.o
+emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include -fvisibility=hidden -g -Os  -c viewport.c -o viewport.o
 emar -cr grid.a clippath.o gpar.o grid.o just.o layout.o mask.o matrix.o register.o state.o unit.o util.o viewport.o
+emcc -g -Os -s SIDE_MODULE=2 -o grid.so clippath.o gpar.o grid.o just.o layout.o mask.o matrix.o register.o state.o unit.o util.o viewport.o
+cp grid.so /app/build/root/usr/lib/R/library/grid/libs/
 popd
 
 pushd src/library/splines/src
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c splines.c -o splines.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I/usr/local/include -fvisibility=hidden  -g -Os  -c splines.c -o splines.o
 emar -cr splines.a splines.o
+emcc -g -Os -s SIDE_MODULE=2 -o splines.so splines.o
+cp splines.so /app/build/root/usr/lib/R/library/splines/libs/
 popd
 
 pushd src/library/methods/src
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c do_substitute_direct.c -o do_substitute_direct.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c init.c -o init.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c methods_list_dispatch.c -o methods_list_dispatch.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c slot.c -o slot.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c class_support.c -o class_support.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c tests.c -o tests.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c utils.c -o utils.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os -fvisibility=hidden  -c do_substitute_direct.c -o do_substitute_direct.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os -fvisibility=hidden  -c init.c -o init.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os -fvisibility=hidden  -c methods_list_dispatch.c -o methods_list_dispatch.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os -fvisibility=hidden  -c slot.c -o slot.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os -fvisibility=hidden  -c class_support.c -o class_support.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os -fvisibility=hidden  -c tests.c -o tests.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os -fvisibility=hidden  -c utils.c -o utils.o
 emar -cr methods.a do_substitute_direct.o init.o methods_list_dispatch.o slot.o class_support.o tests.o utils.o
+emcc -g -Os -s SIDE_MODULE=2 -o methods.so do_substitute_direct.o init.o methods_list_dispatch.o slot.o class_support.o tests.o utils.o
+cp methods.so /app/build/root/usr/lib/R/library/methods/libs/
 popd
 
 pushd src/library/utils/src
-emcc -fPIC -std=gnu11 -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main -I/app/build/Rlibs/include -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c init.c -o init.o
-emcc -fPIC -std=gnu11 -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main -I/app/build/Rlibs/include -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c io.c -o io.o
-emcc -fPIC -std=gnu11 -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main -I/app/build/Rlibs/include -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c size.c -o size.o
-emcc -fPIC -std=gnu11 -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main -I/app/build/Rlibs/include -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c sock.c -o sock.o
-emcc -fPIC -std=gnu11 -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main -I/app/build/Rlibs/include -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c stubs.c -o stubs.o
-emcc -fPIC -std=gnu11 -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main -I/app/build/Rlibs/include -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c utils.c -o utils.o
+emcc -fPIC -std=gnu11 -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main -I/app/build/Rlibs/include -I/usr/local/include -fvisibility=hidden -g -Os  -c init.c -o init.o
+emcc -fPIC -std=gnu11 -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main -I/app/build/Rlibs/include -I/usr/local/include -fvisibility=hidden -g -Os  -c io.c -o io.o
+emcc -fPIC -std=gnu11 -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main -I/app/build/Rlibs/include -I/usr/local/include -fvisibility=hidden -g -Os  -c size.c -o size.o
+emcc -fPIC -std=gnu11 -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main -I/app/build/Rlibs/include -I/usr/local/include -fvisibility=hidden -g -Os  -c sock.c -o sock.o
+emcc -fPIC -std=gnu11 -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main -I/app/build/Rlibs/include -I/usr/local/include -fvisibility=hidden -g -Os  -c stubs.c -o stubs.o
+emcc -fPIC -std=gnu11 -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main -I/app/build/Rlibs/include -I/usr/local/include -fvisibility=hidden -g -Os  -c utils.c -o utils.o
 emar -cr utils.a init.o io.o size.o sock.o stubs.o utils.o
+emcc -g -Os -s SIDE_MODULE=2 -o utils.so /app/build/Rlibs/lib/liblzma.a init.o io.o size.o sock.o stubs.o utils.o
+cp utils.so /app/build/root/usr/lib/R/library/utils/libs/
 popd
 
 pushd src/library/grDevices/src
-emcc -s USE_BZIP2=1 -s USE_ZLIB=1 -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fpic  -g -Os  -c axis_scales.c -o axis_scales.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fpic  -g -Os  -c chull.c -o chull.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fpic  -g -Os  -c devices.c -o devices.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fpic  -g -Os  -c init.c -o init.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fpic  -g -Os  -c stubs.c -o stubs.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fpic  -g -Os  -c colors.c -o colors.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fpic  -g -Os  -c clippath.c -o clippath.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fpic  -g -Os  -c patterns.c -o patterns.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fpic  -g -Os  -c mask.c -o mask.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fpic  -g -Os  -c devCairo.c -o devCairo.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fpic  -g -Os  -c devPicTeX.c -o devPicTeX.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fpic  -g -Os  -c devPS.c -o devPS.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fpic  -g -Os  -c devQuartz.c -o devQuartz.o
+emcc -s USE_BZIP2=1 -s USE_ZLIB=1 -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os  -c axis_scales.c -o axis_scales.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os  -c chull.c -o chull.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os  -c devices.c -o devices.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os  -c init.c -o init.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os  -c stubs.c -o stubs.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os  -c colors.c -o colors.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os  -c clippath.c -o clippath.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os  -c patterns.c -o patterns.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os  -c mask.c -o mask.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os  -c devCairo.c -o devCairo.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os  -c devPicTeX.c -o devPicTeX.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os  -c devPS.c -o devPS.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os  -c devQuartz.c -o devQuartz.o
 emar -cr grDevices.a axis_scales.o chull.o devices.o init.o stubs.o colors.o clippath.o patterns.o mask.o devCairo.o devPicTeX.o devPS.o devQuartz.o
+emcc -g -Os -s SIDE_MODULE=2 -o grDevices.so axis_scales.o chull.o devices.o init.o stubs.o colors.o clippath.o patterns.o mask.o devCairo.o devPicTeX.o devPS.o devQuartz.o
+cp grDevices.so /app/build/root/usr/lib/R/library/grDevices/libs/
 popd
 
 pushd src/library/graphics/src
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c init.c -o init.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c base.c -o base.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c graphics.c -o graphics.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c par.c -o par.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c plot.c -o plot.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c plot3d.c -o plot3d.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c stem.c -o stem.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main  -I/usr/local/include -fvisibility=hidden -g -Os  -c init.c -o init.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main  -I/usr/local/include -fvisibility=hidden -g -Os  -c base.c -o base.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main  -I/usr/local/include -fvisibility=hidden -g -Os  -c graphics.c -o graphics.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main  -I/usr/local/include -fvisibility=hidden -g -Os  -c par.c -o par.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main  -I/usr/local/include -fvisibility=hidden -g -Os  -c plot.c -o plot.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main  -I/usr/local/include -fvisibility=hidden -g -Os  -c plot3d.c -o plot3d.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main  -I/usr/local/include -fvisibility=hidden -g -Os  -c stem.c -o stem.o
 emar -cr graphics.a init.o base.o graphics.o par.o plot.o plot3d.o stem.o
+emcc -g -Os -s SIDE_MODULE=2 -o graphics.so init.o base.o graphics.o par.o plot.o plot3d.o stem.o
+cp graphics.so /app/build/root/usr/lib/R/library/graphics/libs/
+popd
+
+pushd src/main
+emfc -c xxxpr.f -o xxxpr.o
 popd
 
 pushd src/library/stats/src
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c init.c -o init.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c kmeans.c -o kmeans.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c ansari.c -o ansari.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c bandwidths.c -o bandwidths.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c chisqsim.c -o chisqsim.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c d2x2xk.c -o d2x2xk.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c fexact.c -o fexact.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c kendall.c -o kendall.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c ks.c -o ks.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c line.c -o line.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c smooth.c -o smooth.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c prho.c -o prho.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c swilk.c -o swilk.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c ksmooth.c -o ksmooth.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c loessc.c -o loessc.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c monoSpl.c -o monoSpl.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c isoreg.c -o isoreg.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c Srunmed.c -o Srunmed.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c dblcen.c -o dblcen.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c distance.c -o distance.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c hclust-utils.c -o hclust-utils.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c nls.c -o nls.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c rWishart.c -o rWishart.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c HoltWinters.c -o HoltWinters.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c PPsum.c -o PPsum.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c arima.c -o arima.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c burg.c -o burg.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c filter.c -o filter.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c mAR.c -o mAR.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c pacf.c -o pacf.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c starma.c -o starma.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c port.c -o port.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c family.c -o family.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c sbart.c -o sbart.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c approx.c -o approx.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c loglin.c -o loglin.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c lowess.c -o lowess.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c massdist.c -o massdist.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c splines.c -o splines.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c lm.c -o lm.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c complete_cases.c -o complete_cases.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c cov.c -o cov.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c deriv.c -o deriv.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c fft.c -o fft.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c fourier.c -o fourier.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c model.c -o model.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c optim.c -o optim.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c optimize.c -o optimize.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c integrate.c -o integrate.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c random.c -o random.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c distn.c -o distn.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c zeroin.c -o zeroin.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c rcont.c -o rcont.o
-emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include  -fvisibility=hidden -fpic  -g -Os  -c influence.c -o influence.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c init.c -o init.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c kmeans.c -o kmeans.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c ansari.c -o ansari.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c bandwidths.c -o bandwidths.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c chisqsim.c -o chisqsim.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c d2x2xk.c -o d2x2xk.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c fexact.c -o fexact.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c kendall.c -o kendall.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c ks.c -o ks.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c line.c -o line.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c smooth.c -o smooth.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c prho.c -o prho.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c swilk.c -o swilk.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c ksmooth.c -o ksmooth.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c loessc.c -o loessc.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c monoSpl.c -o monoSpl.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c isoreg.c -o isoreg.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c Srunmed.c -o Srunmed.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c dblcen.c -o dblcen.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c distance.c -o distance.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c hclust-utils.c -o hclust-utils.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c nls.c -o nls.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c rWishart.c -o rWishart.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c HoltWinters.c -o HoltWinters.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c PPsum.c -o PPsum.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c arima.c -o arima.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c burg.c -o burg.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c filter.c -o filter.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c mAR.c -o mAR.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c pacf.c -o pacf.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c starma.c -o starma.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c port.c -o port.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c family.c -o family.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c sbart.c -o sbart.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c approx.c -o approx.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c loglin.c -o loglin.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c lowess.c -o lowess.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c massdist.c -o massdist.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c splines.c -o splines.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c lm.c -o lm.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c complete_cases.c -o complete_cases.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c cov.c -o cov.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c deriv.c -o deriv.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c fft.c -o fft.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c fourier.c -o fourier.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c model.c -o model.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c optim.c -o optim.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c optimize.c -o optimize.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c integrate.c -o integrate.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c random.c -o random.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c distn.c -o distn.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c zeroin.c -o zeroin.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c rcont.c -o rcont.o
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -fvisibility=hidden -g -Os  -c influence.c -o influence.o
 emfc -c bsplvd.f -o bsplvd.o
 emfc -c bvalue.f -o bvalue.o
 emfc -c bvalus.f -o bvalus.o
@@ -388,6 +410,8 @@ emfc -c stl.f -o stl.o
 emfc -c portsrc.f -o portsrc.o
 emfc -c lminfl.f -o lminfl.o
 emar -cr stats.a init.o kmeans.o ansari.o bandwidths.o chisqsim.o d2x2xk.o fexact.o kendall.o ks.o line.o smooth.o prho.o swilk.o ksmooth.o loessc.o monoSpl.o isoreg.o Srunmed.o dblcen.o distance.o hclust-utils.o nls.o rWishart.o HoltWinters.o PPsum.o arima.o burg.o filter.o mAR.o pacf.o starma.o port.o family.o sbart.o approx.o loglin.o lowess.o massdist.o splines.o lm.o complete_cases.o cov.o deriv.o fft.o fourier.o model.o optim.o optimize.o integrate.o random.o distn.o zeroin.o rcont.o influence.o bsplvd.o bvalue.o bvalus.o loessf.o ppr.o qsbart.o sgram.o sinerp.o sslvrg.o stxwx.o hclust.o kmns.o eureka.o stl.o portsrc.o lminfl.o
+emcc -g -Os -s SIDE_MODULE=2 -o stats.so init.o kmeans.o ansari.o bandwidths.o chisqsim.o d2x2xk.o fexact.o kendall.o ks.o line.o smooth.o prho.o swilk.o ksmooth.o loessc.o monoSpl.o isoreg.o Srunmed.o dblcen.o distance.o hclust-utils.o nls.o rWishart.o HoltWinters.o PPsum.o arima.o burg.o filter.o mAR.o pacf.o starma.o port.o family.o sbart.o approx.o loglin.o lowess.o massdist.o splines.o lm.o complete_cases.o cov.o deriv.o fft.o fourier.o model.o optim.o optimize.o integrate.o random.o distn.o zeroin.o rcont.o influence.o bsplvd.o bvalue.o bvalus.o loessf.o ppr.o qsbart.o sgram.o sinerp.o sslvrg.o stxwx.o hclust.o kmns.o eureka.o stl.o portsrc.o lminfl.o
+cp stats.so /app/build/root/usr/lib/R/library/stats/libs/
 popd
 
 pushd src/main
@@ -487,10 +511,9 @@ emcc -fPIC -std=gnu11 -I../../src/extra  -I. -I../../src/include  -I/usr/local/i
 emcc -fPIC -std=gnu11 -I../../src/extra  -I. -I../../src/include  -I/usr/local/include -I../../src/nmath -DHAVE_CONFIG_H     -g -Os  -c g_cntrlify.c -o g_cntrlify.o
 emcc -fPIC -std=gnu11 -I../../src/extra  -I. -I../../src/include  -I/usr/local/include -I../../src/nmath -DHAVE_CONFIG_H     -g -Os  -c g_fontdb.c -o g_fontdb.o
 emcc -fPIC -std=gnu11 -I../../src/extra  -I. -I../../src/include  -I/usr/local/include -I../../src/nmath -DHAVE_CONFIG_H     -g -Os  -c g_her_glyph.c -o g_her_glyph.o
-emfc -c xxxpr.f -o xxxpr.o
 popd
 
 mkdir -p src/main/bin
 pushd src/main/bin
-emcc -g -Os -std=gnu11 -L/usr/local/lib -o R.bin.html ../Rmain.o ../CommandLineArgs.o ../Rdynload.o ../Renviron.o ../RNG.o ../agrep.o ../altclasses.o ../altrep.o ../apply.o ../arithmetic.o ../array.o ../attrib.o ../bind.o ../builtin.o ../character.o ../coerce.o ../colors.o ../complex.o ../connections.o ../context.o ../cum.o ../dcf.o ../datetime.o ../debug.o ../deparse.o ../devices.o ../dotcode.o ../dounzip.o ../dstruct.o ../duplicate.o ../edit.o ../engine.o ../envir.o ../errors.o ../eval.o ../format.o ../gevents.o ../gram.o ../gram-ex.o ../graphics.o ../grep.o ../identical.o ../inlined.o ../inspect.o ../internet.o ../iosupport.o ../lapack.o ../list.o ../localecharset.o ../logic.o ../main.o ../mapply.o ../match.o ../memory.o ../names.o ../objects.o ../options.o ../paste.o ../patterns.o ../platform.o ../plot.o ../plot3d.o ../plotmath.o ../print.o ../printarray.o ../printvector.o ../printutils.o ../qsort.o ../radixsort.o ../random.o ../raw.o ../registration.o ../relop.o ../rlocale.o ../saveload.o ../scan.o ../seq.o ../serialize.o ../sort.o ../source.o ../split.o ../sprintf.o ../startup.o ../subassign.o ../subscript.o ../subset.o ../summary.o ../sysutils.o ../times.o ../unique.o ../util.o ../version.o ../g_alab_her.o ../g_cntrlify.o ../g_fontdb.o ../g_her_glyph.o ../xxxpr.o `ls ../../unix/*.o ../../appl/*.o ../../nmath/*.o` ../../extra/tre/libtre.a ../../extra/blas/libRblas.a ../../extra/xdr/libxdr.a -lm -L/usr/local/lib /app/build/Rlibs/lib/libpcre2_8.a /app/build/Rlibs/lib/liblzma.a /app/build/Rlibs/lib/libgfortran.a -lrt -ldl -lm --preload-file /app/build/root@/ -s USE_BZIP2=1 -s USE_ZLIB=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s WASM_BIGINT -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s MAIN_MODULE=1 -s ASSERTIONS=1 ../../library/methods/src/methods.a ../../library/utils/src/utils.a ../../library/stats/src/stats.a ../../library/grDevices/src/grDevices.a ../../library/graphics/src/graphics.a ../../library/tools/src/tools.a ../../library/splines/src/splines.a ../../library/grid/src/grid.a ../../modules/lapack/libRlapack.a -s FETCH=1 -s NO_EXIT_RUNTIME=0
+emcc -g -Os -std=gnu11 -L/usr/local/lib -o R.bin.js ../Rmain.o ../CommandLineArgs.o ../Rdynload.o ../Renviron.o ../RNG.o ../agrep.o ../altclasses.o ../altrep.o ../apply.o ../arithmetic.o ../array.o ../attrib.o ../bind.o ../builtin.o ../character.o ../coerce.o ../colors.o ../complex.o ../connections.o ../context.o ../cum.o ../dcf.o ../datetime.o ../debug.o ../deparse.o ../devices.o ../dotcode.o ../dounzip.o ../dstruct.o ../duplicate.o ../edit.o ../engine.o ../envir.o ../errors.o ../eval.o ../format.o ../gevents.o ../gram.o ../gram-ex.o ../graphics.o ../grep.o ../identical.o ../inlined.o ../inspect.o ../internet.o ../iosupport.o ../lapack.o ../list.o ../localecharset.o ../logic.o ../main.o ../mapply.o ../match.o ../memory.o ../names.o ../objects.o ../options.o ../paste.o ../patterns.o ../platform.o ../plot.o ../plot3d.o ../plotmath.o ../print.o ../printarray.o ../printvector.o ../printutils.o ../qsort.o ../radixsort.o ../random.o ../raw.o ../registration.o ../relop.o ../rlocale.o ../saveload.o ../scan.o ../seq.o ../serialize.o ../sort.o ../source.o ../split.o ../sprintf.o ../startup.o ../subassign.o ../subscript.o ../subset.o ../summary.o ../sysutils.o ../times.o ../unique.o ../util.o ../version.o ../g_alab_her.o ../g_cntrlify.o ../g_fontdb.o ../g_her_glyph.o ../xxxpr.o ../../unix/libunix.a ../../appl/libappl.a ../../nmath/libnmath.a ../../extra/tre/libtre.a ../../extra/blas/libRblas.a ../../extra/xdr/libxdr.a ../../modules/lapack/libRlapack.a ../../library/methods/src/methods.a ../../library/utils/src/utils.a ../../library/stats/src/stats.a ../../library/grDevices/src/grDevices.a ../../library/graphics/src/graphics.a ../../library/tools/src/tools.a ../../library/splines/src/splines.a ../../library/grid/src/grid.a /app/build/Rlibs/lib/libpcre2_8.a /app/build/Rlibs/lib/liblzma.a /app/build/Rlibs/lib/libgfortran.a -lrt -ldl -lm --use-preload-plugins --preload-file /app/build/root@/ -s USE_BZIP2=1 -s USE_ZLIB=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s WASM_BIGINT -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s MAIN_MODULE=1 -s ASSERTIONS=1 -s FETCH=1 -s NO_EXIT_RUNTIME=0
 cp * /app/webR/

@@ -139,7 +139,6 @@ Module['FS_createPath']("/usr/lib/R/library", "parallel", true, true);
 Module['FS_createPath']("/usr/lib/R/library/parallel", "R", true, true);
 Module['FS_createPath']("/usr/lib/R/library/parallel", "doc", true, true);
 Module['FS_createPath']("/usr/lib/R/library/parallel", "Meta", true, true);
-Module['FS_createPath']("/usr/lib/R/library/parallel", "libs", true, true);
 Module['FS_createPath']("/usr/lib/R/library", "tools", true, true);
 Module['FS_createPath']("/usr/lib/R/library/tools", "R", true, true);
 Module['FS_createPath']("/usr/lib/R/library/tools", "Meta", true, true);
@@ -263,8 +262,15 @@ Module['FS_createPath']("/usr/lib/R/library/utils", "libs", true, true);
             finish: function(byteArray) {
               var that = this;
       
-          Module['FS_createDataFile'](this.name, null, byteArray, true, true, true); // canOwn this data in the filesystem, it is a slide into the heap that will never change
-          Module['removeRunDependency']('fp ' + that.name);
+          Module['FS_createPreloadedFile'](this.name, null, byteArray, true, true, function() {
+            Module['removeRunDependency']('fp ' + that.name);
+          }, function() {
+            if (that.audio) {
+              Module['removeRunDependency']('fp ' + that.name); // workaround for chromium bug 124926 (still no audio with this, but at least we don't hang)
+            } else {
+              err('Preloading file ' + that.name + ' failed');
+            }
+          }, false, true); // canOwn this data in the filesystem, it is a slide into the heap that will never change
   
               this.requests[this.name] = null;
             }
@@ -313,7 +319,7 @@ Module['FS_createPath']("/usr/lib/R/library/utils", "libs", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/usr/lib/R/etc/Makefile.in", "start": 0, "end": 3176}, {"filename": "/usr/lib/R/etc/ldpaths.in", "start": 3176, "end": 3955}, {"filename": "/usr/lib/R/etc/repositories", "start": 3955, "end": 5053}, {"filename": "/usr/lib/R/etc/javaconf", "start": 5053, "end": 5262}, {"filename": "/usr/lib/R/etc/Makeconf.in", "start": 5262, "end": 11641}, {"filename": "/usr/lib/R/etc/Makeconf", "start": 11641, "end": 17904}, {"filename": "/usr/lib/R/etc/Renviron.in", "start": 17904, "end": 19853}, {"filename": "/usr/lib/R/etc/Renviron", "start": 19853, "end": 21762}, {"filename": "/usr/lib/R/etc/javaconf.in", "start": 21762, "end": 22075}, {"filename": "/usr/lib/R/etc/ldpaths", "start": 22075, "end": 22856}, {"filename": "/usr/lib/R/etc/Makefile", "start": 22856, "end": 25999}, {"filename": "/usr/lib/R/library/parallel/NAMESPACE", "start": 25999, "end": 27370}, {"filename": "/usr/lib/R/library/parallel/DESCRIPTION", "start": 27370, "end": 27954}, {"filename": "/usr/lib/R/library/parallel/R/parallel", "start": 27954, "end": 29012}, {"filename": "/usr/lib/R/library/parallel/R/parallel.rdb", "start": 29012, "end": 68986}, {"filename": "/usr/lib/R/library/parallel/R/parallel.rdx", "start": 68986, "end": 70782}, {"filename": "/usr/lib/R/library/parallel/doc/parallel.pdf", "start": 70782, "end": 366457}, {"filename": "/usr/lib/R/library/parallel/Meta/features.rds", "start": 366457, "end": 366589}, {"filename": "/usr/lib/R/library/parallel/Meta/package.rds", "start": 366589, "end": 367303}, {"filename": "/usr/lib/R/library/parallel/Meta/nsInfo.rds", "start": 367303, "end": 367955}, {"filename": "/usr/lib/R/library/parallel/libs/parallel.so", "start": 367955, "end": 367955}, {"filename": "/usr/lib/R/library/tools/NAMESPACE", "start": 367955, "end": 375886}, {"filename": "/usr/lib/R/library/tools/DESCRIPTION", "start": 375886, "end": 376348}, {"filename": "/usr/lib/R/library/tools/R/tools", "start": 376348, "end": 377406}, {"filename": "/usr/lib/R/library/tools/R/sysdata.rdx", "start": 377406, "end": 377620}, {"filename": "/usr/lib/R/library/tools/R/tools.rdb", "start": 377620, "end": 974123}, {"filename": "/usr/lib/R/library/tools/R/tools.rdx", "start": 974123, "end": 984856}, {"filename": "/usr/lib/R/library/tools/R/sysdata.rdb", "start": 984856, "end": 993419}, {"filename": "/usr/lib/R/library/tools/Meta/features.rds", "start": 993419, "end": 993551}, {"filename": "/usr/lib/R/library/tools/Meta/package.rds", "start": 993551, "end": 994214}, {"filename": "/usr/lib/R/library/tools/Meta/nsInfo.rds", "start": 994214, "end": 996064}, {"filename": "/usr/lib/R/library/tools/libs/tools.so", "start": 996064, "end": 996064}, {"filename": "/usr/lib/R/library/compiler/NAMESPACE", "start": 996064, "end": 996191}, {"filename": "/usr/lib/R/library/compiler/DESCRIPTION", "start": 996191, "end": 996542}, {"filename": "/usr/lib/R/library/compiler/R/compiler", "start": 996542, "end": 997600}, {"filename": "/usr/lib/R/library/compiler/R/compiler.rdb", "start": 997600, "end": 1067135}, {"filename": "/usr/lib/R/library/compiler/R/compiler.rdx", "start": 1067135, "end": 1070658}, {"filename": "/usr/lib/R/library/compiler/Meta/features.rds", "start": 1070658, "end": 1070790}, {"filename": "/usr/lib/R/library/compiler/Meta/package.rds", "start": 1070790, "end": 1071328}, {"filename": "/usr/lib/R/library/compiler/Meta/nsInfo.rds", "start": 1071328, "end": 1071602}, {"filename": "/usr/lib/R/library/tcltk/NAMESPACE", "start": 1071602, "end": 1072582}, {"filename": "/usr/lib/R/library/tcltk/DESCRIPTION", "start": 1072582, "end": 1072984}, {"filename": "/usr/lib/R/library/tcltk/R/tcltk", "start": 1072984, "end": 1073845}, {"filename": "/usr/lib/R/library/tcltk/exec/util.tcl", "start": 1073845, "end": 1097112}, {"filename": "/usr/lib/R/library/tcltk/exec/widget.tcl", "start": 1097112, "end": 1129815}, {"filename": "/usr/lib/R/library/tcltk/exec/util-tk.tcl", "start": 1129815, "end": 1136972}, {"filename": "/usr/lib/R/library/tcltk/exec/console.tcl", "start": 1136972, "end": 1139207}, {"filename": "/usr/lib/R/library/tcltk/exec/Tk-frontend.R", "start": 1139207, "end": 1140156}, {"filename": "/usr/lib/R/library/tcltk/exec/progressbar.tcl", "start": 1140156, "end": 1218790}, {"filename": "/usr/lib/R/library/tcltk/exec/hierarchy.tcl", "start": 1218790, "end": 1257950}, {"filename": "/usr/lib/R/library/tcltk/exec/pkgIndex.tcl", "start": 1257950, "end": 1259293}, {"filename": "/usr/lib/R/library/tcltk/exec/util-string.tcl", "start": 1259293, "end": 1262893}, {"filename": "/usr/lib/R/library/tcltk/exec/util-dump.tcl", "start": 1262893, "end": 1280723}, {"filename": "/usr/lib/R/library/tcltk/exec/util-expand.tcl", "start": 1280723, "end": 1286476}, {"filename": "/usr/lib/R/library/tcltk/exec/util-number.tcl", "start": 1286476, "end": 1288591}, {"filename": "/usr/lib/R/library/tcltk/Meta/features.rds", "start": 1288591, "end": 1288723}, {"filename": "/usr/lib/R/library/tcltk/Meta/package.rds", "start": 1288723, "end": 1289322}, {"filename": "/usr/lib/R/library/tcltk/Meta/nsInfo.rds", "start": 1289322, "end": 1289809}, {"filename": "/usr/lib/R/library/tcltk/demo/tkcanvas.R", "start": 1289809, "end": 1295037}, {"filename": "/usr/lib/R/library/tcltk/demo/tkfaq.R", "start": 1295037, "end": 1296266}, {"filename": "/usr/lib/R/library/tcltk/demo/tkdensity.R", "start": 1296266, "end": 1299742}, {"filename": "/usr/lib/R/library/tcltk/demo/tkttest.R", "start": 1299742, "end": 1302717}, {"filename": "/usr/lib/R/library/translations/DESCRIPTION", "start": 1302717, "end": 1302955}, {"filename": "/usr/lib/R/library/translations/en_GB/LC_MESSAGES/R-grDevices.mo", "start": 1302955, "end": 1303315}, {"filename": "/usr/lib/R/library/translations/en_GB/LC_MESSAGES/grDevices.mo", "start": 1303315, "end": 1304440}, {"filename": "/usr/lib/R/library/translations/en_GB/LC_MESSAGES/R.mo", "start": 1304440, "end": 1305355}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-tools.mo", "start": 1305355, "end": 1345097}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-grDevices.mo", "start": 1345097, "end": 1358779}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/parallel.mo", "start": 1358779, "end": 1361218}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/utils.mo", "start": 1361218, "end": 1366480}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-stats.mo", "start": 1366480, "end": 1444154}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/grid.mo", "start": 1444154, "end": 1447020}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-stats4.mo", "start": 1447020, "end": 1447854}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-graphics.mo", "start": 1447854, "end": 1464087}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-base.mo", "start": 1464087, "end": 1512289}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-utils.mo", "start": 1512289, "end": 1553366}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/graphics.mo", "start": 1553366, "end": 1565598}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/grDevices.mo", "start": 1565598, "end": 1583579}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/stats.mo", "start": 1583579, "end": 1603452}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-compiler.mo", "start": 1603452, "end": 1605464}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/tools.mo", "start": 1605464, "end": 1609107}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-splines.mo", "start": 1609107, "end": 1612057}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-methods.mo", "start": 1612057, "end": 1667734}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-parallel.mo", "start": 1667734, "end": 1671482}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/RGui.mo", "start": 1671482, "end": 1694638}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R.mo", "start": 1694638, "end": 1849697}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/methods.mo", "start": 1849697, "end": 1855391}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/splines.mo", "start": 1855391, "end": 1856176}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-grid.mo", "start": 1856176, "end": 1871160}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/tcltk.mo", "start": 1871160, "end": 1872591}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-tcltk.mo", "start": 1872591, "end": 1875064}, {"filename": "/usr/lib/R/library/translations/tr/LC_MESSAGES/R-tools.mo", "start": 1875064, "end": 1875550}, {"filename": "/usr/lib/R/library/translations/tr/LC_MESSAGES/R-stats.mo", "start": 1875550, "end": 1907549}, {"filename": "/usr/lib/R/library/translations/tr/LC_MESSAGES/R-stats4.mo", "start": 1907549, "end": 1908322}, {"filename": "/usr/lib/R/library/translations/tr/LC_MESSAGES/R-base.mo", "start": 1908322, "end": 1909076}, {"filename": "/usr/lib/R/library/translations/tr/LC_MESSAGES/R-utils.mo", "start": 1909076, "end": 1909981}, {"filename": "/usr/lib/R/library/translations/tr/LC_MESSAGES/graphics.mo", "start": 1909981, "end": 1919427}, {"filename": "/usr/lib/R/library/translations/tr/LC_MESSAGES/RGui.mo", "start": 1919427, "end": 1940070}, {"filename": "/usr/lib/R/library/translations/tr/LC_MESSAGES/R.mo", "start": 1940070, "end": 2058224}, {"filename": "/usr/lib/R/library/translations/es/LC_MESSAGES/graphics.mo", "start": 2058224, "end": 2067164}, {"filename": "/usr/lib/R/library/translations/es/LC_MESSAGES/RGui.mo", "start": 2067164, "end": 2087922}, {"filename": "/usr/lib/R/library/translations/es/LC_MESSAGES/R.mo", "start": 2087922, "end": 2197509}, {"filename": "/usr/lib/R/library/translations/nn/LC_MESSAGES/R-base.mo", "start": 2197509, "end": 2234998}, {"filename": "/usr/lib/R/library/translations/nn/LC_MESSAGES/graphics.mo", "start": 2234998, "end": 2244254}, {"filename": "/usr/lib/R/library/translations/nn/LC_MESSAGES/RGui.mo", "start": 2244254, "end": 2264428}, {"filename": "/usr/lib/R/library/translations/nn/LC_MESSAGES/R.mo", "start": 2264428, "end": 2383612}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-tools.mo", "start": 2383612, "end": 2433331}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-grDevices.mo", "start": 2433331, "end": 2449149}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/parallel.mo", "start": 2449149, "end": 2451806}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/utils.mo", "start": 2451806, "end": 2457961}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-stats.mo", "start": 2457961, "end": 2547482}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/grid.mo", "start": 2547482, "end": 2552074}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-stats4.mo", "start": 2552074, "end": 2553392}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-graphics.mo", "start": 2553392, "end": 2570217}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-base.mo", "start": 2570217, "end": 2634568}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-utils.mo", "start": 2634568, "end": 2682573}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/graphics.mo", "start": 2682573, "end": 2694871}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/grDevices.mo", "start": 2694871, "end": 2712521}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/stats.mo", "start": 2712521, "end": 2735717}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-compiler.mo", "start": 2735717, "end": 2739940}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/tools.mo", "start": 2739940, "end": 2743911}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-splines.mo", "start": 2743911, "end": 2746803}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-methods.mo", "start": 2746803, "end": 2817216}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-parallel.mo", "start": 2817216, "end": 2822642}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/RGui.mo", "start": 2822642, "end": 2843198}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R.mo", "start": 2843198, "end": 3022617}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/methods.mo", "start": 3022617, "end": 3028444}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/splines.mo", "start": 3028444, "end": 3029245}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-grid.mo", "start": 3029245, "end": 3045679}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/tcltk.mo", "start": 3045679, "end": 3047034}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-tcltk.mo", "start": 3047034, "end": 3049325}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-tools.mo", "start": 3049325, "end": 3093739}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-grDevices.mo", "start": 3093739, "end": 3108660}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/parallel.mo", "start": 3108660, "end": 3111328}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/utils.mo", "start": 3111328, "end": 3116813}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-stats.mo", "start": 3116813, "end": 3205519}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/grid.mo", "start": 3205519, "end": 3210071}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-stats4.mo", "start": 3210071, "end": 3211557}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-graphics.mo", "start": 3211557, "end": 3228279}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-base.mo", "start": 3228279, "end": 3289685}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-utils.mo", "start": 3289685, "end": 3335762}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/graphics.mo", "start": 3335762, "end": 3351609}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/grDevices.mo", "start": 3351609, "end": 3368696}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/stats.mo", "start": 3368696, "end": 3391407}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-compiler.mo", "start": 3391407, "end": 3397059}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/tools.mo", "start": 3397059, "end": 3401051}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-splines.mo", "start": 3401051, "end": 3404002}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-methods.mo", "start": 3404002, "end": 3471070}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-parallel.mo", "start": 3471070, "end": 3476822}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/RGui.mo", "start": 3476822, "end": 3497132}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R.mo", "start": 3497132, "end": 3719933}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/methods.mo", "start": 3719933, "end": 3725538}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/splines.mo", "start": 3725538, "end": 3726416}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-grid.mo", "start": 3726416, "end": 3742795}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/tcltk.mo", "start": 3742795, "end": 3744201}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-tcltk.mo", "start": 3744201, "end": 3746527}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R-grDevices.mo", "start": 3746527, "end": 3761432}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/parallel.mo", "start": 3761432, "end": 3764084}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/utils.mo", "start": 3764084, "end": 3769622}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/grid.mo", "start": 3769622, "end": 3774221}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R-stats4.mo", "start": 3774221, "end": 3775637}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R-graphics.mo", "start": 3775637, "end": 3792391}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R-base.mo", "start": 3792391, "end": 3854473}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R-utils.mo", "start": 3854473, "end": 3901331}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/graphics.mo", "start": 3901331, "end": 3913724}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/grDevices.mo", "start": 3913724, "end": 3931069}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/stats.mo", "start": 3931069, "end": 3953821}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R-compiler.mo", "start": 3953821, "end": 3958141}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R-parallel.mo", "start": 3958141, "end": 3963924}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/RGui.mo", "start": 3963924, "end": 3984656}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R.mo", "start": 3984656, "end": 4156346}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/methods.mo", "start": 4156346, "end": 4159527}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/splines.mo", "start": 4159527, "end": 4160373}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R-grid.mo", "start": 4160373, "end": 4176877}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/tcltk.mo", "start": 4176877, "end": 4178266}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R-tcltk.mo", "start": 4178266, "end": 4180542}, {"filename": "/usr/lib/R/library/translations/en/LC_MESSAGES/R.mo", "start": 4180542, "end": 4181332}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-grDevices.mo", "start": 4181332, "end": 4193856}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/parallel.mo", "start": 4193856, "end": 4196317}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/utils.mo", "start": 4196317, "end": 4201089}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-stats.mo", "start": 4201089, "end": 4279032}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/grid.mo", "start": 4279032, "end": 4281561}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-stats4.mo", "start": 4281561, "end": 4282316}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-graphics.mo", "start": 4282316, "end": 4297058}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-base.mo", "start": 4297058, "end": 4349677}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-utils.mo", "start": 4349677, "end": 4389045}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/graphics.mo", "start": 4389045, "end": 4399922}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/grDevices.mo", "start": 4399922, "end": 4415597}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/stats.mo", "start": 4415597, "end": 4434813}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-compiler.mo", "start": 4434813, "end": 4438706}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/tools.mo", "start": 4438706, "end": 4441979}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-splines.mo", "start": 4441979, "end": 4444687}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-parallel.mo", "start": 4444687, "end": 4448347}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/RGui.mo", "start": 4448347, "end": 4466184}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R.mo", "start": 4466184, "end": 4617241}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/methods.mo", "start": 4617241, "end": 4622051}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/splines.mo", "start": 4622051, "end": 4622827}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-grid.mo", "start": 4622827, "end": 4637028}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/tcltk.mo", "start": 4637028, "end": 4638272}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-tcltk.mo", "start": 4638272, "end": 4640439}, {"filename": "/usr/lib/R/library/translations/fa/LC_MESSAGES/R-base.mo", "start": 4640439, "end": 4640956}, {"filename": "/usr/lib/R/library/translations/fa/LC_MESSAGES/R-utils.mo", "start": 4640956, "end": 4642576}, {"filename": "/usr/lib/R/library/translations/fa/LC_MESSAGES/RGui.mo", "start": 4642576, "end": 4669452}, {"filename": "/usr/lib/R/library/translations/fa/LC_MESSAGES/R.mo", "start": 4669452, "end": 4671619}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-tools.mo", "start": 4671619, "end": 4677488}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-grDevices.mo", "start": 4677488, "end": 4687537}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/parallel.mo", "start": 4687537, "end": 4688980}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-stats.mo", "start": 4688980, "end": 4693424}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/grid.mo", "start": 4693424, "end": 4694226}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-stats4.mo", "start": 4694226, "end": 4694994}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-graphics.mo", "start": 4694994, "end": 4696205}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-base.mo", "start": 4696205, "end": 4746391}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-utils.mo", "start": 4746391, "end": 4751209}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/graphics.mo", "start": 4751209, "end": 4751751}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/grDevices.mo", "start": 4751751, "end": 4760896}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/stats.mo", "start": 4760896, "end": 4767035}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-compiler.mo", "start": 4767035, "end": 4770087}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/tools.mo", "start": 4770087, "end": 4771015}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-splines.mo", "start": 4771015, "end": 4772978}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-methods.mo", "start": 4772978, "end": 4774277}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-parallel.mo", "start": 4774277, "end": 4776791}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/RGui.mo", "start": 4776791, "end": 4796784}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R.mo", "start": 4796784, "end": 4844318}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/methods.mo", "start": 4844318, "end": 4848558}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/splines.mo", "start": 4848558, "end": 4849069}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-grid.mo", "start": 4849069, "end": 4850280}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/tcltk.mo", "start": 4850280, "end": 4851511}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-tcltk.mo", "start": 4851511, "end": 4853643}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-tools.mo", "start": 4853643, "end": 4901106}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-grDevices.mo", "start": 4901106, "end": 4915975}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/parallel.mo", "start": 4915975, "end": 4918413}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/utils.mo", "start": 4918413, "end": 4924109}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-stats.mo", "start": 4924109, "end": 5010332}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/grid.mo", "start": 5010332, "end": 5014614}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-stats4.mo", "start": 5014614, "end": 5015821}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-graphics.mo", "start": 5015821, "end": 5032108}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-base.mo", "start": 5032108, "end": 5093785}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-utils.mo", "start": 5093785, "end": 5139284}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/graphics.mo", "start": 5139284, "end": 5150894}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/grDevices.mo", "start": 5150894, "end": 5167352}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/stats.mo", "start": 5167352, "end": 5189399}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-compiler.mo", "start": 5189399, "end": 5193350}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/tools.mo", "start": 5193350, "end": 5197052}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-splines.mo", "start": 5197052, "end": 5199793}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-methods.mo", "start": 5199793, "end": 5265432}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-parallel.mo", "start": 5265432, "end": 5270439}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R.mo", "start": 5270439, "end": 5437985}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/methods.mo", "start": 5437985, "end": 5443447}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/splines.mo", "start": 5443447, "end": 5444175}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-grid.mo", "start": 5444175, "end": 5460260}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/tcltk.mo", "start": 5460260, "end": 5461502}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-tcltk.mo", "start": 5461502, "end": 5463615}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-tools.mo", "start": 5463615, "end": 5510701}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-grDevices.mo", "start": 5510701, "end": 5525959}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-stats.mo", "start": 5525959, "end": 5620598}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/grid.mo", "start": 5620598, "end": 5623702}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-stats4.mo", "start": 5623702, "end": 5624607}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-graphics.mo", "start": 5624607, "end": 5642459}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-base.mo", "start": 5642459, "end": 5702543}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-utils.mo", "start": 5702543, "end": 5747896}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/graphics.mo", "start": 5747896, "end": 5761404}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/grDevices.mo", "start": 5761404, "end": 5781252}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/stats.mo", "start": 5781252, "end": 5802726}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-compiler.mo", "start": 5802726, "end": 5806719}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/tools.mo", "start": 5806719, "end": 5810831}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-splines.mo", "start": 5810831, "end": 5813835}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-methods.mo", "start": 5813835, "end": 5888210}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/RGui.mo", "start": 5888210, "end": 5912089}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R.mo", "start": 5912089, "end": 6092650}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/methods.mo", "start": 6092650, "end": 6098629}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/splines.mo", "start": 6098629, "end": 6099115}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-grid.mo", "start": 6099115, "end": 6116731}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/tcltk.mo", "start": 6116731, "end": 6118125}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-tcltk.mo", "start": 6118125, "end": 6120822}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-tools.mo", "start": 6120822, "end": 6122897}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-grDevices.mo", "start": 6122897, "end": 6132529}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-stats.mo", "start": 6132529, "end": 6179780}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/grid.mo", "start": 6179780, "end": 6180696}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-stats4.mo", "start": 6180696, "end": 6181531}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-graphics.mo", "start": 6181531, "end": 6193900}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-base.mo", "start": 6193900, "end": 6224451}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-utils.mo", "start": 6224451, "end": 6225633}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/graphics.mo", "start": 6225633, "end": 6235411}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/grDevices.mo", "start": 6235411, "end": 6237899}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/stats.mo", "start": 6237899, "end": 6254906}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-compiler.mo", "start": 6254906, "end": 6258268}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/tools.mo", "start": 6258268, "end": 6259041}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-splines.mo", "start": 6259041, "end": 6261128}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-methods.mo", "start": 6261128, "end": 6265937}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/RGui.mo", "start": 6265937, "end": 6286625}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R.mo", "start": 6286625, "end": 6411800}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/methods.mo", "start": 6411800, "end": 6416438}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/splines.mo", "start": 6416438, "end": 6417031}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-grid.mo", "start": 6417031, "end": 6421678}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/tcltk.mo", "start": 6421678, "end": 6423007}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-tcltk.mo", "start": 6423007, "end": 6425296}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-tools.mo", "start": 6425296, "end": 6452453}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-grDevices.mo", "start": 6452453, "end": 6463774}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/parallel.mo", "start": 6463774, "end": 6465642}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-stats.mo", "start": 6465642, "end": 6537021}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/grid.mo", "start": 6537021, "end": 6539267}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-stats4.mo", "start": 6539267, "end": 6539971}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-graphics.mo", "start": 6539971, "end": 6553525}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-base.mo", "start": 6553525, "end": 6598235}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-utils.mo", "start": 6598235, "end": 6631063}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/graphics.mo", "start": 6631063, "end": 6641404}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/grDevices.mo", "start": 6641404, "end": 6655861}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/stats.mo", "start": 6655861, "end": 6672014}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-compiler.mo", "start": 6672014, "end": 6675041}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/tools.mo", "start": 6675041, "end": 6678227}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-splines.mo", "start": 6678227, "end": 6680485}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-methods.mo", "start": 6680485, "end": 6737290}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-parallel.mo", "start": 6737290, "end": 6740520}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/RGui.mo", "start": 6740520, "end": 6757897}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R.mo", "start": 6757897, "end": 6890241}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/methods.mo", "start": 6890241, "end": 6894926}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/splines.mo", "start": 6894926, "end": 6895386}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-grid.mo", "start": 6895386, "end": 6908415}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/tcltk.mo", "start": 6908415, "end": 6909594}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-tcltk.mo", "start": 6909594, "end": 6911670}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-tools.mo", "start": 6911670, "end": 6963620}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-grDevices.mo", "start": 6963620, "end": 6980171}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/parallel.mo", "start": 6980171, "end": 6982945}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/utils.mo", "start": 6982945, "end": 6988903}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-stats.mo", "start": 6988903, "end": 7081634}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/grid.mo", "start": 7081634, "end": 7086560}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-stats4.mo", "start": 7086560, "end": 7088030}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-graphics.mo", "start": 7088030, "end": 7105506}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-base.mo", "start": 7105506, "end": 7173423}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-utils.mo", "start": 7173423, "end": 7222913}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/graphics.mo", "start": 7222913, "end": 7235563}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/grDevices.mo", "start": 7235563, "end": 7254141}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/stats.mo", "start": 7254141, "end": 7278076}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-compiler.mo", "start": 7278076, "end": 7282619}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/tools.mo", "start": 7282619, "end": 7286795}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-splines.mo", "start": 7286795, "end": 7289762}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-methods.mo", "start": 7289762, "end": 7357342}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-parallel.mo", "start": 7357342, "end": 7361171}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/RGui.mo", "start": 7361171, "end": 7382523}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R.mo", "start": 7382523, "end": 7567651}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/methods.mo", "start": 7567651, "end": 7573994}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/splines.mo", "start": 7573994, "end": 7574816}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-grid.mo", "start": 7574816, "end": 7591954}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/tcltk.mo", "start": 7591954, "end": 7593395}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-tcltk.mo", "start": 7593395, "end": 7595778}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-tools.mo", "start": 7595778, "end": 7638256}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-grDevices.mo", "start": 7638256, "end": 7651972}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/parallel.mo", "start": 7651972, "end": 7654561}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/utils.mo", "start": 7654561, "end": 7659792}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-stats.mo", "start": 7659792, "end": 7745443}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/grid.mo", "start": 7745443, "end": 7748070}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-stats4.mo", "start": 7748070, "end": 7748841}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-graphics.mo", "start": 7748841, "end": 7764823}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-base.mo", "start": 7764823, "end": 7822486}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-utils.mo", "start": 7822486, "end": 7865198}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/graphics.mo", "start": 7865198, "end": 7876934}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/grDevices.mo", "start": 7876934, "end": 7894209}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/stats.mo", "start": 7894209, "end": 7915173}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-compiler.mo", "start": 7915173, "end": 7919335}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/tools.mo", "start": 7919335, "end": 7922908}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-splines.mo", "start": 7922908, "end": 7925760}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-methods.mo", "start": 7925760, "end": 7993691}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-parallel.mo", "start": 7993691, "end": 7997720}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/RGui.mo", "start": 7997720, "end": 8018180}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R.mo", "start": 8018180, "end": 8183245}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/methods.mo", "start": 8183245, "end": 8188455}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/splines.mo", "start": 8188455, "end": 8189245}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-grid.mo", "start": 8189245, "end": 8204537}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/tcltk.mo", "start": 8204537, "end": 8205806}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-tcltk.mo", "start": 8205806, "end": 8208008}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-tools.mo", "start": 8208008, "end": 8253685}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-grDevices.mo", "start": 8253685, "end": 8268318}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/parallel.mo", "start": 8268318, "end": 8271167}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/utils.mo", "start": 8271167, "end": 8276707}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-stats.mo", "start": 8276707, "end": 8368985}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/grid.mo", "start": 8368985, "end": 8371830}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-stats4.mo", "start": 8371830, "end": 8372769}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-graphics.mo", "start": 8372769, "end": 8389567}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-base.mo", "start": 8389567, "end": 8452518}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-utils.mo", "start": 8452518, "end": 8497918}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/graphics.mo", "start": 8497918, "end": 8510309}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/grDevices.mo", "start": 8510309, "end": 8528150}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/stats.mo", "start": 8528150, "end": 8550018}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-compiler.mo", "start": 8550018, "end": 8554584}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/tools.mo", "start": 8554584, "end": 8558424}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-splines.mo", "start": 8558424, "end": 8561471}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-methods.mo", "start": 8561471, "end": 8629732}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-parallel.mo", "start": 8629732, "end": 8634227}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/RGui.mo", "start": 8634227, "end": 8655165}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R.mo", "start": 8655165, "end": 8825666}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/methods.mo", "start": 8825666, "end": 8830895}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/splines.mo", "start": 8830895, "end": 8831858}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-grid.mo", "start": 8831858, "end": 8848139}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/tcltk.mo", "start": 8848139, "end": 8849573}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-tcltk.mo", "start": 8849573, "end": 8852008}, {"filename": "/usr/lib/R/library/base/CITATION", "start": 8852008, "end": 8852964}, {"filename": "/usr/lib/R/library/base/DESCRIPTION", "start": 8852964, "end": 8853318}, {"filename": "/usr/lib/R/library/base/R/base", "start": 8853318, "end": 8858470}, {"filename": "/usr/lib/R/library/base/R/base.rdb", "start": 8858470, "end": 9228453}, {"filename": "/usr/lib/R/library/base/R/Rprofile", "start": 9228453, "end": 9234922}, {"filename": "/usr/lib/R/library/base/R/base.rdx", "start": 9234922, "end": 9248033}, {"filename": "/usr/lib/R/library/base/Meta/features.rds", "start": 9248033, "end": 9248165}, {"filename": "/usr/lib/R/library/base/Meta/package.rds", "start": 9248165, "end": 9248721}, {"filename": "/usr/lib/R/library/base/demo/is.things.R", "start": 9248721, "end": 9253519}, {"filename": "/usr/lib/R/library/base/demo/error.catching.R", "start": 9253519, "end": 9254698}, {"filename": "/usr/lib/R/library/base/demo/recursion.R", "start": 9254698, "end": 9256813}, {"filename": "/usr/lib/R/library/base/demo/scoping.R", "start": 9256813, "end": 9258373}, {"filename": "/usr/lib/R/library/stats4/NAMESPACE", "start": 9258373, "end": 9259061}, {"filename": "/usr/lib/R/library/stats4/DESCRIPTION", "start": 9259061, "end": 9259475}, {"filename": "/usr/lib/R/library/stats4/R/stats4.rdb", "start": 9259475, "end": 9371879}, {"filename": "/usr/lib/R/library/stats4/R/stats4", "start": 9371879, "end": 9372937}, {"filename": "/usr/lib/R/library/stats4/R/stats4.rdx", "start": 9372937, "end": 9374091}, {"filename": "/usr/lib/R/library/stats4/Meta/features.rds", "start": 9374091, "end": 9374223}, {"filename": "/usr/lib/R/library/stats4/Meta/package.rds", "start": 9374223, "end": 9374831}, {"filename": "/usr/lib/R/library/stats4/Meta/nsInfo.rds", "start": 9374831, "end": 9375263}, {"filename": "/usr/lib/R/library/grDevices/NAMESPACE", "start": 9375263, "end": 9378000}, {"filename": "/usr/lib/R/library/grDevices/DESCRIPTION", "start": 9378000, "end": 9378480}, {"filename": "/usr/lib/R/library/grDevices/enc/ISOLatin9.enc", "start": 9378480, "end": 9380676}, {"filename": "/usr/lib/R/library/grDevices/enc/ISOLatin1.enc", "start": 9380676, "end": 9382889}, {"filename": "/usr/lib/R/library/grDevices/enc/AdobeStd.enc", "start": 9382889, "end": 9384983}, {"filename": "/usr/lib/R/library/grDevices/enc/Cyrillic.enc", "start": 9384983, "end": 9387332}, {"filename": "/usr/lib/R/library/grDevices/enc/CP1251.enc", "start": 9387332, "end": 9389721}, {"filename": "/usr/lib/R/library/grDevices/enc/CP1257.enc", "start": 9389721, "end": 9391968}, {"filename": "/usr/lib/R/library/grDevices/enc/AdobeSym.enc", "start": 9391968, "end": 9394482}, {"filename": "/usr/lib/R/library/grDevices/enc/KOI8-R.enc", "start": 9394482, "end": 9396772}, {"filename": "/usr/lib/R/library/grDevices/enc/ISOLatin7.enc", "start": 9396772, "end": 9399044}, {"filename": "/usr/lib/R/library/grDevices/enc/CP1253.enc", "start": 9399044, "end": 9401229}, {"filename": "/usr/lib/R/library/grDevices/enc/PDFDoc.enc", "start": 9401229, "end": 9403436}, {"filename": "/usr/lib/R/library/grDevices/enc/CP1250.enc", "start": 9403436, "end": 9405660}, {"filename": "/usr/lib/R/library/grDevices/enc/Greek.enc", "start": 9405660, "end": 9407872}, {"filename": "/usr/lib/R/library/grDevices/enc/ISOLatin2.enc", "start": 9407872, "end": 9410059}, {"filename": "/usr/lib/R/library/grDevices/enc/TeXtext.enc", "start": 9410059, "end": 9412150}, {"filename": "/usr/lib/R/library/grDevices/enc/MacRoman.enc", "start": 9412150, "end": 9414412}, {"filename": "/usr/lib/R/library/grDevices/enc/WinAnsi.enc", "start": 9414412, "end": 9416723}, {"filename": "/usr/lib/R/library/grDevices/enc/KOI8-U.enc", "start": 9416723, "end": 9419031}, {"filename": "/usr/lib/R/library/grDevices/icc/srgb", "start": 9419031, "end": 9428552}, {"filename": "/usr/lib/R/library/grDevices/icc/srgb.flate", "start": 9428552, "end": 9431232}, {"filename": "/usr/lib/R/library/grDevices/R/grDevices.rdb", "start": 9431232, "end": 9524194}, {"filename": "/usr/lib/R/library/grDevices/R/grDevices.rdx", "start": 9524194, "end": 9527082}, {"filename": "/usr/lib/R/library/grDevices/R/grDevices", "start": 9527082, "end": 9528140}, {"filename": "/usr/lib/R/library/grDevices/Meta/features.rds", "start": 9528140, "end": 9528272}, {"filename": "/usr/lib/R/library/grDevices/Meta/package.rds", "start": 9528272, "end": 9528902}, {"filename": "/usr/lib/R/library/grDevices/Meta/nsInfo.rds", "start": 9528902, "end": 9530128}, {"filename": "/usr/lib/R/library/grDevices/afm/bkl_____.afm.gz", "start": 9530128, "end": 9534385}, {"filename": "/usr/lib/R/library/grDevices/afm/pobi____.afm.gz", "start": 9534385, "end": 9538817}, {"filename": "/usr/lib/R/library/grDevices/afm/Courier.afm.gz", "start": 9538817, "end": 9542790}, {"filename": "/usr/lib/R/library/grDevices/afm/por_____.afm.gz", "start": 9542790, "end": 9547276}, {"filename": "/usr/lib/R/library/grDevices/afm/p052023l.afm.gz", "start": 9547276, "end": 9557800}, {"filename": "/usr/lib/R/library/grDevices/afm/sy______.afm.gz", "start": 9557800, "end": 9561198}, {"filename": "/usr/lib/R/library/grDevices/afm/Times-Roman.afm.gz", "start": 9561198, "end": 9573043}, {"filename": "/usr/lib/R/library/grDevices/afm/n019044l.afm.gz", "start": 9573043, "end": 9582828}, {"filename": "/usr/lib/R/library/grDevices/afm/hvnbo___.afm.gz", "start": 9582828, "end": 9587654}, {"filename": "/usr/lib/R/library/grDevices/afm/Times-Bold.afm.gz", "start": 9587654, "end": 9599983}, {"filename": "/usr/lib/R/library/grDevices/afm/Courier-Oblique.afm.gz", "start": 9599983, "end": 9604085}, {"filename": "/usr/lib/R/library/grDevices/afm/MustRead.html", "start": 9604085, "end": 9605086}, {"filename": "/usr/lib/R/library/grDevices/afm/n019063l.afm.gz", "start": 9605086, "end": 9615370}, {"filename": "/usr/lib/R/library/grDevices/afm/Helvetica-Oblique.afm.gz", "start": 9615370, "end": 9629195}, {"filename": "/usr/lib/R/library/grDevices/afm/README", "start": 9629195, "end": 9630084}, {"filename": "/usr/lib/R/library/grDevices/afm/ArialMT-Italic.afm.gz", "start": 9630084, "end": 9638446}, {"filename": "/usr/lib/R/library/grDevices/afm/ncb_____.afm.gz", "start": 9638446, "end": 9642727}, {"filename": "/usr/lib/R/library/grDevices/afm/hvb_____.afm.gz", "start": 9642727, "end": 9647418}, {"filename": "/usr/lib/R/library/grDevices/afm/nci_____.afm.gz", "start": 9647418, "end": 9651937}, {"filename": "/usr/lib/R/library/grDevices/afm/bkli____.afm.gz", "start": 9651937, "end": 9656268}, {"filename": "/usr/lib/R/library/grDevices/afm/c059013l.afm.gz", "start": 9656268, "end": 9666611}, {"filename": "/usr/lib/R/library/grDevices/afm/CM_italic_10.afm.gz", "start": 9666611, "end": 9669659}, {"filename": "/usr/lib/R/library/grDevices/afm/n019043l.afm.gz", "start": 9669659, "end": 9679754}, {"filename": "/usr/lib/R/library/grDevices/afm/Helvetica-BoldOblique.afm.gz", "start": 9679754, "end": 9692967}, {"filename": "/usr/lib/R/library/grDevices/afm/n019004l.afm.gz", "start": 9692967, "end": 9703012}, {"filename": "/usr/lib/R/library/grDevices/afm/com_____.afm.gz", "start": 9703012, "end": 9706984}, {"filename": "/usr/lib/R/library/grDevices/afm/CM_regular_10.afm.gz", "start": 9706984, "end": 9709937}, {"filename": "/usr/lib/R/library/grDevices/afm/n022023l.afm.gz", "start": 9709937, "end": 9715809}, {"filename": "/usr/lib/R/library/grDevices/afm/CM_symbol_10.afm.gz", "start": 9715809, "end": 9718063}, {"filename": "/usr/lib/R/library/grDevices/afm/hvnb____.afm.gz", "start": 9718063, "end": 9722738}, {"filename": "/usr/lib/R/library/grDevices/afm/tibi____.afm.gz", "start": 9722738, "end": 9727840}, {"filename": "/usr/lib/R/library/grDevices/afm/n022003l.afm.gz", "start": 9727840, "end": 9733317}, {"filename": "/usr/lib/R/library/grDevices/afm/agwo____.afm.gz", "start": 9733317, "end": 9738456}, {"filename": "/usr/lib/R/library/grDevices/afm/a010013l.afm.gz", "start": 9738456, "end": 9748681}, {"filename": "/usr/lib/R/library/grDevices/afm/n021024l.afm.gz", "start": 9748681, "end": 9759206}, {"filename": "/usr/lib/R/library/grDevices/afm/agdo____.afm.gz", "start": 9759206, "end": 9764184}, {"filename": "/usr/lib/R/library/grDevices/afm/ncr_____.afm.gz", "start": 9764184, "end": 9768637}, {"filename": "/usr/lib/R/library/grDevices/afm/c059033l.afm.gz", "start": 9768637, "end": 9779177}, {"filename": "/usr/lib/R/library/grDevices/afm/b018015l.afm.gz", "start": 9779177, "end": 9789264}, {"filename": "/usr/lib/R/library/grDevices/afm/a010033l.afm.gz", "start": 9789264, "end": 9799537}, {"filename": "/usr/lib/R/library/grDevices/afm/b018032l.afm.gz", "start": 9799537, "end": 9809898}, {"filename": "/usr/lib/R/library/grDevices/afm/bkdi____.afm.gz", "start": 9809898, "end": 9814267}, {"filename": "/usr/lib/R/library/grDevices/afm/n021003l.afm.gz", "start": 9814267, "end": 9824806}, {"filename": "/usr/lib/R/library/grDevices/afm/n019023l.afm.gz", "start": 9824806, "end": 9835290}, {"filename": "/usr/lib/R/library/grDevices/afm/Courier-Bold.afm.gz", "start": 9835290, "end": 9839274}, {"filename": "/usr/lib/R/library/grDevices/afm/ZapfDingbats.afm.gz", "start": 9839274, "end": 9841818}, {"filename": "/usr/lib/R/library/grDevices/afm/ArialMT.afm.gz", "start": 9841818, "end": 9850386}, {"filename": "/usr/lib/R/library/grDevices/afm/Times-Italic.afm.gz", "start": 9850386, "end": 9863044}, {"filename": "/usr/lib/R/library/grDevices/afm/c059036l.afm.gz", "start": 9863044, "end": 9873518}, {"filename": "/usr/lib/R/library/grDevices/afm/tib_____.afm.gz", "start": 9873518, "end": 9878523}, {"filename": "/usr/lib/R/library/grDevices/afm/cmti10.afm.gz", "start": 9878523, "end": 9881438}, {"filename": "/usr/lib/R/library/grDevices/afm/ArialMT-BoldItalic.afm.gz", "start": 9881438, "end": 9889752}, {"filename": "/usr/lib/R/library/grDevices/afm/Symbol.afm.gz", "start": 9889752, "end": 9893195}, {"filename": "/usr/lib/R/library/grDevices/afm/cobo____.afm.gz", "start": 9893195, "end": 9897279}, {"filename": "/usr/lib/R/library/grDevices/afm/CM_boldx_10.afm.gz", "start": 9897279, "end": 9900332}, {"filename": "/usr/lib/R/library/grDevices/afm/s050000l.afm.gz", "start": 9900332, "end": 9903715}, {"filename": "/usr/lib/R/library/grDevices/afm/p052004l.afm.gz", "start": 9903715, "end": 9913945}, {"filename": "/usr/lib/R/library/grDevices/afm/hvbo____.afm.gz", "start": 9913945, "end": 9918778}, {"filename": "/usr/lib/R/library/grDevices/afm/n021023l.afm.gz", "start": 9918778, "end": 9929323}, {"filename": "/usr/lib/R/library/grDevices/afm/n021004l.afm.gz", "start": 9929323, "end": 9939678}, {"filename": "/usr/lib/R/library/grDevices/afm/p052003l.afm.gz", "start": 9939678, "end": 9950099}, {"filename": "/usr/lib/R/library/grDevices/afm/cmbxti10.afm.gz", "start": 9950099, "end": 9953036}, {"filename": "/usr/lib/R/library/grDevices/afm/poi_____.afm.gz", "start": 9953036, "end": 9957490}, {"filename": "/usr/lib/R/library/grDevices/afm/c059016l.afm.gz", "start": 9957490, "end": 9967737}, {"filename": "/usr/lib/R/library/grDevices/afm/b018012l.afm.gz", "start": 9967737, "end": 9977990}, {"filename": "/usr/lib/R/library/grDevices/afm/agw_____.afm.gz", "start": 9977990, "end": 9983049}, {"filename": "/usr/lib/R/library/grDevices/afm/hvo_____.afm.gz", "start": 9983049, "end": 9988026}, {"filename": "/usr/lib/R/library/grDevices/afm/p052024l.afm.gz", "start": 9988026, "end": 9998307}, {"filename": "/usr/lib/R/library/grDevices/afm/n022024l.afm.gz", "start": 9998307, "end": 10004161}, {"filename": "/usr/lib/R/library/grDevices/afm/agd_____.afm.gz", "start": 10004161, "end": 10009064}, {"filename": "/usr/lib/R/library/grDevices/afm/ncbi____.afm.gz", "start": 10009064, "end": 10013985}, {"filename": "/usr/lib/R/library/grDevices/afm/a010015l.afm.gz", "start": 10013985, "end": 10024033}, {"filename": "/usr/lib/R/library/grDevices/afm/Times-BoldItalic.afm.gz", "start": 10024033, "end": 10035744}, {"filename": "/usr/lib/R/library/grDevices/afm/cob_____.afm.gz", "start": 10035744, "end": 10039717}, {"filename": "/usr/lib/R/library/grDevices/afm/Helvetica.afm.gz", "start": 10039717, "end": 10053355}, {"filename": "/usr/lib/R/library/grDevices/afm/ArialMT-Bold.afm.gz", "start": 10053355, "end": 10061713}, {"filename": "/usr/lib/R/library/grDevices/afm/Courier-BoldOblique.afm.gz", "start": 10061713, "end": 10065825}, {"filename": "/usr/lib/R/library/grDevices/afm/hvno____.afm.gz", "start": 10065825, "end": 10070788}, {"filename": "/usr/lib/R/library/grDevices/afm/n019003l.afm.gz", "start": 10070788, "end": 10081005}, {"filename": "/usr/lib/R/library/grDevices/afm/CM_boldx_italic_10.afm.gz", "start": 10081005, "end": 10084154}, {"filename": "/usr/lib/R/library/grDevices/afm/a010035l.afm.gz", "start": 10084154, "end": 10094344}, {"filename": "/usr/lib/R/library/grDevices/afm/n019064l.afm.gz", "start": 10094344, "end": 10104510}, {"filename": "/usr/lib/R/library/grDevices/afm/n019024l.afm.gz", "start": 10104510, "end": 10114833}, {"filename": "/usr/lib/R/library/grDevices/afm/n022004l.afm.gz", "start": 10114833, "end": 10120407}, {"filename": "/usr/lib/R/library/grDevices/afm/coo_____.afm.gz", "start": 10120407, "end": 10124499}, {"filename": "/usr/lib/R/library/grDevices/afm/pob_____.afm.gz", "start": 10124499, "end": 10128894}, {"filename": "/usr/lib/R/library/grDevices/afm/Helvetica-Bold.afm.gz", "start": 10128894, "end": 10141897}, {"filename": "/usr/lib/R/library/grDevices/afm/tii_____.afm.gz", "start": 10141897, "end": 10147004}, {"filename": "/usr/lib/R/library/grDevices/afm/bkd_____.afm.gz", "start": 10147004, "end": 10151258}, {"filename": "/usr/lib/R/library/grDevices/afm/tir_____.afm.gz", "start": 10151258, "end": 10156241}, {"filename": "/usr/lib/R/library/grDevices/afm/hv______.afm.gz", "start": 10156241, "end": 10161067}, {"filename": "/usr/lib/R/library/grDevices/afm/hvn_____.afm.gz", "start": 10161067, "end": 10165877}, {"filename": "/usr/lib/R/library/grDevices/afm/b018035l.afm.gz", "start": 10165877, "end": 10176236}, {"filename": "/usr/lib/R/library/grDevices/demo/hclColors.R", "start": 10176236, "end": 10178846}, {"filename": "/usr/lib/R/library/grDevices/demo/colors.R", "start": 10178846, "end": 10182612}, {"filename": "/usr/lib/R/library/grDevices/libs/grDevices.so", "start": 10182612, "end": 10182612}, {"filename": "/usr/lib/R/library/grid/NAMESPACE", "start": 10182612, "end": 10196695}, {"filename": "/usr/lib/R/library/grid/DESCRIPTION", "start": 10196695, "end": 10197172}, {"filename": "/usr/lib/R/library/grid/R/grid", "start": 10197172, "end": 10198230}, {"filename": "/usr/lib/R/library/grid/R/grid.rdx", "start": 10198230, "end": 10207193}, {"filename": "/usr/lib/R/library/grid/R/grid.rdb", "start": 10207193, "end": 10412725}, {"filename": "/usr/lib/R/library/grid/doc/viewports.pdf", "start": 10412725, "end": 10576785}, {"filename": "/usr/lib/R/library/grid/doc/displaylist.pdf", "start": 10576785, "end": 10734756}, {"filename": "/usr/lib/R/library/grid/doc/sharing.pdf", "start": 10734756, "end": 10807576}, {"filename": "/usr/lib/R/library/grid/doc/grobs.pdf", "start": 10807576, "end": 10914818}, {"filename": "/usr/lib/R/library/grid/doc/changes.txt", "start": 10914818, "end": 10974435}, {"filename": "/usr/lib/R/library/grid/doc/moveline.pdf", "start": 10974435, "end": 11061847}, {"filename": "/usr/lib/R/library/grid/doc/rotated.pdf", "start": 11061847, "end": 11190935}, {"filename": "/usr/lib/R/library/grid/doc/grid.pdf", "start": 11190935, "end": 11424093}, {"filename": "/usr/lib/R/library/grid/doc/interactive.pdf", "start": 11424093, "end": 11515052}, {"filename": "/usr/lib/R/library/grid/doc/frame.pdf", "start": 11515052, "end": 11671627}, {"filename": "/usr/lib/R/library/grid/doc/plotexample.pdf", "start": 11671627, "end": 11907948}, {"filename": "/usr/lib/R/library/grid/doc/DivByZero.txt", "start": 11907948, "end": 11910159}, {"filename": "/usr/lib/R/library/grid/doc/saveload.pdf", "start": 11910159, "end": 12044127}, {"filename": "/usr/lib/R/library/grid/doc/nonfinite.pdf", "start": 12044127, "end": 12124147}, {"filename": "/usr/lib/R/library/grid/doc/locndimn.pdf", "start": 12124147, "end": 12212942}, {"filename": "/usr/lib/R/library/grid/Meta/features.rds", "start": 12212942, "end": 12213074}, {"filename": "/usr/lib/R/library/grid/Meta/package.rds", "start": 12213074, "end": 12213744}, {"filename": "/usr/lib/R/library/grid/Meta/nsInfo.rds", "start": 12213744, "end": 12216068}, {"filename": "/usr/lib/R/library/grid/libs/grid.so", "start": 12216068, "end": 12216068}, {"filename": "/usr/lib/R/library/splines/NAMESPACE", "start": 12216068, "end": 12217493}, {"filename": "/usr/lib/R/library/splines/DESCRIPTION", "start": 12217493, "end": 12218018}, {"filename": "/usr/lib/R/library/splines/R/splines.rdb", "start": 12218018, "end": 12236324}, {"filename": "/usr/lib/R/library/splines/R/splines", "start": 12236324, "end": 12237382}, {"filename": "/usr/lib/R/library/splines/R/splines.rdx", "start": 12237382, "end": 12238190}, {"filename": "/usr/lib/R/library/splines/Meta/features.rds", "start": 12238190, "end": 12238322}, {"filename": "/usr/lib/R/library/splines/Meta/package.rds", "start": 12238322, "end": 12239025}, {"filename": "/usr/lib/R/library/splines/Meta/nsInfo.rds", "start": 12239025, "end": 12239626}, {"filename": "/usr/lib/R/library/splines/libs/splines.so", "start": 12239626, "end": 12239626}, {"filename": "/usr/lib/R/library/datasets/NAMESPACE", "start": 12239626, "end": 12239697}, {"filename": "/usr/lib/R/library/datasets/DESCRIPTION", "start": 12239697, "end": 12240040}, {"filename": "/usr/lib/R/library/datasets/data/Rdata.rdx", "start": 12240040, "end": 12241595}, {"filename": "/usr/lib/R/library/datasets/data/morley.tab", "start": 12241595, "end": 12243717}, {"filename": "/usr/lib/R/library/datasets/data/Rdata.rds", "start": 12243717, "end": 12244802}, {"filename": "/usr/lib/R/library/datasets/data/Rdata.rdb", "start": 12244802, "end": 12359861}, {"filename": "/usr/lib/R/library/datasets/Meta/features.rds", "start": 12359861, "end": 12359993}, {"filename": "/usr/lib/R/library/datasets/Meta/package.rds", "start": 12359993, "end": 12360521}, {"filename": "/usr/lib/R/library/datasets/Meta/nsInfo.rds", "start": 12360521, "end": 12360722}, {"filename": "/usr/lib/R/library/graphics/NAMESPACE", "start": 12360722, "end": 12363534}, {"filename": "/usr/lib/R/library/graphics/DESCRIPTION", "start": 12363534, "end": 12363951}, {"filename": "/usr/lib/R/library/graphics/R/graphics.rdb", "start": 12363951, "end": 12460979}, {"filename": "/usr/lib/R/library/graphics/R/graphics", "start": 12460979, "end": 12462037}, {"filename": "/usr/lib/R/library/graphics/R/graphics.rdx", "start": 12462037, "end": 12463839}, {"filename": "/usr/lib/R/library/graphics/Meta/features.rds", "start": 12463839, "end": 12463971}, {"filename": "/usr/lib/R/library/graphics/Meta/package.rds", "start": 12463971, "end": 12464577}, {"filename": "/usr/lib/R/library/graphics/Meta/nsInfo.rds", "start": 12464577, "end": 12465760}, {"filename": "/usr/lib/R/library/graphics/demo/plotmath.R", "start": 12465760, "end": 12474519}, {"filename": "/usr/lib/R/library/graphics/demo/persp.R", "start": 12474519, "end": 12477310}, {"filename": "/usr/lib/R/library/graphics/demo/Hershey.R", "start": 12477310, "end": 12497282}, {"filename": "/usr/lib/R/library/graphics/demo/Japanese.R", "start": 12497282, "end": 12531801}, {"filename": "/usr/lib/R/library/graphics/demo/graphics.R", "start": 12531801, "end": 12536840}, {"filename": "/usr/lib/R/library/graphics/demo/image.R", "start": 12536840, "end": 12537945}, {"filename": "/usr/lib/R/library/graphics/libs/graphics.so", "start": 12537945, "end": 12537945}, {"filename": "/usr/lib/R/library/graphics/help/figures/pch.png", "start": 12537945, "end": 12547232}, {"filename": "/usr/lib/R/library/graphics/help/figures/oma.png", "start": 12547232, "end": 12552346}, {"filename": "/usr/lib/R/library/graphics/help/figures/mai.png", "start": 12552346, "end": 12557013}, {"filename": "/usr/lib/R/library/graphics/help/figures/pch.svg", "start": 12557013, "end": 12584200}, {"filename": "/usr/lib/R/library/graphics/help/figures/pch.pdf", "start": 12584200, "end": 12589194}, {"filename": "/usr/lib/R/library/graphics/help/figures/oma.pdf", "start": 12589194, "end": 12592957}, {"filename": "/usr/lib/R/library/graphics/help/figures/mai.pdf", "start": 12592957, "end": 12595498}, {"filename": "/usr/lib/R/library/methods/NAMESPACE", "start": 12595498, "end": 12600752}, {"filename": "/usr/lib/R/library/methods/DESCRIPTION", "start": 12600752, "end": 12601361}, {"filename": "/usr/lib/R/library/methods/R/methods.rdx", "start": 12601361, "end": 12615539}, {"filename": "/usr/lib/R/library/methods/R/methods", "start": 12615539, "end": 12616597}, {"filename": "/usr/lib/R/library/methods/R/methods.rdb", "start": 12616597, "end": 13433896}, {"filename": "/usr/lib/R/library/methods/Meta/features.rds", "start": 13433896, "end": 13434028}, {"filename": "/usr/lib/R/library/methods/Meta/package.rds", "start": 13434028, "end": 13434776}, {"filename": "/usr/lib/R/library/methods/Meta/nsInfo.rds", "start": 13434776, "end": 13436492}, {"filename": "/usr/lib/R/library/methods/libs/methods.so", "start": 13436492, "end": 13436492}, {"filename": "/usr/lib/R/library/stats/NAMESPACE", "start": 13436492, "end": 13453286}, {"filename": "/usr/lib/R/library/stats/SOURCES.ts", "start": 13453286, "end": 13453836}, {"filename": "/usr/lib/R/library/stats/DESCRIPTION", "start": 13453836, "end": 13454309}, {"filename": "/usr/lib/R/library/stats/COPYRIGHTS.modreg", "start": 13454309, "end": 13455861}, {"filename": "/usr/lib/R/library/stats/R/stats.rdx", "start": 13455861, "end": 13466464}, {"filename": "/usr/lib/R/library/stats/R/stats.rdb", "start": 13466464, "end": 13978957}, {"filename": "/usr/lib/R/library/stats/R/stats", "start": 13978957, "end": 13980015}, {"filename": "/usr/lib/R/library/stats/Meta/features.rds", "start": 13980015, "end": 13980147}, {"filename": "/usr/lib/R/library/stats/Meta/package.rds", "start": 13980147, "end": 13980858}, {"filename": "/usr/lib/R/library/stats/Meta/nsInfo.rds", "start": 13980858, "end": 13985287}, {"filename": "/usr/lib/R/library/stats/demo/smooth.R", "start": 13985287, "end": 13986569}, {"filename": "/usr/lib/R/library/stats/demo/glm.vr.R", "start": 13986569, "end": 13987313}, {"filename": "/usr/lib/R/library/stats/demo/lm.glm.R", "start": 13987313, "end": 13992306}, {"filename": "/usr/lib/R/library/stats/demo/nlm.R", "start": 13992306, "end": 13995556}, {"filename": "/usr/lib/R/library/stats/libs/stats.so", "start": 13995556, "end": 13995556}, {"filename": "/usr/lib/R/library/utils/NAMESPACE", "start": 13995556, "end": 14002742}, {"filename": "/usr/lib/R/library/utils/iconvlist", "start": 14002742, "end": 14016328}, {"filename": "/usr/lib/R/library/utils/DESCRIPTION", "start": 14016328, "end": 14016746}, {"filename": "/usr/lib/R/library/utils/misc/exDIF.dif", "start": 14016746, "end": 14016988}, {"filename": "/usr/lib/R/library/utils/misc/exDIF.csv", "start": 14016988, "end": 14017026}, {"filename": "/usr/lib/R/library/utils/R/utils.rdx", "start": 14017026, "end": 14023937}, {"filename": "/usr/lib/R/library/utils/R/sysdata.rdx", "start": 14023937, "end": 14024132}, {"filename": "/usr/lib/R/library/utils/R/utils.rdb", "start": 14024132, "end": 14325127}, {"filename": "/usr/lib/R/library/utils/R/sysdata.rdb", "start": 14325127, "end": 14339476}, {"filename": "/usr/lib/R/library/utils/R/utils", "start": 14339476, "end": 14340534}, {"filename": "/usr/lib/R/library/utils/doc/Sweave.pdf", "start": 14340534, "end": 14662992}, {"filename": "/usr/lib/R/library/utils/Meta/features.rds", "start": 14662992, "end": 14663124}, {"filename": "/usr/lib/R/library/utils/Meta/package.rds", "start": 14663124, "end": 14663757}, {"filename": "/usr/lib/R/library/utils/Meta/nsInfo.rds", "start": 14663757, "end": 14666099}, {"filename": "/usr/lib/R/library/utils/Sweave/Sweave-test-1.Rnw", "start": 14666099, "end": 14667404}, {"filename": "/usr/lib/R/library/utils/Sweave/example-1.Rnw", "start": 14667404, "end": 14668129}, {"filename": "/usr/lib/R/library/utils/libs/utils.so", "start": 14668129, "end": 14668129}], "remote_package_size": 14668129, "package_uuid": "f109021f-52a6-4e64-9cf9-c4f5f4e46455"});
+   loadPackage({"files": [{"filename": "/usr/lib/R/etc/Makefile.in", "start": 0, "end": 3176}, {"filename": "/usr/lib/R/etc/ldpaths.in", "start": 3176, "end": 3955}, {"filename": "/usr/lib/R/etc/repositories", "start": 3955, "end": 5053}, {"filename": "/usr/lib/R/etc/javaconf", "start": 5053, "end": 5262}, {"filename": "/usr/lib/R/etc/Makeconf.in", "start": 5262, "end": 11641}, {"filename": "/usr/lib/R/etc/Makeconf", "start": 11641, "end": 17904}, {"filename": "/usr/lib/R/etc/Renviron.in", "start": 17904, "end": 19853}, {"filename": "/usr/lib/R/etc/Renviron", "start": 19853, "end": 21762}, {"filename": "/usr/lib/R/etc/javaconf.in", "start": 21762, "end": 22075}, {"filename": "/usr/lib/R/etc/ldpaths", "start": 22075, "end": 22856}, {"filename": "/usr/lib/R/etc/Makefile", "start": 22856, "end": 25999}, {"filename": "/usr/lib/R/library/parallel/NAMESPACE", "start": 25999, "end": 27370}, {"filename": "/usr/lib/R/library/parallel/DESCRIPTION", "start": 27370, "end": 27954}, {"filename": "/usr/lib/R/library/parallel/R/parallel", "start": 27954, "end": 29012}, {"filename": "/usr/lib/R/library/parallel/R/parallel.rdb", "start": 29012, "end": 68986}, {"filename": "/usr/lib/R/library/parallel/R/parallel.rdx", "start": 68986, "end": 70782}, {"filename": "/usr/lib/R/library/parallel/doc/parallel.pdf", "start": 70782, "end": 366457}, {"filename": "/usr/lib/R/library/parallel/Meta/features.rds", "start": 366457, "end": 366589}, {"filename": "/usr/lib/R/library/parallel/Meta/package.rds", "start": 366589, "end": 367301}, {"filename": "/usr/lib/R/library/parallel/Meta/nsInfo.rds", "start": 367301, "end": 367953}, {"filename": "/usr/lib/R/library/tools/NAMESPACE", "start": 367953, "end": 375884}, {"filename": "/usr/lib/R/library/tools/DESCRIPTION", "start": 375884, "end": 376346}, {"filename": "/usr/lib/R/library/tools/R/tools", "start": 376346, "end": 377404}, {"filename": "/usr/lib/R/library/tools/R/sysdata.rdx", "start": 377404, "end": 377618}, {"filename": "/usr/lib/R/library/tools/R/tools.rdb", "start": 377618, "end": 974121}, {"filename": "/usr/lib/R/library/tools/R/tools.rdx", "start": 974121, "end": 984854}, {"filename": "/usr/lib/R/library/tools/R/sysdata.rdb", "start": 984854, "end": 993417}, {"filename": "/usr/lib/R/library/tools/Meta/features.rds", "start": 993417, "end": 993549}, {"filename": "/usr/lib/R/library/tools/Meta/package.rds", "start": 993549, "end": 994211}, {"filename": "/usr/lib/R/library/tools/Meta/nsInfo.rds", "start": 994211, "end": 996061}, {"filename": "/usr/lib/R/library/tools/libs/tools.so", "start": 996061, "end": 1084525}, {"filename": "/usr/lib/R/library/compiler/NAMESPACE", "start": 1084525, "end": 1084652}, {"filename": "/usr/lib/R/library/compiler/DESCRIPTION", "start": 1084652, "end": 1085003}, {"filename": "/usr/lib/R/library/compiler/R/compiler", "start": 1085003, "end": 1086061}, {"filename": "/usr/lib/R/library/compiler/R/compiler.rdb", "start": 1086061, "end": 1155596}, {"filename": "/usr/lib/R/library/compiler/R/compiler.rdx", "start": 1155596, "end": 1159119}, {"filename": "/usr/lib/R/library/compiler/Meta/features.rds", "start": 1159119, "end": 1159251}, {"filename": "/usr/lib/R/library/compiler/Meta/package.rds", "start": 1159251, "end": 1159788}, {"filename": "/usr/lib/R/library/compiler/Meta/nsInfo.rds", "start": 1159788, "end": 1160062}, {"filename": "/usr/lib/R/library/tcltk/NAMESPACE", "start": 1160062, "end": 1161042}, {"filename": "/usr/lib/R/library/tcltk/DESCRIPTION", "start": 1161042, "end": 1161444}, {"filename": "/usr/lib/R/library/tcltk/R/tcltk", "start": 1161444, "end": 1162305}, {"filename": "/usr/lib/R/library/tcltk/exec/util.tcl", "start": 1162305, "end": 1185572}, {"filename": "/usr/lib/R/library/tcltk/exec/widget.tcl", "start": 1185572, "end": 1218275}, {"filename": "/usr/lib/R/library/tcltk/exec/util-tk.tcl", "start": 1218275, "end": 1225432}, {"filename": "/usr/lib/R/library/tcltk/exec/console.tcl", "start": 1225432, "end": 1227667}, {"filename": "/usr/lib/R/library/tcltk/exec/Tk-frontend.R", "start": 1227667, "end": 1228616}, {"filename": "/usr/lib/R/library/tcltk/exec/progressbar.tcl", "start": 1228616, "end": 1307250}, {"filename": "/usr/lib/R/library/tcltk/exec/hierarchy.tcl", "start": 1307250, "end": 1346410}, {"filename": "/usr/lib/R/library/tcltk/exec/pkgIndex.tcl", "start": 1346410, "end": 1347753}, {"filename": "/usr/lib/R/library/tcltk/exec/util-string.tcl", "start": 1347753, "end": 1351353}, {"filename": "/usr/lib/R/library/tcltk/exec/util-dump.tcl", "start": 1351353, "end": 1369183}, {"filename": "/usr/lib/R/library/tcltk/exec/util-expand.tcl", "start": 1369183, "end": 1374936}, {"filename": "/usr/lib/R/library/tcltk/exec/util-number.tcl", "start": 1374936, "end": 1377051}, {"filename": "/usr/lib/R/library/tcltk/Meta/features.rds", "start": 1377051, "end": 1377183}, {"filename": "/usr/lib/R/library/tcltk/Meta/package.rds", "start": 1377183, "end": 1377780}, {"filename": "/usr/lib/R/library/tcltk/Meta/nsInfo.rds", "start": 1377780, "end": 1378267}, {"filename": "/usr/lib/R/library/tcltk/demo/tkcanvas.R", "start": 1378267, "end": 1383495}, {"filename": "/usr/lib/R/library/tcltk/demo/tkfaq.R", "start": 1383495, "end": 1384724}, {"filename": "/usr/lib/R/library/tcltk/demo/tkdensity.R", "start": 1384724, "end": 1388200}, {"filename": "/usr/lib/R/library/tcltk/demo/tkttest.R", "start": 1388200, "end": 1391175}, {"filename": "/usr/lib/R/library/translations/DESCRIPTION", "start": 1391175, "end": 1391413}, {"filename": "/usr/lib/R/library/translations/en_GB/LC_MESSAGES/R-grDevices.mo", "start": 1391413, "end": 1391773}, {"filename": "/usr/lib/R/library/translations/en_GB/LC_MESSAGES/grDevices.mo", "start": 1391773, "end": 1392898}, {"filename": "/usr/lib/R/library/translations/en_GB/LC_MESSAGES/R.mo", "start": 1392898, "end": 1393813}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-tools.mo", "start": 1393813, "end": 1433555}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-grDevices.mo", "start": 1433555, "end": 1447237}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/parallel.mo", "start": 1447237, "end": 1449676}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/utils.mo", "start": 1449676, "end": 1454938}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-stats.mo", "start": 1454938, "end": 1532612}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/grid.mo", "start": 1532612, "end": 1535478}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-stats4.mo", "start": 1535478, "end": 1536312}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-graphics.mo", "start": 1536312, "end": 1552545}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-base.mo", "start": 1552545, "end": 1600747}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-utils.mo", "start": 1600747, "end": 1641824}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/graphics.mo", "start": 1641824, "end": 1654056}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/grDevices.mo", "start": 1654056, "end": 1672037}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/stats.mo", "start": 1672037, "end": 1691910}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-compiler.mo", "start": 1691910, "end": 1693922}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/tools.mo", "start": 1693922, "end": 1697565}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-splines.mo", "start": 1697565, "end": 1700515}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-methods.mo", "start": 1700515, "end": 1756192}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-parallel.mo", "start": 1756192, "end": 1759940}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/RGui.mo", "start": 1759940, "end": 1783096}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R.mo", "start": 1783096, "end": 1938155}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/methods.mo", "start": 1938155, "end": 1943849}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/splines.mo", "start": 1943849, "end": 1944634}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-grid.mo", "start": 1944634, "end": 1959618}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/tcltk.mo", "start": 1959618, "end": 1961049}, {"filename": "/usr/lib/R/library/translations/ko/LC_MESSAGES/R-tcltk.mo", "start": 1961049, "end": 1963522}, {"filename": "/usr/lib/R/library/translations/tr/LC_MESSAGES/R-tools.mo", "start": 1963522, "end": 1964008}, {"filename": "/usr/lib/R/library/translations/tr/LC_MESSAGES/R-stats.mo", "start": 1964008, "end": 1996007}, {"filename": "/usr/lib/R/library/translations/tr/LC_MESSAGES/R-stats4.mo", "start": 1996007, "end": 1996780}, {"filename": "/usr/lib/R/library/translations/tr/LC_MESSAGES/R-base.mo", "start": 1996780, "end": 1997534}, {"filename": "/usr/lib/R/library/translations/tr/LC_MESSAGES/R-utils.mo", "start": 1997534, "end": 1998439}, {"filename": "/usr/lib/R/library/translations/tr/LC_MESSAGES/graphics.mo", "start": 1998439, "end": 2007885}, {"filename": "/usr/lib/R/library/translations/tr/LC_MESSAGES/RGui.mo", "start": 2007885, "end": 2028528}, {"filename": "/usr/lib/R/library/translations/tr/LC_MESSAGES/R.mo", "start": 2028528, "end": 2146682}, {"filename": "/usr/lib/R/library/translations/es/LC_MESSAGES/graphics.mo", "start": 2146682, "end": 2155622}, {"filename": "/usr/lib/R/library/translations/es/LC_MESSAGES/RGui.mo", "start": 2155622, "end": 2176380}, {"filename": "/usr/lib/R/library/translations/es/LC_MESSAGES/R.mo", "start": 2176380, "end": 2285967}, {"filename": "/usr/lib/R/library/translations/nn/LC_MESSAGES/R-base.mo", "start": 2285967, "end": 2323456}, {"filename": "/usr/lib/R/library/translations/nn/LC_MESSAGES/graphics.mo", "start": 2323456, "end": 2332712}, {"filename": "/usr/lib/R/library/translations/nn/LC_MESSAGES/RGui.mo", "start": 2332712, "end": 2352886}, {"filename": "/usr/lib/R/library/translations/nn/LC_MESSAGES/R.mo", "start": 2352886, "end": 2472070}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-tools.mo", "start": 2472070, "end": 2521789}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-grDevices.mo", "start": 2521789, "end": 2537607}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/parallel.mo", "start": 2537607, "end": 2540264}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/utils.mo", "start": 2540264, "end": 2546419}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-stats.mo", "start": 2546419, "end": 2635940}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/grid.mo", "start": 2635940, "end": 2640532}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-stats4.mo", "start": 2640532, "end": 2641850}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-graphics.mo", "start": 2641850, "end": 2658675}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-base.mo", "start": 2658675, "end": 2723026}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-utils.mo", "start": 2723026, "end": 2771031}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/graphics.mo", "start": 2771031, "end": 2783329}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/grDevices.mo", "start": 2783329, "end": 2800979}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/stats.mo", "start": 2800979, "end": 2824175}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-compiler.mo", "start": 2824175, "end": 2828398}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/tools.mo", "start": 2828398, "end": 2832369}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-splines.mo", "start": 2832369, "end": 2835261}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-methods.mo", "start": 2835261, "end": 2905674}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-parallel.mo", "start": 2905674, "end": 2911100}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/RGui.mo", "start": 2911100, "end": 2931656}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R.mo", "start": 2931656, "end": 3111075}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/methods.mo", "start": 3111075, "end": 3116902}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/splines.mo", "start": 3116902, "end": 3117703}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-grid.mo", "start": 3117703, "end": 3134137}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/tcltk.mo", "start": 3134137, "end": 3135492}, {"filename": "/usr/lib/R/library/translations/it/LC_MESSAGES/R-tcltk.mo", "start": 3135492, "end": 3137783}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-tools.mo", "start": 3137783, "end": 3182197}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-grDevices.mo", "start": 3182197, "end": 3197118}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/parallel.mo", "start": 3197118, "end": 3199786}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/utils.mo", "start": 3199786, "end": 3205271}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-stats.mo", "start": 3205271, "end": 3293977}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/grid.mo", "start": 3293977, "end": 3298529}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-stats4.mo", "start": 3298529, "end": 3300015}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-graphics.mo", "start": 3300015, "end": 3316737}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-base.mo", "start": 3316737, "end": 3378143}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-utils.mo", "start": 3378143, "end": 3424220}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/graphics.mo", "start": 3424220, "end": 3440067}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/grDevices.mo", "start": 3440067, "end": 3457154}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/stats.mo", "start": 3457154, "end": 3479865}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-compiler.mo", "start": 3479865, "end": 3485517}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/tools.mo", "start": 3485517, "end": 3489509}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-splines.mo", "start": 3489509, "end": 3492460}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-methods.mo", "start": 3492460, "end": 3559528}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-parallel.mo", "start": 3559528, "end": 3565280}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/RGui.mo", "start": 3565280, "end": 3585590}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R.mo", "start": 3585590, "end": 3808391}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/methods.mo", "start": 3808391, "end": 3813996}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/splines.mo", "start": 3813996, "end": 3814874}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-grid.mo", "start": 3814874, "end": 3831253}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/tcltk.mo", "start": 3831253, "end": 3832659}, {"filename": "/usr/lib/R/library/translations/ru/LC_MESSAGES/R-tcltk.mo", "start": 3832659, "end": 3834985}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R-grDevices.mo", "start": 3834985, "end": 3849890}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/parallel.mo", "start": 3849890, "end": 3852542}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/utils.mo", "start": 3852542, "end": 3858080}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/grid.mo", "start": 3858080, "end": 3862679}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R-stats4.mo", "start": 3862679, "end": 3864095}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R-graphics.mo", "start": 3864095, "end": 3880849}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R-base.mo", "start": 3880849, "end": 3942931}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R-utils.mo", "start": 3942931, "end": 3989789}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/graphics.mo", "start": 3989789, "end": 4002182}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/grDevices.mo", "start": 4002182, "end": 4019527}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/stats.mo", "start": 4019527, "end": 4042279}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R-compiler.mo", "start": 4042279, "end": 4046599}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R-parallel.mo", "start": 4046599, "end": 4052382}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/RGui.mo", "start": 4052382, "end": 4073114}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R.mo", "start": 4073114, "end": 4244804}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/methods.mo", "start": 4244804, "end": 4247985}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/splines.mo", "start": 4247985, "end": 4248831}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R-grid.mo", "start": 4248831, "end": 4265335}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/tcltk.mo", "start": 4265335, "end": 4266724}, {"filename": "/usr/lib/R/library/translations/lt/LC_MESSAGES/R-tcltk.mo", "start": 4266724, "end": 4269000}, {"filename": "/usr/lib/R/library/translations/en/LC_MESSAGES/R.mo", "start": 4269000, "end": 4269790}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-grDevices.mo", "start": 4269790, "end": 4282314}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/parallel.mo", "start": 4282314, "end": 4284775}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/utils.mo", "start": 4284775, "end": 4289547}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-stats.mo", "start": 4289547, "end": 4367490}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/grid.mo", "start": 4367490, "end": 4370019}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-stats4.mo", "start": 4370019, "end": 4370774}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-graphics.mo", "start": 4370774, "end": 4385516}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-base.mo", "start": 4385516, "end": 4438135}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-utils.mo", "start": 4438135, "end": 4477503}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/graphics.mo", "start": 4477503, "end": 4488380}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/grDevices.mo", "start": 4488380, "end": 4504055}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/stats.mo", "start": 4504055, "end": 4523271}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-compiler.mo", "start": 4523271, "end": 4527164}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/tools.mo", "start": 4527164, "end": 4530437}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-splines.mo", "start": 4530437, "end": 4533145}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-parallel.mo", "start": 4533145, "end": 4536805}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/RGui.mo", "start": 4536805, "end": 4554642}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R.mo", "start": 4554642, "end": 4705699}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/methods.mo", "start": 4705699, "end": 4710509}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/splines.mo", "start": 4710509, "end": 4711285}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-grid.mo", "start": 4711285, "end": 4725486}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/tcltk.mo", "start": 4725486, "end": 4726730}, {"filename": "/usr/lib/R/library/translations/zh_TW/LC_MESSAGES/R-tcltk.mo", "start": 4726730, "end": 4728897}, {"filename": "/usr/lib/R/library/translations/fa/LC_MESSAGES/R-base.mo", "start": 4728897, "end": 4729414}, {"filename": "/usr/lib/R/library/translations/fa/LC_MESSAGES/R-utils.mo", "start": 4729414, "end": 4731034}, {"filename": "/usr/lib/R/library/translations/fa/LC_MESSAGES/RGui.mo", "start": 4731034, "end": 4757910}, {"filename": "/usr/lib/R/library/translations/fa/LC_MESSAGES/R.mo", "start": 4757910, "end": 4760077}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-tools.mo", "start": 4760077, "end": 4765946}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-grDevices.mo", "start": 4765946, "end": 4775995}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/parallel.mo", "start": 4775995, "end": 4777438}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-stats.mo", "start": 4777438, "end": 4781882}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/grid.mo", "start": 4781882, "end": 4782684}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-stats4.mo", "start": 4782684, "end": 4783452}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-graphics.mo", "start": 4783452, "end": 4784663}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-base.mo", "start": 4784663, "end": 4834849}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-utils.mo", "start": 4834849, "end": 4839667}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/graphics.mo", "start": 4839667, "end": 4840209}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/grDevices.mo", "start": 4840209, "end": 4849354}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/stats.mo", "start": 4849354, "end": 4855493}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-compiler.mo", "start": 4855493, "end": 4858545}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/tools.mo", "start": 4858545, "end": 4859473}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-splines.mo", "start": 4859473, "end": 4861436}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-methods.mo", "start": 4861436, "end": 4862735}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-parallel.mo", "start": 4862735, "end": 4865249}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/RGui.mo", "start": 4865249, "end": 4885242}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R.mo", "start": 4885242, "end": 4932776}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/methods.mo", "start": 4932776, "end": 4937016}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/splines.mo", "start": 4937016, "end": 4937527}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-grid.mo", "start": 4937527, "end": 4938738}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/tcltk.mo", "start": 4938738, "end": 4939969}, {"filename": "/usr/lib/R/library/translations/da/LC_MESSAGES/R-tcltk.mo", "start": 4939969, "end": 4942101}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-tools.mo", "start": 4942101, "end": 4989564}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-grDevices.mo", "start": 4989564, "end": 5004433}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/parallel.mo", "start": 5004433, "end": 5006871}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/utils.mo", "start": 5006871, "end": 5012567}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-stats.mo", "start": 5012567, "end": 5098790}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/grid.mo", "start": 5098790, "end": 5103072}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-stats4.mo", "start": 5103072, "end": 5104279}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-graphics.mo", "start": 5104279, "end": 5120566}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-base.mo", "start": 5120566, "end": 5182243}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-utils.mo", "start": 5182243, "end": 5227742}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/graphics.mo", "start": 5227742, "end": 5239352}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/grDevices.mo", "start": 5239352, "end": 5255810}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/stats.mo", "start": 5255810, "end": 5277857}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-compiler.mo", "start": 5277857, "end": 5281808}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/tools.mo", "start": 5281808, "end": 5285510}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-splines.mo", "start": 5285510, "end": 5288251}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-methods.mo", "start": 5288251, "end": 5353890}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-parallel.mo", "start": 5353890, "end": 5358897}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R.mo", "start": 5358897, "end": 5526443}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/methods.mo", "start": 5526443, "end": 5531905}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/splines.mo", "start": 5531905, "end": 5532633}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-grid.mo", "start": 5532633, "end": 5548718}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/tcltk.mo", "start": 5548718, "end": 5549960}, {"filename": "/usr/lib/R/library/translations/en@quot/LC_MESSAGES/R-tcltk.mo", "start": 5549960, "end": 5552073}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-tools.mo", "start": 5552073, "end": 5599159}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-grDevices.mo", "start": 5599159, "end": 5614417}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-stats.mo", "start": 5614417, "end": 5709056}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/grid.mo", "start": 5709056, "end": 5712160}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-stats4.mo", "start": 5712160, "end": 5713065}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-graphics.mo", "start": 5713065, "end": 5730917}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-base.mo", "start": 5730917, "end": 5791001}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-utils.mo", "start": 5791001, "end": 5836354}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/graphics.mo", "start": 5836354, "end": 5849862}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/grDevices.mo", "start": 5849862, "end": 5869710}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/stats.mo", "start": 5869710, "end": 5891184}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-compiler.mo", "start": 5891184, "end": 5895177}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/tools.mo", "start": 5895177, "end": 5899289}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-splines.mo", "start": 5899289, "end": 5902293}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-methods.mo", "start": 5902293, "end": 5976668}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/RGui.mo", "start": 5976668, "end": 6000547}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R.mo", "start": 6000547, "end": 6181108}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/methods.mo", "start": 6181108, "end": 6187087}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/splines.mo", "start": 6187087, "end": 6187573}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-grid.mo", "start": 6187573, "end": 6205189}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/tcltk.mo", "start": 6205189, "end": 6206583}, {"filename": "/usr/lib/R/library/translations/ja/LC_MESSAGES/R-tcltk.mo", "start": 6206583, "end": 6209280}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-tools.mo", "start": 6209280, "end": 6211355}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-grDevices.mo", "start": 6211355, "end": 6220987}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-stats.mo", "start": 6220987, "end": 6268238}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/grid.mo", "start": 6268238, "end": 6269154}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-stats4.mo", "start": 6269154, "end": 6269989}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-graphics.mo", "start": 6269989, "end": 6282358}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-base.mo", "start": 6282358, "end": 6312909}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-utils.mo", "start": 6312909, "end": 6314091}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/graphics.mo", "start": 6314091, "end": 6323869}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/grDevices.mo", "start": 6323869, "end": 6326357}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/stats.mo", "start": 6326357, "end": 6343364}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-compiler.mo", "start": 6343364, "end": 6346726}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/tools.mo", "start": 6346726, "end": 6347499}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-splines.mo", "start": 6347499, "end": 6349586}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-methods.mo", "start": 6349586, "end": 6354395}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/RGui.mo", "start": 6354395, "end": 6375083}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R.mo", "start": 6375083, "end": 6500258}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/methods.mo", "start": 6500258, "end": 6504896}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/splines.mo", "start": 6504896, "end": 6505489}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-grid.mo", "start": 6505489, "end": 6510136}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/tcltk.mo", "start": 6510136, "end": 6511465}, {"filename": "/usr/lib/R/library/translations/pt_BR/LC_MESSAGES/R-tcltk.mo", "start": 6511465, "end": 6513754}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-tools.mo", "start": 6513754, "end": 6540911}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-grDevices.mo", "start": 6540911, "end": 6552232}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/parallel.mo", "start": 6552232, "end": 6554100}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-stats.mo", "start": 6554100, "end": 6625479}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/grid.mo", "start": 6625479, "end": 6627725}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-stats4.mo", "start": 6627725, "end": 6628429}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-graphics.mo", "start": 6628429, "end": 6641983}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-base.mo", "start": 6641983, "end": 6686693}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-utils.mo", "start": 6686693, "end": 6719521}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/graphics.mo", "start": 6719521, "end": 6729862}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/grDevices.mo", "start": 6729862, "end": 6744319}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/stats.mo", "start": 6744319, "end": 6760472}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-compiler.mo", "start": 6760472, "end": 6763499}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/tools.mo", "start": 6763499, "end": 6766685}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-splines.mo", "start": 6766685, "end": 6768943}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-methods.mo", "start": 6768943, "end": 6825748}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-parallel.mo", "start": 6825748, "end": 6828978}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/RGui.mo", "start": 6828978, "end": 6846355}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R.mo", "start": 6846355, "end": 6978699}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/methods.mo", "start": 6978699, "end": 6983384}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/splines.mo", "start": 6983384, "end": 6983844}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-grid.mo", "start": 6983844, "end": 6996873}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/tcltk.mo", "start": 6996873, "end": 6998052}, {"filename": "/usr/lib/R/library/translations/zh_CN/LC_MESSAGES/R-tcltk.mo", "start": 6998052, "end": 7000128}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-tools.mo", "start": 7000128, "end": 7052078}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-grDevices.mo", "start": 7052078, "end": 7068629}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/parallel.mo", "start": 7068629, "end": 7071403}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/utils.mo", "start": 7071403, "end": 7077361}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-stats.mo", "start": 7077361, "end": 7170092}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/grid.mo", "start": 7170092, "end": 7175018}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-stats4.mo", "start": 7175018, "end": 7176488}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-graphics.mo", "start": 7176488, "end": 7193964}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-base.mo", "start": 7193964, "end": 7261881}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-utils.mo", "start": 7261881, "end": 7311371}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/graphics.mo", "start": 7311371, "end": 7324021}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/grDevices.mo", "start": 7324021, "end": 7342599}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/stats.mo", "start": 7342599, "end": 7366534}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-compiler.mo", "start": 7366534, "end": 7371077}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/tools.mo", "start": 7371077, "end": 7375253}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-splines.mo", "start": 7375253, "end": 7378220}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-methods.mo", "start": 7378220, "end": 7445800}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-parallel.mo", "start": 7445800, "end": 7449629}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/RGui.mo", "start": 7449629, "end": 7470981}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R.mo", "start": 7470981, "end": 7656109}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/methods.mo", "start": 7656109, "end": 7662452}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/splines.mo", "start": 7662452, "end": 7663274}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-grid.mo", "start": 7663274, "end": 7680412}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/tcltk.mo", "start": 7680412, "end": 7681853}, {"filename": "/usr/lib/R/library/translations/fr/LC_MESSAGES/R-tcltk.mo", "start": 7681853, "end": 7684236}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-tools.mo", "start": 7684236, "end": 7726714}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-grDevices.mo", "start": 7726714, "end": 7740430}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/parallel.mo", "start": 7740430, "end": 7743019}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/utils.mo", "start": 7743019, "end": 7748250}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-stats.mo", "start": 7748250, "end": 7833901}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/grid.mo", "start": 7833901, "end": 7836528}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-stats4.mo", "start": 7836528, "end": 7837299}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-graphics.mo", "start": 7837299, "end": 7853281}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-base.mo", "start": 7853281, "end": 7910944}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-utils.mo", "start": 7910944, "end": 7953656}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/graphics.mo", "start": 7953656, "end": 7965392}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/grDevices.mo", "start": 7965392, "end": 7982667}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/stats.mo", "start": 7982667, "end": 8003631}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-compiler.mo", "start": 8003631, "end": 8007793}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/tools.mo", "start": 8007793, "end": 8011366}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-splines.mo", "start": 8011366, "end": 8014218}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-methods.mo", "start": 8014218, "end": 8082149}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-parallel.mo", "start": 8082149, "end": 8086178}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/RGui.mo", "start": 8086178, "end": 8106638}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R.mo", "start": 8106638, "end": 8271703}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/methods.mo", "start": 8271703, "end": 8276913}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/splines.mo", "start": 8276913, "end": 8277703}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-grid.mo", "start": 8277703, "end": 8292995}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/tcltk.mo", "start": 8292995, "end": 8294264}, {"filename": "/usr/lib/R/library/translations/de/LC_MESSAGES/R-tcltk.mo", "start": 8294264, "end": 8296466}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-tools.mo", "start": 8296466, "end": 8342143}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-grDevices.mo", "start": 8342143, "end": 8356776}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/parallel.mo", "start": 8356776, "end": 8359625}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/utils.mo", "start": 8359625, "end": 8365165}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-stats.mo", "start": 8365165, "end": 8457443}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/grid.mo", "start": 8457443, "end": 8460288}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-stats4.mo", "start": 8460288, "end": 8461227}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-graphics.mo", "start": 8461227, "end": 8478025}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-base.mo", "start": 8478025, "end": 8540976}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-utils.mo", "start": 8540976, "end": 8586376}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/graphics.mo", "start": 8586376, "end": 8598767}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/grDevices.mo", "start": 8598767, "end": 8616608}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/stats.mo", "start": 8616608, "end": 8638476}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-compiler.mo", "start": 8638476, "end": 8643042}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/tools.mo", "start": 8643042, "end": 8646882}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-splines.mo", "start": 8646882, "end": 8649929}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-methods.mo", "start": 8649929, "end": 8718190}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-parallel.mo", "start": 8718190, "end": 8722685}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/RGui.mo", "start": 8722685, "end": 8743623}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R.mo", "start": 8743623, "end": 8914124}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/methods.mo", "start": 8914124, "end": 8919353}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/splines.mo", "start": 8919353, "end": 8920316}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-grid.mo", "start": 8920316, "end": 8936597}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/tcltk.mo", "start": 8936597, "end": 8938031}, {"filename": "/usr/lib/R/library/translations/pl/LC_MESSAGES/R-tcltk.mo", "start": 8938031, "end": 8940466}, {"filename": "/usr/lib/R/library/base/CITATION", "start": 8940466, "end": 8941422}, {"filename": "/usr/lib/R/library/base/DESCRIPTION", "start": 8941422, "end": 8941776}, {"filename": "/usr/lib/R/library/base/R/base", "start": 8941776, "end": 8946928}, {"filename": "/usr/lib/R/library/base/R/base.rdb", "start": 8946928, "end": 9316911}, {"filename": "/usr/lib/R/library/base/R/Rprofile", "start": 9316911, "end": 9323380}, {"filename": "/usr/lib/R/library/base/R/base.rdx", "start": 9323380, "end": 9336491}, {"filename": "/usr/lib/R/library/base/Meta/features.rds", "start": 9336491, "end": 9336623}, {"filename": "/usr/lib/R/library/base/Meta/package.rds", "start": 9336623, "end": 9337178}, {"filename": "/usr/lib/R/library/base/demo/is.things.R", "start": 9337178, "end": 9341976}, {"filename": "/usr/lib/R/library/base/demo/error.catching.R", "start": 9341976, "end": 9343155}, {"filename": "/usr/lib/R/library/base/demo/recursion.R", "start": 9343155, "end": 9345270}, {"filename": "/usr/lib/R/library/base/demo/scoping.R", "start": 9345270, "end": 9346830}, {"filename": "/usr/lib/R/library/stats4/NAMESPACE", "start": 9346830, "end": 9347518}, {"filename": "/usr/lib/R/library/stats4/DESCRIPTION", "start": 9347518, "end": 9347932}, {"filename": "/usr/lib/R/library/stats4/R/stats4.rdb", "start": 9347932, "end": 9460336}, {"filename": "/usr/lib/R/library/stats4/R/stats4", "start": 9460336, "end": 9461394}, {"filename": "/usr/lib/R/library/stats4/R/stats4.rdx", "start": 9461394, "end": 9462548}, {"filename": "/usr/lib/R/library/stats4/Meta/features.rds", "start": 9462548, "end": 9462680}, {"filename": "/usr/lib/R/library/stats4/Meta/package.rds", "start": 9462680, "end": 9463286}, {"filename": "/usr/lib/R/library/stats4/Meta/nsInfo.rds", "start": 9463286, "end": 9463718}, {"filename": "/usr/lib/R/library/grDevices/NAMESPACE", "start": 9463718, "end": 9466455}, {"filename": "/usr/lib/R/library/grDevices/DESCRIPTION", "start": 9466455, "end": 9466935}, {"filename": "/usr/lib/R/library/grDevices/enc/ISOLatin9.enc", "start": 9466935, "end": 9469131}, {"filename": "/usr/lib/R/library/grDevices/enc/ISOLatin1.enc", "start": 9469131, "end": 9471344}, {"filename": "/usr/lib/R/library/grDevices/enc/AdobeStd.enc", "start": 9471344, "end": 9473438}, {"filename": "/usr/lib/R/library/grDevices/enc/Cyrillic.enc", "start": 9473438, "end": 9475787}, {"filename": "/usr/lib/R/library/grDevices/enc/CP1251.enc", "start": 9475787, "end": 9478176}, {"filename": "/usr/lib/R/library/grDevices/enc/CP1257.enc", "start": 9478176, "end": 9480423}, {"filename": "/usr/lib/R/library/grDevices/enc/AdobeSym.enc", "start": 9480423, "end": 9482937}, {"filename": "/usr/lib/R/library/grDevices/enc/KOI8-R.enc", "start": 9482937, "end": 9485227}, {"filename": "/usr/lib/R/library/grDevices/enc/ISOLatin7.enc", "start": 9485227, "end": 9487499}, {"filename": "/usr/lib/R/library/grDevices/enc/CP1253.enc", "start": 9487499, "end": 9489684}, {"filename": "/usr/lib/R/library/grDevices/enc/PDFDoc.enc", "start": 9489684, "end": 9491891}, {"filename": "/usr/lib/R/library/grDevices/enc/CP1250.enc", "start": 9491891, "end": 9494115}, {"filename": "/usr/lib/R/library/grDevices/enc/Greek.enc", "start": 9494115, "end": 9496327}, {"filename": "/usr/lib/R/library/grDevices/enc/ISOLatin2.enc", "start": 9496327, "end": 9498514}, {"filename": "/usr/lib/R/library/grDevices/enc/TeXtext.enc", "start": 9498514, "end": 9500605}, {"filename": "/usr/lib/R/library/grDevices/enc/MacRoman.enc", "start": 9500605, "end": 9502867}, {"filename": "/usr/lib/R/library/grDevices/enc/WinAnsi.enc", "start": 9502867, "end": 9505178}, {"filename": "/usr/lib/R/library/grDevices/enc/KOI8-U.enc", "start": 9505178, "end": 9507486}, {"filename": "/usr/lib/R/library/grDevices/icc/srgb", "start": 9507486, "end": 9517007}, {"filename": "/usr/lib/R/library/grDevices/icc/srgb.flate", "start": 9517007, "end": 9519687}, {"filename": "/usr/lib/R/library/grDevices/R/grDevices.rdb", "start": 9519687, "end": 9612649}, {"filename": "/usr/lib/R/library/grDevices/R/grDevices.rdx", "start": 9612649, "end": 9615537}, {"filename": "/usr/lib/R/library/grDevices/R/grDevices", "start": 9615537, "end": 9616595}, {"filename": "/usr/lib/R/library/grDevices/Meta/features.rds", "start": 9616595, "end": 9616727}, {"filename": "/usr/lib/R/library/grDevices/Meta/package.rds", "start": 9616727, "end": 9617356}, {"filename": "/usr/lib/R/library/grDevices/Meta/nsInfo.rds", "start": 9617356, "end": 9618582}, {"filename": "/usr/lib/R/library/grDevices/afm/bkl_____.afm.gz", "start": 9618582, "end": 9622839}, {"filename": "/usr/lib/R/library/grDevices/afm/pobi____.afm.gz", "start": 9622839, "end": 9627271}, {"filename": "/usr/lib/R/library/grDevices/afm/Courier.afm.gz", "start": 9627271, "end": 9631244}, {"filename": "/usr/lib/R/library/grDevices/afm/por_____.afm.gz", "start": 9631244, "end": 9635730}, {"filename": "/usr/lib/R/library/grDevices/afm/p052023l.afm.gz", "start": 9635730, "end": 9646254}, {"filename": "/usr/lib/R/library/grDevices/afm/sy______.afm.gz", "start": 9646254, "end": 9649652}, {"filename": "/usr/lib/R/library/grDevices/afm/Times-Roman.afm.gz", "start": 9649652, "end": 9661497}, {"filename": "/usr/lib/R/library/grDevices/afm/n019044l.afm.gz", "start": 9661497, "end": 9671282}, {"filename": "/usr/lib/R/library/grDevices/afm/hvnbo___.afm.gz", "start": 9671282, "end": 9676108}, {"filename": "/usr/lib/R/library/grDevices/afm/Times-Bold.afm.gz", "start": 9676108, "end": 9688437}, {"filename": "/usr/lib/R/library/grDevices/afm/Courier-Oblique.afm.gz", "start": 9688437, "end": 9692539}, {"filename": "/usr/lib/R/library/grDevices/afm/MustRead.html", "start": 9692539, "end": 9693540}, {"filename": "/usr/lib/R/library/grDevices/afm/n019063l.afm.gz", "start": 9693540, "end": 9703824}, {"filename": "/usr/lib/R/library/grDevices/afm/Helvetica-Oblique.afm.gz", "start": 9703824, "end": 9717649}, {"filename": "/usr/lib/R/library/grDevices/afm/README", "start": 9717649, "end": 9718538}, {"filename": "/usr/lib/R/library/grDevices/afm/ArialMT-Italic.afm.gz", "start": 9718538, "end": 9726900}, {"filename": "/usr/lib/R/library/grDevices/afm/ncb_____.afm.gz", "start": 9726900, "end": 9731181}, {"filename": "/usr/lib/R/library/grDevices/afm/hvb_____.afm.gz", "start": 9731181, "end": 9735872}, {"filename": "/usr/lib/R/library/grDevices/afm/nci_____.afm.gz", "start": 9735872, "end": 9740391}, {"filename": "/usr/lib/R/library/grDevices/afm/bkli____.afm.gz", "start": 9740391, "end": 9744722}, {"filename": "/usr/lib/R/library/grDevices/afm/c059013l.afm.gz", "start": 9744722, "end": 9755065}, {"filename": "/usr/lib/R/library/grDevices/afm/CM_italic_10.afm.gz", "start": 9755065, "end": 9758113}, {"filename": "/usr/lib/R/library/grDevices/afm/n019043l.afm.gz", "start": 9758113, "end": 9768208}, {"filename": "/usr/lib/R/library/grDevices/afm/Helvetica-BoldOblique.afm.gz", "start": 9768208, "end": 9781421}, {"filename": "/usr/lib/R/library/grDevices/afm/n019004l.afm.gz", "start": 9781421, "end": 9791466}, {"filename": "/usr/lib/R/library/grDevices/afm/com_____.afm.gz", "start": 9791466, "end": 9795438}, {"filename": "/usr/lib/R/library/grDevices/afm/CM_regular_10.afm.gz", "start": 9795438, "end": 9798391}, {"filename": "/usr/lib/R/library/grDevices/afm/n022023l.afm.gz", "start": 9798391, "end": 9804263}, {"filename": "/usr/lib/R/library/grDevices/afm/CM_symbol_10.afm.gz", "start": 9804263, "end": 9806517}, {"filename": "/usr/lib/R/library/grDevices/afm/hvnb____.afm.gz", "start": 9806517, "end": 9811192}, {"filename": "/usr/lib/R/library/grDevices/afm/tibi____.afm.gz", "start": 9811192, "end": 9816294}, {"filename": "/usr/lib/R/library/grDevices/afm/n022003l.afm.gz", "start": 9816294, "end": 9821771}, {"filename": "/usr/lib/R/library/grDevices/afm/agwo____.afm.gz", "start": 9821771, "end": 9826910}, {"filename": "/usr/lib/R/library/grDevices/afm/a010013l.afm.gz", "start": 9826910, "end": 9837135}, {"filename": "/usr/lib/R/library/grDevices/afm/n021024l.afm.gz", "start": 9837135, "end": 9847660}, {"filename": "/usr/lib/R/library/grDevices/afm/agdo____.afm.gz", "start": 9847660, "end": 9852638}, {"filename": "/usr/lib/R/library/grDevices/afm/ncr_____.afm.gz", "start": 9852638, "end": 9857091}, {"filename": "/usr/lib/R/library/grDevices/afm/c059033l.afm.gz", "start": 9857091, "end": 9867631}, {"filename": "/usr/lib/R/library/grDevices/afm/b018015l.afm.gz", "start": 9867631, "end": 9877718}, {"filename": "/usr/lib/R/library/grDevices/afm/a010033l.afm.gz", "start": 9877718, "end": 9887991}, {"filename": "/usr/lib/R/library/grDevices/afm/b018032l.afm.gz", "start": 9887991, "end": 9898352}, {"filename": "/usr/lib/R/library/grDevices/afm/bkdi____.afm.gz", "start": 9898352, "end": 9902721}, {"filename": "/usr/lib/R/library/grDevices/afm/n021003l.afm.gz", "start": 9902721, "end": 9913260}, {"filename": "/usr/lib/R/library/grDevices/afm/n019023l.afm.gz", "start": 9913260, "end": 9923744}, {"filename": "/usr/lib/R/library/grDevices/afm/Courier-Bold.afm.gz", "start": 9923744, "end": 9927728}, {"filename": "/usr/lib/R/library/grDevices/afm/ZapfDingbats.afm.gz", "start": 9927728, "end": 9930272}, {"filename": "/usr/lib/R/library/grDevices/afm/ArialMT.afm.gz", "start": 9930272, "end": 9938840}, {"filename": "/usr/lib/R/library/grDevices/afm/Times-Italic.afm.gz", "start": 9938840, "end": 9951498}, {"filename": "/usr/lib/R/library/grDevices/afm/c059036l.afm.gz", "start": 9951498, "end": 9961972}, {"filename": "/usr/lib/R/library/grDevices/afm/tib_____.afm.gz", "start": 9961972, "end": 9966977}, {"filename": "/usr/lib/R/library/grDevices/afm/cmti10.afm.gz", "start": 9966977, "end": 9969892}, {"filename": "/usr/lib/R/library/grDevices/afm/ArialMT-BoldItalic.afm.gz", "start": 9969892, "end": 9978206}, {"filename": "/usr/lib/R/library/grDevices/afm/Symbol.afm.gz", "start": 9978206, "end": 9981649}, {"filename": "/usr/lib/R/library/grDevices/afm/cobo____.afm.gz", "start": 9981649, "end": 9985733}, {"filename": "/usr/lib/R/library/grDevices/afm/CM_boldx_10.afm.gz", "start": 9985733, "end": 9988786}, {"filename": "/usr/lib/R/library/grDevices/afm/s050000l.afm.gz", "start": 9988786, "end": 9992169}, {"filename": "/usr/lib/R/library/grDevices/afm/p052004l.afm.gz", "start": 9992169, "end": 10002399}, {"filename": "/usr/lib/R/library/grDevices/afm/hvbo____.afm.gz", "start": 10002399, "end": 10007232}, {"filename": "/usr/lib/R/library/grDevices/afm/n021023l.afm.gz", "start": 10007232, "end": 10017777}, {"filename": "/usr/lib/R/library/grDevices/afm/n021004l.afm.gz", "start": 10017777, "end": 10028132}, {"filename": "/usr/lib/R/library/grDevices/afm/p052003l.afm.gz", "start": 10028132, "end": 10038553}, {"filename": "/usr/lib/R/library/grDevices/afm/cmbxti10.afm.gz", "start": 10038553, "end": 10041490}, {"filename": "/usr/lib/R/library/grDevices/afm/poi_____.afm.gz", "start": 10041490, "end": 10045944}, {"filename": "/usr/lib/R/library/grDevices/afm/c059016l.afm.gz", "start": 10045944, "end": 10056191}, {"filename": "/usr/lib/R/library/grDevices/afm/b018012l.afm.gz", "start": 10056191, "end": 10066444}, {"filename": "/usr/lib/R/library/grDevices/afm/agw_____.afm.gz", "start": 10066444, "end": 10071503}, {"filename": "/usr/lib/R/library/grDevices/afm/hvo_____.afm.gz", "start": 10071503, "end": 10076480}, {"filename": "/usr/lib/R/library/grDevices/afm/p052024l.afm.gz", "start": 10076480, "end": 10086761}, {"filename": "/usr/lib/R/library/grDevices/afm/n022024l.afm.gz", "start": 10086761, "end": 10092615}, {"filename": "/usr/lib/R/library/grDevices/afm/agd_____.afm.gz", "start": 10092615, "end": 10097518}, {"filename": "/usr/lib/R/library/grDevices/afm/ncbi____.afm.gz", "start": 10097518, "end": 10102439}, {"filename": "/usr/lib/R/library/grDevices/afm/a010015l.afm.gz", "start": 10102439, "end": 10112487}, {"filename": "/usr/lib/R/library/grDevices/afm/Times-BoldItalic.afm.gz", "start": 10112487, "end": 10124198}, {"filename": "/usr/lib/R/library/grDevices/afm/cob_____.afm.gz", "start": 10124198, "end": 10128171}, {"filename": "/usr/lib/R/library/grDevices/afm/Helvetica.afm.gz", "start": 10128171, "end": 10141809}, {"filename": "/usr/lib/R/library/grDevices/afm/ArialMT-Bold.afm.gz", "start": 10141809, "end": 10150167}, {"filename": "/usr/lib/R/library/grDevices/afm/Courier-BoldOblique.afm.gz", "start": 10150167, "end": 10154279}, {"filename": "/usr/lib/R/library/grDevices/afm/hvno____.afm.gz", "start": 10154279, "end": 10159242}, {"filename": "/usr/lib/R/library/grDevices/afm/n019003l.afm.gz", "start": 10159242, "end": 10169459}, {"filename": "/usr/lib/R/library/grDevices/afm/CM_boldx_italic_10.afm.gz", "start": 10169459, "end": 10172608}, {"filename": "/usr/lib/R/library/grDevices/afm/a010035l.afm.gz", "start": 10172608, "end": 10182798}, {"filename": "/usr/lib/R/library/grDevices/afm/n019064l.afm.gz", "start": 10182798, "end": 10192964}, {"filename": "/usr/lib/R/library/grDevices/afm/n019024l.afm.gz", "start": 10192964, "end": 10203287}, {"filename": "/usr/lib/R/library/grDevices/afm/n022004l.afm.gz", "start": 10203287, "end": 10208861}, {"filename": "/usr/lib/R/library/grDevices/afm/coo_____.afm.gz", "start": 10208861, "end": 10212953}, {"filename": "/usr/lib/R/library/grDevices/afm/pob_____.afm.gz", "start": 10212953, "end": 10217348}, {"filename": "/usr/lib/R/library/grDevices/afm/Helvetica-Bold.afm.gz", "start": 10217348, "end": 10230351}, {"filename": "/usr/lib/R/library/grDevices/afm/tii_____.afm.gz", "start": 10230351, "end": 10235458}, {"filename": "/usr/lib/R/library/grDevices/afm/bkd_____.afm.gz", "start": 10235458, "end": 10239712}, {"filename": "/usr/lib/R/library/grDevices/afm/tir_____.afm.gz", "start": 10239712, "end": 10244695}, {"filename": "/usr/lib/R/library/grDevices/afm/hv______.afm.gz", "start": 10244695, "end": 10249521}, {"filename": "/usr/lib/R/library/grDevices/afm/hvn_____.afm.gz", "start": 10249521, "end": 10254331}, {"filename": "/usr/lib/R/library/grDevices/afm/b018035l.afm.gz", "start": 10254331, "end": 10264690}, {"filename": "/usr/lib/R/library/grDevices/demo/hclColors.R", "start": 10264690, "end": 10267300}, {"filename": "/usr/lib/R/library/grDevices/demo/colors.R", "start": 10267300, "end": 10271066}, {"filename": "/usr/lib/R/library/grDevices/libs/grDevices.so", "start": 10271066, "end": 10468239}, {"filename": "/usr/lib/R/library/grid/NAMESPACE", "start": 10468239, "end": 10482322}, {"filename": "/usr/lib/R/library/grid/DESCRIPTION", "start": 10482322, "end": 10482799}, {"filename": "/usr/lib/R/library/grid/R/grid", "start": 10482799, "end": 10483857}, {"filename": "/usr/lib/R/library/grid/R/grid.rdx", "start": 10483857, "end": 10492820}, {"filename": "/usr/lib/R/library/grid/R/grid.rdb", "start": 10492820, "end": 10698352}, {"filename": "/usr/lib/R/library/grid/doc/viewports.pdf", "start": 10698352, "end": 10862412}, {"filename": "/usr/lib/R/library/grid/doc/displaylist.pdf", "start": 10862412, "end": 11020383}, {"filename": "/usr/lib/R/library/grid/doc/sharing.pdf", "start": 11020383, "end": 11093203}, {"filename": "/usr/lib/R/library/grid/doc/grobs.pdf", "start": 11093203, "end": 11200445}, {"filename": "/usr/lib/R/library/grid/doc/changes.txt", "start": 11200445, "end": 11260062}, {"filename": "/usr/lib/R/library/grid/doc/moveline.pdf", "start": 11260062, "end": 11347474}, {"filename": "/usr/lib/R/library/grid/doc/rotated.pdf", "start": 11347474, "end": 11476562}, {"filename": "/usr/lib/R/library/grid/doc/grid.pdf", "start": 11476562, "end": 11709720}, {"filename": "/usr/lib/R/library/grid/doc/interactive.pdf", "start": 11709720, "end": 11800679}, {"filename": "/usr/lib/R/library/grid/doc/frame.pdf", "start": 11800679, "end": 11957254}, {"filename": "/usr/lib/R/library/grid/doc/plotexample.pdf", "start": 11957254, "end": 12193575}, {"filename": "/usr/lib/R/library/grid/doc/DivByZero.txt", "start": 12193575, "end": 12195786}, {"filename": "/usr/lib/R/library/grid/doc/saveload.pdf", "start": 12195786, "end": 12329754}, {"filename": "/usr/lib/R/library/grid/doc/nonfinite.pdf", "start": 12329754, "end": 12409774}, {"filename": "/usr/lib/R/library/grid/doc/locndimn.pdf", "start": 12409774, "end": 12498569}, {"filename": "/usr/lib/R/library/grid/Meta/features.rds", "start": 12498569, "end": 12498701}, {"filename": "/usr/lib/R/library/grid/Meta/package.rds", "start": 12498701, "end": 12499370}, {"filename": "/usr/lib/R/library/grid/Meta/nsInfo.rds", "start": 12499370, "end": 12501694}, {"filename": "/usr/lib/R/library/grid/libs/grid.so", "start": 12501694, "end": 12703283}, {"filename": "/usr/lib/R/library/splines/NAMESPACE", "start": 12703283, "end": 12704708}, {"filename": "/usr/lib/R/library/splines/DESCRIPTION", "start": 12704708, "end": 12705233}, {"filename": "/usr/lib/R/library/splines/R/splines.rdb", "start": 12705233, "end": 12723539}, {"filename": "/usr/lib/R/library/splines/R/splines", "start": 12723539, "end": 12724597}, {"filename": "/usr/lib/R/library/splines/R/splines.rdx", "start": 12724597, "end": 12725405}, {"filename": "/usr/lib/R/library/splines/Meta/features.rds", "start": 12725405, "end": 12725537}, {"filename": "/usr/lib/R/library/splines/Meta/package.rds", "start": 12725537, "end": 12726238}, {"filename": "/usr/lib/R/library/splines/Meta/nsInfo.rds", "start": 12726238, "end": 12726839}, {"filename": "/usr/lib/R/library/splines/libs/splines.so", "start": 12726839, "end": 12733988}, {"filename": "/usr/lib/R/library/datasets/NAMESPACE", "start": 12733988, "end": 12734059}, {"filename": "/usr/lib/R/library/datasets/DESCRIPTION", "start": 12734059, "end": 12734402}, {"filename": "/usr/lib/R/library/datasets/data/Rdata.rdx", "start": 12734402, "end": 12735957}, {"filename": "/usr/lib/R/library/datasets/data/morley.tab", "start": 12735957, "end": 12738079}, {"filename": "/usr/lib/R/library/datasets/data/Rdata.rds", "start": 12738079, "end": 12739164}, {"filename": "/usr/lib/R/library/datasets/data/Rdata.rdb", "start": 12739164, "end": 12854223}, {"filename": "/usr/lib/R/library/datasets/Meta/features.rds", "start": 12854223, "end": 12854355}, {"filename": "/usr/lib/R/library/datasets/Meta/package.rds", "start": 12854355, "end": 12854882}, {"filename": "/usr/lib/R/library/datasets/Meta/nsInfo.rds", "start": 12854882, "end": 12855083}, {"filename": "/usr/lib/R/library/graphics/NAMESPACE", "start": 12855083, "end": 12857895}, {"filename": "/usr/lib/R/library/graphics/DESCRIPTION", "start": 12857895, "end": 12858312}, {"filename": "/usr/lib/R/library/graphics/R/graphics.rdb", "start": 12858312, "end": 12955340}, {"filename": "/usr/lib/R/library/graphics/R/graphics", "start": 12955340, "end": 12956398}, {"filename": "/usr/lib/R/library/graphics/R/graphics.rdx", "start": 12956398, "end": 12958200}, {"filename": "/usr/lib/R/library/graphics/Meta/features.rds", "start": 12958200, "end": 12958332}, {"filename": "/usr/lib/R/library/graphics/Meta/package.rds", "start": 12958332, "end": 12958937}, {"filename": "/usr/lib/R/library/graphics/Meta/nsInfo.rds", "start": 12958937, "end": 12960120}, {"filename": "/usr/lib/R/library/graphics/demo/plotmath.R", "start": 12960120, "end": 12968879}, {"filename": "/usr/lib/R/library/graphics/demo/persp.R", "start": 12968879, "end": 12971670}, {"filename": "/usr/lib/R/library/graphics/demo/Hershey.R", "start": 12971670, "end": 12991642}, {"filename": "/usr/lib/R/library/graphics/demo/Japanese.R", "start": 12991642, "end": 13026161}, {"filename": "/usr/lib/R/library/graphics/demo/graphics.R", "start": 13026161, "end": 13031200}, {"filename": "/usr/lib/R/library/graphics/demo/image.R", "start": 13031200, "end": 13032305}, {"filename": "/usr/lib/R/library/graphics/libs/graphics.so", "start": 13032305, "end": 13259374}, {"filename": "/usr/lib/R/library/graphics/help/figures/pch.png", "start": 13259374, "end": 13268661}, {"filename": "/usr/lib/R/library/graphics/help/figures/oma.png", "start": 13268661, "end": 13273775}, {"filename": "/usr/lib/R/library/graphics/help/figures/mai.png", "start": 13273775, "end": 13278442}, {"filename": "/usr/lib/R/library/graphics/help/figures/pch.svg", "start": 13278442, "end": 13305629}, {"filename": "/usr/lib/R/library/graphics/help/figures/pch.pdf", "start": 13305629, "end": 13310623}, {"filename": "/usr/lib/R/library/graphics/help/figures/oma.pdf", "start": 13310623, "end": 13314386}, {"filename": "/usr/lib/R/library/graphics/help/figures/mai.pdf", "start": 13314386, "end": 13316927}, {"filename": "/usr/lib/R/library/methods/NAMESPACE", "start": 13316927, "end": 13322181}, {"filename": "/usr/lib/R/library/methods/DESCRIPTION", "start": 13322181, "end": 13322790}, {"filename": "/usr/lib/R/library/methods/R/methods.rdx", "start": 13322790, "end": 13336973}, {"filename": "/usr/lib/R/library/methods/R/methods", "start": 13336973, "end": 13338031}, {"filename": "/usr/lib/R/library/methods/R/methods.rdb", "start": 13338031, "end": 14155327}, {"filename": "/usr/lib/R/library/methods/Meta/features.rds", "start": 14155327, "end": 14155459}, {"filename": "/usr/lib/R/library/methods/Meta/package.rds", "start": 14155459, "end": 14156206}, {"filename": "/usr/lib/R/library/methods/Meta/nsInfo.rds", "start": 14156206, "end": 14157922}, {"filename": "/usr/lib/R/library/methods/libs/methods.so", "start": 14157922, "end": 14186872}, {"filename": "/usr/lib/R/library/stats/NAMESPACE", "start": 14186872, "end": 14203666}, {"filename": "/usr/lib/R/library/stats/SOURCES.ts", "start": 14203666, "end": 14204216}, {"filename": "/usr/lib/R/library/stats/DESCRIPTION", "start": 14204216, "end": 14204689}, {"filename": "/usr/lib/R/library/stats/COPYRIGHTS.modreg", "start": 14204689, "end": 14206241}, {"filename": "/usr/lib/R/library/stats/R/stats.rdx", "start": 14206241, "end": 14216844}, {"filename": "/usr/lib/R/library/stats/R/stats.rdb", "start": 14216844, "end": 14729337}, {"filename": "/usr/lib/R/library/stats/R/stats", "start": 14729337, "end": 14730395}, {"filename": "/usr/lib/R/library/stats/Meta/features.rds", "start": 14730395, "end": 14730527}, {"filename": "/usr/lib/R/library/stats/Meta/package.rds", "start": 14730527, "end": 14731237}, {"filename": "/usr/lib/R/library/stats/Meta/nsInfo.rds", "start": 14731237, "end": 14735666}, {"filename": "/usr/lib/R/library/stats/demo/smooth.R", "start": 14735666, "end": 14736948}, {"filename": "/usr/lib/R/library/stats/demo/glm.vr.R", "start": 14736948, "end": 14737692}, {"filename": "/usr/lib/R/library/stats/demo/lm.glm.R", "start": 14737692, "end": 14742685}, {"filename": "/usr/lib/R/library/stats/demo/nlm.R", "start": 14742685, "end": 14745935}, {"filename": "/usr/lib/R/library/stats/libs/stats.so", "start": 14745935, "end": 15166878}, {"filename": "/usr/lib/R/library/utils/NAMESPACE", "start": 15166878, "end": 15174064}, {"filename": "/usr/lib/R/library/utils/iconvlist", "start": 15174064, "end": 15187650}, {"filename": "/usr/lib/R/library/utils/DESCRIPTION", "start": 15187650, "end": 15188068}, {"filename": "/usr/lib/R/library/utils/misc/exDIF.dif", "start": 15188068, "end": 15188310}, {"filename": "/usr/lib/R/library/utils/misc/exDIF.csv", "start": 15188310, "end": 15188348}, {"filename": "/usr/lib/R/library/utils/R/utils.rdx", "start": 15188348, "end": 15195259}, {"filename": "/usr/lib/R/library/utils/R/sysdata.rdx", "start": 15195259, "end": 15195454}, {"filename": "/usr/lib/R/library/utils/R/utils.rdb", "start": 15195454, "end": 15496449}, {"filename": "/usr/lib/R/library/utils/R/sysdata.rdb", "start": 15496449, "end": 15510798}, {"filename": "/usr/lib/R/library/utils/R/utils", "start": 15510798, "end": 15511856}, {"filename": "/usr/lib/R/library/utils/doc/Sweave.pdf", "start": 15511856, "end": 15834314}, {"filename": "/usr/lib/R/library/utils/Meta/features.rds", "start": 15834314, "end": 15834446}, {"filename": "/usr/lib/R/library/utils/Meta/package.rds", "start": 15834446, "end": 15835078}, {"filename": "/usr/lib/R/library/utils/Meta/nsInfo.rds", "start": 15835078, "end": 15837420}, {"filename": "/usr/lib/R/library/utils/Sweave/Sweave-test-1.Rnw", "start": 15837420, "end": 15838725}, {"filename": "/usr/lib/R/library/utils/Sweave/example-1.Rnw", "start": 15838725, "end": 15839450}, {"filename": "/usr/lib/R/library/utils/libs/utils.so", "start": 15839450, "end": 15877005}], "remote_package_size": 15877005, "package_uuid": "b9d80c4f-3bca-43e3-acc2-b7920ec0451d"});
   
   })();
   
@@ -2081,6 +2087,847 @@ function call_trampoline(func,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,
 
 
 
+  function _emscripten_set_main_loop_timing(mode, value) {
+      Browser.mainLoop.timingMode = mode;
+      Browser.mainLoop.timingValue = value;
+  
+      if (!Browser.mainLoop.func) {
+        err('emscripten_set_main_loop_timing: Cannot set timing mode for main loop since a main loop does not exist! Call emscripten_set_main_loop first to set one up.');
+        return 1; // Return non-zero on failure, can't set timing mode when there is no main loop.
+      }
+  
+      if (!Browser.mainLoop.running) {
+        runtimeKeepalivePush();
+        Browser.mainLoop.running = true;
+      }
+      if (mode == 0 /*EM_TIMING_SETTIMEOUT*/) {
+        Browser.mainLoop.scheduler = function Browser_mainLoop_scheduler_setTimeout() {
+          var timeUntilNextTick = Math.max(0, Browser.mainLoop.tickStartTime + value - _emscripten_get_now())|0;
+          setTimeout(Browser.mainLoop.runner, timeUntilNextTick); // doing this each time means that on exception, we stop
+        };
+        Browser.mainLoop.method = 'timeout';
+      } else if (mode == 1 /*EM_TIMING_RAF*/) {
+        Browser.mainLoop.scheduler = function Browser_mainLoop_scheduler_rAF() {
+          Browser.requestAnimationFrame(Browser.mainLoop.runner);
+        };
+        Browser.mainLoop.method = 'rAF';
+      } else if (mode == 2 /*EM_TIMING_SETIMMEDIATE*/) {
+        if (typeof setImmediate === 'undefined') {
+          // Emulate setImmediate. (note: not a complete polyfill, we don't emulate clearImmediate() to keep code size to minimum, since not needed)
+          var setImmediates = [];
+          var emscriptenMainLoopMessageId = 'setimmediate';
+          var Browser_setImmediate_messageHandler = function(event) {
+            // When called in current thread or Worker, the main loop ID is structured slightly different to accommodate for --proxy-to-worker runtime listening to Worker events,
+            // so check for both cases.
+            if (event.data === emscriptenMainLoopMessageId || event.data.target === emscriptenMainLoopMessageId) {
+              event.stopPropagation();
+              setImmediates.shift()();
+            }
+          }
+          addEventListener("message", Browser_setImmediate_messageHandler, true);
+          setImmediate = /** @type{function(function(): ?, ...?): number} */(function Browser_emulated_setImmediate(func) {
+            setImmediates.push(func);
+            if (ENVIRONMENT_IS_WORKER) {
+              if (Module['setImmediates'] === undefined) Module['setImmediates'] = [];
+              Module['setImmediates'].push(func);
+              postMessage({target: emscriptenMainLoopMessageId}); // In --proxy-to-worker, route the message via proxyClient.js
+            } else postMessage(emscriptenMainLoopMessageId, "*"); // On the main thread, can just send the message to itself.
+          })
+        }
+        Browser.mainLoop.scheduler = function Browser_mainLoop_scheduler_setImmediate() {
+          setImmediate(Browser.mainLoop.runner);
+        };
+        Browser.mainLoop.method = 'immediate';
+      }
+      return 0;
+    }
+  Module["_emscripten_set_main_loop_timing"] = _emscripten_set_main_loop_timing;
+  _emscripten_set_main_loop_timing.sig = 'iii';
+  
+  var _emscripten_get_now;if (ENVIRONMENT_IS_NODE) {
+    _emscripten_get_now = () => {
+      var t = process['hrtime']();
+      return t[0] * 1e3 + t[1] / 1e6;
+    };
+  } else _emscripten_get_now = () => performance.now();
+  ;
+  Module["_emscripten_get_now"] = _emscripten_get_now;
+  
+  function runtimeKeepalivePush() {
+      runtimeKeepaliveCounter += 1;
+    }
+  Module["runtimeKeepalivePush"] = runtimeKeepalivePush;
+  runtimeKeepalivePush.sig = 'v';
+  
+  function _exit(status) {
+      // void _exit(int status);
+      // http://pubs.opengroup.org/onlinepubs/000095399/functions/exit.html
+      exit(status);
+    }
+  Module["_exit"] = _exit;
+  _exit.sig = 'vi';
+  
+  function handleException(e) {
+      // Certain exception types we do not treat as errors since they are used for
+      // internal control flow.
+      // 1. ExitStatus, which is thrown by exit()
+      // 2. "unwind", which is thrown by emscripten_unwind_to_js_event_loop() and others
+      //    that wish to return to JS event loop.
+      if (e instanceof ExitStatus || e == 'unwind') {
+        return EXITSTATUS;
+      }
+      quit_(1, e);
+    }
+  Module["handleException"] = handleException;
+  function maybeExit() {
+      if (!keepRuntimeAlive()) {
+        try {
+          _exit(EXITSTATUS);
+        } catch (e) {
+          handleException(e);
+        }
+      }
+    }
+  Module["maybeExit"] = maybeExit;
+  function setMainLoop(browserIterationFunc, fps, simulateInfiniteLoop, arg, noSetTiming) {
+      assert(!Browser.mainLoop.func, 'emscripten_set_main_loop: there can only be one main loop function at once: call emscripten_cancel_main_loop to cancel the previous one before setting a new one with different parameters.');
+  
+      Browser.mainLoop.func = browserIterationFunc;
+      Browser.mainLoop.arg = arg;
+  
+      var thisMainLoopId = Browser.mainLoop.currentlyRunningMainloop;
+      function checkIsRunning() {
+        if (thisMainLoopId < Browser.mainLoop.currentlyRunningMainloop) {
+          runtimeKeepalivePop();
+          maybeExit();
+          return false;
+        }
+        return true;
+      }
+  
+      // We create the loop runner here but it is not actually running until
+      // _emscripten_set_main_loop_timing is called (which might happen a
+      // later time).  This member signifies that the current runner has not
+      // yet been started so that we can call runtimeKeepalivePush when it
+      // gets it timing set for the first time.
+      Browser.mainLoop.running = false;
+      Browser.mainLoop.runner = function Browser_mainLoop_runner() {
+        if (ABORT) return;
+        if (Browser.mainLoop.queue.length > 0) {
+          var start = Date.now();
+          var blocker = Browser.mainLoop.queue.shift();
+          blocker.func(blocker.arg);
+          if (Browser.mainLoop.remainingBlockers) {
+            var remaining = Browser.mainLoop.remainingBlockers;
+            var next = remaining%1 == 0 ? remaining-1 : Math.floor(remaining);
+            if (blocker.counted) {
+              Browser.mainLoop.remainingBlockers = next;
+            } else {
+              // not counted, but move the progress along a tiny bit
+              next = next + 0.5; // do not steal all the next one's progress
+              Browser.mainLoop.remainingBlockers = (8*remaining + next)/9;
+            }
+          }
+          out('main loop blocker "' + blocker.name + '" took ' + (Date.now() - start) + ' ms'); //, left: ' + Browser.mainLoop.remainingBlockers);
+          Browser.mainLoop.updateStatus();
+  
+          // catches pause/resume main loop from blocker execution
+          if (!checkIsRunning()) return;
+  
+          setTimeout(Browser.mainLoop.runner, 0);
+          return;
+        }
+  
+        // catch pauses from non-main loop sources
+        if (!checkIsRunning()) return;
+  
+        // Implement very basic swap interval control
+        Browser.mainLoop.currentFrameNumber = Browser.mainLoop.currentFrameNumber + 1 | 0;
+        if (Browser.mainLoop.timingMode == 1/*EM_TIMING_RAF*/ && Browser.mainLoop.timingValue > 1 && Browser.mainLoop.currentFrameNumber % Browser.mainLoop.timingValue != 0) {
+          // Not the scheduled time to render this frame - skip.
+          Browser.mainLoop.scheduler();
+          return;
+        } else if (Browser.mainLoop.timingMode == 0/*EM_TIMING_SETTIMEOUT*/) {
+          Browser.mainLoop.tickStartTime = _emscripten_get_now();
+        }
+  
+        // Signal GL rendering layer that processing of a new frame is about to start. This helps it optimize
+        // VBO double-buffering and reduce GPU stalls.
+  
+        if (Browser.mainLoop.method === 'timeout' && Module.ctx) {
+          warnOnce('Looks like you are rendering without using requestAnimationFrame for the main loop. You should use 0 for the frame rate in emscripten_set_main_loop in order to use requestAnimationFrame, as that can greatly improve your frame rates!');
+          Browser.mainLoop.method = ''; // just warn once per call to set main loop
+        }
+  
+        Browser.mainLoop.runIter(browserIterationFunc);
+  
+        checkStackCookie();
+  
+        // catch pauses from the main loop itself
+        if (!checkIsRunning()) return;
+  
+        // Queue new audio data. This is important to be right after the main loop invocation, so that we will immediately be able
+        // to queue the newest produced audio samples.
+        // TODO: Consider adding pre- and post- rAF callbacks so that GL.newRenderingFrameStarted() and SDL.audio.queueNewAudioData()
+        //       do not need to be hardcoded into this function, but can be more generic.
+        if (typeof SDL === 'object' && SDL.audio && SDL.audio.queueNewAudioData) SDL.audio.queueNewAudioData();
+  
+        Browser.mainLoop.scheduler();
+      }
+  
+      if (!noSetTiming) {
+        if (fps && fps > 0) _emscripten_set_main_loop_timing(0/*EM_TIMING_SETTIMEOUT*/, 1000.0 / fps);
+        else _emscripten_set_main_loop_timing(1/*EM_TIMING_RAF*/, 1); // Do rAF by rendering each frame (no decimating)
+  
+        Browser.mainLoop.scheduler();
+      }
+  
+      if (simulateInfiniteLoop) {
+        throw 'unwind';
+      }
+    }
+  Module["setMainLoop"] = setMainLoop;
+  
+  function callUserCallback(func, synchronous) {
+      if (runtimeExited || ABORT) {
+        err('user callback triggered after runtime exited or application aborted.  Ignoring.');
+        return;
+      }
+      // For synchronous calls, let any exceptions propagate, and don't let the runtime exit.
+      if (synchronous) {
+        func();
+        return;
+      }
+      try {
+        func();
+          maybeExit();
+      } catch (e) {
+        handleException(e);
+      }
+    }
+  Module["callUserCallback"] = callUserCallback;
+  
+  function runtimeKeepalivePop() {
+      assert(runtimeKeepaliveCounter > 0);
+      runtimeKeepaliveCounter -= 1;
+    }
+  Module["runtimeKeepalivePop"] = runtimeKeepalivePop;
+  runtimeKeepalivePop.sig = 'v';
+  function safeSetTimeout(func, timeout) {
+      runtimeKeepalivePush();
+      return setTimeout(function() {
+        runtimeKeepalivePop();
+        callUserCallback(func);
+      }, timeout);
+    }
+  Module["safeSetTimeout"] = safeSetTimeout;
+  var Browser = {mainLoop:{running:false,scheduler:null,method:"",currentlyRunningMainloop:0,func:null,arg:0,timingMode:0,timingValue:0,currentFrameNumber:0,queue:[],pause:function() {
+          Browser.mainLoop.scheduler = null;
+          // Incrementing this signals the previous main loop that it's now become old, and it must return.
+          Browser.mainLoop.currentlyRunningMainloop++;
+        },resume:function() {
+          Browser.mainLoop.currentlyRunningMainloop++;
+          var timingMode = Browser.mainLoop.timingMode;
+          var timingValue = Browser.mainLoop.timingValue;
+          var func = Browser.mainLoop.func;
+          Browser.mainLoop.func = null;
+          // do not set timing and call scheduler, we will do it on the next lines
+          setMainLoop(func, 0, false, Browser.mainLoop.arg, true);
+          _emscripten_set_main_loop_timing(timingMode, timingValue);
+          Browser.mainLoop.scheduler();
+        },updateStatus:function() {
+          if (Module['setStatus']) {
+            var message = Module['statusMessage'] || 'Please wait...';
+            var remaining = Browser.mainLoop.remainingBlockers;
+            var expected = Browser.mainLoop.expectedBlockers;
+            if (remaining) {
+              if (remaining < expected) {
+                Module['setStatus'](message + ' (' + (expected - remaining) + '/' + expected + ')');
+              } else {
+                Module['setStatus'](message);
+              }
+            } else {
+              Module['setStatus']('');
+            }
+          }
+        },runIter:function(func) {
+          if (ABORT) return;
+          if (Module['preMainLoop']) {
+            var preRet = Module['preMainLoop']();
+            if (preRet === false) {
+              return; // |return false| skips a frame
+            }
+          }
+          callUserCallback(func);
+          if (Module['postMainLoop']) Module['postMainLoop']();
+        }},isFullscreen:false,pointerLock:false,moduleContextCreatedCallbacks:[],workers:[],init:function() {
+        if (!Module["preloadPlugins"]) Module["preloadPlugins"] = []; // needs to exist even in workers
+  
+        if (Browser.initted) return;
+        Browser.initted = true;
+  
+        try {
+          new Blob();
+          Browser.hasBlobConstructor = true;
+        } catch(e) {
+          Browser.hasBlobConstructor = false;
+          out("warning: no blob constructor, cannot create blobs with mimetypes");
+        }
+        Browser.BlobBuilder = typeof MozBlobBuilder != "undefined" ? MozBlobBuilder : (typeof WebKitBlobBuilder != "undefined" ? WebKitBlobBuilder : (!Browser.hasBlobConstructor ? out("warning: no BlobBuilder") : null));
+        Browser.URLObject = typeof window != "undefined" ? (window.URL ? window.URL : window.webkitURL) : undefined;
+        if (!Module.noImageDecoding && typeof Browser.URLObject === 'undefined') {
+          out("warning: Browser does not support creating object URLs. Built-in browser image decoding will not be available.");
+          Module.noImageDecoding = true;
+        }
+  
+        // Support for plugins that can process preloaded files. You can add more of these to
+        // your app by creating and appending to Module.preloadPlugins.
+        //
+        // Each plugin is asked if it can handle a file based on the file's name. If it can,
+        // it is given the file's raw data. When it is done, it calls a callback with the file's
+        // (possibly modified) data. For example, a plugin might decompress a file, or it
+        // might create some side data structure for use later (like an Image element, etc.).
+  
+        var imagePlugin = {};
+        imagePlugin['canHandle'] = function imagePlugin_canHandle(name) {
+          return !Module.noImageDecoding && /\.(jpg|jpeg|png|bmp)$/i.test(name);
+        };
+        imagePlugin['handle'] = function imagePlugin_handle(byteArray, name, onload, onerror) {
+          var b = null;
+          if (Browser.hasBlobConstructor) {
+            try {
+              b = new Blob([byteArray], { type: Browser.getMimetype(name) });
+              if (b.size !== byteArray.length) { // Safari bug #118630
+                // Safari's Blob can only take an ArrayBuffer
+                b = new Blob([(new Uint8Array(byteArray)).buffer], { type: Browser.getMimetype(name) });
+              }
+            } catch(e) {
+              warnOnce('Blob constructor present but fails: ' + e + '; falling back to blob builder');
+            }
+          }
+          if (!b) {
+            var bb = new Browser.BlobBuilder();
+            bb.append((new Uint8Array(byteArray)).buffer); // we need to pass a buffer, and must copy the array to get the right data range
+            b = bb.getBlob();
+          }
+          var url = Browser.URLObject.createObjectURL(b);
+          assert(typeof url == 'string', 'createObjectURL must return a url as a string');
+          var img = new Image();
+          img.onload = () => {
+            assert(img.complete, 'Image ' + name + ' could not be decoded');
+            var canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            Module["preloadedImages"][name] = canvas;
+            Browser.URLObject.revokeObjectURL(url);
+            if (onload) onload(byteArray);
+          };
+          img.onerror = (event) => {
+            out('Image ' + url + ' could not be decoded');
+            if (onerror) onerror();
+          };
+          img.src = url;
+        };
+        Module['preloadPlugins'].push(imagePlugin);
+  
+        var audioPlugin = {};
+        audioPlugin['canHandle'] = function audioPlugin_canHandle(name) {
+          return !Module.noAudioDecoding && name.substr(-4) in { '.ogg': 1, '.wav': 1, '.mp3': 1 };
+        };
+        audioPlugin['handle'] = function audioPlugin_handle(byteArray, name, onload, onerror) {
+          var done = false;
+          function finish(audio) {
+            if (done) return;
+            done = true;
+            Module["preloadedAudios"][name] = audio;
+            if (onload) onload(byteArray);
+          }
+          function fail() {
+            if (done) return;
+            done = true;
+            Module["preloadedAudios"][name] = new Audio(); // empty shim
+            if (onerror) onerror();
+          }
+          if (Browser.hasBlobConstructor) {
+            try {
+              var b = new Blob([byteArray], { type: Browser.getMimetype(name) });
+            } catch(e) {
+              return fail();
+            }
+            var url = Browser.URLObject.createObjectURL(b); // XXX we never revoke this!
+            assert(typeof url == 'string', 'createObjectURL must return a url as a string');
+            var audio = new Audio();
+            audio.addEventListener('canplaythrough', function() { finish(audio) }, false); // use addEventListener due to chromium bug 124926
+            audio.onerror = function audio_onerror(event) {
+              if (done) return;
+              out('warning: browser could not fully decode audio ' + name + ', trying slower base64 approach');
+              function encode64(data) {
+                var BASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+                var PAD = '=';
+                var ret = '';
+                var leftchar = 0;
+                var leftbits = 0;
+                for (var i = 0; i < data.length; i++) {
+                  leftchar = (leftchar << 8) | data[i];
+                  leftbits += 8;
+                  while (leftbits >= 6) {
+                    var curr = (leftchar >> (leftbits-6)) & 0x3f;
+                    leftbits -= 6;
+                    ret += BASE[curr];
+                  }
+                }
+                if (leftbits == 2) {
+                  ret += BASE[(leftchar&3) << 4];
+                  ret += PAD + PAD;
+                } else if (leftbits == 4) {
+                  ret += BASE[(leftchar&0xf) << 2];
+                  ret += PAD;
+                }
+                return ret;
+              }
+              audio.src = 'data:audio/x-' + name.substr(-3) + ';base64,' + encode64(byteArray);
+              finish(audio); // we don't wait for confirmation this worked - but it's worth trying
+            };
+            audio.src = url;
+            // workaround for chrome bug 124926 - we do not always get oncanplaythrough or onerror
+            safeSetTimeout(function() {
+              finish(audio); // try to use it even though it is not necessarily ready to play
+            }, 10000);
+          } else {
+            return fail();
+          }
+        };
+        Module['preloadPlugins'].push(audioPlugin);
+  
+        // Use string keys here to avoid minification since the plugin consumer
+        // also uses string keys.
+        var wasmPlugin = {
+          'asyncWasmLoadPromise': new Promise(function(resolve, reject) { return resolve(); }),
+          'canHandle': function(name) {
+            return !Module.noWasmDecoding && name.endsWith('.so')
+          },
+          'handle': function(byteArray, name, onload, onerror) {
+            // loadWebAssemblyModule can not load modules out-of-order, so rather
+            // than just running the promises in parallel, this makes a chain of
+            // promises to run in series.
+            this['asyncWasmLoadPromise'] = this['asyncWasmLoadPromise'].then(
+              function() {
+                return loadWebAssemblyModule(byteArray, {loadAsync: true, nodelete: true});
+              }).then(
+                function(module) {
+                  Module['preloadedWasm'][name] = module;
+                  onload();
+                },
+                function(err) {
+                  console.warn("Couldn't instantiate wasm: " + name + " '" + err + "'");
+                  onerror();
+                });
+          }
+        };
+        Module['preloadPlugins'].push(wasmPlugin);
+  
+        // Canvas event setup
+  
+        function pointerLockChange() {
+          Browser.pointerLock = document['pointerLockElement'] === Module['canvas'] ||
+                                document['mozPointerLockElement'] === Module['canvas'] ||
+                                document['webkitPointerLockElement'] === Module['canvas'] ||
+                                document['msPointerLockElement'] === Module['canvas'];
+        }
+        var canvas = Module['canvas'];
+        if (canvas) {
+          // forced aspect ratio can be enabled by defining 'forcedAspectRatio' on Module
+          // Module['forcedAspectRatio'] = 4 / 3;
+  
+          canvas.requestPointerLock = canvas['requestPointerLock'] ||
+                                      canvas['mozRequestPointerLock'] ||
+                                      canvas['webkitRequestPointerLock'] ||
+                                      canvas['msRequestPointerLock'] ||
+                                      function(){};
+          canvas.exitPointerLock = document['exitPointerLock'] ||
+                                   document['mozExitPointerLock'] ||
+                                   document['webkitExitPointerLock'] ||
+                                   document['msExitPointerLock'] ||
+                                   function(){}; // no-op if function does not exist
+          canvas.exitPointerLock = canvas.exitPointerLock.bind(document);
+  
+          document.addEventListener('pointerlockchange', pointerLockChange, false);
+          document.addEventListener('mozpointerlockchange', pointerLockChange, false);
+          document.addEventListener('webkitpointerlockchange', pointerLockChange, false);
+          document.addEventListener('mspointerlockchange', pointerLockChange, false);
+  
+          if (Module['elementPointerLock']) {
+            canvas.addEventListener("click", function(ev) {
+              if (!Browser.pointerLock && Module['canvas'].requestPointerLock) {
+                Module['canvas'].requestPointerLock();
+                ev.preventDefault();
+              }
+            }, false);
+          }
+        }
+      },createContext:function(canvas, useWebGL, setInModule, webGLContextAttributes) {
+        if (useWebGL && Module.ctx && canvas == Module.canvas) return Module.ctx; // no need to recreate GL context if it's already been created for this canvas.
+  
+        var ctx;
+        var contextHandle;
+        if (useWebGL) {
+          // For GLES2/desktop GL compatibility, adjust a few defaults to be different to WebGL defaults, so that they align better with the desktop defaults.
+          var contextAttributes = {
+            antialias: false,
+            alpha: false,
+            majorVersion: 1,
+          };
+  
+          if (webGLContextAttributes) {
+            for (var attribute in webGLContextAttributes) {
+              contextAttributes[attribute] = webGLContextAttributes[attribute];
+            }
+          }
+  
+          // This check of existence of GL is here to satisfy Closure compiler, which yells if variable GL is referenced below but GL object is not
+          // actually compiled in because application is not doing any GL operations. TODO: Ideally if GL is not being used, this function
+          // Browser.createContext() should not even be emitted.
+          if (typeof GL !== 'undefined') {
+            contextHandle = GL.createContext(canvas, contextAttributes);
+            if (contextHandle) {
+              ctx = GL.getContext(contextHandle).GLctx;
+            }
+          }
+        } else {
+          ctx = canvas.getContext('2d');
+        }
+  
+        if (!ctx) return null;
+  
+        if (setInModule) {
+          if (!useWebGL) assert(typeof GLctx === 'undefined', 'cannot set in module if GLctx is used, but we are a non-GL context that would replace it');
+  
+          Module.ctx = ctx;
+          if (useWebGL) GL.makeContextCurrent(contextHandle);
+          Module.useWebGL = useWebGL;
+          Browser.moduleContextCreatedCallbacks.forEach(function(callback) { callback() });
+          Browser.init();
+        }
+        return ctx;
+      },destroyContext:function(canvas, useWebGL, setInModule) {},fullscreenHandlersInstalled:false,lockPointer:undefined,resizeCanvas:undefined,requestFullscreen:function(lockPointer, resizeCanvas) {
+        Browser.lockPointer = lockPointer;
+        Browser.resizeCanvas = resizeCanvas;
+        if (typeof Browser.lockPointer === 'undefined') Browser.lockPointer = true;
+        if (typeof Browser.resizeCanvas === 'undefined') Browser.resizeCanvas = false;
+  
+        var canvas = Module['canvas'];
+        function fullscreenChange() {
+          Browser.isFullscreen = false;
+          var canvasContainer = canvas.parentNode;
+          if ((document['fullscreenElement'] || document['mozFullScreenElement'] ||
+               document['msFullscreenElement'] || document['webkitFullscreenElement'] ||
+               document['webkitCurrentFullScreenElement']) === canvasContainer) {
+            canvas.exitFullscreen = Browser.exitFullscreen;
+            if (Browser.lockPointer) canvas.requestPointerLock();
+            Browser.isFullscreen = true;
+            if (Browser.resizeCanvas) {
+              Browser.setFullscreenCanvasSize();
+            } else {
+              Browser.updateCanvasDimensions(canvas);
+            }
+          } else {
+            // remove the full screen specific parent of the canvas again to restore the HTML structure from before going full screen
+            canvasContainer.parentNode.insertBefore(canvas, canvasContainer);
+            canvasContainer.parentNode.removeChild(canvasContainer);
+  
+            if (Browser.resizeCanvas) {
+              Browser.setWindowedCanvasSize();
+            } else {
+              Browser.updateCanvasDimensions(canvas);
+            }
+          }
+          if (Module['onFullScreen']) Module['onFullScreen'](Browser.isFullscreen);
+          if (Module['onFullscreen']) Module['onFullscreen'](Browser.isFullscreen);
+        }
+  
+        if (!Browser.fullscreenHandlersInstalled) {
+          Browser.fullscreenHandlersInstalled = true;
+          document.addEventListener('fullscreenchange', fullscreenChange, false);
+          document.addEventListener('mozfullscreenchange', fullscreenChange, false);
+          document.addEventListener('webkitfullscreenchange', fullscreenChange, false);
+          document.addEventListener('MSFullscreenChange', fullscreenChange, false);
+        }
+  
+        // create a new parent to ensure the canvas has no siblings. this allows browsers to optimize full screen performance when its parent is the full screen root
+        var canvasContainer = document.createElement("div");
+        canvas.parentNode.insertBefore(canvasContainer, canvas);
+        canvasContainer.appendChild(canvas);
+  
+        // use parent of canvas as full screen root to allow aspect ratio correction (Firefox stretches the root to screen size)
+        canvasContainer.requestFullscreen = canvasContainer['requestFullscreen'] ||
+                                            canvasContainer['mozRequestFullScreen'] ||
+                                            canvasContainer['msRequestFullscreen'] ||
+                                           (canvasContainer['webkitRequestFullscreen'] ? function() { canvasContainer['webkitRequestFullscreen'](Element['ALLOW_KEYBOARD_INPUT']) } : null) ||
+                                           (canvasContainer['webkitRequestFullScreen'] ? function() { canvasContainer['webkitRequestFullScreen'](Element['ALLOW_KEYBOARD_INPUT']) } : null);
+  
+        canvasContainer.requestFullscreen();
+      },requestFullScreen:function() {
+        abort('Module.requestFullScreen has been replaced by Module.requestFullscreen (without a capital S)');
+      },exitFullscreen:function() {
+        // This is workaround for chrome. Trying to exit from fullscreen
+        // not in fullscreen state will cause "TypeError: Document not active"
+        // in chrome. See https://github.com/emscripten-core/emscripten/pull/8236
+        if (!Browser.isFullscreen) {
+          return false;
+        }
+  
+        var CFS = document['exitFullscreen'] ||
+                  document['cancelFullScreen'] ||
+                  document['mozCancelFullScreen'] ||
+                  document['msExitFullscreen'] ||
+                  document['webkitCancelFullScreen'] ||
+            (function() {});
+        CFS.apply(document, []);
+        return true;
+      },nextRAF:0,fakeRequestAnimationFrame:function(func) {
+        // try to keep 60fps between calls to here
+        var now = Date.now();
+        if (Browser.nextRAF === 0) {
+          Browser.nextRAF = now + 1000/60;
+        } else {
+          while (now + 2 >= Browser.nextRAF) { // fudge a little, to avoid timer jitter causing us to do lots of delay:0
+            Browser.nextRAF += 1000/60;
+          }
+        }
+        var delay = Math.max(Browser.nextRAF - now, 0);
+        setTimeout(func, delay);
+      },requestAnimationFrame:function(func) {
+        if (typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(func);
+          return;
+        }
+        var RAF = Browser.fakeRequestAnimationFrame;
+        RAF(func);
+      },safeSetTimeout:function(func) {
+        // Legacy function, this is used by the SDL2 port so we need to keep it
+        // around at least until that is updated.
+        return safeSetTimeout(func);
+      },safeRequestAnimationFrame:function(func) {
+        runtimeKeepalivePush();
+        return Browser.requestAnimationFrame(function() {
+          runtimeKeepalivePop();
+          callUserCallback(func);
+        });
+      },getMimetype:function(name) {
+        return {
+          'jpg': 'image/jpeg',
+          'jpeg': 'image/jpeg',
+          'png': 'image/png',
+          'bmp': 'image/bmp',
+          'ogg': 'audio/ogg',
+          'wav': 'audio/wav',
+          'mp3': 'audio/mpeg'
+        }[name.substr(name.lastIndexOf('.')+1)];
+      },getUserMedia:function(func) {
+        if (!window.getUserMedia) {
+          window.getUserMedia = navigator['getUserMedia'] ||
+                                navigator['mozGetUserMedia'];
+        }
+        window.getUserMedia(func);
+      },getMovementX:function(event) {
+        return event['movementX'] ||
+               event['mozMovementX'] ||
+               event['webkitMovementX'] ||
+               0;
+      },getMovementY:function(event) {
+        return event['movementY'] ||
+               event['mozMovementY'] ||
+               event['webkitMovementY'] ||
+               0;
+      },getMouseWheelDelta:function(event) {
+        var delta = 0;
+        switch (event.type) {
+          case 'DOMMouseScroll':
+            // 3 lines make up a step
+            delta = event.detail / 3;
+            break;
+          case 'mousewheel':
+            // 120 units make up a step
+            delta = event.wheelDelta / 120;
+            break;
+          case 'wheel':
+            delta = event.deltaY
+            switch (event.deltaMode) {
+              case 0:
+                // DOM_DELTA_PIXEL: 100 pixels make up a step
+                delta /= 100;
+                break;
+              case 1:
+                // DOM_DELTA_LINE: 3 lines make up a step
+                delta /= 3;
+                break;
+              case 2:
+                // DOM_DELTA_PAGE: A page makes up 80 steps
+                delta *= 80;
+                break;
+              default:
+                throw 'unrecognized mouse wheel delta mode: ' + event.deltaMode;
+            }
+            break;
+          default:
+            throw 'unrecognized mouse wheel event: ' + event.type;
+        }
+        return delta;
+      },mouseX:0,mouseY:0,mouseMovementX:0,mouseMovementY:0,touches:{},lastTouches:{},calculateMouseEvent:function(event) { // event should be mousemove, mousedown or mouseup
+        if (Browser.pointerLock) {
+          // When the pointer is locked, calculate the coordinates
+          // based on the movement of the mouse.
+          // Workaround for Firefox bug 764498
+          if (event.type != 'mousemove' &&
+              ('mozMovementX' in event)) {
+            Browser.mouseMovementX = Browser.mouseMovementY = 0;
+          } else {
+            Browser.mouseMovementX = Browser.getMovementX(event);
+            Browser.mouseMovementY = Browser.getMovementY(event);
+          }
+  
+          // check if SDL is available
+          if (typeof SDL != "undefined") {
+            Browser.mouseX = SDL.mouseX + Browser.mouseMovementX;
+            Browser.mouseY = SDL.mouseY + Browser.mouseMovementY;
+          } else {
+            // just add the mouse delta to the current absolut mouse position
+            // FIXME: ideally this should be clamped against the canvas size and zero
+            Browser.mouseX += Browser.mouseMovementX;
+            Browser.mouseY += Browser.mouseMovementY;
+          }
+        } else {
+          // Otherwise, calculate the movement based on the changes
+          // in the coordinates.
+          var rect = Module["canvas"].getBoundingClientRect();
+          var cw = Module["canvas"].width;
+          var ch = Module["canvas"].height;
+  
+          // Neither .scrollX or .pageXOffset are defined in a spec, but
+          // we prefer .scrollX because it is currently in a spec draft.
+          // (see: http://www.w3.org/TR/2013/WD-cssom-view-20131217/)
+          var scrollX = ((typeof window.scrollX !== 'undefined') ? window.scrollX : window.pageXOffset);
+          var scrollY = ((typeof window.scrollY !== 'undefined') ? window.scrollY : window.pageYOffset);
+          // If this assert lands, it's likely because the browser doesn't support scrollX or pageXOffset
+          // and we have no viable fallback.
+          assert((typeof scrollX !== 'undefined') && (typeof scrollY !== 'undefined'), 'Unable to retrieve scroll position, mouse positions likely broken.');
+  
+          if (event.type === 'touchstart' || event.type === 'touchend' || event.type === 'touchmove') {
+            var touch = event.touch;
+            if (touch === undefined) {
+              return; // the "touch" property is only defined in SDL
+  
+            }
+            var adjustedX = touch.pageX - (scrollX + rect.left);
+            var adjustedY = touch.pageY - (scrollY + rect.top);
+  
+            adjustedX = adjustedX * (cw / rect.width);
+            adjustedY = adjustedY * (ch / rect.height);
+  
+            var coords = { x: adjustedX, y: adjustedY };
+  
+            if (event.type === 'touchstart') {
+              Browser.lastTouches[touch.identifier] = coords;
+              Browser.touches[touch.identifier] = coords;
+            } else if (event.type === 'touchend' || event.type === 'touchmove') {
+              var last = Browser.touches[touch.identifier];
+              if (!last) last = coords;
+              Browser.lastTouches[touch.identifier] = last;
+              Browser.touches[touch.identifier] = coords;
+            }
+            return;
+          }
+  
+          var x = event.pageX - (scrollX + rect.left);
+          var y = event.pageY - (scrollY + rect.top);
+  
+          // the canvas might be CSS-scaled compared to its backbuffer;
+          // SDL-using content will want mouse coordinates in terms
+          // of backbuffer units.
+          x = x * (cw / rect.width);
+          y = y * (ch / rect.height);
+  
+          Browser.mouseMovementX = x - Browser.mouseX;
+          Browser.mouseMovementY = y - Browser.mouseY;
+          Browser.mouseX = x;
+          Browser.mouseY = y;
+        }
+      },resizeListeners:[],updateResizeListeners:function() {
+        var canvas = Module['canvas'];
+        Browser.resizeListeners.forEach(function(listener) {
+          listener(canvas.width, canvas.height);
+        });
+      },setCanvasSize:function(width, height, noUpdates) {
+        var canvas = Module['canvas'];
+        Browser.updateCanvasDimensions(canvas, width, height);
+        if (!noUpdates) Browser.updateResizeListeners();
+      },windowedWidth:0,windowedHeight:0,setFullscreenCanvasSize:function() {
+        // check if SDL is available
+        if (typeof SDL != "undefined") {
+          var flags = HEAPU32[((SDL.screen)>>2)];
+          flags = flags | 0x00800000; // set SDL_FULLSCREEN flag
+          HEAP32[((SDL.screen)>>2)] = flags;
+        }
+        Browser.updateCanvasDimensions(Module['canvas']);
+        Browser.updateResizeListeners();
+      },setWindowedCanvasSize:function() {
+        // check if SDL is available
+        if (typeof SDL != "undefined") {
+          var flags = HEAPU32[((SDL.screen)>>2)];
+          flags = flags & ~0x00800000; // clear SDL_FULLSCREEN flag
+          HEAP32[((SDL.screen)>>2)] = flags;
+        }
+        Browser.updateCanvasDimensions(Module['canvas']);
+        Browser.updateResizeListeners();
+      },updateCanvasDimensions:function(canvas, wNative, hNative) {
+        if (wNative && hNative) {
+          canvas.widthNative = wNative;
+          canvas.heightNative = hNative;
+        } else {
+          wNative = canvas.widthNative;
+          hNative = canvas.heightNative;
+        }
+        var w = wNative;
+        var h = hNative;
+        if (Module['forcedAspectRatio'] && Module['forcedAspectRatio'] > 0) {
+          if (w/h < Module['forcedAspectRatio']) {
+            w = Math.round(h * Module['forcedAspectRatio']);
+          } else {
+            h = Math.round(w / Module['forcedAspectRatio']);
+          }
+        }
+        if (((document['fullscreenElement'] || document['mozFullScreenElement'] ||
+             document['msFullscreenElement'] || document['webkitFullscreenElement'] ||
+             document['webkitCurrentFullScreenElement']) === canvas.parentNode) && (typeof screen != 'undefined')) {
+           var factor = Math.min(screen.width / w, screen.height / h);
+           w = Math.round(w * factor);
+           h = Math.round(h * factor);
+        }
+        if (Browser.resizeCanvas) {
+          if (canvas.width  != w) canvas.width  = w;
+          if (canvas.height != h) canvas.height = h;
+          if (typeof canvas.style != 'undefined') {
+            canvas.style.removeProperty( "width");
+            canvas.style.removeProperty("height");
+          }
+        } else {
+          if (canvas.width  != wNative) canvas.width  = wNative;
+          if (canvas.height != hNative) canvas.height = hNative;
+          if (typeof canvas.style != 'undefined') {
+            if (w != wNative || h != hNative) {
+              canvas.style.setProperty( "width", w + "px", "important");
+              canvas.style.setProperty("height", h + "px", "important");
+            } else {
+              canvas.style.removeProperty( "width");
+              canvas.style.removeProperty("height");
+            }
+          }
+        }
+      }};
+  Module["Browser"] = Browser;
+
   var GOT = {};
   Module["GOT"] = GOT;
   var GOTHandler = {get:function(obj, symName) {
@@ -2254,18 +3101,6 @@ function call_trampoline(func,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,
     }
   Module["getWasmTableEntry"] = getWasmTableEntry;
 
-  function handleException(e) {
-      // Certain exception types we do not treat as errors since they are used for
-      // internal control flow.
-      // 1. ExitStatus, which is thrown by exit()
-      // 2. "unwind", which is thrown by emscripten_unwind_to_js_event_loop() and others
-      //    that wish to return to JS event loop.
-      if (e instanceof ExitStatus || e == 'unwind') {
-        return EXITSTATUS;
-      }
-      quit_(1, e);
-    }
-  Module["handleException"] = handleException;
 
   function jsStackTrace() {
       var error = new Error();
@@ -2338,7 +3173,7 @@ function call_trampoline(func,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,
     }
   Module["createInvokeFunction"] = createInvokeFunction;
   
-  var ___heap_base = 7896336;
+  var ___heap_base = 7896352;
   Module["___heap_base"] = ___heap_base;
   function getMemory(size) {
       // After the runtime is initialized, we must only use sbrk() normally.
@@ -2775,15 +3610,6 @@ function call_trampoline(func,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,
     }
   Module["___call_sighandler"] = ___call_sighandler;
 
-  var _emscripten_get_now;if (ENVIRONMENT_IS_NODE) {
-    _emscripten_get_now = () => {
-      var t = process['hrtime']();
-      return t[0] * 1e3 + t[1] / 1e6;
-    };
-  } else _emscripten_get_now = () => performance.now();
-  ;
-  Module["_emscripten_get_now"] = _emscripten_get_now;
-  
   var _emscripten_get_now_is_monotonic = true;;
   Module["_emscripten_get_now_is_monotonic"] = _emscripten_get_now_is_monotonic;
   
@@ -2910,7 +3736,7 @@ function call_trampoline(func,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,
   var ___memory_base = new WebAssembly.Global({'value': 'i32', 'mutable': false}, 1024);
   Module["___memory_base"] = ___memory_base;
 
-  var ___stack_pointer = new WebAssembly.Global({'value': 'i32', 'mutable': true}, 7896336);
+  var ___stack_pointer = new WebAssembly.Global({'value': 'i32', 'mutable': true}, 7896352);
   Module["___stack_pointer"] = ___stack_pointer;
 
   var PATH = {splitPath:function(filename) {
@@ -7666,54 +8492,6 @@ function call_trampoline(func,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,
   Module["__dlsym_js"] = __dlsym_js;
   __dlsym_js.sig = 'iii';
 
-  function _exit(status) {
-      // void _exit(int status);
-      // http://pubs.opengroup.org/onlinepubs/000095399/functions/exit.html
-      exit(status);
-    }
-  Module["_exit"] = _exit;
-  _exit.sig = 'vi';
-  function maybeExit() {
-      if (!keepRuntimeAlive()) {
-        try {
-          _exit(EXITSTATUS);
-        } catch (e) {
-          handleException(e);
-        }
-      }
-    }
-  Module["maybeExit"] = maybeExit;
-  function callUserCallback(func, synchronous) {
-      if (runtimeExited || ABORT) {
-        err('user callback triggered after runtime exited or application aborted.  Ignoring.');
-        return;
-      }
-      // For synchronous calls, let any exceptions propagate, and don't let the runtime exit.
-      if (synchronous) {
-        func();
-        return;
-      }
-      try {
-        func();
-          maybeExit();
-      } catch (e) {
-        handleException(e);
-      }
-    }
-  Module["callUserCallback"] = callUserCallback;
-  
-  function runtimeKeepalivePush() {
-      runtimeKeepaliveCounter += 1;
-    }
-  Module["runtimeKeepalivePush"] = runtimeKeepalivePush;
-  runtimeKeepalivePush.sig = 'v';
-  
-  function runtimeKeepalivePop() {
-      assert(runtimeKeepaliveCounter > 0);
-      runtimeKeepaliveCounter -= 1;
-    }
-  Module["runtimeKeepalivePop"] = runtimeKeepalivePop;
-  runtimeKeepalivePop.sig = 'v';
   function __emscripten_dlopen_js(handle, onsuccess, onerror) {
       function errorCallback(e) {
         var filename = UTF8ToString(HEAP32[(((handle)+(44))>>2)]);
@@ -7796,775 +8574,6 @@ function call_trampoline(func,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,
   Module["_abort"] = _abort;
   _abort.sig = 'v';
 
-  function _emscripten_set_main_loop_timing(mode, value) {
-      Browser.mainLoop.timingMode = mode;
-      Browser.mainLoop.timingValue = value;
-  
-      if (!Browser.mainLoop.func) {
-        err('emscripten_set_main_loop_timing: Cannot set timing mode for main loop since a main loop does not exist! Call emscripten_set_main_loop first to set one up.');
-        return 1; // Return non-zero on failure, can't set timing mode when there is no main loop.
-      }
-  
-      if (!Browser.mainLoop.running) {
-        runtimeKeepalivePush();
-        Browser.mainLoop.running = true;
-      }
-      if (mode == 0 /*EM_TIMING_SETTIMEOUT*/) {
-        Browser.mainLoop.scheduler = function Browser_mainLoop_scheduler_setTimeout() {
-          var timeUntilNextTick = Math.max(0, Browser.mainLoop.tickStartTime + value - _emscripten_get_now())|0;
-          setTimeout(Browser.mainLoop.runner, timeUntilNextTick); // doing this each time means that on exception, we stop
-        };
-        Browser.mainLoop.method = 'timeout';
-      } else if (mode == 1 /*EM_TIMING_RAF*/) {
-        Browser.mainLoop.scheduler = function Browser_mainLoop_scheduler_rAF() {
-          Browser.requestAnimationFrame(Browser.mainLoop.runner);
-        };
-        Browser.mainLoop.method = 'rAF';
-      } else if (mode == 2 /*EM_TIMING_SETIMMEDIATE*/) {
-        if (typeof setImmediate === 'undefined') {
-          // Emulate setImmediate. (note: not a complete polyfill, we don't emulate clearImmediate() to keep code size to minimum, since not needed)
-          var setImmediates = [];
-          var emscriptenMainLoopMessageId = 'setimmediate';
-          var Browser_setImmediate_messageHandler = function(event) {
-            // When called in current thread or Worker, the main loop ID is structured slightly different to accommodate for --proxy-to-worker runtime listening to Worker events,
-            // so check for both cases.
-            if (event.data === emscriptenMainLoopMessageId || event.data.target === emscriptenMainLoopMessageId) {
-              event.stopPropagation();
-              setImmediates.shift()();
-            }
-          }
-          addEventListener("message", Browser_setImmediate_messageHandler, true);
-          setImmediate = /** @type{function(function(): ?, ...?): number} */(function Browser_emulated_setImmediate(func) {
-            setImmediates.push(func);
-            if (ENVIRONMENT_IS_WORKER) {
-              if (Module['setImmediates'] === undefined) Module['setImmediates'] = [];
-              Module['setImmediates'].push(func);
-              postMessage({target: emscriptenMainLoopMessageId}); // In --proxy-to-worker, route the message via proxyClient.js
-            } else postMessage(emscriptenMainLoopMessageId, "*"); // On the main thread, can just send the message to itself.
-          })
-        }
-        Browser.mainLoop.scheduler = function Browser_mainLoop_scheduler_setImmediate() {
-          setImmediate(Browser.mainLoop.runner);
-        };
-        Browser.mainLoop.method = 'immediate';
-      }
-      return 0;
-    }
-  Module["_emscripten_set_main_loop_timing"] = _emscripten_set_main_loop_timing;
-  _emscripten_set_main_loop_timing.sig = 'iii';
-  function setMainLoop(browserIterationFunc, fps, simulateInfiniteLoop, arg, noSetTiming) {
-      assert(!Browser.mainLoop.func, 'emscripten_set_main_loop: there can only be one main loop function at once: call emscripten_cancel_main_loop to cancel the previous one before setting a new one with different parameters.');
-  
-      Browser.mainLoop.func = browserIterationFunc;
-      Browser.mainLoop.arg = arg;
-  
-      var thisMainLoopId = Browser.mainLoop.currentlyRunningMainloop;
-      function checkIsRunning() {
-        if (thisMainLoopId < Browser.mainLoop.currentlyRunningMainloop) {
-          runtimeKeepalivePop();
-          maybeExit();
-          return false;
-        }
-        return true;
-      }
-  
-      // We create the loop runner here but it is not actually running until
-      // _emscripten_set_main_loop_timing is called (which might happen a
-      // later time).  This member signifies that the current runner has not
-      // yet been started so that we can call runtimeKeepalivePush when it
-      // gets it timing set for the first time.
-      Browser.mainLoop.running = false;
-      Browser.mainLoop.runner = function Browser_mainLoop_runner() {
-        if (ABORT) return;
-        if (Browser.mainLoop.queue.length > 0) {
-          var start = Date.now();
-          var blocker = Browser.mainLoop.queue.shift();
-          blocker.func(blocker.arg);
-          if (Browser.mainLoop.remainingBlockers) {
-            var remaining = Browser.mainLoop.remainingBlockers;
-            var next = remaining%1 == 0 ? remaining-1 : Math.floor(remaining);
-            if (blocker.counted) {
-              Browser.mainLoop.remainingBlockers = next;
-            } else {
-              // not counted, but move the progress along a tiny bit
-              next = next + 0.5; // do not steal all the next one's progress
-              Browser.mainLoop.remainingBlockers = (8*remaining + next)/9;
-            }
-          }
-          out('main loop blocker "' + blocker.name + '" took ' + (Date.now() - start) + ' ms'); //, left: ' + Browser.mainLoop.remainingBlockers);
-          Browser.mainLoop.updateStatus();
-  
-          // catches pause/resume main loop from blocker execution
-          if (!checkIsRunning()) return;
-  
-          setTimeout(Browser.mainLoop.runner, 0);
-          return;
-        }
-  
-        // catch pauses from non-main loop sources
-        if (!checkIsRunning()) return;
-  
-        // Implement very basic swap interval control
-        Browser.mainLoop.currentFrameNumber = Browser.mainLoop.currentFrameNumber + 1 | 0;
-        if (Browser.mainLoop.timingMode == 1/*EM_TIMING_RAF*/ && Browser.mainLoop.timingValue > 1 && Browser.mainLoop.currentFrameNumber % Browser.mainLoop.timingValue != 0) {
-          // Not the scheduled time to render this frame - skip.
-          Browser.mainLoop.scheduler();
-          return;
-        } else if (Browser.mainLoop.timingMode == 0/*EM_TIMING_SETTIMEOUT*/) {
-          Browser.mainLoop.tickStartTime = _emscripten_get_now();
-        }
-  
-        // Signal GL rendering layer that processing of a new frame is about to start. This helps it optimize
-        // VBO double-buffering and reduce GPU stalls.
-  
-        if (Browser.mainLoop.method === 'timeout' && Module.ctx) {
-          warnOnce('Looks like you are rendering without using requestAnimationFrame for the main loop. You should use 0 for the frame rate in emscripten_set_main_loop in order to use requestAnimationFrame, as that can greatly improve your frame rates!');
-          Browser.mainLoop.method = ''; // just warn once per call to set main loop
-        }
-  
-        Browser.mainLoop.runIter(browserIterationFunc);
-  
-        checkStackCookie();
-  
-        // catch pauses from the main loop itself
-        if (!checkIsRunning()) return;
-  
-        // Queue new audio data. This is important to be right after the main loop invocation, so that we will immediately be able
-        // to queue the newest produced audio samples.
-        // TODO: Consider adding pre- and post- rAF callbacks so that GL.newRenderingFrameStarted() and SDL.audio.queueNewAudioData()
-        //       do not need to be hardcoded into this function, but can be more generic.
-        if (typeof SDL === 'object' && SDL.audio && SDL.audio.queueNewAudioData) SDL.audio.queueNewAudioData();
-  
-        Browser.mainLoop.scheduler();
-      }
-  
-      if (!noSetTiming) {
-        if (fps && fps > 0) _emscripten_set_main_loop_timing(0/*EM_TIMING_SETTIMEOUT*/, 1000.0 / fps);
-        else _emscripten_set_main_loop_timing(1/*EM_TIMING_RAF*/, 1); // Do rAF by rendering each frame (no decimating)
-  
-        Browser.mainLoop.scheduler();
-      }
-  
-      if (simulateInfiniteLoop) {
-        throw 'unwind';
-      }
-    }
-  Module["setMainLoop"] = setMainLoop;
-  
-  function safeSetTimeout(func, timeout) {
-      runtimeKeepalivePush();
-      return setTimeout(function() {
-        runtimeKeepalivePop();
-        callUserCallback(func);
-      }, timeout);
-    }
-  Module["safeSetTimeout"] = safeSetTimeout;
-  var Browser = {mainLoop:{running:false,scheduler:null,method:"",currentlyRunningMainloop:0,func:null,arg:0,timingMode:0,timingValue:0,currentFrameNumber:0,queue:[],pause:function() {
-          Browser.mainLoop.scheduler = null;
-          // Incrementing this signals the previous main loop that it's now become old, and it must return.
-          Browser.mainLoop.currentlyRunningMainloop++;
-        },resume:function() {
-          Browser.mainLoop.currentlyRunningMainloop++;
-          var timingMode = Browser.mainLoop.timingMode;
-          var timingValue = Browser.mainLoop.timingValue;
-          var func = Browser.mainLoop.func;
-          Browser.mainLoop.func = null;
-          // do not set timing and call scheduler, we will do it on the next lines
-          setMainLoop(func, 0, false, Browser.mainLoop.arg, true);
-          _emscripten_set_main_loop_timing(timingMode, timingValue);
-          Browser.mainLoop.scheduler();
-        },updateStatus:function() {
-          if (Module['setStatus']) {
-            var message = Module['statusMessage'] || 'Please wait...';
-            var remaining = Browser.mainLoop.remainingBlockers;
-            var expected = Browser.mainLoop.expectedBlockers;
-            if (remaining) {
-              if (remaining < expected) {
-                Module['setStatus'](message + ' (' + (expected - remaining) + '/' + expected + ')');
-              } else {
-                Module['setStatus'](message);
-              }
-            } else {
-              Module['setStatus']('');
-            }
-          }
-        },runIter:function(func) {
-          if (ABORT) return;
-          if (Module['preMainLoop']) {
-            var preRet = Module['preMainLoop']();
-            if (preRet === false) {
-              return; // |return false| skips a frame
-            }
-          }
-          callUserCallback(func);
-          if (Module['postMainLoop']) Module['postMainLoop']();
-        }},isFullscreen:false,pointerLock:false,moduleContextCreatedCallbacks:[],workers:[],init:function() {
-        if (!Module["preloadPlugins"]) Module["preloadPlugins"] = []; // needs to exist even in workers
-  
-        if (Browser.initted) return;
-        Browser.initted = true;
-  
-        try {
-          new Blob();
-          Browser.hasBlobConstructor = true;
-        } catch(e) {
-          Browser.hasBlobConstructor = false;
-          out("warning: no blob constructor, cannot create blobs with mimetypes");
-        }
-        Browser.BlobBuilder = typeof MozBlobBuilder != "undefined" ? MozBlobBuilder : (typeof WebKitBlobBuilder != "undefined" ? WebKitBlobBuilder : (!Browser.hasBlobConstructor ? out("warning: no BlobBuilder") : null));
-        Browser.URLObject = typeof window != "undefined" ? (window.URL ? window.URL : window.webkitURL) : undefined;
-        if (!Module.noImageDecoding && typeof Browser.URLObject === 'undefined') {
-          out("warning: Browser does not support creating object URLs. Built-in browser image decoding will not be available.");
-          Module.noImageDecoding = true;
-        }
-  
-        // Support for plugins that can process preloaded files. You can add more of these to
-        // your app by creating and appending to Module.preloadPlugins.
-        //
-        // Each plugin is asked if it can handle a file based on the file's name. If it can,
-        // it is given the file's raw data. When it is done, it calls a callback with the file's
-        // (possibly modified) data. For example, a plugin might decompress a file, or it
-        // might create some side data structure for use later (like an Image element, etc.).
-  
-        var imagePlugin = {};
-        imagePlugin['canHandle'] = function imagePlugin_canHandle(name) {
-          return !Module.noImageDecoding && /\.(jpg|jpeg|png|bmp)$/i.test(name);
-        };
-        imagePlugin['handle'] = function imagePlugin_handle(byteArray, name, onload, onerror) {
-          var b = null;
-          if (Browser.hasBlobConstructor) {
-            try {
-              b = new Blob([byteArray], { type: Browser.getMimetype(name) });
-              if (b.size !== byteArray.length) { // Safari bug #118630
-                // Safari's Blob can only take an ArrayBuffer
-                b = new Blob([(new Uint8Array(byteArray)).buffer], { type: Browser.getMimetype(name) });
-              }
-            } catch(e) {
-              warnOnce('Blob constructor present but fails: ' + e + '; falling back to blob builder');
-            }
-          }
-          if (!b) {
-            var bb = new Browser.BlobBuilder();
-            bb.append((new Uint8Array(byteArray)).buffer); // we need to pass a buffer, and must copy the array to get the right data range
-            b = bb.getBlob();
-          }
-          var url = Browser.URLObject.createObjectURL(b);
-          assert(typeof url == 'string', 'createObjectURL must return a url as a string');
-          var img = new Image();
-          img.onload = () => {
-            assert(img.complete, 'Image ' + name + ' could not be decoded');
-            var canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            var ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-            Module["preloadedImages"][name] = canvas;
-            Browser.URLObject.revokeObjectURL(url);
-            if (onload) onload(byteArray);
-          };
-          img.onerror = (event) => {
-            out('Image ' + url + ' could not be decoded');
-            if (onerror) onerror();
-          };
-          img.src = url;
-        };
-        Module['preloadPlugins'].push(imagePlugin);
-  
-        var audioPlugin = {};
-        audioPlugin['canHandle'] = function audioPlugin_canHandle(name) {
-          return !Module.noAudioDecoding && name.substr(-4) in { '.ogg': 1, '.wav': 1, '.mp3': 1 };
-        };
-        audioPlugin['handle'] = function audioPlugin_handle(byteArray, name, onload, onerror) {
-          var done = false;
-          function finish(audio) {
-            if (done) return;
-            done = true;
-            Module["preloadedAudios"][name] = audio;
-            if (onload) onload(byteArray);
-          }
-          function fail() {
-            if (done) return;
-            done = true;
-            Module["preloadedAudios"][name] = new Audio(); // empty shim
-            if (onerror) onerror();
-          }
-          if (Browser.hasBlobConstructor) {
-            try {
-              var b = new Blob([byteArray], { type: Browser.getMimetype(name) });
-            } catch(e) {
-              return fail();
-            }
-            var url = Browser.URLObject.createObjectURL(b); // XXX we never revoke this!
-            assert(typeof url == 'string', 'createObjectURL must return a url as a string');
-            var audio = new Audio();
-            audio.addEventListener('canplaythrough', function() { finish(audio) }, false); // use addEventListener due to chromium bug 124926
-            audio.onerror = function audio_onerror(event) {
-              if (done) return;
-              out('warning: browser could not fully decode audio ' + name + ', trying slower base64 approach');
-              function encode64(data) {
-                var BASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-                var PAD = '=';
-                var ret = '';
-                var leftchar = 0;
-                var leftbits = 0;
-                for (var i = 0; i < data.length; i++) {
-                  leftchar = (leftchar << 8) | data[i];
-                  leftbits += 8;
-                  while (leftbits >= 6) {
-                    var curr = (leftchar >> (leftbits-6)) & 0x3f;
-                    leftbits -= 6;
-                    ret += BASE[curr];
-                  }
-                }
-                if (leftbits == 2) {
-                  ret += BASE[(leftchar&3) << 4];
-                  ret += PAD + PAD;
-                } else if (leftbits == 4) {
-                  ret += BASE[(leftchar&0xf) << 2];
-                  ret += PAD;
-                }
-                return ret;
-              }
-              audio.src = 'data:audio/x-' + name.substr(-3) + ';base64,' + encode64(byteArray);
-              finish(audio); // we don't wait for confirmation this worked - but it's worth trying
-            };
-            audio.src = url;
-            // workaround for chrome bug 124926 - we do not always get oncanplaythrough or onerror
-            safeSetTimeout(function() {
-              finish(audio); // try to use it even though it is not necessarily ready to play
-            }, 10000);
-          } else {
-            return fail();
-          }
-        };
-        Module['preloadPlugins'].push(audioPlugin);
-  
-        // Use string keys here to avoid minification since the plugin consumer
-        // also uses string keys.
-        var wasmPlugin = {
-          'asyncWasmLoadPromise': new Promise(function(resolve, reject) { return resolve(); }),
-          'canHandle': function(name) {
-            return !Module.noWasmDecoding && name.endsWith('.so')
-          },
-          'handle': function(byteArray, name, onload, onerror) {
-            // loadWebAssemblyModule can not load modules out-of-order, so rather
-            // than just running the promises in parallel, this makes a chain of
-            // promises to run in series.
-            this['asyncWasmLoadPromise'] = this['asyncWasmLoadPromise'].then(
-              function() {
-                return loadWebAssemblyModule(byteArray, {loadAsync: true, nodelete: true});
-              }).then(
-                function(module) {
-                  Module['preloadedWasm'][name] = module;
-                  onload();
-                },
-                function(err) {
-                  console.warn("Couldn't instantiate wasm: " + name + " '" + err + "'");
-                  onerror();
-                });
-          }
-        };
-        Module['preloadPlugins'].push(wasmPlugin);
-  
-        // Canvas event setup
-  
-        function pointerLockChange() {
-          Browser.pointerLock = document['pointerLockElement'] === Module['canvas'] ||
-                                document['mozPointerLockElement'] === Module['canvas'] ||
-                                document['webkitPointerLockElement'] === Module['canvas'] ||
-                                document['msPointerLockElement'] === Module['canvas'];
-        }
-        var canvas = Module['canvas'];
-        if (canvas) {
-          // forced aspect ratio can be enabled by defining 'forcedAspectRatio' on Module
-          // Module['forcedAspectRatio'] = 4 / 3;
-  
-          canvas.requestPointerLock = canvas['requestPointerLock'] ||
-                                      canvas['mozRequestPointerLock'] ||
-                                      canvas['webkitRequestPointerLock'] ||
-                                      canvas['msRequestPointerLock'] ||
-                                      function(){};
-          canvas.exitPointerLock = document['exitPointerLock'] ||
-                                   document['mozExitPointerLock'] ||
-                                   document['webkitExitPointerLock'] ||
-                                   document['msExitPointerLock'] ||
-                                   function(){}; // no-op if function does not exist
-          canvas.exitPointerLock = canvas.exitPointerLock.bind(document);
-  
-          document.addEventListener('pointerlockchange', pointerLockChange, false);
-          document.addEventListener('mozpointerlockchange', pointerLockChange, false);
-          document.addEventListener('webkitpointerlockchange', pointerLockChange, false);
-          document.addEventListener('mspointerlockchange', pointerLockChange, false);
-  
-          if (Module['elementPointerLock']) {
-            canvas.addEventListener("click", function(ev) {
-              if (!Browser.pointerLock && Module['canvas'].requestPointerLock) {
-                Module['canvas'].requestPointerLock();
-                ev.preventDefault();
-              }
-            }, false);
-          }
-        }
-      },createContext:function(canvas, useWebGL, setInModule, webGLContextAttributes) {
-        if (useWebGL && Module.ctx && canvas == Module.canvas) return Module.ctx; // no need to recreate GL context if it's already been created for this canvas.
-  
-        var ctx;
-        var contextHandle;
-        if (useWebGL) {
-          // For GLES2/desktop GL compatibility, adjust a few defaults to be different to WebGL defaults, so that they align better with the desktop defaults.
-          var contextAttributes = {
-            antialias: false,
-            alpha: false,
-            majorVersion: 1,
-          };
-  
-          if (webGLContextAttributes) {
-            for (var attribute in webGLContextAttributes) {
-              contextAttributes[attribute] = webGLContextAttributes[attribute];
-            }
-          }
-  
-          // This check of existence of GL is here to satisfy Closure compiler, which yells if variable GL is referenced below but GL object is not
-          // actually compiled in because application is not doing any GL operations. TODO: Ideally if GL is not being used, this function
-          // Browser.createContext() should not even be emitted.
-          if (typeof GL !== 'undefined') {
-            contextHandle = GL.createContext(canvas, contextAttributes);
-            if (contextHandle) {
-              ctx = GL.getContext(contextHandle).GLctx;
-            }
-          }
-        } else {
-          ctx = canvas.getContext('2d');
-        }
-  
-        if (!ctx) return null;
-  
-        if (setInModule) {
-          if (!useWebGL) assert(typeof GLctx === 'undefined', 'cannot set in module if GLctx is used, but we are a non-GL context that would replace it');
-  
-          Module.ctx = ctx;
-          if (useWebGL) GL.makeContextCurrent(contextHandle);
-          Module.useWebGL = useWebGL;
-          Browser.moduleContextCreatedCallbacks.forEach(function(callback) { callback() });
-          Browser.init();
-        }
-        return ctx;
-      },destroyContext:function(canvas, useWebGL, setInModule) {},fullscreenHandlersInstalled:false,lockPointer:undefined,resizeCanvas:undefined,requestFullscreen:function(lockPointer, resizeCanvas) {
-        Browser.lockPointer = lockPointer;
-        Browser.resizeCanvas = resizeCanvas;
-        if (typeof Browser.lockPointer === 'undefined') Browser.lockPointer = true;
-        if (typeof Browser.resizeCanvas === 'undefined') Browser.resizeCanvas = false;
-  
-        var canvas = Module['canvas'];
-        function fullscreenChange() {
-          Browser.isFullscreen = false;
-          var canvasContainer = canvas.parentNode;
-          if ((document['fullscreenElement'] || document['mozFullScreenElement'] ||
-               document['msFullscreenElement'] || document['webkitFullscreenElement'] ||
-               document['webkitCurrentFullScreenElement']) === canvasContainer) {
-            canvas.exitFullscreen = Browser.exitFullscreen;
-            if (Browser.lockPointer) canvas.requestPointerLock();
-            Browser.isFullscreen = true;
-            if (Browser.resizeCanvas) {
-              Browser.setFullscreenCanvasSize();
-            } else {
-              Browser.updateCanvasDimensions(canvas);
-            }
-          } else {
-            // remove the full screen specific parent of the canvas again to restore the HTML structure from before going full screen
-            canvasContainer.parentNode.insertBefore(canvas, canvasContainer);
-            canvasContainer.parentNode.removeChild(canvasContainer);
-  
-            if (Browser.resizeCanvas) {
-              Browser.setWindowedCanvasSize();
-            } else {
-              Browser.updateCanvasDimensions(canvas);
-            }
-          }
-          if (Module['onFullScreen']) Module['onFullScreen'](Browser.isFullscreen);
-          if (Module['onFullscreen']) Module['onFullscreen'](Browser.isFullscreen);
-        }
-  
-        if (!Browser.fullscreenHandlersInstalled) {
-          Browser.fullscreenHandlersInstalled = true;
-          document.addEventListener('fullscreenchange', fullscreenChange, false);
-          document.addEventListener('mozfullscreenchange', fullscreenChange, false);
-          document.addEventListener('webkitfullscreenchange', fullscreenChange, false);
-          document.addEventListener('MSFullscreenChange', fullscreenChange, false);
-        }
-  
-        // create a new parent to ensure the canvas has no siblings. this allows browsers to optimize full screen performance when its parent is the full screen root
-        var canvasContainer = document.createElement("div");
-        canvas.parentNode.insertBefore(canvasContainer, canvas);
-        canvasContainer.appendChild(canvas);
-  
-        // use parent of canvas as full screen root to allow aspect ratio correction (Firefox stretches the root to screen size)
-        canvasContainer.requestFullscreen = canvasContainer['requestFullscreen'] ||
-                                            canvasContainer['mozRequestFullScreen'] ||
-                                            canvasContainer['msRequestFullscreen'] ||
-                                           (canvasContainer['webkitRequestFullscreen'] ? function() { canvasContainer['webkitRequestFullscreen'](Element['ALLOW_KEYBOARD_INPUT']) } : null) ||
-                                           (canvasContainer['webkitRequestFullScreen'] ? function() { canvasContainer['webkitRequestFullScreen'](Element['ALLOW_KEYBOARD_INPUT']) } : null);
-  
-        canvasContainer.requestFullscreen();
-      },requestFullScreen:function() {
-        abort('Module.requestFullScreen has been replaced by Module.requestFullscreen (without a capital S)');
-      },exitFullscreen:function() {
-        // This is workaround for chrome. Trying to exit from fullscreen
-        // not in fullscreen state will cause "TypeError: Document not active"
-        // in chrome. See https://github.com/emscripten-core/emscripten/pull/8236
-        if (!Browser.isFullscreen) {
-          return false;
-        }
-  
-        var CFS = document['exitFullscreen'] ||
-                  document['cancelFullScreen'] ||
-                  document['mozCancelFullScreen'] ||
-                  document['msExitFullscreen'] ||
-                  document['webkitCancelFullScreen'] ||
-            (function() {});
-        CFS.apply(document, []);
-        return true;
-      },nextRAF:0,fakeRequestAnimationFrame:function(func) {
-        // try to keep 60fps between calls to here
-        var now = Date.now();
-        if (Browser.nextRAF === 0) {
-          Browser.nextRAF = now + 1000/60;
-        } else {
-          while (now + 2 >= Browser.nextRAF) { // fudge a little, to avoid timer jitter causing us to do lots of delay:0
-            Browser.nextRAF += 1000/60;
-          }
-        }
-        var delay = Math.max(Browser.nextRAF - now, 0);
-        setTimeout(func, delay);
-      },requestAnimationFrame:function(func) {
-        if (typeof requestAnimationFrame === 'function') {
-          requestAnimationFrame(func);
-          return;
-        }
-        var RAF = Browser.fakeRequestAnimationFrame;
-        RAF(func);
-      },safeSetTimeout:function(func) {
-        // Legacy function, this is used by the SDL2 port so we need to keep it
-        // around at least until that is updated.
-        return safeSetTimeout(func);
-      },safeRequestAnimationFrame:function(func) {
-        runtimeKeepalivePush();
-        return Browser.requestAnimationFrame(function() {
-          runtimeKeepalivePop();
-          callUserCallback(func);
-        });
-      },getMimetype:function(name) {
-        return {
-          'jpg': 'image/jpeg',
-          'jpeg': 'image/jpeg',
-          'png': 'image/png',
-          'bmp': 'image/bmp',
-          'ogg': 'audio/ogg',
-          'wav': 'audio/wav',
-          'mp3': 'audio/mpeg'
-        }[name.substr(name.lastIndexOf('.')+1)];
-      },getUserMedia:function(func) {
-        if (!window.getUserMedia) {
-          window.getUserMedia = navigator['getUserMedia'] ||
-                                navigator['mozGetUserMedia'];
-        }
-        window.getUserMedia(func);
-      },getMovementX:function(event) {
-        return event['movementX'] ||
-               event['mozMovementX'] ||
-               event['webkitMovementX'] ||
-               0;
-      },getMovementY:function(event) {
-        return event['movementY'] ||
-               event['mozMovementY'] ||
-               event['webkitMovementY'] ||
-               0;
-      },getMouseWheelDelta:function(event) {
-        var delta = 0;
-        switch (event.type) {
-          case 'DOMMouseScroll':
-            // 3 lines make up a step
-            delta = event.detail / 3;
-            break;
-          case 'mousewheel':
-            // 120 units make up a step
-            delta = event.wheelDelta / 120;
-            break;
-          case 'wheel':
-            delta = event.deltaY
-            switch (event.deltaMode) {
-              case 0:
-                // DOM_DELTA_PIXEL: 100 pixels make up a step
-                delta /= 100;
-                break;
-              case 1:
-                // DOM_DELTA_LINE: 3 lines make up a step
-                delta /= 3;
-                break;
-              case 2:
-                // DOM_DELTA_PAGE: A page makes up 80 steps
-                delta *= 80;
-                break;
-              default:
-                throw 'unrecognized mouse wheel delta mode: ' + event.deltaMode;
-            }
-            break;
-          default:
-            throw 'unrecognized mouse wheel event: ' + event.type;
-        }
-        return delta;
-      },mouseX:0,mouseY:0,mouseMovementX:0,mouseMovementY:0,touches:{},lastTouches:{},calculateMouseEvent:function(event) { // event should be mousemove, mousedown or mouseup
-        if (Browser.pointerLock) {
-          // When the pointer is locked, calculate the coordinates
-          // based on the movement of the mouse.
-          // Workaround for Firefox bug 764498
-          if (event.type != 'mousemove' &&
-              ('mozMovementX' in event)) {
-            Browser.mouseMovementX = Browser.mouseMovementY = 0;
-          } else {
-            Browser.mouseMovementX = Browser.getMovementX(event);
-            Browser.mouseMovementY = Browser.getMovementY(event);
-          }
-  
-          // check if SDL is available
-          if (typeof SDL != "undefined") {
-            Browser.mouseX = SDL.mouseX + Browser.mouseMovementX;
-            Browser.mouseY = SDL.mouseY + Browser.mouseMovementY;
-          } else {
-            // just add the mouse delta to the current absolut mouse position
-            // FIXME: ideally this should be clamped against the canvas size and zero
-            Browser.mouseX += Browser.mouseMovementX;
-            Browser.mouseY += Browser.mouseMovementY;
-          }
-        } else {
-          // Otherwise, calculate the movement based on the changes
-          // in the coordinates.
-          var rect = Module["canvas"].getBoundingClientRect();
-          var cw = Module["canvas"].width;
-          var ch = Module["canvas"].height;
-  
-          // Neither .scrollX or .pageXOffset are defined in a spec, but
-          // we prefer .scrollX because it is currently in a spec draft.
-          // (see: http://www.w3.org/TR/2013/WD-cssom-view-20131217/)
-          var scrollX = ((typeof window.scrollX !== 'undefined') ? window.scrollX : window.pageXOffset);
-          var scrollY = ((typeof window.scrollY !== 'undefined') ? window.scrollY : window.pageYOffset);
-          // If this assert lands, it's likely because the browser doesn't support scrollX or pageXOffset
-          // and we have no viable fallback.
-          assert((typeof scrollX !== 'undefined') && (typeof scrollY !== 'undefined'), 'Unable to retrieve scroll position, mouse positions likely broken.');
-  
-          if (event.type === 'touchstart' || event.type === 'touchend' || event.type === 'touchmove') {
-            var touch = event.touch;
-            if (touch === undefined) {
-              return; // the "touch" property is only defined in SDL
-  
-            }
-            var adjustedX = touch.pageX - (scrollX + rect.left);
-            var adjustedY = touch.pageY - (scrollY + rect.top);
-  
-            adjustedX = adjustedX * (cw / rect.width);
-            adjustedY = adjustedY * (ch / rect.height);
-  
-            var coords = { x: adjustedX, y: adjustedY };
-  
-            if (event.type === 'touchstart') {
-              Browser.lastTouches[touch.identifier] = coords;
-              Browser.touches[touch.identifier] = coords;
-            } else if (event.type === 'touchend' || event.type === 'touchmove') {
-              var last = Browser.touches[touch.identifier];
-              if (!last) last = coords;
-              Browser.lastTouches[touch.identifier] = last;
-              Browser.touches[touch.identifier] = coords;
-            }
-            return;
-          }
-  
-          var x = event.pageX - (scrollX + rect.left);
-          var y = event.pageY - (scrollY + rect.top);
-  
-          // the canvas might be CSS-scaled compared to its backbuffer;
-          // SDL-using content will want mouse coordinates in terms
-          // of backbuffer units.
-          x = x * (cw / rect.width);
-          y = y * (ch / rect.height);
-  
-          Browser.mouseMovementX = x - Browser.mouseX;
-          Browser.mouseMovementY = y - Browser.mouseY;
-          Browser.mouseX = x;
-          Browser.mouseY = y;
-        }
-      },resizeListeners:[],updateResizeListeners:function() {
-        var canvas = Module['canvas'];
-        Browser.resizeListeners.forEach(function(listener) {
-          listener(canvas.width, canvas.height);
-        });
-      },setCanvasSize:function(width, height, noUpdates) {
-        var canvas = Module['canvas'];
-        Browser.updateCanvasDimensions(canvas, width, height);
-        if (!noUpdates) Browser.updateResizeListeners();
-      },windowedWidth:0,windowedHeight:0,setFullscreenCanvasSize:function() {
-        // check if SDL is available
-        if (typeof SDL != "undefined") {
-          var flags = HEAPU32[((SDL.screen)>>2)];
-          flags = flags | 0x00800000; // set SDL_FULLSCREEN flag
-          HEAP32[((SDL.screen)>>2)] = flags;
-        }
-        Browser.updateCanvasDimensions(Module['canvas']);
-        Browser.updateResizeListeners();
-      },setWindowedCanvasSize:function() {
-        // check if SDL is available
-        if (typeof SDL != "undefined") {
-          var flags = HEAPU32[((SDL.screen)>>2)];
-          flags = flags & ~0x00800000; // clear SDL_FULLSCREEN flag
-          HEAP32[((SDL.screen)>>2)] = flags;
-        }
-        Browser.updateCanvasDimensions(Module['canvas']);
-        Browser.updateResizeListeners();
-      },updateCanvasDimensions:function(canvas, wNative, hNative) {
-        if (wNative && hNative) {
-          canvas.widthNative = wNative;
-          canvas.heightNative = hNative;
-        } else {
-          wNative = canvas.widthNative;
-          hNative = canvas.heightNative;
-        }
-        var w = wNative;
-        var h = hNative;
-        if (Module['forcedAspectRatio'] && Module['forcedAspectRatio'] > 0) {
-          if (w/h < Module['forcedAspectRatio']) {
-            w = Math.round(h * Module['forcedAspectRatio']);
-          } else {
-            h = Math.round(w / Module['forcedAspectRatio']);
-          }
-        }
-        if (((document['fullscreenElement'] || document['mozFullScreenElement'] ||
-             document['msFullscreenElement'] || document['webkitFullscreenElement'] ||
-             document['webkitCurrentFullScreenElement']) === canvas.parentNode) && (typeof screen != 'undefined')) {
-           var factor = Math.min(screen.width / w, screen.height / h);
-           w = Math.round(w * factor);
-           h = Math.round(h * factor);
-        }
-        if (Browser.resizeCanvas) {
-          if (canvas.width  != w) canvas.width  = w;
-          if (canvas.height != h) canvas.height = h;
-          if (typeof canvas.style != 'undefined') {
-            canvas.style.removeProperty( "width");
-            canvas.style.removeProperty("height");
-          }
-        } else {
-          if (canvas.width  != wNative) canvas.width  = wNative;
-          if (canvas.height != hNative) canvas.height = hNative;
-          if (typeof canvas.style != 'undefined') {
-            if (w != wNative || h != hNative) {
-              canvas.style.setProperty( "width", w + "px", "important");
-              canvas.style.setProperty("height", h + "px", "important");
-            } else {
-              canvas.style.removeProperty( "width");
-              canvas.style.removeProperty("height");
-            }
-          }
-        }
-      }};
-  Module["Browser"] = Browser;
   var AL = {QUEUE_INTERVAL:25,QUEUE_LOOKAHEAD:0.1,DEVICE_NAME:"Emscripten OpenAL",CAPTURE_DEVICE_NAME:"Emscripten OpenAL capture",ALC_EXTENSIONS:{ALC_SOFT_pause_device:true,ALC_SOFT_HRTF:true},AL_EXTENSIONS:{AL_EXT_float32:true,AL_SOFT_loop_points:true,AL_SOFT_source_length:true,AL_EXT_source_distance_model:true,AL_SOFT_source_spatialize:true},_alcErr:0,alcErr:0,deviceRefCounts:{},alcStringCache:{},paused:false,stringCache:{},contexts:{},currentCtx:null,buffers:{0:{id:0,refCount:0,audioBuf:null,frequency:0,bytesPerSample:2,channels:1,length:0}},paramArray:[],_nextId:1,newId:function() {
         return AL.freeIds.length > 0 ? AL.freeIds.pop() : AL._nextId++;
       },freeIds:[],scheduleContextAudio:function(ctx) {
@@ -29884,6 +29893,14 @@ function call_trampoline(func,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,
 
 
 
+Module["requestFullscreen"] = function Module_requestFullscreen(lockPointer, resizeCanvas) { Browser.requestFullscreen(lockPointer, resizeCanvas) };
+  Module["requestFullScreen"] = function Module_requestFullScreen() { Browser.requestFullScreen() };
+  Module["requestAnimationFrame"] = function Module_requestAnimationFrame(func) { Browser.requestAnimationFrame(func) };
+  Module["setCanvasSize"] = function Module_setCanvasSize(width, height, noUpdates) { Browser.setCanvasSize(width, height, noUpdates) };
+  Module["pauseMainLoop"] = function Module_pauseMainLoop() { Browser.mainLoop.pause() };
+  Module["resumeMainLoop"] = function Module_resumeMainLoop() { Browser.mainLoop.resume() };
+  Module["getUserMedia"] = function Module_getUserMedia() { Browser.getUserMedia() }
+  Module["createContext"] = function Module_createContext(canvas, useWebGL, setInModule, webGLContextAttributes) { return Browser.createContext(canvas, useWebGL, setInModule, webGLContextAttributes) };
 
   var FSNode = /** @constructor */ function(parent, name, mode, rdev) {
     if (!parent) {
@@ -30054,14 +30071,6 @@ ERRNO_CODES = {
       'EOWNERDEAD': 62,
       'ESTRPIPE': 135,
     };;
-Module["requestFullscreen"] = function Module_requestFullscreen(lockPointer, resizeCanvas) { Browser.requestFullscreen(lockPointer, resizeCanvas) };
-  Module["requestFullScreen"] = function Module_requestFullScreen() { Browser.requestFullScreen() };
-  Module["requestAnimationFrame"] = function Module_requestAnimationFrame(func) { Browser.requestAnimationFrame(func) };
-  Module["setCanvasSize"] = function Module_setCanvasSize(width, height, noUpdates) { Browser.setCanvasSize(width, height, noUpdates) };
-  Module["pauseMainLoop"] = function Module_pauseMainLoop() { Browser.mainLoop.pause() };
-  Module["resumeMainLoop"] = function Module_resumeMainLoop() { Browser.mainLoop.resume() };
-  Module["getUserMedia"] = function Module_getUserMedia() { Browser.getUserMedia() }
-  Module["createContext"] = function Module_createContext(canvas, useWebGL, setInModule, webGLContextAttributes) { return Browser.createContext(canvas, useWebGL, setInModule, webGLContextAttributes) };
 var GLctx;;
 for (var i = 0; i < 32; ++i) tempFixedLengthArray.push(new Array(i));;
 var miniTempWebGLFloatBuffersStorage = new Float32Array(288);
@@ -34877,213 +34886,6 @@ var _rexit_ = Module["_rexit_"] = createExportWrapper("rexit_");
 var _rwarn_ = Module["_rwarn_"] = createExportWrapper("rwarn_");
 
 /** @type {function(...*):?} */
-var _dchdc_ = Module["_dchdc_"] = createExportWrapper("dchdc_");
-
-/** @type {function(...*):?} */
-var _dswap_ = Module["_dswap_"] = createExportWrapper("dswap_");
-
-/** @type {function(...*):?} */
-var _daxpy_ = Module["_daxpy_"] = createExportWrapper("daxpy_");
-
-/** @type {function(...*):?} */
-var _dpbfa_ = Module["_dpbfa_"] = createExportWrapper("dpbfa_");
-
-/** @type {function(...*):?} */
-var _ddot_ = Module["_ddot_"] = createExportWrapper("ddot_");
-
-/** @type {function(...*):?} */
-var _dpbsl_ = Module["_dpbsl_"] = createExportWrapper("dpbsl_");
-
-/** @type {function(...*):?} */
-var _dpoco_ = Module["_dpoco_"] = createExportWrapper("dpoco_");
-
-/** @type {function(...*):?} */
-var _dasum_ = Module["_dasum_"] = createExportWrapper("dasum_");
-
-/** @type {function(...*):?} */
-var _fabs = Module["_fabs"] = createExportWrapper("fabs");
-
-/** @type {function(...*):?} */
-var _dpofa_ = Module["_dpofa_"] = createExportWrapper("dpofa_");
-
-/** @type {function(...*):?} */
-var _copysign = Module["_copysign"] = createExportWrapper("copysign");
-
-/** @type {function(...*):?} */
-var _dscal_ = Module["_dscal_"] = createExportWrapper("dscal_");
-
-/** @type {function(...*):?} */
-var _dpodi_ = Module["_dpodi_"] = createExportWrapper("dpodi_");
-
-/** @type {function(...*):?} */
-var _dposl_ = Module["_dposl_"] = createExportWrapper("dposl_");
-
-/** @type {function(...*):?} */
-var _dqrdc_ = Module["_dqrdc_"] = createExportWrapper("dqrdc_");
-
-/** @type {function(...*):?} */
-var _dnrm2_ = Module["_dnrm2_"] = createExportWrapper("dnrm2_");
-
-/** @type {function(...*):?} */
-var _dqrls_ = Module["_dqrls_"] = createExportWrapper("dqrls_");
-
-/** @type {function(...*):?} */
-var _dqrsl_ = Module["_dqrsl_"] = createExportWrapper("dqrsl_");
-
-/** @type {function(...*):?} */
-var _dcopy_ = Module["_dcopy_"] = createExportWrapper("dcopy_");
-
-/** @type {function(...*):?} */
-var _dsvdc_ = Module["_dsvdc_"] = createExportWrapper("dsvdc_");
-
-/** @type {function(...*):?} */
-var _drotg_ = Module["_drotg_"] = createExportWrapper("drotg_");
-
-/** @type {function(...*):?} */
-var _drot_ = Module["_drot_"] = createExportWrapper("drot_");
-
-/** @type {function(...*):?} */
-var _dtrsl_ = Module["_dtrsl_"] = createExportWrapper("dtrsl_");
-
-/** @type {function(...*):?} */
-var _Rdqagi = Module["_Rdqagi"] = createExportWrapper("Rdqagi");
-
-/** @type {function(...*):?} */
-var _Rdqags = Module["_Rdqags"] = createExportWrapper("Rdqags");
-
-/** @type {function(...*):?} */
-var _interv_ = Module["_interv_"] = createExportWrapper("interv_");
-
-/** @type {function(...*):?} */
-var _findInterval = Module["_findInterval"] = createExportWrapper("findInterval");
-
-/** @type {function(...*):?} */
-var _vmmin = Module["_vmmin"] = createExportWrapper("vmmin");
-
-/** @type {function(...*):?} */
-var _nmmin = Module["_nmmin"] = createExportWrapper("nmmin");
-
-/** @type {function(...*):?} */
-var _cgmin = Module["_cgmin"] = createExportWrapper("cgmin");
-
-/** @type {function(...*):?} */
-var _lbfgsb = Module["_lbfgsb"] = createExportWrapper("lbfgsb");
-
-/** @type {function(...*):?} */
-var _samin = Module["_samin"] = createExportWrapper("samin");
-
-/** @type {function(...*):?} */
-var _norm_rand = Module["_norm_rand"] = createExportWrapper("norm_rand");
-
-/** @type {function(...*):?} */
-var _fdhess = Module["_fdhess"] = createExportWrapper("fdhess");
-
-/** @type {function(...*):?} */
-var _optif9 = Module["_optif9"] = createExportWrapper("optif9");
-
-/** @type {function(...*):?} */
-var _Rf_bessel_i = Module["_Rf_bessel_i"] = createExportWrapper("Rf_bessel_i");
-
-/** @type {function(...*):?} */
-var _Rf_bessel_k = Module["_Rf_bessel_k"] = createExportWrapper("Rf_bessel_k");
-
-/** @type {function(...*):?} */
-var _Rf_bessel_j = Module["_Rf_bessel_j"] = createExportWrapper("Rf_bessel_j");
-
-/** @type {function(...*):?} */
-var _Rf_bessel_y = Module["_Rf_bessel_y"] = createExportWrapper("Rf_bessel_y");
-
-/** @type {function(...*):?} */
-var _Rf_lgammafn_sign = Module["_Rf_lgammafn_sign"] = createExportWrapper("Rf_lgammafn_sign");
-
-/** @type {function(...*):?} */
-var _fmod = Module["_fmod"] = createExportWrapper("fmod");
-
-/** @type {function(...*):?} */
-var _d1mach_ = Module["_d1mach_"] = createExportWrapper("d1mach_");
-
-/** @type {function(...*):?} */
-var _Rf_dbinom_raw = Module["_Rf_dbinom_raw"] = createExportWrapper("Rf_dbinom_raw");
-
-/** @type {function(...*):?} */
-var _Rf_dpois_raw = Module["_Rf_dpois_raw"] = createExportWrapper("Rf_dpois_raw");
-
-/** @type {function(...*):?} */
-var _logl = Module["_logl"] = createExportWrapper("logl");
-
-/** @type {function(...*):?} */
-var _Rf_lgamma1p = Module["_Rf_lgamma1p"] = createExportWrapper("Rf_lgamma1p");
-
-/** @type {function(...*):?} */
-var ___letf2 = Module["___letf2"] = createExportWrapper("__letf2");
-
-/** @type {function(...*):?} */
-var _round = Module["_round"] = createExportWrapper("round");
-
-/** @type {function(...*):?} */
-var _logb = Module["_logb"] = createExportWrapper("logb");
-
-/** @type {function(...*):?} */
-var _Rf_fsign = Module["_Rf_fsign"] = createExportWrapper("Rf_fsign");
-
-/** @type {function(...*):?} */
-var _Rf_ftrunc = Module["_Rf_ftrunc"] = createExportWrapper("Rf_ftrunc");
-
-/** @type {function(...*):?} */
-var _i1mach_ = Module["_i1mach_"] = createExportWrapper("i1mach_");
-
-/** @type {function(...*):?} */
-var _lgamma = Module["_lgamma"] = createExportWrapper("lgamma");
-
-/** @type {function(...*):?} */
-var _Rf_log1pmx = Module["_Rf_log1pmx"] = createExportWrapper("Rf_log1pmx");
-
-/** @type {function(...*):?} */
-var _Rf_logspace_add = Module["_Rf_logspace_add"] = createExportWrapper("Rf_logspace_add");
-
-/** @type {function(...*):?} */
-var _Rf_logspace_sub = Module["_Rf_logspace_sub"] = createExportWrapper("Rf_logspace_sub");
-
-/** @type {function(...*):?} */
-var _Rf_logspace_sum = Module["_Rf_logspace_sum"] = createExportWrapper("Rf_logspace_sum");
-
-/** @type {function(...*):?} */
-var _expl = Module["_expl"] = createExportWrapper("expl");
-
-/** @type {function(...*):?} */
-var _Rf_log1pexp = Module["_Rf_log1pexp"] = createExportWrapper("Rf_log1pexp");
-
-/** @type {function(...*):?} */
-var _Rf_log1mexp = Module["_Rf_log1mexp"] = createExportWrapper("Rf_log1mexp");
-
-/** @type {function(...*):?} */
-var _log1pl = Module["_log1pl"] = createExportWrapper("log1pl");
-
-/** @type {function(...*):?} */
-var _Rf_pnorm_both = Module["_Rf_pnorm_both"] = createExportWrapper("Rf_pnorm_both");
-
-/** @type {function(...*):?} */
-var _Rf_dpsifn = Module["_Rf_dpsifn"] = createExportWrapper("Rf_dpsifn");
-
-/** @type {function(...*):?} */
-var _Rf_tetragamma = Module["_Rf_tetragamma"] = createExportWrapper("Rf_tetragamma");
-
-/** @type {function(...*):?} */
-var _Rf_pentagamma = Module["_Rf_pentagamma"] = createExportWrapper("Rf_pentagamma");
-
-/** @type {function(...*):?} */
-var _exp_rand = Module["_exp_rand"] = createExportWrapper("exp_rand");
-
-/** @type {function(...*):?} */
-var _Rf_rmultinom = Module["_Rf_rmultinom"] = createExportWrapper("Rf_rmultinom");
-
-/** @type {function(...*):?} */
-var _signrank_free = Module["_signrank_free"] = createExportWrapper("signrank_free");
-
-/** @type {function(...*):?} */
-var _wilcox_free = Module["_wilcox_free"] = createExportWrapper("wilcox_free");
-
-/** @type {function(...*):?} */
 var _Rf_initEmbeddedR = Module["_Rf_initEmbeddedR"] = createExportWrapper("Rf_initEmbeddedR");
 
 /** @type {function(...*):?} */
@@ -35093,64 +34895,25 @@ var _Rf_endEmbeddedR = Module["_Rf_endEmbeddedR"] = createExportWrapper("Rf_endE
 var _fpu_setup = Module["_fpu_setup"] = createExportWrapper("fpu_setup");
 
 /** @type {function(...*):?} */
-var _do_X11 = Module["_do_X11"] = createExportWrapper("do_X11");
+var _dlopen = Module["_dlopen"] = createExportWrapper("dlopen");
 
 /** @type {function(...*):?} */
-var _do_saveplot = Module["_do_saveplot"] = createExportWrapper("do_saveplot");
-
-/** @type {function(...*):?} */
-var _R_GetX11Image = Module["_R_GetX11Image"] = createExportWrapper("R_GetX11Image");
-
-/** @type {function(...*):?} */
-var _do_bmVersion = Module["_do_bmVersion"] = createExportWrapper("do_bmVersion");
+var _dlclose = Module["_dlclose"] = createExportWrapper("dlclose");
 
 /** @type {function(...*):?} */
 var _dlerror = Module["_dlerror"] = createExportWrapper("dlerror");
 
 /** @type {function(...*):?} */
+var _R_setupHistory = Module["_R_setupHistory"] = createExportWrapper("R_setupHistory");
+
+/** @type {function(...*):?} */
+var _Rstd_ShowMessage = Module["_Rstd_ShowMessage"] = createExportWrapper("Rstd_ShowMessage");
+
+/** @type {function(...*):?} */
 var _Rstd_Suicide = Module["_Rstd_Suicide"] = createExportWrapper("Rstd_Suicide");
 
 /** @type {function(...*):?} */
-var _R_SelectEx = Module["_R_SelectEx"] = createExportWrapper("R_SelectEx");
-
-/** @type {function(...*):?} */
-var _select = Module["_select"] = createExportWrapper("select");
-
-/** @type {function(...*):?} */
-var _initStdinHandler = Module["_initStdinHandler"] = createExportWrapper("initStdinHandler");
-
-/** @type {function(...*):?} */
-var _addInputHandler = Module["_addInputHandler"] = createExportWrapper("addInputHandler");
-
-/** @type {function(...*):?} */
-var _removeInputHandler = Module["_removeInputHandler"] = createExportWrapper("removeInputHandler");
-
-/** @type {function(...*):?} */
-var _getInputHandler = Module["_getInputHandler"] = createExportWrapper("getInputHandler");
-
-/** @type {function(...*):?} */
-var _R_checkActivityEx = Module["_R_checkActivityEx"] = createExportWrapper("R_checkActivityEx");
-
-/** @type {function(...*):?} */
-var _R_checkActivity = Module["_R_checkActivity"] = createExportWrapper("R_checkActivity");
-
-/** @type {function(...*):?} */
-var _R_runHandlers = Module["_R_runHandlers"] = createExportWrapper("R_runHandlers");
-
-/** @type {function(...*):?} */
-var _getSelectedHandler = Module["_getSelectedHandler"] = createExportWrapper("getSelectedHandler");
-
-/** @type {function(...*):?} */
 var _Rstd_ReadConsole = Module["_Rstd_ReadConsole"] = createExportWrapper("Rstd_ReadConsole");
-
-/** @type {function(...*):?} */
-var _fputs = Module["_fputs"] = createExportWrapper("fputs");
-
-/** @type {function(...*):?} */
-var _emscripten_fetch_attr_init = Module["_emscripten_fetch_attr_init"] = createExportWrapper("emscripten_fetch_attr_init");
-
-/** @type {function(...*):?} */
-var _emscripten_fetch = Module["_emscripten_fetch"] = createExportWrapper("emscripten_fetch");
 
 /** @type {function(...*):?} */
 var _Rstd_WriteConsole = Module["_Rstd_WriteConsole"] = createExportWrapper("Rstd_WriteConsole");
@@ -35165,9 +34928,6 @@ var _Rstd_FlushConsole = Module["_Rstd_FlushConsole"] = createExportWrapper("Rst
 var _Rstd_ClearerrConsole = Module["_Rstd_ClearerrConsole"] = createExportWrapper("Rstd_ClearerrConsole");
 
 /** @type {function(...*):?} */
-var _clearerr = Module["_clearerr"] = createExportWrapper("clearerr");
-
-/** @type {function(...*):?} */
 var _Rstd_Busy = Module["_Rstd_Busy"] = createExportWrapper("Rstd_Busy");
 
 /** @type {function(...*):?} */
@@ -35180,9 +34940,6 @@ var _Rstd_ShowFiles = Module["_Rstd_ShowFiles"] = createExportWrapper("Rstd_Show
 var _Rstd_ChooseFile = Module["_Rstd_ChooseFile"] = createExportWrapper("Rstd_ChooseFile");
 
 /** @type {function(...*):?} */
-var _Rstd_ShowMessage = Module["_Rstd_ShowMessage"] = createExportWrapper("Rstd_ShowMessage");
-
-/** @type {function(...*):?} */
 var _Rstd_loadhistory = Module["_Rstd_loadhistory"] = createExportWrapper("Rstd_loadhistory");
 
 /** @type {function(...*):?} */
@@ -35192,13 +34949,28 @@ var _Rstd_savehistory = Module["_Rstd_savehistory"] = createExportWrapper("Rstd_
 var _Rstd_addhistory = Module["_Rstd_addhistory"] = createExportWrapper("Rstd_addhistory");
 
 /** @type {function(...*):?} */
+var _R_setStartTime = Module["_R_setStartTime"] = createExportWrapper("R_setStartTime");
+
+/** @type {function(...*):?} */
+var _mkstemp = Module["_mkstemp"] = createExportWrapper("mkstemp");
+
+/** @type {function(...*):?} */
+var _rewind = Module["_rewind"] = createExportWrapper("rewind");
+
+/** @type {function(...*):?} */
+var _fputs = Module["_fputs"] = createExportWrapper("fputs");
+
+/** @type {function(...*):?} */
+var _R_EditFiles = Module["_R_EditFiles"] = createExportWrapper("R_EditFiles");
+
+/** @type {function(...*):?} */
+var _R_GetFDLimit = Module["_R_GetFDLimit"] = createExportWrapper("R_GetFDLimit");
+
+/** @type {function(...*):?} */
 var _getuid = Module["_getuid"] = createExportWrapper("getuid");
 
 /** @type {function(...*):?} */
 var _getpwnam = Module["_getpwnam"] = createExportWrapper("getpwnam");
-
-/** @type {function(...*):?} */
-var _R_setStartTime = Module["_R_setStartTime"] = createExportWrapper("R_setStartTime");
 
 /** @type {function(...*):?} */
 var _sysconf = Module["_sysconf"] = createExportWrapper("sysconf");
@@ -35255,19 +35027,262 @@ var _killpg = Module["_killpg"] = createExportWrapper("killpg");
 var _fork = Module["_fork"] = createExportWrapper("fork");
 
 /** @type {function(...*):?} */
-var _R_setupHistory = Module["_R_setupHistory"] = createExportWrapper("R_setupHistory");
+var _R_SelectEx = Module["_R_SelectEx"] = createExportWrapper("R_SelectEx");
 
 /** @type {function(...*):?} */
-var _mkstemp = Module["_mkstemp"] = createExportWrapper("mkstemp");
+var _select = Module["_select"] = createExportWrapper("select");
 
 /** @type {function(...*):?} */
-var _rewind = Module["_rewind"] = createExportWrapper("rewind");
+var _initStdinHandler = Module["_initStdinHandler"] = createExportWrapper("initStdinHandler");
 
 /** @type {function(...*):?} */
-var _R_EditFiles = Module["_R_EditFiles"] = createExportWrapper("R_EditFiles");
+var _addInputHandler = Module["_addInputHandler"] = createExportWrapper("addInputHandler");
 
 /** @type {function(...*):?} */
-var _R_GetFDLimit = Module["_R_GetFDLimit"] = createExportWrapper("R_GetFDLimit");
+var _removeInputHandler = Module["_removeInputHandler"] = createExportWrapper("removeInputHandler");
+
+/** @type {function(...*):?} */
+var _getInputHandler = Module["_getInputHandler"] = createExportWrapper("getInputHandler");
+
+/** @type {function(...*):?} */
+var _R_checkActivityEx = Module["_R_checkActivityEx"] = createExportWrapper("R_checkActivityEx");
+
+/** @type {function(...*):?} */
+var _R_checkActivity = Module["_R_checkActivity"] = createExportWrapper("R_checkActivity");
+
+/** @type {function(...*):?} */
+var _R_runHandlers = Module["_R_runHandlers"] = createExportWrapper("R_runHandlers");
+
+/** @type {function(...*):?} */
+var _getSelectedHandler = Module["_getSelectedHandler"] = createExportWrapper("getSelectedHandler");
+
+/** @type {function(...*):?} */
+var _emscripten_fetch_attr_init = Module["_emscripten_fetch_attr_init"] = createExportWrapper("emscripten_fetch_attr_init");
+
+/** @type {function(...*):?} */
+var _emscripten_fetch = Module["_emscripten_fetch"] = createExportWrapper("emscripten_fetch");
+
+/** @type {function(...*):?} */
+var _clearerr = Module["_clearerr"] = createExportWrapper("clearerr");
+
+/** @type {function(...*):?} */
+var _do_X11 = Module["_do_X11"] = createExportWrapper("do_X11");
+
+/** @type {function(...*):?} */
+var _do_saveplot = Module["_do_saveplot"] = createExportWrapper("do_saveplot");
+
+/** @type {function(...*):?} */
+var _R_GetX11Image = Module["_R_GetX11Image"] = createExportWrapper("R_GetX11Image");
+
+/** @type {function(...*):?} */
+var _do_bmVersion = Module["_do_bmVersion"] = createExportWrapper("do_bmVersion");
+
+/** @type {function(...*):?} */
+var _Rdqagi = Module["_Rdqagi"] = createExportWrapper("Rdqagi");
+
+/** @type {function(...*):?} */
+var _Rdqags = Module["_Rdqags"] = createExportWrapper("Rdqags");
+
+/** @type {function(...*):?} */
+var _interv_ = Module["_interv_"] = createExportWrapper("interv_");
+
+/** @type {function(...*):?} */
+var _findInterval = Module["_findInterval"] = createExportWrapper("findInterval");
+
+/** @type {function(...*):?} */
+var _vmmin = Module["_vmmin"] = createExportWrapper("vmmin");
+
+/** @type {function(...*):?} */
+var _nmmin = Module["_nmmin"] = createExportWrapper("nmmin");
+
+/** @type {function(...*):?} */
+var _cgmin = Module["_cgmin"] = createExportWrapper("cgmin");
+
+/** @type {function(...*):?} */
+var _lbfgsb = Module["_lbfgsb"] = createExportWrapper("lbfgsb");
+
+/** @type {function(...*):?} */
+var _samin = Module["_samin"] = createExportWrapper("samin");
+
+/** @type {function(...*):?} */
+var _norm_rand = Module["_norm_rand"] = createExportWrapper("norm_rand");
+
+/** @type {function(...*):?} */
+var _dcopy_ = Module["_dcopy_"] = createExportWrapper("dcopy_");
+
+/** @type {function(...*):?} */
+var _ddot_ = Module["_ddot_"] = createExportWrapper("ddot_");
+
+/** @type {function(...*):?} */
+var _dscal_ = Module["_dscal_"] = createExportWrapper("dscal_");
+
+/** @type {function(...*):?} */
+var _daxpy_ = Module["_daxpy_"] = createExportWrapper("daxpy_");
+
+/** @type {function(...*):?} */
+var _dpofa_ = Module["_dpofa_"] = createExportWrapper("dpofa_");
+
+/** @type {function(...*):?} */
+var _dtrsl_ = Module["_dtrsl_"] = createExportWrapper("dtrsl_");
+
+/** @type {function(...*):?} */
+var _fdhess = Module["_fdhess"] = createExportWrapper("fdhess");
+
+/** @type {function(...*):?} */
+var _optif9 = Module["_optif9"] = createExportWrapper("optif9");
+
+/** @type {function(...*):?} */
+var _dnrm2_ = Module["_dnrm2_"] = createExportWrapper("dnrm2_");
+
+/** @type {function(...*):?} */
+var _dchdc_ = Module["_dchdc_"] = createExportWrapper("dchdc_");
+
+/** @type {function(...*):?} */
+var _dswap_ = Module["_dswap_"] = createExportWrapper("dswap_");
+
+/** @type {function(...*):?} */
+var _dpbfa_ = Module["_dpbfa_"] = createExportWrapper("dpbfa_");
+
+/** @type {function(...*):?} */
+var _dpbsl_ = Module["_dpbsl_"] = createExportWrapper("dpbsl_");
+
+/** @type {function(...*):?} */
+var _dpoco_ = Module["_dpoco_"] = createExportWrapper("dpoco_");
+
+/** @type {function(...*):?} */
+var _dasum_ = Module["_dasum_"] = createExportWrapper("dasum_");
+
+/** @type {function(...*):?} */
+var _fabs = Module["_fabs"] = createExportWrapper("fabs");
+
+/** @type {function(...*):?} */
+var _copysign = Module["_copysign"] = createExportWrapper("copysign");
+
+/** @type {function(...*):?} */
+var _dpodi_ = Module["_dpodi_"] = createExportWrapper("dpodi_");
+
+/** @type {function(...*):?} */
+var _dposl_ = Module["_dposl_"] = createExportWrapper("dposl_");
+
+/** @type {function(...*):?} */
+var _dqrdc_ = Module["_dqrdc_"] = createExportWrapper("dqrdc_");
+
+/** @type {function(...*):?} */
+var _dqrls_ = Module["_dqrls_"] = createExportWrapper("dqrls_");
+
+/** @type {function(...*):?} */
+var _dqrsl_ = Module["_dqrsl_"] = createExportWrapper("dqrsl_");
+
+/** @type {function(...*):?} */
+var _dsvdc_ = Module["_dsvdc_"] = createExportWrapper("dsvdc_");
+
+/** @type {function(...*):?} */
+var _drotg_ = Module["_drotg_"] = createExportWrapper("drotg_");
+
+/** @type {function(...*):?} */
+var _drot_ = Module["_drot_"] = createExportWrapper("drot_");
+
+/** @type {function(...*):?} */
+var _d1mach_ = Module["_d1mach_"] = createExportWrapper("d1mach_");
+
+/** @type {function(...*):?} */
+var _i1mach_ = Module["_i1mach_"] = createExportWrapper("i1mach_");
+
+/** @type {function(...*):?} */
+var _round = Module["_round"] = createExportWrapper("round");
+
+/** @type {function(...*):?} */
+var _logb = Module["_logb"] = createExportWrapper("logb");
+
+/** @type {function(...*):?} */
+var _fmod = Module["_fmod"] = createExportWrapper("fmod");
+
+/** @type {function(...*):?} */
+var _Rf_ftrunc = Module["_Rf_ftrunc"] = createExportWrapper("Rf_ftrunc");
+
+/** @type {function(...*):?} */
+var _Rf_fsign = Module["_Rf_fsign"] = createExportWrapper("Rf_fsign");
+
+/** @type {function(...*):?} */
+var _Rf_lgammafn_sign = Module["_Rf_lgammafn_sign"] = createExportWrapper("Rf_lgammafn_sign");
+
+/** @type {function(...*):?} */
+var _lgamma = Module["_lgamma"] = createExportWrapper("lgamma");
+
+/** @type {function(...*):?} */
+var _Rf_dpsifn = Module["_Rf_dpsifn"] = createExportWrapper("Rf_dpsifn");
+
+/** @type {function(...*):?} */
+var _Rf_tetragamma = Module["_Rf_tetragamma"] = createExportWrapper("Rf_tetragamma");
+
+/** @type {function(...*):?} */
+var _Rf_pentagamma = Module["_Rf_pentagamma"] = createExportWrapper("Rf_pentagamma");
+
+/** @type {function(...*):?} */
+var _Rf_bessel_i = Module["_Rf_bessel_i"] = createExportWrapper("Rf_bessel_i");
+
+/** @type {function(...*):?} */
+var _Rf_bessel_k = Module["_Rf_bessel_k"] = createExportWrapper("Rf_bessel_k");
+
+/** @type {function(...*):?} */
+var _Rf_bessel_j = Module["_Rf_bessel_j"] = createExportWrapper("Rf_bessel_j");
+
+/** @type {function(...*):?} */
+var _Rf_bessel_y = Module["_Rf_bessel_y"] = createExportWrapper("Rf_bessel_y");
+
+/** @type {function(...*):?} */
+var _exp_rand = Module["_exp_rand"] = createExportWrapper("exp_rand");
+
+/** @type {function(...*):?} */
+var _Rf_dpois_raw = Module["_Rf_dpois_raw"] = createExportWrapper("Rf_dpois_raw");
+
+/** @type {function(...*):?} */
+var _Rf_log1pmx = Module["_Rf_log1pmx"] = createExportWrapper("Rf_log1pmx");
+
+/** @type {function(...*):?} */
+var _Rf_lgamma1p = Module["_Rf_lgamma1p"] = createExportWrapper("Rf_lgamma1p");
+
+/** @type {function(...*):?} */
+var _Rf_logspace_add = Module["_Rf_logspace_add"] = createExportWrapper("Rf_logspace_add");
+
+/** @type {function(...*):?} */
+var _Rf_logspace_sub = Module["_Rf_logspace_sub"] = createExportWrapper("Rf_logspace_sub");
+
+/** @type {function(...*):?} */
+var _Rf_logspace_sum = Module["_Rf_logspace_sum"] = createExportWrapper("Rf_logspace_sum");
+
+/** @type {function(...*):?} */
+var _expl = Module["_expl"] = createExportWrapper("expl");
+
+/** @type {function(...*):?} */
+var _logl = Module["_logl"] = createExportWrapper("logl");
+
+/** @type {function(...*):?} */
+var _Rf_dbinom_raw = Module["_Rf_dbinom_raw"] = createExportWrapper("Rf_dbinom_raw");
+
+/** @type {function(...*):?} */
+var _Rf_pnorm_both = Module["_Rf_pnorm_both"] = createExportWrapper("Rf_pnorm_both");
+
+/** @type {function(...*):?} */
+var _Rf_rmultinom = Module["_Rf_rmultinom"] = createExportWrapper("Rf_rmultinom");
+
+/** @type {function(...*):?} */
+var _Rf_log1pexp = Module["_Rf_log1pexp"] = createExportWrapper("Rf_log1pexp");
+
+/** @type {function(...*):?} */
+var _Rf_log1mexp = Module["_Rf_log1mexp"] = createExportWrapper("Rf_log1mexp");
+
+/** @type {function(...*):?} */
+var ___letf2 = Module["___letf2"] = createExportWrapper("__letf2");
+
+/** @type {function(...*):?} */
+var _log1pl = Module["_log1pl"] = createExportWrapper("log1pl");
+
+/** @type {function(...*):?} */
+var _wilcox_free = Module["_wilcox_free"] = createExportWrapper("wilcox_free");
+
+/** @type {function(...*):?} */
+var _signrank_free = Module["_signrank_free"] = createExportWrapper("signrank_free");
 
 /** @type {function(...*):?} */
 var _tre_regncomp = Module["_tre_regncomp"] = createExportWrapper("tre_regncomp");
@@ -35609,1263 +35624,6 @@ var _xdr_u_int = Module["_xdr_u_int"] = createExportWrapper("xdr_u_int");
 var _xdr_opaque = Module["_xdr_opaque"] = createExportWrapper("xdr_opaque");
 
 /** @type {function(...*):?} */
-var _pcre2_code_copy_8 = Module["_pcre2_code_copy_8"] = createExportWrapper("pcre2_code_copy_8");
-
-/** @type {function(...*):?} */
-var _pcre2_code_copy_with_tables_8 = Module["_pcre2_code_copy_with_tables_8"] = createExportWrapper("pcre2_code_copy_with_tables_8");
-
-/** @type {function(...*):?} */
-var _pcre2_general_context_create_8 = Module["_pcre2_general_context_create_8"] = createExportWrapper("pcre2_general_context_create_8");
-
-/** @type {function(...*):?} */
-var _pcre2_convert_context_create_8 = Module["_pcre2_convert_context_create_8"] = createExportWrapper("pcre2_convert_context_create_8");
-
-/** @type {function(...*):?} */
-var _pcre2_general_context_copy_8 = Module["_pcre2_general_context_copy_8"] = createExportWrapper("pcre2_general_context_copy_8");
-
-/** @type {function(...*):?} */
-var _pcre2_compile_context_copy_8 = Module["_pcre2_compile_context_copy_8"] = createExportWrapper("pcre2_compile_context_copy_8");
-
-/** @type {function(...*):?} */
-var _pcre2_match_context_copy_8 = Module["_pcre2_match_context_copy_8"] = createExportWrapper("pcre2_match_context_copy_8");
-
-/** @type {function(...*):?} */
-var _pcre2_convert_context_copy_8 = Module["_pcre2_convert_context_copy_8"] = createExportWrapper("pcre2_convert_context_copy_8");
-
-/** @type {function(...*):?} */
-var _pcre2_general_context_free_8 = Module["_pcre2_general_context_free_8"] = createExportWrapper("pcre2_general_context_free_8");
-
-/** @type {function(...*):?} */
-var _pcre2_convert_context_free_8 = Module["_pcre2_convert_context_free_8"] = createExportWrapper("pcre2_convert_context_free_8");
-
-/** @type {function(...*):?} */
-var _pcre2_set_bsr_8 = Module["_pcre2_set_bsr_8"] = createExportWrapper("pcre2_set_bsr_8");
-
-/** @type {function(...*):?} */
-var _pcre2_set_max_pattern_length_8 = Module["_pcre2_set_max_pattern_length_8"] = createExportWrapper("pcre2_set_max_pattern_length_8");
-
-/** @type {function(...*):?} */
-var _pcre2_set_newline_8 = Module["_pcre2_set_newline_8"] = createExportWrapper("pcre2_set_newline_8");
-
-/** @type {function(...*):?} */
-var _pcre2_set_parens_nest_limit_8 = Module["_pcre2_set_parens_nest_limit_8"] = createExportWrapper("pcre2_set_parens_nest_limit_8");
-
-/** @type {function(...*):?} */
-var _pcre2_set_compile_extra_options_8 = Module["_pcre2_set_compile_extra_options_8"] = createExportWrapper("pcre2_set_compile_extra_options_8");
-
-/** @type {function(...*):?} */
-var _pcre2_set_compile_recursion_guard_8 = Module["_pcre2_set_compile_recursion_guard_8"] = createExportWrapper("pcre2_set_compile_recursion_guard_8");
-
-/** @type {function(...*):?} */
-var _pcre2_set_callout_8 = Module["_pcre2_set_callout_8"] = createExportWrapper("pcre2_set_callout_8");
-
-/** @type {function(...*):?} */
-var _pcre2_set_substitute_callout_8 = Module["_pcre2_set_substitute_callout_8"] = createExportWrapper("pcre2_set_substitute_callout_8");
-
-/** @type {function(...*):?} */
-var _pcre2_set_heap_limit_8 = Module["_pcre2_set_heap_limit_8"] = createExportWrapper("pcre2_set_heap_limit_8");
-
-/** @type {function(...*):?} */
-var _pcre2_set_match_limit_8 = Module["_pcre2_set_match_limit_8"] = createExportWrapper("pcre2_set_match_limit_8");
-
-/** @type {function(...*):?} */
-var _pcre2_set_depth_limit_8 = Module["_pcre2_set_depth_limit_8"] = createExportWrapper("pcre2_set_depth_limit_8");
-
-/** @type {function(...*):?} */
-var _pcre2_set_offset_limit_8 = Module["_pcre2_set_offset_limit_8"] = createExportWrapper("pcre2_set_offset_limit_8");
-
-/** @type {function(...*):?} */
-var _pcre2_set_recursion_limit_8 = Module["_pcre2_set_recursion_limit_8"] = createExportWrapper("pcre2_set_recursion_limit_8");
-
-/** @type {function(...*):?} */
-var _pcre2_set_recursion_memory_management_8 = Module["_pcre2_set_recursion_memory_management_8"] = createExportWrapper("pcre2_set_recursion_memory_management_8");
-
-/** @type {function(...*):?} */
-var _pcre2_set_glob_separator_8 = Module["_pcre2_set_glob_separator_8"] = createExportWrapper("pcre2_set_glob_separator_8");
-
-/** @type {function(...*):?} */
-var _pcre2_set_glob_escape_8 = Module["_pcre2_set_glob_escape_8"] = createExportWrapper("pcre2_set_glob_escape_8");
-
-/** @type {function(...*):?} */
-var _ispunct = Module["_ispunct"] = createExportWrapper("ispunct");
-
-/** @type {function(...*):?} */
-var _pcre2_pattern_convert_8 = Module["_pcre2_pattern_convert_8"] = createExportWrapper("pcre2_pattern_convert_8");
-
-/** @type {function(...*):?} */
-var _isdigit = Module["_isdigit"] = createExportWrapper("isdigit");
-
-/** @type {function(...*):?} */
-var _pcre2_converted_pattern_free_8 = Module["_pcre2_converted_pattern_free_8"] = createExportWrapper("pcre2_converted_pattern_free_8");
-
-/** @type {function(...*):?} */
-var _iscntrl = Module["_iscntrl"] = createExportWrapper("iscntrl");
-
-/** @type {function(...*):?} */
-var _isgraph = Module["_isgraph"] = createExportWrapper("isgraph");
-
-/** @type {function(...*):?} */
-var _isupper = Module["_isupper"] = createExportWrapper("isupper");
-
-/** @type {function(...*):?} */
-var _isxdigit = Module["_isxdigit"] = createExportWrapper("isxdigit");
-
-/** @type {function(...*):?} */
-var _pcre2_dfa_match_8 = Module["_pcre2_dfa_match_8"] = createExportWrapper("pcre2_dfa_match_8");
-
-/** @type {function(...*):?} */
-var _pcre2_jit_match_8 = Module["_pcre2_jit_match_8"] = createExportWrapper("pcre2_jit_match_8");
-
-/** @type {function(...*):?} */
-var _pcre2_jit_free_unused_memory_8 = Module["_pcre2_jit_free_unused_memory_8"] = createExportWrapper("pcre2_jit_free_unused_memory_8");
-
-/** @type {function(...*):?} */
-var _pcre2_jit_stack_free_8 = Module["_pcre2_jit_stack_free_8"] = createExportWrapper("pcre2_jit_stack_free_8");
-
-/** @type {function(...*):?} */
-var _pcre2_maketables_free_8 = Module["_pcre2_maketables_free_8"] = createExportWrapper("pcre2_maketables_free_8");
-
-/** @type {function(...*):?} */
-var _pcre2_match_data_create_from_pattern_8 = Module["_pcre2_match_data_create_from_pattern_8"] = createExportWrapper("pcre2_match_data_create_from_pattern_8");
-
-/** @type {function(...*):?} */
-var _pcre2_get_mark_8 = Module["_pcre2_get_mark_8"] = createExportWrapper("pcre2_get_mark_8");
-
-/** @type {function(...*):?} */
-var _pcre2_get_ovector_count_8 = Module["_pcre2_get_ovector_count_8"] = createExportWrapper("pcre2_get_ovector_count_8");
-
-/** @type {function(...*):?} */
-var _pcre2_get_startchar_8 = Module["_pcre2_get_startchar_8"] = createExportWrapper("pcre2_get_startchar_8");
-
-/** @type {function(...*):?} */
-var _pcre2_get_match_data_size_8 = Module["_pcre2_get_match_data_size_8"] = createExportWrapper("pcre2_get_match_data_size_8");
-
-/** @type {function(...*):?} */
-var _pcre2_callout_enumerate_8 = Module["_pcre2_callout_enumerate_8"] = createExportWrapper("pcre2_callout_enumerate_8");
-
-/** @type {function(...*):?} */
-var _pcre2_serialize_encode_8 = Module["_pcre2_serialize_encode_8"] = createExportWrapper("pcre2_serialize_encode_8");
-
-/** @type {function(...*):?} */
-var _pcre2_serialize_decode_8 = Module["_pcre2_serialize_decode_8"] = createExportWrapper("pcre2_serialize_decode_8");
-
-/** @type {function(...*):?} */
-var _pcre2_serialize_get_number_of_codes_8 = Module["_pcre2_serialize_get_number_of_codes_8"] = createExportWrapper("pcre2_serialize_get_number_of_codes_8");
-
-/** @type {function(...*):?} */
-var _pcre2_serialize_free_8 = Module["_pcre2_serialize_free_8"] = createExportWrapper("pcre2_serialize_free_8");
-
-/** @type {function(...*):?} */
-var _pcre2_substitute_8 = Module["_pcre2_substitute_8"] = createExportWrapper("pcre2_substitute_8");
-
-/** @type {function(...*):?} */
-var _pcre2_substring_nametable_scan_8 = Module["_pcre2_substring_nametable_scan_8"] = createExportWrapper("pcre2_substring_nametable_scan_8");
-
-/** @type {function(...*):?} */
-var _pcre2_substring_length_bynumber_8 = Module["_pcre2_substring_length_bynumber_8"] = createExportWrapper("pcre2_substring_length_bynumber_8");
-
-/** @type {function(...*):?} */
-var _pcre2_substring_copy_byname_8 = Module["_pcre2_substring_copy_byname_8"] = createExportWrapper("pcre2_substring_copy_byname_8");
-
-/** @type {function(...*):?} */
-var _pcre2_substring_copy_bynumber_8 = Module["_pcre2_substring_copy_bynumber_8"] = createExportWrapper("pcre2_substring_copy_bynumber_8");
-
-/** @type {function(...*):?} */
-var _pcre2_substring_get_byname_8 = Module["_pcre2_substring_get_byname_8"] = createExportWrapper("pcre2_substring_get_byname_8");
-
-/** @type {function(...*):?} */
-var _pcre2_substring_get_bynumber_8 = Module["_pcre2_substring_get_bynumber_8"] = createExportWrapper("pcre2_substring_get_bynumber_8");
-
-/** @type {function(...*):?} */
-var _pcre2_substring_free_8 = Module["_pcre2_substring_free_8"] = createExportWrapper("pcre2_substring_free_8");
-
-/** @type {function(...*):?} */
-var _pcre2_substring_length_byname_8 = Module["_pcre2_substring_length_byname_8"] = createExportWrapper("pcre2_substring_length_byname_8");
-
-/** @type {function(...*):?} */
-var _pcre2_substring_list_get_8 = Module["_pcre2_substring_list_get_8"] = createExportWrapper("pcre2_substring_list_get_8");
-
-/** @type {function(...*):?} */
-var _pcre2_substring_list_free_8 = Module["_pcre2_substring_list_free_8"] = createExportWrapper("pcre2_substring_list_free_8");
-
-/** @type {function(...*):?} */
-var _pcre2_substring_number_from_name_8 = Module["_pcre2_substring_number_from_name_8"] = createExportWrapper("pcre2_substring_number_from_name_8");
-
-/** @type {function(...*):?} */
-var _lzma_version_number = Module["_lzma_version_number"] = createExportWrapper("lzma_version_number");
-
-/** @type {function(...*):?} */
-var _lzma_free = Module["_lzma_free"] = createExportWrapper("lzma_free");
-
-/** @type {function(...*):?} */
-var _lzma_get_progress = Module["_lzma_get_progress"] = createExportWrapper("lzma_get_progress");
-
-/** @type {function(...*):?} */
-var _lzma_get_check = Module["_lzma_get_check"] = createExportWrapper("lzma_get_check");
-
-/** @type {function(...*):?} */
-var _lzma_memusage = Module["_lzma_memusage"] = createExportWrapper("lzma_memusage");
-
-/** @type {function(...*):?} */
-var _lzma_memlimit_get = Module["_lzma_memlimit_get"] = createExportWrapper("lzma_memlimit_get");
-
-/** @type {function(...*):?} */
-var _lzma_memlimit_set = Module["_lzma_memlimit_set"] = createExportWrapper("lzma_memlimit_set");
-
-/** @type {function(...*):?} */
-var _lzma_block_compressed_size = Module["_lzma_block_compressed_size"] = createExportWrapper("lzma_block_compressed_size");
-
-/** @type {function(...*):?} */
-var _lzma_block_unpadded_size = Module["_lzma_block_unpadded_size"] = createExportWrapper("lzma_block_unpadded_size");
-
-/** @type {function(...*):?} */
-var _lzma_check_size = Module["_lzma_check_size"] = createExportWrapper("lzma_check_size");
-
-/** @type {function(...*):?} */
-var _lzma_block_total_size = Module["_lzma_block_total_size"] = createExportWrapper("lzma_block_total_size");
-
-/** @type {function(...*):?} */
-var _lzma_filters_copy = Module["_lzma_filters_copy"] = createExportWrapper("lzma_filters_copy");
-
-/** @type {function(...*):?} */
-var _lzma_physmem = Module["_lzma_physmem"] = createExportWrapper("lzma_physmem");
-
-/** @type {function(...*):?} */
-var _lzma_index_init = Module["_lzma_index_init"] = createExportWrapper("lzma_index_init");
-
-/** @type {function(...*):?} */
-var _lzma_index_end = Module["_lzma_index_end"] = createExportWrapper("lzma_index_end");
-
-/** @type {function(...*):?} */
-var _lzma_index_memusage = Module["_lzma_index_memusage"] = createExportWrapper("lzma_index_memusage");
-
-/** @type {function(...*):?} */
-var _lzma_index_memused = Module["_lzma_index_memused"] = createExportWrapper("lzma_index_memused");
-
-/** @type {function(...*):?} */
-var _lzma_index_block_count = Module["_lzma_index_block_count"] = createExportWrapper("lzma_index_block_count");
-
-/** @type {function(...*):?} */
-var _lzma_index_stream_count = Module["_lzma_index_stream_count"] = createExportWrapper("lzma_index_stream_count");
-
-/** @type {function(...*):?} */
-var _lzma_index_size = Module["_lzma_index_size"] = createExportWrapper("lzma_index_size");
-
-/** @type {function(...*):?} */
-var _lzma_index_total_size = Module["_lzma_index_total_size"] = createExportWrapper("lzma_index_total_size");
-
-/** @type {function(...*):?} */
-var _lzma_index_stream_size = Module["_lzma_index_stream_size"] = createExportWrapper("lzma_index_stream_size");
-
-/** @type {function(...*):?} */
-var _lzma_index_file_size = Module["_lzma_index_file_size"] = createExportWrapper("lzma_index_file_size");
-
-/** @type {function(...*):?} */
-var _lzma_index_uncompressed_size = Module["_lzma_index_uncompressed_size"] = createExportWrapper("lzma_index_uncompressed_size");
-
-/** @type {function(...*):?} */
-var _lzma_index_checks = Module["_lzma_index_checks"] = createExportWrapper("lzma_index_checks");
-
-/** @type {function(...*):?} */
-var _lzma_vli_size = Module["_lzma_vli_size"] = createExportWrapper("lzma_vli_size");
-
-/** @type {function(...*):?} */
-var _lzma_index_stream_flags = Module["_lzma_index_stream_flags"] = createExportWrapper("lzma_index_stream_flags");
-
-/** @type {function(...*):?} */
-var _lzma_stream_flags_compare = Module["_lzma_stream_flags_compare"] = createExportWrapper("lzma_stream_flags_compare");
-
-/** @type {function(...*):?} */
-var _lzma_index_stream_padding = Module["_lzma_index_stream_padding"] = createExportWrapper("lzma_index_stream_padding");
-
-/** @type {function(...*):?} */
-var _lzma_index_append = Module["_lzma_index_append"] = createExportWrapper("lzma_index_append");
-
-/** @type {function(...*):?} */
-var _lzma_index_cat = Module["_lzma_index_cat"] = createExportWrapper("lzma_index_cat");
-
-/** @type {function(...*):?} */
-var _lzma_index_dup = Module["_lzma_index_dup"] = createExportWrapper("lzma_index_dup");
-
-/** @type {function(...*):?} */
-var _lzma_index_iter_init = Module["_lzma_index_iter_init"] = createExportWrapper("lzma_index_iter_init");
-
-/** @type {function(...*):?} */
-var _lzma_index_iter_rewind = Module["_lzma_index_iter_rewind"] = createExportWrapper("lzma_index_iter_rewind");
-
-/** @type {function(...*):?} */
-var _lzma_index_iter_next = Module["_lzma_index_iter_next"] = createExportWrapper("lzma_index_iter_next");
-
-/** @type {function(...*):?} */
-var _lzma_index_iter_locate = Module["_lzma_index_iter_locate"] = createExportWrapper("lzma_index_iter_locate");
-
-/** @type {function(...*):?} */
-var _lzma_cputhreads = Module["_lzma_cputhreads"] = createExportWrapper("lzma_cputhreads");
-
-/** @type {function(...*):?} */
-var _lzma_alone_encoder = Module["_lzma_alone_encoder"] = createExportWrapper("lzma_alone_encoder");
-
-/** @type {function(...*):?} */
-var _lzma_lzma_encoder_init = Module["_lzma_lzma_encoder_init"] = createExportWrapper("lzma_lzma_encoder_init");
-
-/** @type {function(...*):?} */
-var _lzma_block_buffer_bound = Module["_lzma_block_buffer_bound"] = createExportWrapper("lzma_block_buffer_bound");
-
-/** @type {function(...*):?} */
-var _lzma_block_buffer_encode = Module["_lzma_block_buffer_encode"] = createExportWrapper("lzma_block_buffer_encode");
-
-/** @type {function(...*):?} */
-var _lzma_check_is_supported = Module["_lzma_check_is_supported"] = createExportWrapper("lzma_check_is_supported");
-
-/** @type {function(...*):?} */
-var _lzma_block_uncomp_encode = Module["_lzma_block_uncomp_encode"] = createExportWrapper("lzma_block_uncomp_encode");
-
-/** @type {function(...*):?} */
-var _lzma_block_header_size = Module["_lzma_block_header_size"] = createExportWrapper("lzma_block_header_size");
-
-/** @type {function(...*):?} */
-var _lzma_block_header_encode = Module["_lzma_block_header_encode"] = createExportWrapper("lzma_block_header_encode");
-
-/** @type {function(...*):?} */
-var _lzma_block_encoder = Module["_lzma_block_encoder"] = createExportWrapper("lzma_block_encoder");
-
-/** @type {function(...*):?} */
-var _lzma_filter_flags_size = Module["_lzma_filter_flags_size"] = createExportWrapper("lzma_filter_flags_size");
-
-/** @type {function(...*):?} */
-var _lzma_vli_encode = Module["_lzma_vli_encode"] = createExportWrapper("lzma_vli_encode");
-
-/** @type {function(...*):?} */
-var _lzma_filter_flags_encode = Module["_lzma_filter_flags_encode"] = createExportWrapper("lzma_filter_flags_encode");
-
-/** @type {function(...*):?} */
-var _lzma_crc32 = Module["_lzma_crc32"] = createExportWrapper("lzma_crc32");
-
-/** @type {function(...*):?} */
-var _lzma_easy_buffer_encode = Module["_lzma_easy_buffer_encode"] = createExportWrapper("lzma_easy_buffer_encode");
-
-/** @type {function(...*):?} */
-var _lzma_stream_buffer_encode = Module["_lzma_stream_buffer_encode"] = createExportWrapper("lzma_stream_buffer_encode");
-
-/** @type {function(...*):?} */
-var _lzma_easy_encoder = Module["_lzma_easy_encoder"] = createExportWrapper("lzma_easy_encoder");
-
-/** @type {function(...*):?} */
-var _lzma_easy_encoder_memusage = Module["_lzma_easy_encoder_memusage"] = createExportWrapper("lzma_easy_encoder_memusage");
-
-/** @type {function(...*):?} */
-var _lzma_raw_encoder_memusage = Module["_lzma_raw_encoder_memusage"] = createExportWrapper("lzma_raw_encoder_memusage");
-
-/** @type {function(...*):?} */
-var _lzma_raw_buffer_encode = Module["_lzma_raw_buffer_encode"] = createExportWrapper("lzma_raw_buffer_encode");
-
-/** @type {function(...*):?} */
-var _lzma_filter_encoder_is_supported = Module["_lzma_filter_encoder_is_supported"] = createExportWrapper("lzma_filter_encoder_is_supported");
-
-/** @type {function(...*):?} */
-var _lzma_filters_update = Module["_lzma_filters_update"] = createExportWrapper("lzma_filters_update");
-
-/** @type {function(...*):?} */
-var _lzma_properties_size = Module["_lzma_properties_size"] = createExportWrapper("lzma_properties_size");
-
-/** @type {function(...*):?} */
-var _lzma_properties_encode = Module["_lzma_properties_encode"] = createExportWrapper("lzma_properties_encode");
-
-/** @type {function(...*):?} */
-var _lzma_index_encoder = Module["_lzma_index_encoder"] = createExportWrapper("lzma_index_encoder");
-
-/** @type {function(...*):?} */
-var _lzma_index_buffer_encode = Module["_lzma_index_buffer_encode"] = createExportWrapper("lzma_index_buffer_encode");
-
-/** @type {function(...*):?} */
-var _lzma_stream_buffer_bound = Module["_lzma_stream_buffer_bound"] = createExportWrapper("lzma_stream_buffer_bound");
-
-/** @type {function(...*):?} */
-var _lzma_stream_header_encode = Module["_lzma_stream_header_encode"] = createExportWrapper("lzma_stream_header_encode");
-
-/** @type {function(...*):?} */
-var _lzma_stream_footer_encode = Module["_lzma_stream_footer_encode"] = createExportWrapper("lzma_stream_footer_encode");
-
-/** @type {function(...*):?} */
-var _lzma_stream_encoder_mt = Module["_lzma_stream_encoder_mt"] = createExportWrapper("lzma_stream_encoder_mt");
-
-/** @type {function(...*):?} */
-var _lzma_stream_encoder_mt_memusage = Module["_lzma_stream_encoder_mt_memusage"] = createExportWrapper("lzma_stream_encoder_mt_memusage");
-
-/** @type {function(...*):?} */
-var _pthread_mutex_init = Module["_pthread_mutex_init"] = createExportWrapper("pthread_mutex_init");
-
-/** @type {function(...*):?} */
-var _pthread_condattr_init = Module["_pthread_condattr_init"] = createExportWrapper("pthread_condattr_init");
-
-/** @type {function(...*):?} */
-var _pthread_condattr_setclock = Module["_pthread_condattr_setclock"] = createExportWrapper("pthread_condattr_setclock");
-
-/** @type {function(...*):?} */
-var _pthread_cond_init = Module["_pthread_cond_init"] = createExportWrapper("pthread_cond_init");
-
-/** @type {function(...*):?} */
-var _pthread_condattr_destroy = Module["_pthread_condattr_destroy"] = createExportWrapper("pthread_condattr_destroy");
-
-/** @type {function(...*):?} */
-var _pthread_mutex_destroy = Module["_pthread_mutex_destroy"] = createExportWrapper("pthread_mutex_destroy");
-
-/** @type {function(...*):?} */
-var _pthread_mutex_unlock = Module["_pthread_mutex_unlock"] = createExportWrapper("pthread_mutex_unlock");
-
-/** @type {function(...*):?} */
-var _pthread_mutex_lock = Module["_pthread_mutex_lock"] = createExportWrapper("pthread_mutex_lock");
-
-/** @type {function(...*):?} */
-var _pthread_cond_signal = Module["_pthread_cond_signal"] = createExportWrapper("pthread_cond_signal");
-
-/** @type {function(...*):?} */
-var _sigfillset = Module["_sigfillset"] = createExportWrapper("sigfillset");
-
-/** @type {function(...*):?} */
-var _pthread_create = Module["_pthread_create"] = createExportWrapper("pthread_create");
-
-/** @type {function(...*):?} */
-var _pthread_cond_destroy = Module["_pthread_cond_destroy"] = createExportWrapper("pthread_cond_destroy");
-
-/** @type {function(...*):?} */
-var _pthread_sigmask = Module["_pthread_sigmask"] = createExportWrapper("pthread_sigmask");
-
-/** @type {function(...*):?} */
-var _pthread_cond_wait = Module["_pthread_cond_wait"] = createExportWrapper("pthread_cond_wait");
-
-/** @type {function(...*):?} */
-var _pthread_cond_timedwait = Module["_pthread_cond_timedwait"] = createExportWrapper("pthread_cond_timedwait");
-
-/** @type {function(...*):?} */
-var _pthread_join = Module["_pthread_join"] = createExportWrapper("pthread_join");
-
-/** @type {function(...*):?} */
-var _lzma_lzma_decoder_init = Module["_lzma_lzma_decoder_init"] = createExportWrapper("lzma_lzma_decoder_init");
-
-/** @type {function(...*):?} */
-var _lzma_auto_decoder = Module["_lzma_auto_decoder"] = createExportWrapper("lzma_auto_decoder");
-
-/** @type {function(...*):?} */
-var _lzma_block_buffer_decode = Module["_lzma_block_buffer_decode"] = createExportWrapper("lzma_block_buffer_decode");
-
-/** @type {function(...*):?} */
-var _lzma_block_decoder = Module["_lzma_block_decoder"] = createExportWrapper("lzma_block_decoder");
-
-/** @type {function(...*):?} */
-var _lzma_block_header_decode = Module["_lzma_block_header_decode"] = createExportWrapper("lzma_block_header_decode");
-
-/** @type {function(...*):?} */
-var _lzma_vli_decode = Module["_lzma_vli_decode"] = createExportWrapper("lzma_vli_decode");
-
-/** @type {function(...*):?} */
-var _lzma_filter_flags_decode = Module["_lzma_filter_flags_decode"] = createExportWrapper("lzma_filter_flags_decode");
-
-/** @type {function(...*):?} */
-var _lzma_easy_decoder_memusage = Module["_lzma_easy_decoder_memusage"] = createExportWrapper("lzma_easy_decoder_memusage");
-
-/** @type {function(...*):?} */
-var _lzma_raw_decoder_memusage = Module["_lzma_raw_decoder_memusage"] = createExportWrapper("lzma_raw_decoder_memusage");
-
-/** @type {function(...*):?} */
-var _lzma_raw_buffer_decode = Module["_lzma_raw_buffer_decode"] = createExportWrapper("lzma_raw_buffer_decode");
-
-/** @type {function(...*):?} */
-var _lzma_filter_decoder_is_supported = Module["_lzma_filter_decoder_is_supported"] = createExportWrapper("lzma_filter_decoder_is_supported");
-
-/** @type {function(...*):?} */
-var _lzma_properties_decode = Module["_lzma_properties_decode"] = createExportWrapper("lzma_properties_decode");
-
-/** @type {function(...*):?} */
-var _lzma_index_decoder = Module["_lzma_index_decoder"] = createExportWrapper("lzma_index_decoder");
-
-/** @type {function(...*):?} */
-var _lzma_index_buffer_decode = Module["_lzma_index_buffer_decode"] = createExportWrapper("lzma_index_buffer_decode");
-
-/** @type {function(...*):?} */
-var _lzma_index_hash_init = Module["_lzma_index_hash_init"] = createExportWrapper("lzma_index_hash_init");
-
-/** @type {function(...*):?} */
-var _lzma_index_hash_end = Module["_lzma_index_hash_end"] = createExportWrapper("lzma_index_hash_end");
-
-/** @type {function(...*):?} */
-var _lzma_index_hash_size = Module["_lzma_index_hash_size"] = createExportWrapper("lzma_index_hash_size");
-
-/** @type {function(...*):?} */
-var _lzma_index_hash_append = Module["_lzma_index_hash_append"] = createExportWrapper("lzma_index_hash_append");
-
-/** @type {function(...*):?} */
-var _lzma_index_hash_decode = Module["_lzma_index_hash_decode"] = createExportWrapper("lzma_index_hash_decode");
-
-/** @type {function(...*):?} */
-var _lzma_stream_buffer_decode = Module["_lzma_stream_buffer_decode"] = createExportWrapper("lzma_stream_buffer_decode");
-
-/** @type {function(...*):?} */
-var _lzma_stream_header_decode = Module["_lzma_stream_header_decode"] = createExportWrapper("lzma_stream_header_decode");
-
-/** @type {function(...*):?} */
-var _lzma_stream_footer_decode = Module["_lzma_stream_footer_decode"] = createExportWrapper("lzma_stream_footer_decode");
-
-/** @type {function(...*):?} */
-var _lzma_mf_hc3_find = Module["_lzma_mf_hc3_find"] = createExportWrapper("lzma_mf_hc3_find");
-
-/** @type {function(...*):?} */
-var _lzma_mf_hc3_skip = Module["_lzma_mf_hc3_skip"] = createExportWrapper("lzma_mf_hc3_skip");
-
-/** @type {function(...*):?} */
-var _lzma_mf_hc4_find = Module["_lzma_mf_hc4_find"] = createExportWrapper("lzma_mf_hc4_find");
-
-/** @type {function(...*):?} */
-var _lzma_mf_hc4_skip = Module["_lzma_mf_hc4_skip"] = createExportWrapper("lzma_mf_hc4_skip");
-
-/** @type {function(...*):?} */
-var _lzma_mf_bt2_find = Module["_lzma_mf_bt2_find"] = createExportWrapper("lzma_mf_bt2_find");
-
-/** @type {function(...*):?} */
-var _lzma_mf_bt2_skip = Module["_lzma_mf_bt2_skip"] = createExportWrapper("lzma_mf_bt2_skip");
-
-/** @type {function(...*):?} */
-var _lzma_mf_bt3_find = Module["_lzma_mf_bt3_find"] = createExportWrapper("lzma_mf_bt3_find");
-
-/** @type {function(...*):?} */
-var _lzma_mf_bt3_skip = Module["_lzma_mf_bt3_skip"] = createExportWrapper("lzma_mf_bt3_skip");
-
-/** @type {function(...*):?} */
-var _lzma_mf_bt4_find = Module["_lzma_mf_bt4_find"] = createExportWrapper("lzma_mf_bt4_find");
-
-/** @type {function(...*):?} */
-var _lzma_mf_bt4_skip = Module["_lzma_mf_bt4_skip"] = createExportWrapper("lzma_mf_bt4_skip");
-
-/** @type {function(...*):?} */
-var _lzma_mf_is_supported = Module["_lzma_mf_is_supported"] = createExportWrapper("lzma_mf_is_supported");
-
-/** @type {function(...*):?} */
-var _lzma_mode_is_supported = Module["_lzma_mode_is_supported"] = createExportWrapper("lzma_mode_is_supported");
-
-/** @type {function(...*):?} */
-var __gfortran_pow_i4_i4 = Module["__gfortran_pow_i4_i4"] = createExportWrapper("_gfortran_pow_i4_i4");
-
-/** @type {function(...*):?} */
-var _compare_string = Module["_compare_string"] = createExportWrapper("compare_string");
-
-/** @type {function(...*):?} */
-var __gfortran_concat_string = Module["__gfortran_concat_string"] = createExportWrapper("_gfortran_concat_string");
-
-/** @type {function(...*):?} */
-var __gfortran_string_trim = Module["__gfortran_string_trim"] = createExportWrapper("_gfortran_string_trim");
-
-/** @type {function(...*):?} */
-var __gfortran_string_len_trim = Module["__gfortran_string_len_trim"] = createExportWrapper("_gfortran_string_len_trim");
-
-/** @type {function(...*):?} */
-var __gfortran_string_index = Module["__gfortran_string_index"] = createExportWrapper("_gfortran_string_index");
-
-/** @type {function(...*):?} */
-var __gfortran_adjustl = Module["__gfortran_adjustl"] = createExportWrapper("_gfortran_adjustl");
-
-/** @type {function(...*):?} */
-var __gfortran_adjustr = Module["__gfortran_adjustr"] = createExportWrapper("_gfortran_adjustr");
-
-/** @type {function(...*):?} */
-var __gfortran_string_scan = Module["__gfortran_string_scan"] = createExportWrapper("_gfortran_string_scan");
-
-/** @type {function(...*):?} */
-var __gfortran_string_verify = Module["__gfortran_string_verify"] = createExportWrapper("_gfortran_string_verify");
-
-/** @type {function(...*):?} */
-var __gfortran_string_minmax = Module["__gfortran_string_minmax"] = createExportWrapper("_gfortran_string_minmax");
-
-/** @type {function(...*):?} */
-var __gfortran_compare_string = Module["__gfortran_compare_string"] = createExportWrapper("_gfortran_compare_string");
-
-/** @type {function(...*):?} */
-var _R_init_methods = Module["_R_init_methods"] = createExportWrapper("R_init_methods");
-
-/** @type {function(...*):?} */
-var _R_init_utils = Module["_R_init_utils"] = createExportWrapper("R_init_utils");
-
-/** @type {function(...*):?} */
-var _inet_ntoa = Module["_inet_ntoa"] = createExportWrapper("inet_ntoa");
-
-/** @type {function(...*):?} */
-var _R_init_stats = Module["_R_init_stats"] = createExportWrapper("R_init_stats");
-
-/** @type {function(...*):?} */
-var _nlminb_iterate = Module["_nlminb_iterate"] = createExportWrapper("nlminb_iterate");
-
-/** @type {function(...*):?} */
-var _nlsb_iterate = Module["_nlsb_iterate"] = createExportWrapper("nlsb_iterate");
-
-/** @type {function(...*):?} */
-var _Rf_divset = Module["_Rf_divset"] = createExportWrapper("Rf_divset");
-
-/** @type {function(...*):?} */
-var _rcont2 = Module["_rcont2"] = createExportWrapper("rcont2");
-
-/** @type {function(...*):?} */
-var _lowesw_ = Module["_lowesw_"] = createExportWrapper("lowesw_");
-
-/** @type {function(...*):?} */
-var _lowesp_ = Module["_lowesp_"] = createExportWrapper("lowesp_");
-
-/** @type {function(...*):?} */
-var _setppr_ = Module["_setppr_"] = createExportWrapper("setppr_");
-
-/** @type {function(...*):?} */
-var _smart_ = Module["_smart_"] = createExportWrapper("smart_");
-
-/** @type {function(...*):?} */
-var _pppred_ = Module["_pppred_"] = createExportWrapper("pppred_");
-
-/** @type {function(...*):?} */
-var _setsmu_ = Module["_setsmu_"] = createExportWrapper("setsmu_");
-
-/** @type {function(...*):?} */
-var _rbart_ = Module["_rbart_"] = createExportWrapper("rbart_");
-
-/** @type {function(...*):?} */
-var _bvalus_ = Module["_bvalus_"] = createExportWrapper("bvalus_");
-
-/** @type {function(...*):?} */
-var _supsmu_ = Module["_supsmu_"] = createExportWrapper("supsmu_");
-
-/** @type {function(...*):?} */
-var _hclust_ = Module["_hclust_"] = createExportWrapper("hclust_");
-
-/** @type {function(...*):?} */
-var _hcass2_ = Module["_hcass2_"] = createExportWrapper("hcass2_");
-
-/** @type {function(...*):?} */
-var _kmns_ = Module["_kmns_"] = createExportWrapper("kmns_");
-
-/** @type {function(...*):?} */
-var _eureka_ = Module["_eureka_"] = createExportWrapper("eureka_");
-
-/** @type {function(...*):?} */
-var _stl_ = Module["_stl_"] = createExportWrapper("stl_");
-
-/** @type {function(...*):?} */
-var _lowesb_ = Module["_lowesb_"] = createExportWrapper("lowesb_");
-
-/** @type {function(...*):?} */
-var _lowese_ = Module["_lowese_"] = createExportWrapper("lowese_");
-
-/** @type {function(...*):?} */
-var _lowesf_ = Module["_lowesf_"] = createExportWrapper("lowesf_");
-
-/** @type {function(...*):?} */
-var _lowesa_ = Module["_lowesa_"] = createExportWrapper("lowesa_");
-
-/** @type {function(...*):?} */
-var _ehg196_ = Module["_ehg196_"] = createExportWrapper("ehg196_");
-
-/** @type {function(...*):?} */
-var _lowesl_ = Module["_lowesl_"] = createExportWrapper("lowesl_");
-
-/** @type {function(...*):?} */
-var _lowesc_ = Module["_lowesc_"] = createExportWrapper("lowesc_");
-
-/** @type {function(...*):?} */
-var _lowesd_ = Module["_lowesd_"] = createExportWrapper("lowesd_");
-
-/** @type {function(...*):?} */
-var _ehg169_ = Module["_ehg169_"] = createExportWrapper("ehg169_");
-
-/** @type {function(...*):?} */
-var _dpotrf_ = Module["_dpotrf_"] = createExportWrapper("dpotrf_");
-
-/** @type {function(...*):?} */
-var _dv7dfl_ = Module["_dv7dfl_"] = createExportWrapper("dv7dfl_");
-
-/** @type {function(...*):?} */
-var _drmnhb_ = Module["_drmnhb_"] = createExportWrapper("drmnhb_");
-
-/** @type {function(...*):?} */
-var _drmngb_ = Module["_drmngb_"] = createExportWrapper("drmngb_");
-
-/** @type {function(...*):?} */
-var _drmnfb_ = Module["_drmnfb_"] = createExportWrapper("drmnfb_");
-
-/** @type {function(...*):?} */
-var _drmnh_ = Module["_drmnh_"] = createExportWrapper("drmnh_");
-
-/** @type {function(...*):?} */
-var _drmng_ = Module["_drmng_"] = createExportWrapper("drmng_");
-
-/** @type {function(...*):?} */
-var _drmnf_ = Module["_drmnf_"] = createExportWrapper("drmnf_");
-
-/** @type {function(...*):?} */
-var _drn2gb_ = Module["_drn2gb_"] = createExportWrapper("drn2gb_");
-
-/** @type {function(...*):?} */
-var _drn2g_ = Module["_drn2g_"] = createExportWrapper("drn2g_");
-
-/** @type {function(...*):?} */
-var _sgram_ = Module["_sgram_"] = createExportWrapper("sgram_");
-
-/** @type {function(...*):?} */
-var _stxwx_ = Module["_stxwx_"] = createExportWrapper("stxwx_");
-
-/** @type {function(...*):?} */
-var _sslvrg_ = Module["_sslvrg_"] = createExportWrapper("sslvrg_");
-
-/** @type {function(...*):?} */
-var _sqrtl = Module["_sqrtl"] = createExportWrapper("sqrtl");
-
-/** @type {function(...*):?} */
-var _lminfl_ = Module["_lminfl_"] = createExportWrapper("lminfl_");
-
-/** @type {function(...*):?} */
-var _bsplvb_ = Module["_bsplvb_"] = createExportWrapper("bsplvb_");
-
-/** @type {function(...*):?} */
-var _bsplvd_ = Module["_bsplvd_"] = createExportWrapper("bsplvd_");
-
-/** @type {function(...*):?} */
-var _bvalue_ = Module["_bvalue_"] = createExportWrapper("bvalue_");
-
-/** @type {function(...*):?} */
-var _ehg106_ = Module["_ehg106_"] = createExportWrapper("ehg106_");
-
-/** @type {function(...*):?} */
-var _ifloor_ = Module["_ifloor_"] = createExportWrapper("ifloor_");
-
-/** @type {function(...*):?} */
-var _ehg192_ = Module["_ehg192_"] = createExportWrapper("ehg192_");
-
-/** @type {function(...*):?} */
-var _ehg191_ = Module["_ehg191_"] = createExportWrapper("ehg191_");
-
-/** @type {function(...*):?} */
-var _ehg128_ = Module["_ehg128_"] = createExportWrapper("ehg128_");
-
-/** @type {function(...*):?} */
-var _ehg136_ = Module["_ehg136_"] = createExportWrapper("ehg136_");
-
-/** @type {function(...*):?} */
-var _ehg127_ = Module["_ehg127_"] = createExportWrapper("ehg127_");
-
-/** @type {function(...*):?} */
-var _ehg133_ = Module["_ehg133_"] = createExportWrapper("ehg133_");
-
-/** @type {function(...*):?} */
-var _ehg183_ = Module["_ehg183_"] = createExportWrapper("ehg183_");
-
-/** @type {function(...*):?} */
-var _ehg131_ = Module["_ehg131_"] = createExportWrapper("ehg131_");
-
-/** @type {function(...*):?} */
-var _ehg126_ = Module["_ehg126_"] = createExportWrapper("ehg126_");
-
-/** @type {function(...*):?} */
-var _ehg124_ = Module["_ehg124_"] = createExportWrapper("ehg124_");
-
-/** @type {function(...*):?} */
-var _ehg139_ = Module["_ehg139_"] = createExportWrapper("ehg139_");
-
-/** @type {function(...*):?} */
-var _ehg184_ = Module["_ehg184_"] = createExportWrapper("ehg184_");
-
-/** @type {function(...*):?} */
-var _ehg197_ = Module["_ehg197_"] = createExportWrapper("ehg197_");
-
-/** @type {function(...*):?} */
-var _ehg141_ = Module["_ehg141_"] = createExportWrapper("ehg141_");
-
-/** @type {function(...*):?} */
-var _ehg176_ = Module["_ehg176_"] = createExportWrapper("ehg176_");
-
-/** @type {function(...*):?} */
-var _ehg125_ = Module["_ehg125_"] = createExportWrapper("ehg125_");
-
-/** @type {function(...*):?} */
-var _ehg137_ = Module["_ehg137_"] = createExportWrapper("ehg137_");
-
-/** @type {function(...*):?} */
-var _ehg129_ = Module["_ehg129_"] = createExportWrapper("ehg129_");
-
-/** @type {function(...*):?} */
-var _ehg138_ = Module["_ehg138_"] = createExportWrapper("ehg138_");
-
-/** @type {function(...*):?} */
-var _ehg140_ = Module["_ehg140_"] = createExportWrapper("ehg140_");
-
-/** @type {function(...*):?} */
-var _lowesr_ = Module["_lowesr_"] = createExportWrapper("lowesr_");
-
-/** @type {function(...*):?} */
-var _fsort_ = Module["_fsort_"] = createExportWrapper("fsort_");
-
-/** @type {function(...*):?} */
-var _sort_ = Module["_sort_"] = createExportWrapper("sort_");
-
-/** @type {function(...*):?} */
-var _smart1_ = Module["_smart1_"] = createExportWrapper("smart1_");
-
-/** @type {function(...*):?} */
-var _subfit_ = Module["_subfit_"] = createExportWrapper("subfit_");
-
-/** @type {function(...*):?} */
-var _fulfit_ = Module["_fulfit_"] = createExportWrapper("fulfit_");
-
-/** @type {function(...*):?} */
-var _onetrm_ = Module["_onetrm_"] = createExportWrapper("onetrm_");
-
-/** @type {function(...*):?} */
-var _newb_ = Module["_newb_"] = createExportWrapper("newb_");
-
-/** @type {function(...*):?} */
-var _oneone_ = Module["_oneone_"] = createExportWrapper("oneone_");
-
-/** @type {function(...*):?} */
-var _pprdir_ = Module["_pprdir_"] = createExportWrapper("pprdir_");
-
-/** @type {function(...*):?} */
-var _pprder_ = Module["_pprder_"] = createExportWrapper("pprder_");
-
-/** @type {function(...*):?} */
-var _ppconj_ = Module["_ppconj_"] = createExportWrapper("ppconj_");
-
-/** @type {function(...*):?} */
-var _pool_ = Module["_pool_"] = createExportWrapper("pool_");
-
-/** @type {function(...*):?} */
-var _spline_ = Module["_spline_"] = createExportWrapper("spline_");
-
-/** @type {function(...*):?} */
-var _smooth_ = Module["_smooth_"] = createExportWrapper("smooth_");
-
-/** @type {function(...*):?} */
-var _splineaa_ = Module["_splineaa_"] = createExportWrapper("splineaa_");
-
-/** @type {function(...*):?} */
-var _sinerp_ = Module["_sinerp_"] = createExportWrapper("sinerp_");
-
-/** @type {function(...*):?} */
-var _ioffst_ = Module["_ioffst_"] = createExportWrapper("ioffst_");
-
-/** @type {function(...*):?} */
-var _qtran_ = Module["_qtran_"] = createExportWrapper("qtran_");
-
-/** @type {function(...*):?} */
-var _optra_ = Module["_optra_"] = createExportWrapper("optra_");
-
-/** @type {function(...*):?} */
-var _stlstp_ = Module["_stlstp_"] = createExportWrapper("stlstp_");
-
-/** @type {function(...*):?} */
-var _stlss_ = Module["_stlss_"] = createExportWrapper("stlss_");
-
-/** @type {function(...*):?} */
-var _stlfts_ = Module["_stlfts_"] = createExportWrapper("stlfts_");
-
-/** @type {function(...*):?} */
-var _stless_ = Module["_stless_"] = createExportWrapper("stless_");
-
-/** @type {function(...*):?} */
-var _stlrwt_ = Module["_stlrwt_"] = createExportWrapper("stlrwt_");
-
-/** @type {function(...*):?} */
-var _psort_ = Module["_psort_"] = createExportWrapper("psort_");
-
-/** @type {function(...*):?} */
-var _stlest_ = Module["_stlest_"] = createExportWrapper("stlest_");
-
-/** @type {function(...*):?} */
-var _stlma_ = Module["_stlma_"] = createExportWrapper("stlma_");
-
-/** @type {function(...*):?} */
-var _stlez_ = Module["_stlez_"] = createExportWrapper("stlez_");
-
-/** @type {function(...*):?} */
-var _m7seq_ = Module["_m7seq_"] = createExportWrapper("m7seq_");
-
-/** @type {function(...*):?} */
-var _n7msrt_ = Module["_n7msrt_"] = createExportWrapper("n7msrt_");
-
-/** @type {function(...*):?} */
-var _i7do_ = Module["_i7do_"] = createExportWrapper("i7do_");
-
-/** @type {function(...*):?} */
-var _m7slo_ = Module["_m7slo_"] = createExportWrapper("m7slo_");
-
-/** @type {function(...*):?} */
-var _d7egr_ = Module["_d7egr_"] = createExportWrapper("d7egr_");
-
-/** @type {function(...*):?} */
-var _s7etr_ = Module["_s7etr_"] = createExportWrapper("s7etr_");
-
-/** @type {function(...*):?} */
-var _s7rtdt_ = Module["_s7rtdt_"] = createExportWrapper("s7rtdt_");
-
-/** @type {function(...*):?} */
-var _dc7vfn_ = Module["_dc7vfn_"] = createExportWrapper("dc7vfn_");
-
-/** @type {function(...*):?} */
-var _dl7nvr_ = Module["_dl7nvr_"] = createExportWrapper("dl7nvr_");
-
-/** @type {function(...*):?} */
-var _dl7tsq_ = Module["_dl7tsq_"] = createExportWrapper("dl7tsq_");
-
-/** @type {function(...*):?} */
-var _dn2lrd_ = Module["_dn2lrd_"] = createExportWrapper("dn2lrd_");
-
-/** @type {function(...*):?} */
-var _dl7ivm_ = Module["_dl7ivm_"] = createExportWrapper("dl7ivm_");
-
-/** @type {function(...*):?} */
-var _dl7itv_ = Module["_dl7itv_"] = createExportWrapper("dl7itv_");
-
-/** @type {function(...*):?} */
-var _do7prd_ = Module["_do7prd_"] = createExportWrapper("do7prd_");
-
-/** @type {function(...*):?} */
-var _dr7mdc_ = Module["_dr7mdc_"] = createExportWrapper("dr7mdc_");
-
-/** @type {function(...*):?} */
-var _dl7svx_ = Module["_dl7svx_"] = createExportWrapper("dl7svx_");
-
-/** @type {function(...*):?} */
-var _dl7svn_ = Module["_dl7svn_"] = createExportWrapper("dl7svn_");
-
-/** @type {function(...*):?} */
-var _dl7srt_ = Module["_dl7srt_"] = createExportWrapper("dl7srt_");
-
-/** @type {function(...*):?} */
-var _dq7rad_ = Module["_dq7rad_"] = createExportWrapper("dq7rad_");
-
-/** @type {function(...*):?} */
-var _dq7apl_ = Module["_dq7apl_"] = createExportWrapper("dq7apl_");
-
-/** @type {function(...*):?} */
-var _dq7rfh_ = Module["_dq7rfh_"] = createExportWrapper("dq7rfh_");
-
-/** @type {function(...*):?} */
-var _dg7lit_ = Module["_dg7lit_"] = createExportWrapper("dg7lit_");
-
-/** @type {function(...*):?} */
-var _dl7vml_ = Module["_dl7vml_"] = createExportWrapper("dl7vml_");
-
-/** @type {function(...*):?} */
-var _dd7upd_ = Module["_dd7upd_"] = createExportWrapper("dd7upd_");
-
-/** @type {function(...*):?} */
-var _ds3grd_ = Module["_ds3grd_"] = createExportWrapper("ds3grd_");
-
-/** @type {function(...*):?} */
-var _dparck_ = Module["_dparck_"] = createExportWrapper("dparck_");
-
-/** @type {function(...*):?} */
-var _i7shft_ = Module["_i7shft_"] = createExportWrapper("i7shft_");
-
-/** @type {function(...*):?} */
-var _dq7rsh_ = Module["_dq7rsh_"] = createExportWrapper("dq7rsh_");
-
-/** @type {function(...*):?} */
-var _dv7vmp_ = Module["_dv7vmp_"] = createExportWrapper("dv7vmp_");
-
-/** @type {function(...*):?} */
-var _dd7dgb_ = Module["_dd7dgb_"] = createExportWrapper("dd7dgb_");
-
-/** @type {function(...*):?} */
-var _drldst_ = Module["_drldst_"] = createExportWrapper("drldst_");
-
-/** @type {function(...*):?} */
-var _da7sst_ = Module["_da7sst_"] = createExportWrapper("da7sst_");
-
-/** @type {function(...*):?} */
-var _dl7tvm_ = Module["_dl7tvm_"] = createExportWrapper("dl7tvm_");
-
-/** @type {function(...*):?} */
-var _dw7zbf_ = Module["_dw7zbf_"] = createExportWrapper("dw7zbf_");
-
-/** @type {function(...*):?} */
-var _dl7upd_ = Module["_dl7upd_"] = createExportWrapper("dl7upd_");
-
-/** @type {function(...*):?} */
-var _dd7dog_ = Module["_dd7dog_"] = createExportWrapper("dd7dog_");
-
-/** @type {function(...*):?} */
-var _dv7shf_ = Module["_dv7shf_"] = createExportWrapper("dv7shf_");
-
-/** @type {function(...*):?} */
-var _dh2rfg_ = Module["_dh2rfg_"] = createExportWrapper("dh2rfg_");
-
-/** @type {function(...*):?} */
-var _dh2rfa_ = Module["_dh2rfa_"] = createExportWrapper("dh2rfa_");
-
-/** @type {function(...*):?} */
-var _stopx_ = Module["_stopx_"] = createExportWrapper("stopx_");
-
-/** @type {function(...*):?} */
-var _dg7itb_ = Module["_dg7itb_"] = createExportWrapper("dg7itb_");
-
-/** @type {function(...*):?} */
-var _dr7tvm_ = Module["_dr7tvm_"] = createExportWrapper("dr7tvm_");
-
-/** @type {function(...*):?} */
-var _dl7sqr_ = Module["_dl7sqr_"] = createExportWrapper("dl7sqr_");
-
-/** @type {function(...*):?} */
-var _ds7ipr_ = Module["_ds7ipr_"] = createExportWrapper("ds7ipr_");
-
-/** @type {function(...*):?} */
-var _dl7msb_ = Module["_dl7msb_"] = createExportWrapper("dl7msb_");
-
-/** @type {function(...*):?} */
-var _ds7dmp_ = Module["_ds7dmp_"] = createExportWrapper("ds7dmp_");
-
-/** @type {function(...*):?} */
-var _dg7qsb_ = Module["_dg7qsb_"] = createExportWrapper("dg7qsb_");
-
-/** @type {function(...*):?} */
-var _ds7lvm_ = Module["_ds7lvm_"] = createExportWrapper("ds7lvm_");
-
-/** @type {function(...*):?} */
-var _ds7lup_ = Module["_ds7lup_"] = createExportWrapper("ds7lup_");
-
-/** @type {function(...*):?} */
-var _df7dhb_ = Module["_df7dhb_"] = createExportWrapper("df7dhb_");
-
-/** @type {function(...*):?} */
-var _dg7qts_ = Module["_dg7qts_"] = createExportWrapper("dg7qts_");
-
-/** @type {function(...*):?} */
-var _ds7bqn_ = Module["_ds7bqn_"] = createExportWrapper("ds7bqn_");
-
-/** @type {function(...*):?} */
-var _dl7mst_ = Module["_dl7mst_"] = createExportWrapper("dl7mst_");
-
-/** @type {function(...*):?} */
-var _dd7mlp_ = Module["_dd7mlp_"] = createExportWrapper("dd7mlp_");
-
-/** @type {function(...*):?} */
-var _ds7grd_ = Module["_ds7grd_"] = createExportWrapper("ds7grd_");
-
-/** @type {function(...*):?} */
-var _dd7dup_ = Module["_dd7dup_"] = createExportWrapper("dd7dup_");
-
-/** @type {function(...*):?} */
-var _df7hes_ = Module["_df7hes_"] = createExportWrapper("df7hes_");
-
-/** @type {function(...*):?} */
-var _drnsgb_ = Module["_drnsgb_"] = createExportWrapper("drnsgb_");
-
-/** @type {function(...*):?} */
-var _drnsg_ = Module["_drnsg_"] = createExportWrapper("drnsg_");
-
-/** @type {function(...*):?} */
-var _dsm_ = Module["_dsm_"] = createExportWrapper("dsm_");
-
-/** @type {function(...*):?} */
-var _R_CreateAtVector = Module["_R_CreateAtVector"] = createExportWrapper("R_CreateAtVector");
-
-/** @type {function(...*):?} */
-var _R_GAxisPars = Module["_R_GAxisPars"] = createExportWrapper("R_GAxisPars");
-
-/** @type {function(...*):?} */
-var _chull = Module["_chull"] = createExportWrapper("chull");
-
-/** @type {function(...*):?} */
-var _devcontrol = Module["_devcontrol"] = createExportWrapper("devcontrol");
-
-/** @type {function(...*):?} */
-var _devdisplaylist = Module["_devdisplaylist"] = createExportWrapper("devdisplaylist");
-
-/** @type {function(...*):?} */
-var _devcopy = Module["_devcopy"] = createExportWrapper("devcopy");
-
-/** @type {function(...*):?} */
-var _devcur = Module["_devcur"] = createExportWrapper("devcur");
-
-/** @type {function(...*):?} */
-var _devnext = Module["_devnext"] = createExportWrapper("devnext");
-
-/** @type {function(...*):?} */
-var _devprev = Module["_devprev"] = createExportWrapper("devprev");
-
-/** @type {function(...*):?} */
-var _devset = Module["_devset"] = createExportWrapper("devset");
-
-/** @type {function(...*):?} */
-var _devoff = Module["_devoff"] = createExportWrapper("devoff");
-
-/** @type {function(...*):?} */
-var _devsize = Module["_devsize"] = createExportWrapper("devsize");
-
-/** @type {function(...*):?} */
-var _devholdflush = Module["_devholdflush"] = createExportWrapper("devholdflush");
-
-/** @type {function(...*):?} */
-var _devcap = Module["_devcap"] = createExportWrapper("devcap");
-
-/** @type {function(...*):?} */
-var _devcapture = Module["_devcapture"] = createExportWrapper("devcapture");
-
-/** @type {function(...*):?} */
-var _R_init_grDevices = Module["_R_init_grDevices"] = createExportWrapper("R_init_grDevices");
-
-/** @type {function(...*):?} */
-var _initPalette = Module["_initPalette"] = createExportWrapper("initPalette");
-
-/** @type {function(...*):?} */
-var _Type1FontInUse = Module["_Type1FontInUse"] = createExportWrapper("Type1FontInUse");
-
-/** @type {function(...*):?} */
-var _CIDFontInUse = Module["_CIDFontInUse"] = createExportWrapper("CIDFontInUse");
-
-/** @type {function(...*):?} */
-var _gray = Module["_gray"] = createExportWrapper("gray");
-
-/** @type {function(...*):?} */
-var _RGB2hsv = Module["_RGB2hsv"] = createExportWrapper("RGB2hsv");
-
-/** @type {function(...*):?} */
-var _rgb = Module["_rgb"] = createExportWrapper("rgb");
-
-/** @type {function(...*):?} */
-var _hsv = Module["_hsv"] = createExportWrapper("hsv");
-
-/** @type {function(...*):?} */
-var _hcl = Module["_hcl"] = createExportWrapper("hcl");
-
-/** @type {function(...*):?} */
-var _col2rgb = Module["_col2rgb"] = createExportWrapper("col2rgb");
-
-/** @type {function(...*):?} */
-var _colors = Module["_colors"] = createExportWrapper("colors");
-
-/** @type {function(...*):?} */
-var _palette = Module["_palette"] = createExportWrapper("palette");
-
-/** @type {function(...*):?} */
-var _palette2 = Module["_palette2"] = createExportWrapper("palette2");
-
-/** @type {function(...*):?} */
-var _cairoVersion = Module["_cairoVersion"] = createExportWrapper("cairoVersion");
-
-/** @type {function(...*):?} */
-var _pangoVersion = Module["_pangoVersion"] = createExportWrapper("pangoVersion");
-
-/** @type {function(...*):?} */
-var _cairoFT = Module["_cairoFT"] = createExportWrapper("cairoFT");
-
-/** @type {function(...*):?} */
-var _bmVersion = Module["_bmVersion"] = createExportWrapper("bmVersion");
-
-/** @type {function(...*):?} */
-var _makeQuartzDefault = Module["_makeQuartzDefault"] = createExportWrapper("makeQuartzDefault");
-
-/** @type {function(...*):?} */
-var _PicTeX = Module["_PicTeX"] = createExportWrapper("PicTeX");
-
-/** @type {function(...*):?} */
-var _PostScript = Module["_PostScript"] = createExportWrapper("PostScript");
-
-/** @type {function(...*):?} */
-var _XFig = Module["_XFig"] = createExportWrapper("XFig");
-
-/** @type {function(...*):?} */
-var _PDF = Module["_PDF"] = createExportWrapper("PDF");
-
-/** @type {function(...*):?} */
-var _devCairo = Module["_devCairo"] = createExportWrapper("devCairo");
-
-/** @type {function(...*):?} */
-var _contourLines = Module["_contourLines"] = createExportWrapper("contourLines");
-
-/** @type {function(...*):?} */
-var _getSnapshot = Module["_getSnapshot"] = createExportWrapper("getSnapshot");
-
-/** @type {function(...*):?} */
-var _playSnapshot = Module["_playSnapshot"] = createExportWrapper("playSnapshot");
-
-/** @type {function(...*):?} */
-var _getGraphicsEvent = Module["_getGraphicsEvent"] = createExportWrapper("getGraphicsEvent");
-
-/** @type {function(...*):?} */
-var _getGraphicsEventEnv = Module["_getGraphicsEventEnv"] = createExportWrapper("getGraphicsEventEnv");
-
-/** @type {function(...*):?} */
-var _setGraphicsEventEnv = Module["_setGraphicsEventEnv"] = createExportWrapper("setGraphicsEventEnv");
-
-/** @type {function(...*):?} */
-var _setPattern = Module["_setPattern"] = createExportWrapper("setPattern");
-
-/** @type {function(...*):?} */
-var _setClipPath = Module["_setClipPath"] = createExportWrapper("setClipPath");
-
-/** @type {function(...*):?} */
-var _setMask = Module["_setMask"] = createExportWrapper("setMask");
-
-/** @type {function(...*):?} */
-var _devAskNewPage = Module["_devAskNewPage"] = createExportWrapper("devAskNewPage");
-
-/** @type {function(...*):?} */
-var _savePlot = Module["_savePlot"] = createExportWrapper("savePlot");
-
-/** @type {function(...*):?} */
-var _Quartz = Module["_Quartz"] = createExportWrapper("Quartz");
-
-/** @type {function(...*):?} */
-var _X11 = Module["_X11"] = createExportWrapper("X11");
-
-/** @type {function(...*):?} */
-var _modf = Module["_modf"] = createExportWrapper("modf");
-
-/** @type {function(...*):?} */
-var _inRGBpar3 = Module["_inRGBpar3"] = createExportWrapper("inRGBpar3");
-
-/** @type {function(...*):?} */
-var _incol2name = Module["_incol2name"] = createExportWrapper("incol2name");
-
-/** @type {function(...*):?} */
-var _inR_GE_str2col = Module["_inR_GE_str2col"] = createExportWrapper("inR_GE_str2col");
-
-/** @type {function(...*):?} */
-var _PSDeviceDriver = Module["_PSDeviceDriver"] = createExportWrapper("PSDeviceDriver");
-
-/** @type {function(...*):?} */
-var _PDFDeviceDriver = Module["_PDFDeviceDriver"] = createExportWrapper("PDFDeviceDriver");
-
-/** @type {function(...*):?} */
-var _PDF_StrWidth = Module["_PDF_StrWidth"] = createExportWrapper("PDF_StrWidth");
-
-/** @type {function(...*):?} */
-var _PDF_MetricInfo = Module["_PDF_MetricInfo"] = createExportWrapper("PDF_MetricInfo");
-
-/** @type {function(...*):?} */
-var _localtime = Module["_localtime"] = createExportWrapper("localtime");
-
-/** @type {function(...*):?} */
-var _Quartz_C = Module["_Quartz_C"] = createExportWrapper("Quartz_C");
-
-/** @type {function(...*):?} */
-var _getQuartzAPI = Module["_getQuartzAPI"] = createExportWrapper("getQuartzAPI");
-
-/** @type {function(...*):?} */
-var _R_init_graphics = Module["_R_init_graphics"] = createExportWrapper("R_init_graphics");
-
-/** @type {function(...*):?} */
-var _R_init_tools = Module["_R_init_tools"] = createExportWrapper("R_init_tools");
-
-/** @type {function(...*):?} */
-var _getpriority = Module["_getpriority"] = createExportWrapper("getpriority");
-
-/** @type {function(...*):?} */
-var _setpriority = Module["_setpriority"] = createExportWrapper("setpriority");
-
-/** @type {function(...*):?} */
-var _R_init_splines = Module["_R_init_splines"] = createExportWrapper("R_init_splines");
-
-/** @type {function(...*):?} */
-var _gridCallback = Module["_gridCallback"] = createExportWrapper("gridCallback");
-
-/** @type {function(...*):?} */
-var _R_init_grid = Module["_R_init_grid"] = createExportWrapper("R_init_grid");
-
-/** @type {function(...*):?} */
 var _dlamch_ = Module["_dlamch_"] = createExportWrapper("dlamch_");
 
 /** @type {function(...*):?} */
@@ -36873,6 +35631,9 @@ var _dlamc3_ = Module["_dlamc3_"] = createExportWrapper("dlamc3_");
 
 /** @type {function(...*):?} */
 var _ilaenv_ = Module["_ilaenv_"] = createExportWrapper("ilaenv_");
+
+/** @type {function(...*):?} */
+var __gfortran_compare_string = Module["__gfortran_compare_string"] = createExportWrapper("_gfortran_compare_string");
 
 /** @type {function(...*):?} */
 var _ieeeck_ = Module["_ieeeck_"] = createExportWrapper("ieeeck_");
@@ -36950,6 +35711,9 @@ var _dtrtri_ = Module["_dtrtri_"] = createExportWrapper("dtrtri_");
 var _dsyswapr_ = Module["_dsyswapr_"] = createExportWrapper("dsyswapr_");
 
 /** @type {function(...*):?} */
+var __gfortran_concat_string = Module["__gfortran_concat_string"] = createExportWrapper("_gfortran_concat_string");
+
+/** @type {function(...*):?} */
 var _dtrti2_ = Module["_dtrti2_"] = createExportWrapper("dtrti2_");
 
 /** @type {function(...*):?} */
@@ -37014,6 +35778,9 @@ var _dsygst_ = Module["_dsygst_"] = createExportWrapper("dsygst_");
 
 /** @type {function(...*):?} */
 var _dsygs2_ = Module["_dsygs2_"] = createExportWrapper("dsygs2_");
+
+/** @type {function(...*):?} */
+var _dpotrf_ = Module["_dpotrf_"] = createExportWrapper("dpotrf_");
 
 /** @type {function(...*):?} */
 var _dpotrf2_ = Module["_dpotrf2_"] = createExportWrapper("dpotrf2_");
@@ -37098,6 +35865,9 @@ var _dlarrv_ = Module["_dlarrv_"] = createExportWrapper("dlarrv_");
 
 /** @type {function(...*):?} */
 var _dlarrj_ = Module["_dlarrj_"] = createExportWrapper("dlarrj_");
+
+/** @type {function(...*):?} */
+var __gfortran_pow_i4_i4 = Module["__gfortran_pow_i4_i4"] = createExportWrapper("_gfortran_pow_i4_i4");
 
 /** @type {function(...*):?} */
 var _dlaed0_ = Module["_dlaed0_"] = createExportWrapper("dlaed0_");
@@ -38531,64 +37301,1249 @@ var _zungrq_ = Module["_zungrq_"] = createExportWrapper("zungrq_");
 var _R_init_lapack = Module["_R_init_lapack"] = createExportWrapper("R_init_lapack");
 
 /** @type {function(...*):?} */
-var _BZ2_blockSort = Module["_BZ2_blockSort"] = createExportWrapper("BZ2_blockSort");
+var _R_init_methods = Module["_R_init_methods"] = createExportWrapper("R_init_methods");
 
 /** @type {function(...*):?} */
-var _BZ2_bz__AssertH__fail = Module["_BZ2_bz__AssertH__fail"] = createExportWrapper("BZ2_bz__AssertH__fail");
+var _R_init_utils = Module["_R_init_utils"] = createExportWrapper("R_init_utils");
 
 /** @type {function(...*):?} */
-var _BZ2_bzCompressInit = Module["_BZ2_bzCompressInit"] = createExportWrapper("BZ2_bzCompressInit");
+var _inet_ntoa = Module["_inet_ntoa"] = createExportWrapper("inet_ntoa");
 
 /** @type {function(...*):?} */
-var _BZ2_bzCompress = Module["_BZ2_bzCompress"] = createExportWrapper("BZ2_bzCompress");
+var _R_init_stats = Module["_R_init_stats"] = createExportWrapper("R_init_stats");
 
 /** @type {function(...*):?} */
-var _BZ2_compressBlock = Module["_BZ2_compressBlock"] = createExportWrapper("BZ2_compressBlock");
+var _nlminb_iterate = Module["_nlminb_iterate"] = createExportWrapper("nlminb_iterate");
 
 /** @type {function(...*):?} */
-var _BZ2_bzCompressEnd = Module["_BZ2_bzCompressEnd"] = createExportWrapper("BZ2_bzCompressEnd");
+var _nlsb_iterate = Module["_nlsb_iterate"] = createExportWrapper("nlsb_iterate");
 
 /** @type {function(...*):?} */
-var _BZ2_indexIntoF = Module["_BZ2_indexIntoF"] = createExportWrapper("BZ2_indexIntoF");
+var _Rf_divset = Module["_Rf_divset"] = createExportWrapper("Rf_divset");
 
 /** @type {function(...*):?} */
-var _BZ2_decompress = Module["_BZ2_decompress"] = createExportWrapper("BZ2_decompress");
+var _rcont2 = Module["_rcont2"] = createExportWrapper("rcont2");
 
 /** @type {function(...*):?} */
-var _BZ2_bzWriteClose64 = Module["_BZ2_bzWriteClose64"] = createExportWrapper("BZ2_bzWriteClose64");
+var _lowesw_ = Module["_lowesw_"] = createExportWrapper("lowesw_");
 
 /** @type {function(...*):?} */
-var _BZ2_bzopen = Module["_BZ2_bzopen"] = createExportWrapper("BZ2_bzopen");
+var _lowesp_ = Module["_lowesp_"] = createExportWrapper("lowesp_");
 
 /** @type {function(...*):?} */
-var _BZ2_bzdopen = Module["_BZ2_bzdopen"] = createExportWrapper("BZ2_bzdopen");
+var _setppr_ = Module["_setppr_"] = createExportWrapper("setppr_");
 
 /** @type {function(...*):?} */
-var _BZ2_bzread = Module["_BZ2_bzread"] = createExportWrapper("BZ2_bzread");
+var _smart_ = Module["_smart_"] = createExportWrapper("smart_");
 
 /** @type {function(...*):?} */
-var _BZ2_bzwrite = Module["_BZ2_bzwrite"] = createExportWrapper("BZ2_bzwrite");
+var _pppred_ = Module["_pppred_"] = createExportWrapper("pppred_");
 
 /** @type {function(...*):?} */
-var _BZ2_bzflush = Module["_BZ2_bzflush"] = createExportWrapper("BZ2_bzflush");
+var _setsmu_ = Module["_setsmu_"] = createExportWrapper("setsmu_");
 
 /** @type {function(...*):?} */
-var _BZ2_bzclose = Module["_BZ2_bzclose"] = createExportWrapper("BZ2_bzclose");
+var _rbart_ = Module["_rbart_"] = createExportWrapper("rbart_");
 
 /** @type {function(...*):?} */
-var _BZ2_bzerror = Module["_BZ2_bzerror"] = createExportWrapper("BZ2_bzerror");
+var _bvalus_ = Module["_bvalus_"] = createExportWrapper("bvalus_");
 
 /** @type {function(...*):?} */
-var _BZ2_bsInitWrite = Module["_BZ2_bsInitWrite"] = createExportWrapper("BZ2_bsInitWrite");
+var _supsmu_ = Module["_supsmu_"] = createExportWrapper("supsmu_");
 
 /** @type {function(...*):?} */
-var _BZ2_hbMakeCodeLengths = Module["_BZ2_hbMakeCodeLengths"] = createExportWrapper("BZ2_hbMakeCodeLengths");
+var _hclust_ = Module["_hclust_"] = createExportWrapper("hclust_");
 
 /** @type {function(...*):?} */
-var _BZ2_hbAssignCodes = Module["_BZ2_hbAssignCodes"] = createExportWrapper("BZ2_hbAssignCodes");
+var _hcass2_ = Module["_hcass2_"] = createExportWrapper("hcass2_");
 
 /** @type {function(...*):?} */
-var _BZ2_hbCreateDecodeTables = Module["_BZ2_hbCreateDecodeTables"] = createExportWrapper("BZ2_hbCreateDecodeTables");
+var _kmns_ = Module["_kmns_"] = createExportWrapper("kmns_");
+
+/** @type {function(...*):?} */
+var _eureka_ = Module["_eureka_"] = createExportWrapper("eureka_");
+
+/** @type {function(...*):?} */
+var _stl_ = Module["_stl_"] = createExportWrapper("stl_");
+
+/** @type {function(...*):?} */
+var _lowesb_ = Module["_lowesb_"] = createExportWrapper("lowesb_");
+
+/** @type {function(...*):?} */
+var _lowese_ = Module["_lowese_"] = createExportWrapper("lowese_");
+
+/** @type {function(...*):?} */
+var _lowesf_ = Module["_lowesf_"] = createExportWrapper("lowesf_");
+
+/** @type {function(...*):?} */
+var _lowesa_ = Module["_lowesa_"] = createExportWrapper("lowesa_");
+
+/** @type {function(...*):?} */
+var _ehg196_ = Module["_ehg196_"] = createExportWrapper("ehg196_");
+
+/** @type {function(...*):?} */
+var _lowesl_ = Module["_lowesl_"] = createExportWrapper("lowesl_");
+
+/** @type {function(...*):?} */
+var _lowesc_ = Module["_lowesc_"] = createExportWrapper("lowesc_");
+
+/** @type {function(...*):?} */
+var _lowesd_ = Module["_lowesd_"] = createExportWrapper("lowesd_");
+
+/** @type {function(...*):?} */
+var _ehg169_ = Module["_ehg169_"] = createExportWrapper("ehg169_");
+
+/** @type {function(...*):?} */
+var _dv7dfl_ = Module["_dv7dfl_"] = createExportWrapper("dv7dfl_");
+
+/** @type {function(...*):?} */
+var _drmnhb_ = Module["_drmnhb_"] = createExportWrapper("drmnhb_");
+
+/** @type {function(...*):?} */
+var _drmngb_ = Module["_drmngb_"] = createExportWrapper("drmngb_");
+
+/** @type {function(...*):?} */
+var _drmnfb_ = Module["_drmnfb_"] = createExportWrapper("drmnfb_");
+
+/** @type {function(...*):?} */
+var _drmnh_ = Module["_drmnh_"] = createExportWrapper("drmnh_");
+
+/** @type {function(...*):?} */
+var _drmng_ = Module["_drmng_"] = createExportWrapper("drmng_");
+
+/** @type {function(...*):?} */
+var _drmnf_ = Module["_drmnf_"] = createExportWrapper("drmnf_");
+
+/** @type {function(...*):?} */
+var _drn2gb_ = Module["_drn2gb_"] = createExportWrapper("drn2gb_");
+
+/** @type {function(...*):?} */
+var _drn2g_ = Module["_drn2g_"] = createExportWrapper("drn2g_");
+
+/** @type {function(...*):?} */
+var _sgram_ = Module["_sgram_"] = createExportWrapper("sgram_");
+
+/** @type {function(...*):?} */
+var _stxwx_ = Module["_stxwx_"] = createExportWrapper("stxwx_");
+
+/** @type {function(...*):?} */
+var _sslvrg_ = Module["_sslvrg_"] = createExportWrapper("sslvrg_");
+
+/** @type {function(...*):?} */
+var _sqrtl = Module["_sqrtl"] = createExportWrapper("sqrtl");
+
+/** @type {function(...*):?} */
+var _lminfl_ = Module["_lminfl_"] = createExportWrapper("lminfl_");
+
+/** @type {function(...*):?} */
+var _bsplvb_ = Module["_bsplvb_"] = createExportWrapper("bsplvb_");
+
+/** @type {function(...*):?} */
+var _bsplvd_ = Module["_bsplvd_"] = createExportWrapper("bsplvd_");
+
+/** @type {function(...*):?} */
+var _bvalue_ = Module["_bvalue_"] = createExportWrapper("bvalue_");
+
+/** @type {function(...*):?} */
+var _ehg106_ = Module["_ehg106_"] = createExportWrapper("ehg106_");
+
+/** @type {function(...*):?} */
+var _ifloor_ = Module["_ifloor_"] = createExportWrapper("ifloor_");
+
+/** @type {function(...*):?} */
+var _ehg192_ = Module["_ehg192_"] = createExportWrapper("ehg192_");
+
+/** @type {function(...*):?} */
+var _ehg191_ = Module["_ehg191_"] = createExportWrapper("ehg191_");
+
+/** @type {function(...*):?} */
+var _ehg128_ = Module["_ehg128_"] = createExportWrapper("ehg128_");
+
+/** @type {function(...*):?} */
+var _ehg136_ = Module["_ehg136_"] = createExportWrapper("ehg136_");
+
+/** @type {function(...*):?} */
+var _ehg127_ = Module["_ehg127_"] = createExportWrapper("ehg127_");
+
+/** @type {function(...*):?} */
+var _ehg133_ = Module["_ehg133_"] = createExportWrapper("ehg133_");
+
+/** @type {function(...*):?} */
+var _ehg183_ = Module["_ehg183_"] = createExportWrapper("ehg183_");
+
+/** @type {function(...*):?} */
+var _ehg131_ = Module["_ehg131_"] = createExportWrapper("ehg131_");
+
+/** @type {function(...*):?} */
+var _ehg126_ = Module["_ehg126_"] = createExportWrapper("ehg126_");
+
+/** @type {function(...*):?} */
+var _ehg124_ = Module["_ehg124_"] = createExportWrapper("ehg124_");
+
+/** @type {function(...*):?} */
+var _ehg139_ = Module["_ehg139_"] = createExportWrapper("ehg139_");
+
+/** @type {function(...*):?} */
+var _ehg184_ = Module["_ehg184_"] = createExportWrapper("ehg184_");
+
+/** @type {function(...*):?} */
+var _ehg197_ = Module["_ehg197_"] = createExportWrapper("ehg197_");
+
+/** @type {function(...*):?} */
+var _ehg141_ = Module["_ehg141_"] = createExportWrapper("ehg141_");
+
+/** @type {function(...*):?} */
+var _ehg176_ = Module["_ehg176_"] = createExportWrapper("ehg176_");
+
+/** @type {function(...*):?} */
+var _ehg125_ = Module["_ehg125_"] = createExportWrapper("ehg125_");
+
+/** @type {function(...*):?} */
+var _ehg137_ = Module["_ehg137_"] = createExportWrapper("ehg137_");
+
+/** @type {function(...*):?} */
+var _ehg129_ = Module["_ehg129_"] = createExportWrapper("ehg129_");
+
+/** @type {function(...*):?} */
+var _ehg138_ = Module["_ehg138_"] = createExportWrapper("ehg138_");
+
+/** @type {function(...*):?} */
+var _ehg140_ = Module["_ehg140_"] = createExportWrapper("ehg140_");
+
+/** @type {function(...*):?} */
+var _lowesr_ = Module["_lowesr_"] = createExportWrapper("lowesr_");
+
+/** @type {function(...*):?} */
+var _fsort_ = Module["_fsort_"] = createExportWrapper("fsort_");
+
+/** @type {function(...*):?} */
+var _sort_ = Module["_sort_"] = createExportWrapper("sort_");
+
+/** @type {function(...*):?} */
+var _smart1_ = Module["_smart1_"] = createExportWrapper("smart1_");
+
+/** @type {function(...*):?} */
+var _subfit_ = Module["_subfit_"] = createExportWrapper("subfit_");
+
+/** @type {function(...*):?} */
+var _fulfit_ = Module["_fulfit_"] = createExportWrapper("fulfit_");
+
+/** @type {function(...*):?} */
+var _onetrm_ = Module["_onetrm_"] = createExportWrapper("onetrm_");
+
+/** @type {function(...*):?} */
+var _newb_ = Module["_newb_"] = createExportWrapper("newb_");
+
+/** @type {function(...*):?} */
+var _oneone_ = Module["_oneone_"] = createExportWrapper("oneone_");
+
+/** @type {function(...*):?} */
+var _pprdir_ = Module["_pprdir_"] = createExportWrapper("pprdir_");
+
+/** @type {function(...*):?} */
+var _pprder_ = Module["_pprder_"] = createExportWrapper("pprder_");
+
+/** @type {function(...*):?} */
+var _ppconj_ = Module["_ppconj_"] = createExportWrapper("ppconj_");
+
+/** @type {function(...*):?} */
+var _pool_ = Module["_pool_"] = createExportWrapper("pool_");
+
+/** @type {function(...*):?} */
+var _spline_ = Module["_spline_"] = createExportWrapper("spline_");
+
+/** @type {function(...*):?} */
+var _smooth_ = Module["_smooth_"] = createExportWrapper("smooth_");
+
+/** @type {function(...*):?} */
+var _splineaa_ = Module["_splineaa_"] = createExportWrapper("splineaa_");
+
+/** @type {function(...*):?} */
+var _sinerp_ = Module["_sinerp_"] = createExportWrapper("sinerp_");
+
+/** @type {function(...*):?} */
+var _ioffst_ = Module["_ioffst_"] = createExportWrapper("ioffst_");
+
+/** @type {function(...*):?} */
+var _qtran_ = Module["_qtran_"] = createExportWrapper("qtran_");
+
+/** @type {function(...*):?} */
+var _optra_ = Module["_optra_"] = createExportWrapper("optra_");
+
+/** @type {function(...*):?} */
+var _stlstp_ = Module["_stlstp_"] = createExportWrapper("stlstp_");
+
+/** @type {function(...*):?} */
+var _stlss_ = Module["_stlss_"] = createExportWrapper("stlss_");
+
+/** @type {function(...*):?} */
+var _stlfts_ = Module["_stlfts_"] = createExportWrapper("stlfts_");
+
+/** @type {function(...*):?} */
+var _stless_ = Module["_stless_"] = createExportWrapper("stless_");
+
+/** @type {function(...*):?} */
+var _stlrwt_ = Module["_stlrwt_"] = createExportWrapper("stlrwt_");
+
+/** @type {function(...*):?} */
+var _psort_ = Module["_psort_"] = createExportWrapper("psort_");
+
+/** @type {function(...*):?} */
+var _stlest_ = Module["_stlest_"] = createExportWrapper("stlest_");
+
+/** @type {function(...*):?} */
+var _stlma_ = Module["_stlma_"] = createExportWrapper("stlma_");
+
+/** @type {function(...*):?} */
+var _stlez_ = Module["_stlez_"] = createExportWrapper("stlez_");
+
+/** @type {function(...*):?} */
+var _m7seq_ = Module["_m7seq_"] = createExportWrapper("m7seq_");
+
+/** @type {function(...*):?} */
+var _n7msrt_ = Module["_n7msrt_"] = createExportWrapper("n7msrt_");
+
+/** @type {function(...*):?} */
+var _i7do_ = Module["_i7do_"] = createExportWrapper("i7do_");
+
+/** @type {function(...*):?} */
+var _m7slo_ = Module["_m7slo_"] = createExportWrapper("m7slo_");
+
+/** @type {function(...*):?} */
+var _d7egr_ = Module["_d7egr_"] = createExportWrapper("d7egr_");
+
+/** @type {function(...*):?} */
+var _s7etr_ = Module["_s7etr_"] = createExportWrapper("s7etr_");
+
+/** @type {function(...*):?} */
+var _s7rtdt_ = Module["_s7rtdt_"] = createExportWrapper("s7rtdt_");
+
+/** @type {function(...*):?} */
+var _dc7vfn_ = Module["_dc7vfn_"] = createExportWrapper("dc7vfn_");
+
+/** @type {function(...*):?} */
+var _dl7nvr_ = Module["_dl7nvr_"] = createExportWrapper("dl7nvr_");
+
+/** @type {function(...*):?} */
+var _dl7tsq_ = Module["_dl7tsq_"] = createExportWrapper("dl7tsq_");
+
+/** @type {function(...*):?} */
+var _dn2lrd_ = Module["_dn2lrd_"] = createExportWrapper("dn2lrd_");
+
+/** @type {function(...*):?} */
+var _dl7ivm_ = Module["_dl7ivm_"] = createExportWrapper("dl7ivm_");
+
+/** @type {function(...*):?} */
+var _dl7itv_ = Module["_dl7itv_"] = createExportWrapper("dl7itv_");
+
+/** @type {function(...*):?} */
+var _do7prd_ = Module["_do7prd_"] = createExportWrapper("do7prd_");
+
+/** @type {function(...*):?} */
+var _dr7mdc_ = Module["_dr7mdc_"] = createExportWrapper("dr7mdc_");
+
+/** @type {function(...*):?} */
+var _dl7svx_ = Module["_dl7svx_"] = createExportWrapper("dl7svx_");
+
+/** @type {function(...*):?} */
+var _dl7svn_ = Module["_dl7svn_"] = createExportWrapper("dl7svn_");
+
+/** @type {function(...*):?} */
+var _dl7srt_ = Module["_dl7srt_"] = createExportWrapper("dl7srt_");
+
+/** @type {function(...*):?} */
+var _dq7rad_ = Module["_dq7rad_"] = createExportWrapper("dq7rad_");
+
+/** @type {function(...*):?} */
+var _dq7apl_ = Module["_dq7apl_"] = createExportWrapper("dq7apl_");
+
+/** @type {function(...*):?} */
+var _dq7rfh_ = Module["_dq7rfh_"] = createExportWrapper("dq7rfh_");
+
+/** @type {function(...*):?} */
+var _dg7lit_ = Module["_dg7lit_"] = createExportWrapper("dg7lit_");
+
+/** @type {function(...*):?} */
+var _dl7vml_ = Module["_dl7vml_"] = createExportWrapper("dl7vml_");
+
+/** @type {function(...*):?} */
+var _dd7upd_ = Module["_dd7upd_"] = createExportWrapper("dd7upd_");
+
+/** @type {function(...*):?} */
+var _ds3grd_ = Module["_ds3grd_"] = createExportWrapper("ds3grd_");
+
+/** @type {function(...*):?} */
+var _dparck_ = Module["_dparck_"] = createExportWrapper("dparck_");
+
+/** @type {function(...*):?} */
+var _i7shft_ = Module["_i7shft_"] = createExportWrapper("i7shft_");
+
+/** @type {function(...*):?} */
+var _dq7rsh_ = Module["_dq7rsh_"] = createExportWrapper("dq7rsh_");
+
+/** @type {function(...*):?} */
+var _dv7vmp_ = Module["_dv7vmp_"] = createExportWrapper("dv7vmp_");
+
+/** @type {function(...*):?} */
+var _dd7dgb_ = Module["_dd7dgb_"] = createExportWrapper("dd7dgb_");
+
+/** @type {function(...*):?} */
+var _drldst_ = Module["_drldst_"] = createExportWrapper("drldst_");
+
+/** @type {function(...*):?} */
+var _da7sst_ = Module["_da7sst_"] = createExportWrapper("da7sst_");
+
+/** @type {function(...*):?} */
+var _dl7tvm_ = Module["_dl7tvm_"] = createExportWrapper("dl7tvm_");
+
+/** @type {function(...*):?} */
+var _dw7zbf_ = Module["_dw7zbf_"] = createExportWrapper("dw7zbf_");
+
+/** @type {function(...*):?} */
+var _dl7upd_ = Module["_dl7upd_"] = createExportWrapper("dl7upd_");
+
+/** @type {function(...*):?} */
+var _dd7dog_ = Module["_dd7dog_"] = createExportWrapper("dd7dog_");
+
+/** @type {function(...*):?} */
+var _dv7shf_ = Module["_dv7shf_"] = createExportWrapper("dv7shf_");
+
+/** @type {function(...*):?} */
+var _dh2rfg_ = Module["_dh2rfg_"] = createExportWrapper("dh2rfg_");
+
+/** @type {function(...*):?} */
+var _dh2rfa_ = Module["_dh2rfa_"] = createExportWrapper("dh2rfa_");
+
+/** @type {function(...*):?} */
+var _stopx_ = Module["_stopx_"] = createExportWrapper("stopx_");
+
+/** @type {function(...*):?} */
+var _dg7itb_ = Module["_dg7itb_"] = createExportWrapper("dg7itb_");
+
+/** @type {function(...*):?} */
+var _dr7tvm_ = Module["_dr7tvm_"] = createExportWrapper("dr7tvm_");
+
+/** @type {function(...*):?} */
+var _dl7sqr_ = Module["_dl7sqr_"] = createExportWrapper("dl7sqr_");
+
+/** @type {function(...*):?} */
+var _ds7ipr_ = Module["_ds7ipr_"] = createExportWrapper("ds7ipr_");
+
+/** @type {function(...*):?} */
+var _dl7msb_ = Module["_dl7msb_"] = createExportWrapper("dl7msb_");
+
+/** @type {function(...*):?} */
+var _ds7dmp_ = Module["_ds7dmp_"] = createExportWrapper("ds7dmp_");
+
+/** @type {function(...*):?} */
+var _dg7qsb_ = Module["_dg7qsb_"] = createExportWrapper("dg7qsb_");
+
+/** @type {function(...*):?} */
+var _ds7lvm_ = Module["_ds7lvm_"] = createExportWrapper("ds7lvm_");
+
+/** @type {function(...*):?} */
+var _ds7lup_ = Module["_ds7lup_"] = createExportWrapper("ds7lup_");
+
+/** @type {function(...*):?} */
+var _df7dhb_ = Module["_df7dhb_"] = createExportWrapper("df7dhb_");
+
+/** @type {function(...*):?} */
+var _dg7qts_ = Module["_dg7qts_"] = createExportWrapper("dg7qts_");
+
+/** @type {function(...*):?} */
+var _ds7bqn_ = Module["_ds7bqn_"] = createExportWrapper("ds7bqn_");
+
+/** @type {function(...*):?} */
+var _dl7mst_ = Module["_dl7mst_"] = createExportWrapper("dl7mst_");
+
+/** @type {function(...*):?} */
+var _dd7mlp_ = Module["_dd7mlp_"] = createExportWrapper("dd7mlp_");
+
+/** @type {function(...*):?} */
+var _ds7grd_ = Module["_ds7grd_"] = createExportWrapper("ds7grd_");
+
+/** @type {function(...*):?} */
+var _dd7dup_ = Module["_dd7dup_"] = createExportWrapper("dd7dup_");
+
+/** @type {function(...*):?} */
+var _df7hes_ = Module["_df7hes_"] = createExportWrapper("df7hes_");
+
+/** @type {function(...*):?} */
+var _drnsgb_ = Module["_drnsgb_"] = createExportWrapper("drnsgb_");
+
+/** @type {function(...*):?} */
+var _drnsg_ = Module["_drnsg_"] = createExportWrapper("drnsg_");
+
+/** @type {function(...*):?} */
+var _dsm_ = Module["_dsm_"] = createExportWrapper("dsm_");
+
+/** @type {function(...*):?} */
+var _R_CreateAtVector = Module["_R_CreateAtVector"] = createExportWrapper("R_CreateAtVector");
+
+/** @type {function(...*):?} */
+var _R_GAxisPars = Module["_R_GAxisPars"] = createExportWrapper("R_GAxisPars");
+
+/** @type {function(...*):?} */
+var _chull = Module["_chull"] = createExportWrapper("chull");
+
+/** @type {function(...*):?} */
+var _devcontrol = Module["_devcontrol"] = createExportWrapper("devcontrol");
+
+/** @type {function(...*):?} */
+var _devdisplaylist = Module["_devdisplaylist"] = createExportWrapper("devdisplaylist");
+
+/** @type {function(...*):?} */
+var _devcopy = Module["_devcopy"] = createExportWrapper("devcopy");
+
+/** @type {function(...*):?} */
+var _devcur = Module["_devcur"] = createExportWrapper("devcur");
+
+/** @type {function(...*):?} */
+var _devnext = Module["_devnext"] = createExportWrapper("devnext");
+
+/** @type {function(...*):?} */
+var _devprev = Module["_devprev"] = createExportWrapper("devprev");
+
+/** @type {function(...*):?} */
+var _devset = Module["_devset"] = createExportWrapper("devset");
+
+/** @type {function(...*):?} */
+var _devoff = Module["_devoff"] = createExportWrapper("devoff");
+
+/** @type {function(...*):?} */
+var _devsize = Module["_devsize"] = createExportWrapper("devsize");
+
+/** @type {function(...*):?} */
+var _devholdflush = Module["_devholdflush"] = createExportWrapper("devholdflush");
+
+/** @type {function(...*):?} */
+var _devcap = Module["_devcap"] = createExportWrapper("devcap");
+
+/** @type {function(...*):?} */
+var _devcapture = Module["_devcapture"] = createExportWrapper("devcapture");
+
+/** @type {function(...*):?} */
+var _R_init_grDevices = Module["_R_init_grDevices"] = createExportWrapper("R_init_grDevices");
+
+/** @type {function(...*):?} */
+var _initPalette = Module["_initPalette"] = createExportWrapper("initPalette");
+
+/** @type {function(...*):?} */
+var _Type1FontInUse = Module["_Type1FontInUse"] = createExportWrapper("Type1FontInUse");
+
+/** @type {function(...*):?} */
+var _CIDFontInUse = Module["_CIDFontInUse"] = createExportWrapper("CIDFontInUse");
+
+/** @type {function(...*):?} */
+var _gray = Module["_gray"] = createExportWrapper("gray");
+
+/** @type {function(...*):?} */
+var _RGB2hsv = Module["_RGB2hsv"] = createExportWrapper("RGB2hsv");
+
+/** @type {function(...*):?} */
+var _rgb = Module["_rgb"] = createExportWrapper("rgb");
+
+/** @type {function(...*):?} */
+var _hsv = Module["_hsv"] = createExportWrapper("hsv");
+
+/** @type {function(...*):?} */
+var _hcl = Module["_hcl"] = createExportWrapper("hcl");
+
+/** @type {function(...*):?} */
+var _col2rgb = Module["_col2rgb"] = createExportWrapper("col2rgb");
+
+/** @type {function(...*):?} */
+var _colors = Module["_colors"] = createExportWrapper("colors");
+
+/** @type {function(...*):?} */
+var _palette = Module["_palette"] = createExportWrapper("palette");
+
+/** @type {function(...*):?} */
+var _palette2 = Module["_palette2"] = createExportWrapper("palette2");
+
+/** @type {function(...*):?} */
+var _cairoVersion = Module["_cairoVersion"] = createExportWrapper("cairoVersion");
+
+/** @type {function(...*):?} */
+var _pangoVersion = Module["_pangoVersion"] = createExportWrapper("pangoVersion");
+
+/** @type {function(...*):?} */
+var _cairoFT = Module["_cairoFT"] = createExportWrapper("cairoFT");
+
+/** @type {function(...*):?} */
+var _bmVersion = Module["_bmVersion"] = createExportWrapper("bmVersion");
+
+/** @type {function(...*):?} */
+var _makeQuartzDefault = Module["_makeQuartzDefault"] = createExportWrapper("makeQuartzDefault");
+
+/** @type {function(...*):?} */
+var _PicTeX = Module["_PicTeX"] = createExportWrapper("PicTeX");
+
+/** @type {function(...*):?} */
+var _PostScript = Module["_PostScript"] = createExportWrapper("PostScript");
+
+/** @type {function(...*):?} */
+var _XFig = Module["_XFig"] = createExportWrapper("XFig");
+
+/** @type {function(...*):?} */
+var _PDF = Module["_PDF"] = createExportWrapper("PDF");
+
+/** @type {function(...*):?} */
+var _devCairo = Module["_devCairo"] = createExportWrapper("devCairo");
+
+/** @type {function(...*):?} */
+var _contourLines = Module["_contourLines"] = createExportWrapper("contourLines");
+
+/** @type {function(...*):?} */
+var _getSnapshot = Module["_getSnapshot"] = createExportWrapper("getSnapshot");
+
+/** @type {function(...*):?} */
+var _playSnapshot = Module["_playSnapshot"] = createExportWrapper("playSnapshot");
+
+/** @type {function(...*):?} */
+var _getGraphicsEvent = Module["_getGraphicsEvent"] = createExportWrapper("getGraphicsEvent");
+
+/** @type {function(...*):?} */
+var _getGraphicsEventEnv = Module["_getGraphicsEventEnv"] = createExportWrapper("getGraphicsEventEnv");
+
+/** @type {function(...*):?} */
+var _setGraphicsEventEnv = Module["_setGraphicsEventEnv"] = createExportWrapper("setGraphicsEventEnv");
+
+/** @type {function(...*):?} */
+var _setPattern = Module["_setPattern"] = createExportWrapper("setPattern");
+
+/** @type {function(...*):?} */
+var _setClipPath = Module["_setClipPath"] = createExportWrapper("setClipPath");
+
+/** @type {function(...*):?} */
+var _setMask = Module["_setMask"] = createExportWrapper("setMask");
+
+/** @type {function(...*):?} */
+var _devAskNewPage = Module["_devAskNewPage"] = createExportWrapper("devAskNewPage");
+
+/** @type {function(...*):?} */
+var _savePlot = Module["_savePlot"] = createExportWrapper("savePlot");
+
+/** @type {function(...*):?} */
+var _Quartz = Module["_Quartz"] = createExportWrapper("Quartz");
+
+/** @type {function(...*):?} */
+var _X11 = Module["_X11"] = createExportWrapper("X11");
+
+/** @type {function(...*):?} */
+var _modf = Module["_modf"] = createExportWrapper("modf");
+
+/** @type {function(...*):?} */
+var _inRGBpar3 = Module["_inRGBpar3"] = createExportWrapper("inRGBpar3");
+
+/** @type {function(...*):?} */
+var _incol2name = Module["_incol2name"] = createExportWrapper("incol2name");
+
+/** @type {function(...*):?} */
+var _inR_GE_str2col = Module["_inR_GE_str2col"] = createExportWrapper("inR_GE_str2col");
+
+/** @type {function(...*):?} */
+var _PSDeviceDriver = Module["_PSDeviceDriver"] = createExportWrapper("PSDeviceDriver");
+
+/** @type {function(...*):?} */
+var _PDFDeviceDriver = Module["_PDFDeviceDriver"] = createExportWrapper("PDFDeviceDriver");
+
+/** @type {function(...*):?} */
+var _PDF_StrWidth = Module["_PDF_StrWidth"] = createExportWrapper("PDF_StrWidth");
+
+/** @type {function(...*):?} */
+var _PDF_MetricInfo = Module["_PDF_MetricInfo"] = createExportWrapper("PDF_MetricInfo");
+
+/** @type {function(...*):?} */
+var _localtime = Module["_localtime"] = createExportWrapper("localtime");
+
+/** @type {function(...*):?} */
+var _Quartz_C = Module["_Quartz_C"] = createExportWrapper("Quartz_C");
+
+/** @type {function(...*):?} */
+var _getQuartzAPI = Module["_getQuartzAPI"] = createExportWrapper("getQuartzAPI");
+
+/** @type {function(...*):?} */
+var _R_init_graphics = Module["_R_init_graphics"] = createExportWrapper("R_init_graphics");
+
+/** @type {function(...*):?} */
+var _R_init_tools = Module["_R_init_tools"] = createExportWrapper("R_init_tools");
+
+/** @type {function(...*):?} */
+var _getpriority = Module["_getpriority"] = createExportWrapper("getpriority");
+
+/** @type {function(...*):?} */
+var _setpriority = Module["_setpriority"] = createExportWrapper("setpriority");
+
+/** @type {function(...*):?} */
+var _R_init_splines = Module["_R_init_splines"] = createExportWrapper("R_init_splines");
+
+/** @type {function(...*):?} */
+var _gridCallback = Module["_gridCallback"] = createExportWrapper("gridCallback");
+
+/** @type {function(...*):?} */
+var _R_init_grid = Module["_R_init_grid"] = createExportWrapper("R_init_grid");
+
+/** @type {function(...*):?} */
+var _pcre2_code_copy_8 = Module["_pcre2_code_copy_8"] = createExportWrapper("pcre2_code_copy_8");
+
+/** @type {function(...*):?} */
+var _pcre2_code_copy_with_tables_8 = Module["_pcre2_code_copy_with_tables_8"] = createExportWrapper("pcre2_code_copy_with_tables_8");
+
+/** @type {function(...*):?} */
+var _pcre2_general_context_create_8 = Module["_pcre2_general_context_create_8"] = createExportWrapper("pcre2_general_context_create_8");
+
+/** @type {function(...*):?} */
+var _pcre2_convert_context_create_8 = Module["_pcre2_convert_context_create_8"] = createExportWrapper("pcre2_convert_context_create_8");
+
+/** @type {function(...*):?} */
+var _pcre2_general_context_copy_8 = Module["_pcre2_general_context_copy_8"] = createExportWrapper("pcre2_general_context_copy_8");
+
+/** @type {function(...*):?} */
+var _pcre2_compile_context_copy_8 = Module["_pcre2_compile_context_copy_8"] = createExportWrapper("pcre2_compile_context_copy_8");
+
+/** @type {function(...*):?} */
+var _pcre2_match_context_copy_8 = Module["_pcre2_match_context_copy_8"] = createExportWrapper("pcre2_match_context_copy_8");
+
+/** @type {function(...*):?} */
+var _pcre2_convert_context_copy_8 = Module["_pcre2_convert_context_copy_8"] = createExportWrapper("pcre2_convert_context_copy_8");
+
+/** @type {function(...*):?} */
+var _pcre2_general_context_free_8 = Module["_pcre2_general_context_free_8"] = createExportWrapper("pcre2_general_context_free_8");
+
+/** @type {function(...*):?} */
+var _pcre2_convert_context_free_8 = Module["_pcre2_convert_context_free_8"] = createExportWrapper("pcre2_convert_context_free_8");
+
+/** @type {function(...*):?} */
+var _pcre2_set_bsr_8 = Module["_pcre2_set_bsr_8"] = createExportWrapper("pcre2_set_bsr_8");
+
+/** @type {function(...*):?} */
+var _pcre2_set_max_pattern_length_8 = Module["_pcre2_set_max_pattern_length_8"] = createExportWrapper("pcre2_set_max_pattern_length_8");
+
+/** @type {function(...*):?} */
+var _pcre2_set_newline_8 = Module["_pcre2_set_newline_8"] = createExportWrapper("pcre2_set_newline_8");
+
+/** @type {function(...*):?} */
+var _pcre2_set_parens_nest_limit_8 = Module["_pcre2_set_parens_nest_limit_8"] = createExportWrapper("pcre2_set_parens_nest_limit_8");
+
+/** @type {function(...*):?} */
+var _pcre2_set_compile_extra_options_8 = Module["_pcre2_set_compile_extra_options_8"] = createExportWrapper("pcre2_set_compile_extra_options_8");
+
+/** @type {function(...*):?} */
+var _pcre2_set_compile_recursion_guard_8 = Module["_pcre2_set_compile_recursion_guard_8"] = createExportWrapper("pcre2_set_compile_recursion_guard_8");
+
+/** @type {function(...*):?} */
+var _pcre2_set_callout_8 = Module["_pcre2_set_callout_8"] = createExportWrapper("pcre2_set_callout_8");
+
+/** @type {function(...*):?} */
+var _pcre2_set_substitute_callout_8 = Module["_pcre2_set_substitute_callout_8"] = createExportWrapper("pcre2_set_substitute_callout_8");
+
+/** @type {function(...*):?} */
+var _pcre2_set_heap_limit_8 = Module["_pcre2_set_heap_limit_8"] = createExportWrapper("pcre2_set_heap_limit_8");
+
+/** @type {function(...*):?} */
+var _pcre2_set_match_limit_8 = Module["_pcre2_set_match_limit_8"] = createExportWrapper("pcre2_set_match_limit_8");
+
+/** @type {function(...*):?} */
+var _pcre2_set_depth_limit_8 = Module["_pcre2_set_depth_limit_8"] = createExportWrapper("pcre2_set_depth_limit_8");
+
+/** @type {function(...*):?} */
+var _pcre2_set_offset_limit_8 = Module["_pcre2_set_offset_limit_8"] = createExportWrapper("pcre2_set_offset_limit_8");
+
+/** @type {function(...*):?} */
+var _pcre2_set_recursion_limit_8 = Module["_pcre2_set_recursion_limit_8"] = createExportWrapper("pcre2_set_recursion_limit_8");
+
+/** @type {function(...*):?} */
+var _pcre2_set_recursion_memory_management_8 = Module["_pcre2_set_recursion_memory_management_8"] = createExportWrapper("pcre2_set_recursion_memory_management_8");
+
+/** @type {function(...*):?} */
+var _pcre2_set_glob_separator_8 = Module["_pcre2_set_glob_separator_8"] = createExportWrapper("pcre2_set_glob_separator_8");
+
+/** @type {function(...*):?} */
+var _pcre2_set_glob_escape_8 = Module["_pcre2_set_glob_escape_8"] = createExportWrapper("pcre2_set_glob_escape_8");
+
+/** @type {function(...*):?} */
+var _ispunct = Module["_ispunct"] = createExportWrapper("ispunct");
+
+/** @type {function(...*):?} */
+var _pcre2_pattern_convert_8 = Module["_pcre2_pattern_convert_8"] = createExportWrapper("pcre2_pattern_convert_8");
+
+/** @type {function(...*):?} */
+var _isdigit = Module["_isdigit"] = createExportWrapper("isdigit");
+
+/** @type {function(...*):?} */
+var _pcre2_converted_pattern_free_8 = Module["_pcre2_converted_pattern_free_8"] = createExportWrapper("pcre2_converted_pattern_free_8");
+
+/** @type {function(...*):?} */
+var _iscntrl = Module["_iscntrl"] = createExportWrapper("iscntrl");
+
+/** @type {function(...*):?} */
+var _isgraph = Module["_isgraph"] = createExportWrapper("isgraph");
+
+/** @type {function(...*):?} */
+var _isupper = Module["_isupper"] = createExportWrapper("isupper");
+
+/** @type {function(...*):?} */
+var _isxdigit = Module["_isxdigit"] = createExportWrapper("isxdigit");
+
+/** @type {function(...*):?} */
+var _pcre2_dfa_match_8 = Module["_pcre2_dfa_match_8"] = createExportWrapper("pcre2_dfa_match_8");
+
+/** @type {function(...*):?} */
+var _pcre2_jit_match_8 = Module["_pcre2_jit_match_8"] = createExportWrapper("pcre2_jit_match_8");
+
+/** @type {function(...*):?} */
+var _pcre2_jit_free_unused_memory_8 = Module["_pcre2_jit_free_unused_memory_8"] = createExportWrapper("pcre2_jit_free_unused_memory_8");
+
+/** @type {function(...*):?} */
+var _pcre2_jit_stack_free_8 = Module["_pcre2_jit_stack_free_8"] = createExportWrapper("pcre2_jit_stack_free_8");
+
+/** @type {function(...*):?} */
+var _pcre2_maketables_free_8 = Module["_pcre2_maketables_free_8"] = createExportWrapper("pcre2_maketables_free_8");
+
+/** @type {function(...*):?} */
+var _pcre2_match_data_create_from_pattern_8 = Module["_pcre2_match_data_create_from_pattern_8"] = createExportWrapper("pcre2_match_data_create_from_pattern_8");
+
+/** @type {function(...*):?} */
+var _pcre2_get_mark_8 = Module["_pcre2_get_mark_8"] = createExportWrapper("pcre2_get_mark_8");
+
+/** @type {function(...*):?} */
+var _pcre2_get_ovector_count_8 = Module["_pcre2_get_ovector_count_8"] = createExportWrapper("pcre2_get_ovector_count_8");
+
+/** @type {function(...*):?} */
+var _pcre2_get_startchar_8 = Module["_pcre2_get_startchar_8"] = createExportWrapper("pcre2_get_startchar_8");
+
+/** @type {function(...*):?} */
+var _pcre2_get_match_data_size_8 = Module["_pcre2_get_match_data_size_8"] = createExportWrapper("pcre2_get_match_data_size_8");
+
+/** @type {function(...*):?} */
+var _pcre2_callout_enumerate_8 = Module["_pcre2_callout_enumerate_8"] = createExportWrapper("pcre2_callout_enumerate_8");
+
+/** @type {function(...*):?} */
+var _pcre2_serialize_encode_8 = Module["_pcre2_serialize_encode_8"] = createExportWrapper("pcre2_serialize_encode_8");
+
+/** @type {function(...*):?} */
+var _pcre2_serialize_decode_8 = Module["_pcre2_serialize_decode_8"] = createExportWrapper("pcre2_serialize_decode_8");
+
+/** @type {function(...*):?} */
+var _pcre2_serialize_get_number_of_codes_8 = Module["_pcre2_serialize_get_number_of_codes_8"] = createExportWrapper("pcre2_serialize_get_number_of_codes_8");
+
+/** @type {function(...*):?} */
+var _pcre2_serialize_free_8 = Module["_pcre2_serialize_free_8"] = createExportWrapper("pcre2_serialize_free_8");
+
+/** @type {function(...*):?} */
+var _pcre2_substitute_8 = Module["_pcre2_substitute_8"] = createExportWrapper("pcre2_substitute_8");
+
+/** @type {function(...*):?} */
+var _pcre2_substring_nametable_scan_8 = Module["_pcre2_substring_nametable_scan_8"] = createExportWrapper("pcre2_substring_nametable_scan_8");
+
+/** @type {function(...*):?} */
+var _pcre2_substring_length_bynumber_8 = Module["_pcre2_substring_length_bynumber_8"] = createExportWrapper("pcre2_substring_length_bynumber_8");
+
+/** @type {function(...*):?} */
+var _pcre2_substring_copy_byname_8 = Module["_pcre2_substring_copy_byname_8"] = createExportWrapper("pcre2_substring_copy_byname_8");
+
+/** @type {function(...*):?} */
+var _pcre2_substring_copy_bynumber_8 = Module["_pcre2_substring_copy_bynumber_8"] = createExportWrapper("pcre2_substring_copy_bynumber_8");
+
+/** @type {function(...*):?} */
+var _pcre2_substring_get_byname_8 = Module["_pcre2_substring_get_byname_8"] = createExportWrapper("pcre2_substring_get_byname_8");
+
+/** @type {function(...*):?} */
+var _pcre2_substring_get_bynumber_8 = Module["_pcre2_substring_get_bynumber_8"] = createExportWrapper("pcre2_substring_get_bynumber_8");
+
+/** @type {function(...*):?} */
+var _pcre2_substring_free_8 = Module["_pcre2_substring_free_8"] = createExportWrapper("pcre2_substring_free_8");
+
+/** @type {function(...*):?} */
+var _pcre2_substring_length_byname_8 = Module["_pcre2_substring_length_byname_8"] = createExportWrapper("pcre2_substring_length_byname_8");
+
+/** @type {function(...*):?} */
+var _pcre2_substring_list_get_8 = Module["_pcre2_substring_list_get_8"] = createExportWrapper("pcre2_substring_list_get_8");
+
+/** @type {function(...*):?} */
+var _pcre2_substring_list_free_8 = Module["_pcre2_substring_list_free_8"] = createExportWrapper("pcre2_substring_list_free_8");
+
+/** @type {function(...*):?} */
+var _pcre2_substring_number_from_name_8 = Module["_pcre2_substring_number_from_name_8"] = createExportWrapper("pcre2_substring_number_from_name_8");
+
+/** @type {function(...*):?} */
+var _lzma_version_number = Module["_lzma_version_number"] = createExportWrapper("lzma_version_number");
+
+/** @type {function(...*):?} */
+var _lzma_free = Module["_lzma_free"] = createExportWrapper("lzma_free");
+
+/** @type {function(...*):?} */
+var _lzma_get_progress = Module["_lzma_get_progress"] = createExportWrapper("lzma_get_progress");
+
+/** @type {function(...*):?} */
+var _lzma_get_check = Module["_lzma_get_check"] = createExportWrapper("lzma_get_check");
+
+/** @type {function(...*):?} */
+var _lzma_memusage = Module["_lzma_memusage"] = createExportWrapper("lzma_memusage");
+
+/** @type {function(...*):?} */
+var _lzma_memlimit_get = Module["_lzma_memlimit_get"] = createExportWrapper("lzma_memlimit_get");
+
+/** @type {function(...*):?} */
+var _lzma_memlimit_set = Module["_lzma_memlimit_set"] = createExportWrapper("lzma_memlimit_set");
+
+/** @type {function(...*):?} */
+var _lzma_block_compressed_size = Module["_lzma_block_compressed_size"] = createExportWrapper("lzma_block_compressed_size");
+
+/** @type {function(...*):?} */
+var _lzma_block_unpadded_size = Module["_lzma_block_unpadded_size"] = createExportWrapper("lzma_block_unpadded_size");
+
+/** @type {function(...*):?} */
+var _lzma_check_size = Module["_lzma_check_size"] = createExportWrapper("lzma_check_size");
+
+/** @type {function(...*):?} */
+var _lzma_block_total_size = Module["_lzma_block_total_size"] = createExportWrapper("lzma_block_total_size");
+
+/** @type {function(...*):?} */
+var _lzma_filters_copy = Module["_lzma_filters_copy"] = createExportWrapper("lzma_filters_copy");
+
+/** @type {function(...*):?} */
+var _lzma_physmem = Module["_lzma_physmem"] = createExportWrapper("lzma_physmem");
+
+/** @type {function(...*):?} */
+var _lzma_index_init = Module["_lzma_index_init"] = createExportWrapper("lzma_index_init");
+
+/** @type {function(...*):?} */
+var _lzma_index_end = Module["_lzma_index_end"] = createExportWrapper("lzma_index_end");
+
+/** @type {function(...*):?} */
+var _lzma_index_memusage = Module["_lzma_index_memusage"] = createExportWrapper("lzma_index_memusage");
+
+/** @type {function(...*):?} */
+var _lzma_index_memused = Module["_lzma_index_memused"] = createExportWrapper("lzma_index_memused");
+
+/** @type {function(...*):?} */
+var _lzma_index_block_count = Module["_lzma_index_block_count"] = createExportWrapper("lzma_index_block_count");
+
+/** @type {function(...*):?} */
+var _lzma_index_stream_count = Module["_lzma_index_stream_count"] = createExportWrapper("lzma_index_stream_count");
+
+/** @type {function(...*):?} */
+var _lzma_index_size = Module["_lzma_index_size"] = createExportWrapper("lzma_index_size");
+
+/** @type {function(...*):?} */
+var _lzma_index_total_size = Module["_lzma_index_total_size"] = createExportWrapper("lzma_index_total_size");
+
+/** @type {function(...*):?} */
+var _lzma_index_stream_size = Module["_lzma_index_stream_size"] = createExportWrapper("lzma_index_stream_size");
+
+/** @type {function(...*):?} */
+var _lzma_index_file_size = Module["_lzma_index_file_size"] = createExportWrapper("lzma_index_file_size");
+
+/** @type {function(...*):?} */
+var _lzma_index_uncompressed_size = Module["_lzma_index_uncompressed_size"] = createExportWrapper("lzma_index_uncompressed_size");
+
+/** @type {function(...*):?} */
+var _lzma_index_checks = Module["_lzma_index_checks"] = createExportWrapper("lzma_index_checks");
+
+/** @type {function(...*):?} */
+var _lzma_vli_size = Module["_lzma_vli_size"] = createExportWrapper("lzma_vli_size");
+
+/** @type {function(...*):?} */
+var _lzma_index_stream_flags = Module["_lzma_index_stream_flags"] = createExportWrapper("lzma_index_stream_flags");
+
+/** @type {function(...*):?} */
+var _lzma_stream_flags_compare = Module["_lzma_stream_flags_compare"] = createExportWrapper("lzma_stream_flags_compare");
+
+/** @type {function(...*):?} */
+var _lzma_index_stream_padding = Module["_lzma_index_stream_padding"] = createExportWrapper("lzma_index_stream_padding");
+
+/** @type {function(...*):?} */
+var _lzma_index_append = Module["_lzma_index_append"] = createExportWrapper("lzma_index_append");
+
+/** @type {function(...*):?} */
+var _lzma_index_cat = Module["_lzma_index_cat"] = createExportWrapper("lzma_index_cat");
+
+/** @type {function(...*):?} */
+var _lzma_index_dup = Module["_lzma_index_dup"] = createExportWrapper("lzma_index_dup");
+
+/** @type {function(...*):?} */
+var _lzma_index_iter_init = Module["_lzma_index_iter_init"] = createExportWrapper("lzma_index_iter_init");
+
+/** @type {function(...*):?} */
+var _lzma_index_iter_rewind = Module["_lzma_index_iter_rewind"] = createExportWrapper("lzma_index_iter_rewind");
+
+/** @type {function(...*):?} */
+var _lzma_index_iter_next = Module["_lzma_index_iter_next"] = createExportWrapper("lzma_index_iter_next");
+
+/** @type {function(...*):?} */
+var _lzma_index_iter_locate = Module["_lzma_index_iter_locate"] = createExportWrapper("lzma_index_iter_locate");
+
+/** @type {function(...*):?} */
+var _lzma_cputhreads = Module["_lzma_cputhreads"] = createExportWrapper("lzma_cputhreads");
+
+/** @type {function(...*):?} */
+var _lzma_alone_encoder = Module["_lzma_alone_encoder"] = createExportWrapper("lzma_alone_encoder");
+
+/** @type {function(...*):?} */
+var _lzma_lzma_encoder_init = Module["_lzma_lzma_encoder_init"] = createExportWrapper("lzma_lzma_encoder_init");
+
+/** @type {function(...*):?} */
+var _lzma_block_buffer_bound = Module["_lzma_block_buffer_bound"] = createExportWrapper("lzma_block_buffer_bound");
+
+/** @type {function(...*):?} */
+var _lzma_block_buffer_encode = Module["_lzma_block_buffer_encode"] = createExportWrapper("lzma_block_buffer_encode");
+
+/** @type {function(...*):?} */
+var _lzma_check_is_supported = Module["_lzma_check_is_supported"] = createExportWrapper("lzma_check_is_supported");
+
+/** @type {function(...*):?} */
+var _lzma_block_uncomp_encode = Module["_lzma_block_uncomp_encode"] = createExportWrapper("lzma_block_uncomp_encode");
+
+/** @type {function(...*):?} */
+var _lzma_block_header_size = Module["_lzma_block_header_size"] = createExportWrapper("lzma_block_header_size");
+
+/** @type {function(...*):?} */
+var _lzma_block_header_encode = Module["_lzma_block_header_encode"] = createExportWrapper("lzma_block_header_encode");
+
+/** @type {function(...*):?} */
+var _lzma_block_encoder = Module["_lzma_block_encoder"] = createExportWrapper("lzma_block_encoder");
+
+/** @type {function(...*):?} */
+var _lzma_filter_flags_size = Module["_lzma_filter_flags_size"] = createExportWrapper("lzma_filter_flags_size");
+
+/** @type {function(...*):?} */
+var _lzma_vli_encode = Module["_lzma_vli_encode"] = createExportWrapper("lzma_vli_encode");
+
+/** @type {function(...*):?} */
+var _lzma_filter_flags_encode = Module["_lzma_filter_flags_encode"] = createExportWrapper("lzma_filter_flags_encode");
+
+/** @type {function(...*):?} */
+var _lzma_crc32 = Module["_lzma_crc32"] = createExportWrapper("lzma_crc32");
+
+/** @type {function(...*):?} */
+var _lzma_easy_buffer_encode = Module["_lzma_easy_buffer_encode"] = createExportWrapper("lzma_easy_buffer_encode");
+
+/** @type {function(...*):?} */
+var _lzma_stream_buffer_encode = Module["_lzma_stream_buffer_encode"] = createExportWrapper("lzma_stream_buffer_encode");
+
+/** @type {function(...*):?} */
+var _lzma_easy_encoder = Module["_lzma_easy_encoder"] = createExportWrapper("lzma_easy_encoder");
+
+/** @type {function(...*):?} */
+var _lzma_easy_encoder_memusage = Module["_lzma_easy_encoder_memusage"] = createExportWrapper("lzma_easy_encoder_memusage");
+
+/** @type {function(...*):?} */
+var _lzma_raw_encoder_memusage = Module["_lzma_raw_encoder_memusage"] = createExportWrapper("lzma_raw_encoder_memusage");
+
+/** @type {function(...*):?} */
+var _lzma_raw_buffer_encode = Module["_lzma_raw_buffer_encode"] = createExportWrapper("lzma_raw_buffer_encode");
+
+/** @type {function(...*):?} */
+var _lzma_filter_encoder_is_supported = Module["_lzma_filter_encoder_is_supported"] = createExportWrapper("lzma_filter_encoder_is_supported");
+
+/** @type {function(...*):?} */
+var _lzma_filters_update = Module["_lzma_filters_update"] = createExportWrapper("lzma_filters_update");
+
+/** @type {function(...*):?} */
+var _lzma_properties_size = Module["_lzma_properties_size"] = createExportWrapper("lzma_properties_size");
+
+/** @type {function(...*):?} */
+var _lzma_properties_encode = Module["_lzma_properties_encode"] = createExportWrapper("lzma_properties_encode");
+
+/** @type {function(...*):?} */
+var _lzma_index_encoder = Module["_lzma_index_encoder"] = createExportWrapper("lzma_index_encoder");
+
+/** @type {function(...*):?} */
+var _lzma_index_buffer_encode = Module["_lzma_index_buffer_encode"] = createExportWrapper("lzma_index_buffer_encode");
+
+/** @type {function(...*):?} */
+var _lzma_stream_buffer_bound = Module["_lzma_stream_buffer_bound"] = createExportWrapper("lzma_stream_buffer_bound");
+
+/** @type {function(...*):?} */
+var _lzma_stream_header_encode = Module["_lzma_stream_header_encode"] = createExportWrapper("lzma_stream_header_encode");
+
+/** @type {function(...*):?} */
+var _lzma_stream_footer_encode = Module["_lzma_stream_footer_encode"] = createExportWrapper("lzma_stream_footer_encode");
+
+/** @type {function(...*):?} */
+var _lzma_stream_encoder_mt = Module["_lzma_stream_encoder_mt"] = createExportWrapper("lzma_stream_encoder_mt");
+
+/** @type {function(...*):?} */
+var _lzma_stream_encoder_mt_memusage = Module["_lzma_stream_encoder_mt_memusage"] = createExportWrapper("lzma_stream_encoder_mt_memusage");
+
+/** @type {function(...*):?} */
+var _pthread_mutex_init = Module["_pthread_mutex_init"] = createExportWrapper("pthread_mutex_init");
+
+/** @type {function(...*):?} */
+var _pthread_condattr_init = Module["_pthread_condattr_init"] = createExportWrapper("pthread_condattr_init");
+
+/** @type {function(...*):?} */
+var _pthread_condattr_setclock = Module["_pthread_condattr_setclock"] = createExportWrapper("pthread_condattr_setclock");
+
+/** @type {function(...*):?} */
+var _pthread_cond_init = Module["_pthread_cond_init"] = createExportWrapper("pthread_cond_init");
+
+/** @type {function(...*):?} */
+var _pthread_condattr_destroy = Module["_pthread_condattr_destroy"] = createExportWrapper("pthread_condattr_destroy");
+
+/** @type {function(...*):?} */
+var _pthread_mutex_destroy = Module["_pthread_mutex_destroy"] = createExportWrapper("pthread_mutex_destroy");
+
+/** @type {function(...*):?} */
+var _pthread_mutex_unlock = Module["_pthread_mutex_unlock"] = createExportWrapper("pthread_mutex_unlock");
+
+/** @type {function(...*):?} */
+var _pthread_mutex_lock = Module["_pthread_mutex_lock"] = createExportWrapper("pthread_mutex_lock");
+
+/** @type {function(...*):?} */
+var _pthread_cond_signal = Module["_pthread_cond_signal"] = createExportWrapper("pthread_cond_signal");
+
+/** @type {function(...*):?} */
+var _sigfillset = Module["_sigfillset"] = createExportWrapper("sigfillset");
+
+/** @type {function(...*):?} */
+var _pthread_create = Module["_pthread_create"] = createExportWrapper("pthread_create");
+
+/** @type {function(...*):?} */
+var _pthread_cond_destroy = Module["_pthread_cond_destroy"] = createExportWrapper("pthread_cond_destroy");
+
+/** @type {function(...*):?} */
+var _pthread_sigmask = Module["_pthread_sigmask"] = createExportWrapper("pthread_sigmask");
+
+/** @type {function(...*):?} */
+var _pthread_cond_wait = Module["_pthread_cond_wait"] = createExportWrapper("pthread_cond_wait");
+
+/** @type {function(...*):?} */
+var _pthread_cond_timedwait = Module["_pthread_cond_timedwait"] = createExportWrapper("pthread_cond_timedwait");
+
+/** @type {function(...*):?} */
+var _pthread_join = Module["_pthread_join"] = createExportWrapper("pthread_join");
+
+/** @type {function(...*):?} */
+var _lzma_lzma_decoder_init = Module["_lzma_lzma_decoder_init"] = createExportWrapper("lzma_lzma_decoder_init");
+
+/** @type {function(...*):?} */
+var _lzma_auto_decoder = Module["_lzma_auto_decoder"] = createExportWrapper("lzma_auto_decoder");
+
+/** @type {function(...*):?} */
+var _lzma_block_buffer_decode = Module["_lzma_block_buffer_decode"] = createExportWrapper("lzma_block_buffer_decode");
+
+/** @type {function(...*):?} */
+var _lzma_block_decoder = Module["_lzma_block_decoder"] = createExportWrapper("lzma_block_decoder");
+
+/** @type {function(...*):?} */
+var _lzma_block_header_decode = Module["_lzma_block_header_decode"] = createExportWrapper("lzma_block_header_decode");
+
+/** @type {function(...*):?} */
+var _lzma_vli_decode = Module["_lzma_vli_decode"] = createExportWrapper("lzma_vli_decode");
+
+/** @type {function(...*):?} */
+var _lzma_filter_flags_decode = Module["_lzma_filter_flags_decode"] = createExportWrapper("lzma_filter_flags_decode");
+
+/** @type {function(...*):?} */
+var _lzma_easy_decoder_memusage = Module["_lzma_easy_decoder_memusage"] = createExportWrapper("lzma_easy_decoder_memusage");
+
+/** @type {function(...*):?} */
+var _lzma_raw_decoder_memusage = Module["_lzma_raw_decoder_memusage"] = createExportWrapper("lzma_raw_decoder_memusage");
+
+/** @type {function(...*):?} */
+var _lzma_raw_buffer_decode = Module["_lzma_raw_buffer_decode"] = createExportWrapper("lzma_raw_buffer_decode");
+
+/** @type {function(...*):?} */
+var _lzma_filter_decoder_is_supported = Module["_lzma_filter_decoder_is_supported"] = createExportWrapper("lzma_filter_decoder_is_supported");
+
+/** @type {function(...*):?} */
+var _lzma_properties_decode = Module["_lzma_properties_decode"] = createExportWrapper("lzma_properties_decode");
+
+/** @type {function(...*):?} */
+var _lzma_index_decoder = Module["_lzma_index_decoder"] = createExportWrapper("lzma_index_decoder");
+
+/** @type {function(...*):?} */
+var _lzma_index_buffer_decode = Module["_lzma_index_buffer_decode"] = createExportWrapper("lzma_index_buffer_decode");
+
+/** @type {function(...*):?} */
+var _lzma_index_hash_init = Module["_lzma_index_hash_init"] = createExportWrapper("lzma_index_hash_init");
+
+/** @type {function(...*):?} */
+var _lzma_index_hash_end = Module["_lzma_index_hash_end"] = createExportWrapper("lzma_index_hash_end");
+
+/** @type {function(...*):?} */
+var _lzma_index_hash_size = Module["_lzma_index_hash_size"] = createExportWrapper("lzma_index_hash_size");
+
+/** @type {function(...*):?} */
+var _lzma_index_hash_append = Module["_lzma_index_hash_append"] = createExportWrapper("lzma_index_hash_append");
+
+/** @type {function(...*):?} */
+var _lzma_index_hash_decode = Module["_lzma_index_hash_decode"] = createExportWrapper("lzma_index_hash_decode");
+
+/** @type {function(...*):?} */
+var _lzma_stream_buffer_decode = Module["_lzma_stream_buffer_decode"] = createExportWrapper("lzma_stream_buffer_decode");
+
+/** @type {function(...*):?} */
+var _lzma_stream_header_decode = Module["_lzma_stream_header_decode"] = createExportWrapper("lzma_stream_header_decode");
+
+/** @type {function(...*):?} */
+var _lzma_stream_footer_decode = Module["_lzma_stream_footer_decode"] = createExportWrapper("lzma_stream_footer_decode");
+
+/** @type {function(...*):?} */
+var _lzma_mf_hc3_find = Module["_lzma_mf_hc3_find"] = createExportWrapper("lzma_mf_hc3_find");
+
+/** @type {function(...*):?} */
+var _lzma_mf_hc3_skip = Module["_lzma_mf_hc3_skip"] = createExportWrapper("lzma_mf_hc3_skip");
+
+/** @type {function(...*):?} */
+var _lzma_mf_hc4_find = Module["_lzma_mf_hc4_find"] = createExportWrapper("lzma_mf_hc4_find");
+
+/** @type {function(...*):?} */
+var _lzma_mf_hc4_skip = Module["_lzma_mf_hc4_skip"] = createExportWrapper("lzma_mf_hc4_skip");
+
+/** @type {function(...*):?} */
+var _lzma_mf_bt2_find = Module["_lzma_mf_bt2_find"] = createExportWrapper("lzma_mf_bt2_find");
+
+/** @type {function(...*):?} */
+var _lzma_mf_bt2_skip = Module["_lzma_mf_bt2_skip"] = createExportWrapper("lzma_mf_bt2_skip");
+
+/** @type {function(...*):?} */
+var _lzma_mf_bt3_find = Module["_lzma_mf_bt3_find"] = createExportWrapper("lzma_mf_bt3_find");
+
+/** @type {function(...*):?} */
+var _lzma_mf_bt3_skip = Module["_lzma_mf_bt3_skip"] = createExportWrapper("lzma_mf_bt3_skip");
+
+/** @type {function(...*):?} */
+var _lzma_mf_bt4_find = Module["_lzma_mf_bt4_find"] = createExportWrapper("lzma_mf_bt4_find");
+
+/** @type {function(...*):?} */
+var _lzma_mf_bt4_skip = Module["_lzma_mf_bt4_skip"] = createExportWrapper("lzma_mf_bt4_skip");
+
+/** @type {function(...*):?} */
+var _lzma_mf_is_supported = Module["_lzma_mf_is_supported"] = createExportWrapper("lzma_mf_is_supported");
+
+/** @type {function(...*):?} */
+var _lzma_mode_is_supported = Module["_lzma_mode_is_supported"] = createExportWrapper("lzma_mode_is_supported");
+
+/** @type {function(...*):?} */
+var _compare_string = Module["_compare_string"] = createExportWrapper("compare_string");
+
+/** @type {function(...*):?} */
+var __gfortran_string_trim = Module["__gfortran_string_trim"] = createExportWrapper("_gfortran_string_trim");
+
+/** @type {function(...*):?} */
+var __gfortran_string_len_trim = Module["__gfortran_string_len_trim"] = createExportWrapper("_gfortran_string_len_trim");
+
+/** @type {function(...*):?} */
+var __gfortran_string_index = Module["__gfortran_string_index"] = createExportWrapper("_gfortran_string_index");
+
+/** @type {function(...*):?} */
+var __gfortran_adjustl = Module["__gfortran_adjustl"] = createExportWrapper("_gfortran_adjustl");
+
+/** @type {function(...*):?} */
+var __gfortran_adjustr = Module["__gfortran_adjustr"] = createExportWrapper("_gfortran_adjustr");
+
+/** @type {function(...*):?} */
+var __gfortran_string_scan = Module["__gfortran_string_scan"] = createExportWrapper("_gfortran_string_scan");
+
+/** @type {function(...*):?} */
+var __gfortran_string_verify = Module["__gfortran_string_verify"] = createExportWrapper("_gfortran_string_verify");
+
+/** @type {function(...*):?} */
+var __gfortran_string_minmax = Module["__gfortran_string_minmax"] = createExportWrapper("_gfortran_string_minmax");
 
 /** @type {function(...*):?} */
 var _adler32_z = Module["_adler32_z"] = createExportWrapper("adler32_z");
@@ -38844,6 +38799,66 @@ var _zlibCompileFlags = Module["_zlibCompileFlags"] = createExportWrapper("zlibC
 
 /** @type {function(...*):?} */
 var _zError = Module["_zError"] = createExportWrapper("zError");
+
+/** @type {function(...*):?} */
+var _BZ2_blockSort = Module["_BZ2_blockSort"] = createExportWrapper("BZ2_blockSort");
+
+/** @type {function(...*):?} */
+var _BZ2_bz__AssertH__fail = Module["_BZ2_bz__AssertH__fail"] = createExportWrapper("BZ2_bz__AssertH__fail");
+
+/** @type {function(...*):?} */
+var _BZ2_bzCompressInit = Module["_BZ2_bzCompressInit"] = createExportWrapper("BZ2_bzCompressInit");
+
+/** @type {function(...*):?} */
+var _BZ2_bzCompress = Module["_BZ2_bzCompress"] = createExportWrapper("BZ2_bzCompress");
+
+/** @type {function(...*):?} */
+var _BZ2_compressBlock = Module["_BZ2_compressBlock"] = createExportWrapper("BZ2_compressBlock");
+
+/** @type {function(...*):?} */
+var _BZ2_bzCompressEnd = Module["_BZ2_bzCompressEnd"] = createExportWrapper("BZ2_bzCompressEnd");
+
+/** @type {function(...*):?} */
+var _BZ2_indexIntoF = Module["_BZ2_indexIntoF"] = createExportWrapper("BZ2_indexIntoF");
+
+/** @type {function(...*):?} */
+var _BZ2_decompress = Module["_BZ2_decompress"] = createExportWrapper("BZ2_decompress");
+
+/** @type {function(...*):?} */
+var _BZ2_bzWriteClose64 = Module["_BZ2_bzWriteClose64"] = createExportWrapper("BZ2_bzWriteClose64");
+
+/** @type {function(...*):?} */
+var _BZ2_bzopen = Module["_BZ2_bzopen"] = createExportWrapper("BZ2_bzopen");
+
+/** @type {function(...*):?} */
+var _BZ2_bzdopen = Module["_BZ2_bzdopen"] = createExportWrapper("BZ2_bzdopen");
+
+/** @type {function(...*):?} */
+var _BZ2_bzread = Module["_BZ2_bzread"] = createExportWrapper("BZ2_bzread");
+
+/** @type {function(...*):?} */
+var _BZ2_bzwrite = Module["_BZ2_bzwrite"] = createExportWrapper("BZ2_bzwrite");
+
+/** @type {function(...*):?} */
+var _BZ2_bzflush = Module["_BZ2_bzflush"] = createExportWrapper("BZ2_bzflush");
+
+/** @type {function(...*):?} */
+var _BZ2_bzclose = Module["_BZ2_bzclose"] = createExportWrapper("BZ2_bzclose");
+
+/** @type {function(...*):?} */
+var _BZ2_bzerror = Module["_BZ2_bzerror"] = createExportWrapper("BZ2_bzerror");
+
+/** @type {function(...*):?} */
+var _BZ2_bsInitWrite = Module["_BZ2_bsInitWrite"] = createExportWrapper("BZ2_bsInitWrite");
+
+/** @type {function(...*):?} */
+var _BZ2_hbMakeCodeLengths = Module["_BZ2_hbMakeCodeLengths"] = createExportWrapper("BZ2_hbMakeCodeLengths");
+
+/** @type {function(...*):?} */
+var _BZ2_hbAssignCodes = Module["_BZ2_hbAssignCodes"] = createExportWrapper("BZ2_hbAssignCodes");
+
+/** @type {function(...*):?} */
+var _BZ2_hbCreateDecodeTables = Module["_BZ2_hbCreateDecodeTables"] = createExportWrapper("BZ2_hbCreateDecodeTables");
 
 /** @type {function(...*):?} */
 var __emscripten_get_fetch_queue = Module["__emscripten_get_fetch_queue"] = createExportWrapper("_emscripten_get_fetch_queue");
@@ -39707,9 +39722,6 @@ var _dirfd = Module["_dirfd"] = createExportWrapper("dirfd");
 var _dirname = Module["_dirname"] = createExportWrapper("dirname");
 
 /** @type {function(...*):?} */
-var _dlclose = Module["_dlclose"] = createExportWrapper("dlclose");
-
-/** @type {function(...*):?} */
 var ___libc_free = Module["___libc_free"] = createExportWrapper("__libc_free");
 
 /** @type {function(...*):?} */
@@ -39750,9 +39762,6 @@ var ___duplocale = Module["___duplocale"] = createExportWrapper("__duplocale");
 
 /** @type {function(...*):?} */
 var _duplocale = Module["_duplocale"] = createExportWrapper("duplocale");
-
-/** @type {function(...*):?} */
-var _dlopen = Module["_dlopen"] = createExportWrapper("dlopen");
 
 /** @type {function(...*):?} */
 var _pthread_setcancelstate = Module["_pthread_setcancelstate"] = createExportWrapper("pthread_setcancelstate");
@@ -55717,7 +55726,7 @@ var _shutdown = Module["_shutdown"] = createExportWrapper("shutdown");
 /** @type {function(...*):?} */
 var _socketpair = Module["_socketpair"] = createExportWrapper("socketpair");
 
-var _R_running_as_main_program = Module['_R_running_as_main_program'] = 2490208;
+var _R_running_as_main_program = Module['_R_running_as_main_program'] = 2483128;
 var _R_RestoreHistory = Module['_R_RestoreHistory'] = 1188320;
 var _R_StdinEnc = Module['_R_StdinEnc'] = 1178672;
 var _R_osDynSymbol = Module['_R_osDynSymbol'] = 884832;
@@ -55730,9 +55739,9 @@ var _R_SeedsSymbol = Module['_R_SeedsSymbol'] = 1188156;
 var _R_GlobalEnv = Module['_R_GlobalEnv'] = 1187896;
 var _R_MissingArg = Module['_R_MissingArg'] = 1187960;
 var _R_NaInt = Module['_R_NaInt'] = 1187968;
-var _N01_kind = Module['_N01_kind'] = 992680;
+var _N01_kind = Module['_N01_kind'] = 992692;
 var _User_norm_fun = Module['_User_norm_fun'] = 1140228;
-var _BM_norm_keep = Module['_BM_norm_keep'] = 2484176;
+var _BM_norm_keep = Module['_BM_norm_keep'] = 2493584;
 var _User_unif_init = Module['_User_unif_init'] = 1140224;
 var _R_BaseEnv = Module['_R_BaseEnv'] = 1187908;
 var _R_NaString = Module['_R_NaString'] = 1188200;
@@ -55808,11 +55817,11 @@ var _R_BCProtTop = Module['_R_BCProtTop'] = 1187916;
 var _R_InBCInterpreter = Module['_R_InBCInterpreter'] = 1187956;
 var _R_SrcrefSymbol = Module['_R_SrcrefSymbol'] = 1188276;
 var _R_BraceSymbol = Module['_R_BraceSymbol'] = 1188072;
-var ___THREW__ = Module['___THREW__'] = 2524208;
+var ___THREW__ = Module['___THREW__'] = 2524224;
 var _R_CurrentExpr = Module['_R_CurrentExpr'] = 1179356;
-var ___threwValue = Module['___threwValue'] = 2524212;
+var ___threwValue = Module['___threwValue'] = 2524228;
 var _R_ShowErrorMessages = Module['_R_ShowErrorMessages'] = 898764;
-var _tzname = Module['_tzname'] = 2506644;
+var _tzname = Module['_tzname'] = 2506660;
 var _R_BrowseLines = Module['_R_BrowseLines'] = 1178620;
 var _R_NamespaceRegistry = Module['_R_NamespaceRegistry'] = 1188044;
 var _R_DeviceSymbol = Module['_R_DeviceSymbol'] = 1187940;
@@ -55821,7 +55830,7 @@ var _baseRegisterIndex = Module['_baseRegisterIndex'] = 893824;
 var _R_Interactive = Module['_R_Interactive'] = 898756;
 var _R_check_constants = Module['_R_check_constants'] = 1179296;
 var _R_CBoundsCheck = Module['_R_CBoundsCheck'] = 1178628;
-var _ptr_R_EditFile = Module['_ptr_R_EditFile'] = 2490228;
+var _ptr_R_EditFile = Module['_ptr_R_EditFile'] = 2483148;
 var _R_ParseErrorMsg = Module['_R_ParseErrorMsg'] = 1178720;
 var _R_DirtyImage = Module['_R_DirtyImage'] = 1179236;
 var _R_QuoteSymbol = Module['_R_QuoteSymbol'] = 1188148;
@@ -55931,116 +55940,116 @@ var _R_ReadItemDepth = Module['_R_ReadItemDepth'] = 1619060;
 var _RestoreAction = Module['_RestoreAction'] = 934032;
 var _SaveAction = Module['_SaveAction'] = 934028;
 var _LoadInitFile = Module['_LoadInitFile'] = 934036;
-var _environ = Module['_environ'] = 2505932;
+var _environ = Module['_environ'] = 2505936;
 var __occidental_hershey_glyphs = Module['__occidental_hershey_glyphs'] = 953008;
 var __oriental_hershey_glyphs = Module['__oriental_hershey_glyphs'] = 970608;
 var __hershey_font_info = Module['__hershey_font_info'] = 939408;
 var __hershey_accented_char_info = Module['__hershey_accented_char_info'] = 435376;
 var __hershey_typeface_info = Module['__hershey_typeface_info'] = 435552;
-var _R_InputHandlers = Module['_R_InputHandlers'] = 992708;
-var _stdin = Module['_stdin'] = 1020032;
-var _Rg_PolledEvents = Module['_Rg_PolledEvents'] = 992716;
-var _R_PolledEvents = Module['_R_PolledEvents'] = 992712;
+var _ptr_R_Suicide = Module['_ptr_R_Suicide'] = 2483080;
+var _ptr_R_ShowMessage = Module['_ptr_R_ShowMessage'] = 2483084;
+var _ptr_R_ReadConsole = Module['_ptr_R_ReadConsole'] = 2483088;
+var _ptr_R_WriteConsole = Module['_ptr_R_WriteConsole'] = 2483092;
+var _ptr_R_WriteConsoleEx = Module['_ptr_R_WriteConsoleEx'] = 2483096;
+var _ptr_R_ResetConsole = Module['_ptr_R_ResetConsole'] = 2483100;
+var _ptr_R_FlushConsole = Module['_ptr_R_FlushConsole'] = 2483104;
+var _ptr_R_ClearerrConsole = Module['_ptr_R_ClearerrConsole'] = 2483108;
+var _ptr_R_Busy = Module['_ptr_R_Busy'] = 2483112;
+var _ptr_R_CleanUp = Module['_ptr_R_CleanUp'] = 2483116;
+var _ptr_R_ShowFiles = Module['_ptr_R_ShowFiles'] = 2483120;
+var _ptr_R_ChooseFile = Module['_ptr_R_ChooseFile'] = 2483124;
+var _ptr_R_loadhistory = Module['_ptr_R_loadhistory'] = 2483136;
+var _ptr_R_savehistory = Module['_ptr_R_savehistory'] = 2483140;
+var _ptr_R_addhistory = Module['_ptr_R_addhistory'] = 2483144;
+var _R_timeout_handler = Module['_R_timeout_handler'] = 2483152;
+var _R_timeout_val = Module['_R_timeout_val'] = 2483156;
+var _ifp = Module['_ifp'] = 2483076;
 var _stdout = Module['_stdout'] = 1020184;
-var _ifp = Module['_ifp'] = 2490156;
-var _R_wait_usec = Module['_R_wait_usec'] = 2484368;
-var _Rg_wait_usec = Module['_Rg_wait_usec'] = 2484372;
-var _ptr_R_ProcessEvents = Module['_ptr_R_ProcessEvents'] = 2494352;
-var _kill_signals = Module['_kill_signals'] = 992720;
-var _ptr_R_Suicide = Module['_ptr_R_Suicide'] = 2490160;
-var _ptr_R_ShowMessage = Module['_ptr_R_ShowMessage'] = 2490164;
-var _ptr_R_ReadConsole = Module['_ptr_R_ReadConsole'] = 2490168;
-var _ptr_R_WriteConsole = Module['_ptr_R_WriteConsole'] = 2490172;
-var _ptr_R_WriteConsoleEx = Module['_ptr_R_WriteConsoleEx'] = 2490176;
-var _ptr_R_ResetConsole = Module['_ptr_R_ResetConsole'] = 2490180;
-var _ptr_R_FlushConsole = Module['_ptr_R_FlushConsole'] = 2490184;
-var _ptr_R_ClearerrConsole = Module['_ptr_R_ClearerrConsole'] = 2490188;
-var _ptr_R_Busy = Module['_ptr_R_Busy'] = 2490192;
-var _ptr_R_CleanUp = Module['_ptr_R_CleanUp'] = 2490196;
-var _ptr_R_ShowFiles = Module['_ptr_R_ShowFiles'] = 2490200;
-var _ptr_R_ChooseFile = Module['_ptr_R_ChooseFile'] = 2490204;
-var _ptr_R_loadhistory = Module['_ptr_R_loadhistory'] = 2490216;
-var _ptr_R_savehistory = Module['_ptr_R_savehistory'] = 2490220;
-var _ptr_R_addhistory = Module['_ptr_R_addhistory'] = 2490224;
-var _R_timeout_handler = Module['_R_timeout_handler'] = 2490232;
-var _R_timeout_val = Module['_R_timeout_val'] = 2490236;
 var _stderr = Module['_stderr'] = 1019880;
-var _ptr_R_EditFiles = Module['_ptr_R_EditFiles'] = 2494336;
-var _ptr_do_selectlist = Module['_ptr_do_selectlist'] = 2494340;
-var _ptr_do_dataentry = Module['_ptr_do_dataentry'] = 2494344;
-var _ptr_do_dataviewer = Module['_ptr_do_dataviewer'] = 2494348;
+var _ptr_R_EditFiles = Module['_ptr_R_EditFiles'] = 2487264;
+var _ptr_do_selectlist = Module['_ptr_do_selectlist'] = 2487268;
+var _ptr_do_dataentry = Module['_ptr_do_dataentry'] = 2487272;
+var _ptr_do_dataviewer = Module['_ptr_do_dataviewer'] = 2487276;
+var _ptr_R_ProcessEvents = Module['_ptr_R_ProcessEvents'] = 2487280;
+var _R_PolledEvents = Module['_R_PolledEvents'] = 992652;
+var _kill_signals = Module['_kill_signals'] = 992612;
+var _R_InputHandlers = Module['_R_InputHandlers'] = 992648;
+var _stdin = Module['_stdin'] = 1020032;
+var _Rg_PolledEvents = Module['_Rg_PolledEvents'] = 992656;
+var _R_wait_usec = Module['_R_wait_usec'] = 2493104;
+var _Rg_wait_usec = Module['_Rg_wait_usec'] = 2493108;
 var _xmalloc_current = Module['_xmalloc_current'] = 2494640;
 var _xmalloc_current_blocks = Module['_xmalloc_current_blocks'] = 2494644;
-var __pcre2_OP_lengths_8 = Module['__pcre2_OP_lengths_8'] = 451232;
-var __pcre2_utf8_table4 = Module['__pcre2_utf8_table4'] = 451712;
-var __pcre2_ucd_stage1_8 = Module['__pcre2_ucd_stage1_8'] = 467888;
-var __pcre2_ucd_stage2_8 = Module['__pcre2_ucd_stage2_8'] = 485296;
-var __pcre2_ucd_records_8 = Module['__pcre2_ucd_records_8'] = 455920;
-var __pcre2_ucd_caseless_sets_8 = Module['__pcre2_ucd_caseless_sets_8'] = 454896;
-var __pcre2_ucp_gentype_8 = Module['__pcre2_ucp_gentype_8'] = 451776;
-var __pcre2_default_tables_8 = Module['__pcre2_default_tables_8'] = 441344;
-var __pcre2_default_compile_context_8 = Module['__pcre2_default_compile_context_8'] = 993428;
-var __pcre2_callout_start_delims_8 = Module['__pcre2_callout_start_delims_8'] = 451520;
-var __pcre2_callout_end_delims_8 = Module['__pcre2_callout_end_delims_8'] = 451568;
-var __pcre2_utt_size_8 = Module['__pcre2_utt_size_8'] = 454884;
-var __pcre2_utt_8 = Module['__pcre2_utt_8'] = 453648;
-var __pcre2_utt_names_8 = Module['__pcre2_utt_names_8'] = 451968;
-var __pcre2_hspace_list_8 = Module['__pcre2_hspace_list_8'] = 451408;
-var __pcre2_vspace_list_8 = Module['__pcre2_vspace_list_8'] = 451488;
-var __pcre2_unicode_version_8 = Module['__pcre2_unicode_version_8'] = 993544;
-var __pcre2_default_match_context_8 = Module['__pcre2_default_match_context_8'] = 993468;
-var __pcre2_default_convert_context_8 = Module['__pcre2_default_convert_context_8'] = 993512;
-var __pcre2_ucp_gbtable_8 = Module['__pcre2_ucp_gbtable_8'] = 451904;
-var __pcre2_utf8_table1_size = Module['__pcre2_utf8_table1_size'] = 451640;
-var __pcre2_utf8_table1 = Module['__pcre2_utf8_table1'] = 451616;
-var __pcre2_utf8_table2 = Module['__pcre2_utf8_table2'] = 451648;
-var __pcre2_ucd_script_sets_8 = Module['__pcre2_ucd_script_sets_8'] = 455616;
-var __pcre2_ucd_digit_sets_8 = Module['__pcre2_ucd_digit_sets_8'] = 455344;
-var _lzma_header_magic = Module['_lzma_header_magic'] = 558928;
-var _lzma_footer_magic = Module['_lzma_footer_magic'] = 558934;
-var _lzma_crc32_table = Module['_lzma_crc32_table'] = 559008;
-var _lzma_crc64_table = Module['_lzma_crc64_table'] = 567200;
-var _lzma_rc_prices = Module['_lzma_rc_prices'] = 583936;
-var _lzma_fastpos = Module['_lzma_fastpos'] = 575696;
 var _pprpar_ = Module['_pprpar_'] = 1037056;
 var _pprz01_ = Module['_pprz01_'] = 1037088;
 var _spsmooth_ = Module['_spsmooth_'] = 1037136;
 var _consts_ = Module['_consts_'] = 1037168;
 var _spans_ = Module['_spans_'] = 1037200;
-var _bksupsmu_ = Module['_bksupsmu_'] = 2548240;
-var _bkppr_ = Module['_bkppr_'] = 2548244;
+var _bksupsmu_ = Module['_bksupsmu_'] = 2653296;
+var _bkppr_ = Module['_bkppr_'] = 2653300;
 var _R_gridEvalEnv = Module['_R_gridEvalEnv'] = 2505912;
 var _gridRegisterIndex = Module['_gridRegisterIndex'] = 2505916;
-var _BZ2_crc32Table = Module['_BZ2_crc32Table'] = 1014944;
-var _BZ2_rNums = Module['_BZ2_rNums'] = 1015968;
-var _z_errmsg = Module['_z_errmsg'] = 1018208;
-var __length_code = Module['__length_code'] = 608528;
-var __dist_code = Module['__dist_code'] = 608016;
-var _deflate_copyright = Module['_deflate_copyright'] = 603184;
-var _inflate_copyright = Module['_inflate_copyright'] = 607712;
-var ___environ = Module['___environ'] = 2505932;
-var ____environ = Module['____environ'] = 2505932;
-var __environ = Module['__environ'] = 2505932;
-var ___progname = Module['___progname'] = 2506832;
-var _daylight = Module['_daylight'] = 2506652;
-var _timezone = Module['_timezone'] = 2506656;
-var ___optreset = Module['___optreset'] = 2506664;
+var __pcre2_OP_lengths_8 = Module['__pcre2_OP_lengths_8'] = 461920;
+var __pcre2_utf8_table4 = Module['__pcre2_utf8_table4'] = 462400;
+var __pcre2_ucd_stage1_8 = Module['__pcre2_ucd_stage1_8'] = 478576;
+var __pcre2_ucd_stage2_8 = Module['__pcre2_ucd_stage2_8'] = 495984;
+var __pcre2_ucd_records_8 = Module['__pcre2_ucd_records_8'] = 466608;
+var __pcre2_ucd_caseless_sets_8 = Module['__pcre2_ucd_caseless_sets_8'] = 465584;
+var __pcre2_ucp_gentype_8 = Module['__pcre2_ucp_gentype_8'] = 462464;
+var __pcre2_default_tables_8 = Module['__pcre2_default_tables_8'] = 452032;
+var __pcre2_default_compile_context_8 = Module['__pcre2_default_compile_context_8'] = 1014244;
+var __pcre2_callout_start_delims_8 = Module['__pcre2_callout_start_delims_8'] = 462208;
+var __pcre2_callout_end_delims_8 = Module['__pcre2_callout_end_delims_8'] = 462256;
+var __pcre2_utt_size_8 = Module['__pcre2_utt_size_8'] = 465572;
+var __pcre2_utt_8 = Module['__pcre2_utt_8'] = 464336;
+var __pcre2_utt_names_8 = Module['__pcre2_utt_names_8'] = 462656;
+var __pcre2_hspace_list_8 = Module['__pcre2_hspace_list_8'] = 462096;
+var __pcre2_vspace_list_8 = Module['__pcre2_vspace_list_8'] = 462176;
+var __pcre2_unicode_version_8 = Module['__pcre2_unicode_version_8'] = 1014360;
+var __pcre2_default_match_context_8 = Module['__pcre2_default_match_context_8'] = 1014284;
+var __pcre2_default_convert_context_8 = Module['__pcre2_default_convert_context_8'] = 1014328;
+var __pcre2_ucp_gbtable_8 = Module['__pcre2_ucp_gbtable_8'] = 462592;
+var __pcre2_utf8_table1_size = Module['__pcre2_utf8_table1_size'] = 462328;
+var __pcre2_utf8_table1 = Module['__pcre2_utf8_table1'] = 462304;
+var __pcre2_utf8_table2 = Module['__pcre2_utf8_table2'] = 462336;
+var __pcre2_ucd_script_sets_8 = Module['__pcre2_ucd_script_sets_8'] = 466304;
+var __pcre2_ucd_digit_sets_8 = Module['__pcre2_ucd_digit_sets_8'] = 466032;
+var _lzma_header_magic = Module['_lzma_header_magic'] = 569616;
+var _lzma_footer_magic = Module['_lzma_footer_magic'] = 569622;
+var _lzma_crc32_table = Module['_lzma_crc32_table'] = 569696;
+var _lzma_crc64_table = Module['_lzma_crc64_table'] = 577888;
+var _lzma_rc_prices = Module['_lzma_rc_prices'] = 594624;
+var _lzma_fastpos = Module['_lzma_fastpos'] = 586384;
+var _z_errmsg = Module['_z_errmsg'] = 1015072;
+var __length_code = Module['__length_code'] = 608464;
+var __dist_code = Module['__dist_code'] = 607952;
+var _deflate_copyright = Module['_deflate_copyright'] = 603120;
+var _inflate_copyright = Module['_inflate_copyright'] = 607648;
+var _BZ2_crc32Table = Module['_BZ2_crc32Table'] = 1015184;
+var _BZ2_rNums = Module['_BZ2_rNums'] = 1016208;
+var ___environ = Module['___environ'] = 2505936;
+var ____environ = Module['____environ'] = 2505936;
+var __environ = Module['__environ'] = 2505936;
+var ___progname = Module['___progname'] = 2506848;
+var _daylight = Module['_daylight'] = 2506668;
+var _timezone = Module['_timezone'] = 2506672;
+var ___optreset = Module['___optreset'] = 2506680;
 var _optind = Module['_optind'] = 1019416;
-var ___optpos = Module['___optpos'] = 2506668;
-var _optarg = Module['_optarg'] = 2506672;
-var _optopt = Module['_optopt'] = 2506676;
+var ___optpos = Module['___optpos'] = 2506684;
+var _optarg = Module['_optarg'] = 2506688;
+var _optopt = Module['_optopt'] = 2506692;
 var _opterr = Module['_opterr'] = 1019420;
-var _optreset = Module['_optreset'] = 2506664;
-var _h_errno = Module['_h_errno'] = 2506796;
-var ___signgam = Module['___signgam'] = 2517900;
-var ___progname_full = Module['___progname_full'] = 2506836;
-var _program_invocation_short_name = Module['_program_invocation_short_name'] = 2506832;
-var _program_invocation_name = Module['_program_invocation_name'] = 2506836;
+var _optreset = Module['_optreset'] = 2506680;
+var _h_errno = Module['_h_errno'] = 2506812;
+var ___signgam = Module['___signgam'] = 2517916;
+var ___progname_full = Module['___progname_full'] = 2506852;
+var _program_invocation_short_name = Module['_program_invocation_short_name'] = 2506848;
+var _program_invocation_name = Module['_program_invocation_name'] = 2506852;
 var __ns_flagdata = Module['__ns_flagdata'] = 785600;
-var ___sig_pending = Module['___sig_pending'] = 2507952;
-var ___sig_actions = Module['___sig_actions'] = 2508800;
-var _signgam = Module['_signgam'] = 2517900;
-var ___data_end = Module['___data_end'] = 2653456;
+var ___sig_pending = Module['___sig_pending'] = 2507968;
+var ___sig_actions = Module['___sig_actions'] = 2508816;
+var _signgam = Module['_signgam'] = 2517916;
+var ___data_end = Module['___data_end'] = 2653464;
 var __ZTVSt12bad_any_cast = Module['__ZTVSt12bad_any_cast'] = 1020352;
 var __ZTISt12bad_any_cast = Module['__ZTISt12bad_any_cast'] = 1020372;
 var __ZTSSt12bad_any_cast = Module['__ZTSSt12bad_any_cast'] = 800480;
@@ -57380,7 +57389,7 @@ function stackCheckInit() {
   // get these values before even running any of the ctors so we call it redundantly
   // here.
   // TODO(sbc): Move writeStackCookie to native to to avoid this.
-  _emscripten_stack_set_limits(7896336, 2653456);
+  _emscripten_stack_set_limits(7896352, 2653472);
   writeStackCookie();
 }
 

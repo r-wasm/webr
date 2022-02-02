@@ -4,6 +4,8 @@ set -e
 PCRE_VERSION=10.39
 
 cd /app/build
+[ -f /app/build/Rlibs/lib/libpcre2_8.a ] && exit
+
 wget "https://github.com/PhilipHazel/pcre2/releases/download/pcre2-${PCRE_VERSION}/pcre2-${PCRE_VERSION}.tar.gz"
 tar xvf pcre2-${PCRE_VERSION}.tar.gz
 cd pcre2-${PCRE_VERSION}

@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+[ -f /app/build/Rlibs/lib/libgfortran.a ] && exit
+
 cd /app
 git clone --single-branch --branch="releases/gcc-4.6" --depth=1 https://github.com/gcc-mirror/gcc.git
 

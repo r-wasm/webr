@@ -67,6 +67,18 @@ sed -i 's/declare double @dd7tpr_(\.\.\.)/declare double @dd7tpr_(i32, i32, i32)
 sed -i 's/double (\.\.\.)\* @dd7tpr_ to double/double (i32, i32, i32)* @dd7tpr_ to double/' "$OUT"
 sed -i 's/declare double @dv2nrm_(\.\.\.)/declare double @dv2nrm_(i32, i32)/' "$OUT"
 sed -i 's/double (\.\.\.)\* @dv2nrm_ to double/double (i32, i32)* @dv2nrm_ to double/' "$OUT"
+sed -i 's/declare double @ddot_(\.\.\.)/declare double @ddot_(i32, i32, i32, i32, i32)/' "$OUT"
+sed -i 's/double (\.\.\.)\* @ddot_ to double/double (i32, i32, i32, i32, i32)* @ddot_ to double/' "$OUT"
+sed -i 's/declare double @dnrm2_(\.\.\.)/declare double @dnrm2_(i32, i32, i32)/' "$OUT"
+sed -i 's/double (\.\.\.)\* @dnrm2_ to double/double (i32, i32, i32)* @dnrm2_ to double/' "$OUT"
+sed -i 's/declare void @dswap_(\.\.\.)/declare void @dswap_(i32, i32, i32, i32, i32)/' "$OUT"
+sed -i 's/void (\.\.\.)\* @dswap_ to void/void (i32, i32, i32, i32, i32)* @dswap_ to void/' "$OUT"
+sed -i 's/declare void @daxpy_(\.\.\.)/declare void @daxpy_(i32, i32, i32, i32, i32, i32)/' "$OUT"
+sed -i 's/void (\.\.\.)\* @daxpy_ to void/void (i32, i32, i32, i32, i32, i32)* @daxpy_ to void/' "$OUT"
+sed -i 's/declare void @dcopy_(\.\.\.)/declare void @dcopy_(i32, i32, i32, i32, i32)/' "$OUT"
+sed -i 's/void (\.\.\.)\* @dcopy_ to void/void (i32, i32, i32, i32, i32)* @dcopy_ to void/' "$OUT"
+sed -i 's/declare void @dscal_(\.\.\.)/declare void @dscal_(i32, i32, i32, i32)/' "$OUT"
+sed -i 's/void (\.\.\.)\* @dscal_ to void/void (i32, i32, i32, i32)* @dscal_ to void/' "$OUT"
 ########
 
 llvm-as-3.3 "$OUT" -o "$OUT.bc" && \

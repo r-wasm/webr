@@ -4,6 +4,8 @@ set -e
 XZ_VERSION=5.2.5
 
 cd /app/build
+[ -f /app/build/Rlibs/lib/liblzma.a ] && exit
+
 wget 'https://tukaani.org/xz/xz-5.2.5.tar.gz/download'
 tar xvf download
 cd xz-${XZ_VERSION}

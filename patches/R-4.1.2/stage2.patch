@@ -523,24 +523,6 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
 diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/unix/dynload.c R-4.1.2_web/src/unix/dynload.c
 --- R-4.1.2/src/unix/dynload.c	2021-04-19 22:02:06.000000000 +0000
 +++ R-4.1.2_web/src/unix/dynload.c	2022-01-13 21:58:17.099380100 +0000
-@@ -79,14 +79,15 @@
-     int openFlag = 0;
- 
-     openFlag = computeDLOpenFlag(asLocal, now);
--    handle = (void *) dlopen(path,openFlag);
-+    //handle = (void *) dlopen(path,openFlag);
-+    handle = (void*) path;
- 
-     return(handle);
- }
- 
- static void closeLibrary(HINSTANCE handle)
- {
--    dlclose(handle);
-+    //dlclose(handle);
- }
- 
-  /*
 @@ -200,7 +201,8 @@
  static DL_FUNC R_local_dlsym(DllInfo *info, char const *name)
  {
