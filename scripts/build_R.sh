@@ -22,7 +22,7 @@ make R
 
 cp -a "/app/build/R-${R_VERSION}" "/app/build/R-${R_VERSION}_orig"
 
-mkdir -p /app/build/root/usr/lib/R
+mkdir -p /app/build/root/usr/lib/R/modules
 cp -a etc /app/build/root/usr/lib/R/etc
 sed -i 's/x86_64-pc-linux-gnu/wasm32-emscripten/g' /app/build/root/usr/lib/R/etc/Renviron
 cp -a library /app/build/root/usr/lib/R/library
@@ -36,6 +36,20 @@ patch --ignore-whitespace -p1 < "/app/patches/R-${R_VERSION}/stage2.patch"
 sed -i 's/x86_64-pc-linux-gnu/wasm32-emscripten/' src/include/config.h
 sed -i 's/x86_64/wasm32/' src/include/config.h
 sed -i 's/linux-gnu/emscripten/' src/include/config.h
+sed -i '/#define HAVE_LONG_DOUBLE/d' src/include/config.h
+sed -i '/#define R_ARCH/d' src/include/config.h
+
+# Force emcc to generate system libc using an empty dummy object
+# Extract the containing .o for linking with SIDE_MODULEs later
+pushd /tmp
+touch dummy.o
+emcc -g -std=gnu11 -s MAIN_MODULE=1 -s ASSERTIONS=1 -Os -o dummy.js dummy.o > /dev/null 2>&1  || true
+mkdir -p /app/build/Rlibs/lib/libc/
+cp /app/emsdk/upstream/emscripten/cache/sysroot/lib/wasm32-emscripten/libc-debug.a /app/build/Rlibs/lib/libc/
+pushd /app/build/Rlibs/lib/libc/
+emar x libc-debug.a
+popd
+popd
 
 pushd src/extra/blas
 emfc -c cmplxblas.f -o cmplxblas.o
@@ -233,6 +247,8 @@ emfc -c dlapack.f -o dlapack.o
 emfc -c cmplx.f -o cmplx.o
 emcc -fPIC -std=gnu11 -I. -I../../../src/include -I/usr/local/include -DHAVE_CONFIG_H -g -Os -c Lapack.c -o Lapack.o
 emar -cr libRlapack.a dlamch.o dlapack.o cmplx.o Lapack.o
+emcc -g -Os -s SIDE_MODULE=1 -o lapack.so dlamch.o dlapack.o cmplx.o Lapack.o ../../extra/blas/libRblas.a /app/build/Rlibs/lib/libgfortran.a /app/build/Rlibs/lib/libc/cabs.o /app/build/Rlibs/lib/libc/csqrt.o
+cp lapack.so /app/build/root/usr/lib/R/modules/
 popd
 
 pushd src/library/tools/src
@@ -248,7 +264,7 @@ emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG 
 emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden  -g -Os  -c gramRd.c -o gramRd.o
 emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden  -g -Os  -c pdscan.c -o pdscan.o
 emar -cr tools.a text.o init.o Rmd5.o md5.o signals.o install.o getfmts.o http.o gramLatex.o gramRd.o pdscan.o
-emcc -g -Os -s SIDE_MODULE=2 -o tools.so text.o init.o Rmd5.o md5.o signals.o install.o getfmts.o http.o gramLatex.o gramRd.o pdscan.o
+emcc -g -Os -s SIDE_MODULE=1 -o tools.so text.o init.o Rmd5.o md5.o signals.o install.o getfmts.o http.o gramLatex.o gramRd.o pdscan.o
 cp tools.so /app/build/root/usr/lib/R/library/tools/libs/
 popd
 
@@ -266,14 +282,14 @@ emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include -fvisibility=hi
 emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include -fvisibility=hidden -g -Os  -c util.c -o util.o
 emcc -fPIC -I"../../../../include" -DNDEBUG -I/usr/local/include -fvisibility=hidden -g -Os  -c viewport.c -o viewport.o
 emar -cr grid.a clippath.o gpar.o grid.o just.o layout.o mask.o matrix.o register.o state.o unit.o util.o viewport.o
-emcc -g -Os -s SIDE_MODULE=2 -o grid.so clippath.o gpar.o grid.o just.o layout.o mask.o matrix.o register.o state.o unit.o util.o viewport.o
+emcc -g -Os -s SIDE_MODULE=1 -o grid.so clippath.o gpar.o grid.o just.o layout.o mask.o matrix.o register.o state.o unit.o util.o viewport.o
 cp grid.so /app/build/root/usr/lib/R/library/grid/libs/
 popd
 
 pushd src/library/splines/src
 emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I/usr/local/include -fvisibility=hidden  -g -Os  -c splines.c -o splines.o
 emar -cr splines.a splines.o
-emcc -g -Os -s SIDE_MODULE=2 -o splines.so splines.o
+emcc -g -Os -s SIDE_MODULE=1 -o splines.so splines.o
 cp splines.so /app/build/root/usr/lib/R/library/splines/libs/
 popd
 
@@ -286,7 +302,7 @@ emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE
 emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os -fvisibility=hidden  -c tests.c -o tests.o
 emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os -fvisibility=hidden  -c utils.c -o utils.o
 emar -cr methods.a do_substitute_direct.o init.o methods_list_dispatch.o slot.o class_support.o tests.o utils.o
-emcc -g -Os -s SIDE_MODULE=2 -o methods.so do_substitute_direct.o init.o methods_list_dispatch.o slot.o class_support.o tests.o utils.o
+emcc -g -Os -s SIDE_MODULE=1 -o methods.so do_substitute_direct.o init.o methods_list_dispatch.o slot.o class_support.o tests.o utils.o
 cp methods.so /app/build/root/usr/lib/R/library/methods/libs/
 popd
 
@@ -298,7 +314,7 @@ emcc -fPIC -std=gnu11 -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../
 emcc -fPIC -std=gnu11 -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main -I/app/build/Rlibs/include -I/usr/local/include -fvisibility=hidden -g -Os  -c stubs.c -o stubs.o
 emcc -fPIC -std=gnu11 -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main -I/app/build/Rlibs/include -I/usr/local/include -fvisibility=hidden -g -Os  -c utils.c -o utils.o
 emar -cr utils.a init.o io.o size.o sock.o stubs.o utils.o
-emcc -g -Os -s SIDE_MODULE=2 -o utils.so /app/build/Rlibs/lib/liblzma.a init.o io.o size.o sock.o stubs.o utils.o
+emcc -g -Os -s SIDE_MODULE=1 -o utils.so /app/build/Rlibs/lib/liblzma.a init.o io.o size.o sock.o stubs.o utils.o
 cp utils.so /app/build/root/usr/lib/R/library/utils/libs/
 popd
 
@@ -317,7 +333,7 @@ emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE
 emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os  -c devPS.c -o devPS.o
 emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Os  -c devQuartz.c -o devQuartz.o
 emar -cr grDevices.a axis_scales.o chull.o devices.o init.o stubs.o colors.o clippath.o patterns.o mask.o devCairo.o devPicTeX.o devPS.o devQuartz.o
-emcc -g -Os -s SIDE_MODULE=2 -o grDevices.so axis_scales.o chull.o devices.o init.o stubs.o colors.o clippath.o patterns.o mask.o devCairo.o devPicTeX.o devPS.o devQuartz.o
+emcc -g -Os -s SIDE_MODULE=1 -o grDevices.so axis_scales.o chull.o devices.o init.o stubs.o colors.o clippath.o patterns.o mask.o devCairo.o devPicTeX.o devPS.o devQuartz.o
 cp grDevices.so /app/build/root/usr/lib/R/library/grDevices/libs/
 popd
 
@@ -330,7 +346,7 @@ emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE
 emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main  -I/usr/local/include -fvisibility=hidden -g -Os  -c plot3d.c -o plot3d.o
 emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H -I../../../../src/main  -I/usr/local/include -fvisibility=hidden -g -Os  -c stem.c -o stem.o
 emar -cr graphics.a init.o base.o graphics.o par.o plot.o plot3d.o stem.o
-emcc -g -Os -s SIDE_MODULE=2 -o graphics.so init.o base.o graphics.o par.o plot.o plot3d.o stem.o
+emcc -g -Os -s SIDE_MODULE=1 -o graphics.so init.o base.o graphics.o par.o plot.o plot3d.o stem.o
 cp graphics.so /app/build/root/usr/lib/R/library/graphics/libs/
 popd
 
@@ -410,7 +426,7 @@ emfc -c stl.f -o stl.o
 emfc -c portsrc.f -o portsrc.o
 emfc -c lminfl.f -o lminfl.o
 emar -cr stats.a init.o kmeans.o ansari.o bandwidths.o chisqsim.o d2x2xk.o fexact.o kendall.o ks.o line.o smooth.o prho.o swilk.o ksmooth.o loessc.o monoSpl.o isoreg.o Srunmed.o dblcen.o distance.o hclust-utils.o nls.o rWishart.o HoltWinters.o PPsum.o arima.o burg.o filter.o mAR.o pacf.o starma.o port.o family.o sbart.o approx.o loglin.o lowess.o massdist.o splines.o lm.o complete_cases.o cov.o deriv.o fft.o fourier.o model.o optim.o optimize.o integrate.o random.o distn.o zeroin.o rcont.o influence.o bsplvd.o bvalue.o bvalus.o loessf.o ppr.o qsbart.o sgram.o sinerp.o sslvrg.o stxwx.o hclust.o kmns.o eureka.o stl.o portsrc.o lminfl.o
-emcc -g -Os -s SIDE_MODULE=2 -o stats.so init.o kmeans.o ansari.o bandwidths.o chisqsim.o d2x2xk.o fexact.o kendall.o ks.o line.o smooth.o prho.o swilk.o ksmooth.o loessc.o monoSpl.o isoreg.o Srunmed.o dblcen.o distance.o hclust-utils.o nls.o rWishart.o HoltWinters.o PPsum.o arima.o burg.o filter.o mAR.o pacf.o starma.o port.o family.o sbart.o approx.o loglin.o lowess.o massdist.o splines.o lm.o complete_cases.o cov.o deriv.o fft.o fourier.o model.o optim.o optimize.o integrate.o random.o distn.o zeroin.o rcont.o influence.o bsplvd.o bvalue.o bvalus.o loessf.o ppr.o qsbart.o sgram.o sinerp.o sslvrg.o stxwx.o hclust.o kmns.o eureka.o stl.o portsrc.o lminfl.o
+emcc  -g -std=gnu11 -Os -s SIDE_MODULE=1 -o stats.so  init.o kmeans.o ansari.o bandwidths.o chisqsim.o d2x2xk.o fexact.o kendall.o ks.o line.o smooth.o prho.o swilk.o ksmooth.o loessc.o monoSpl.o isoreg.o Srunmed.o dblcen.o distance.o hclust-utils.o nls.o rWishart.o HoltWinters.o PPsum.o arima.o burg.o filter.o mAR.o pacf.o starma.o port.o family.o sbart.o approx.o loglin.o lowess.o massdist.o splines.o lm.o complete_cases.o cov.o deriv.o fft.o fourier.o model.o optim.o optimize.o integrate.o random.o distn.o zeroin.o rcont.o influence.o bsplvd.o bvalue.o bvalus.o loessf.o ppr.o qsbart.o sgram.o sinerp.o sslvrg.o stxwx.o hclust.o kmns.o eureka.o stl.o portsrc.o lminfl.o ../../../main/xxxpr.o ../../../modules/lapack/libRlapack.a ../../../extra/blas/libRblas.a /app/build/Rlibs/lib/libgfortran.a /app/build/Rlibs/lib/libc/cabs.o /app/build/Rlibs/lib/libc/csqrt.o
 cp stats.so /app/build/root/usr/lib/R/library/stats/libs/
 popd
 
@@ -506,7 +522,7 @@ emcc -fPIC -std=gnu11 -I../../src/extra  -I. -I../../src/include  -I/usr/local/i
 emcc -fPIC -std=gnu11 -I../../src/extra  -I. -I../../src/include  -I/usr/local/include -I../../src/nmath -DHAVE_CONFIG_H     -g -Os  -c times.c -o times.o
 emcc -fPIC -std=gnu11 -I../../src/extra  -I. -I../../src/include  -I/usr/local/include -I../../src/nmath -DHAVE_CONFIG_H     -g -Os  -c unique.c -o unique.o
 emcc -fPIC -std=gnu11 -I../../src/extra  -I. -I../../src/include  -I/usr/local/include -I../../src/nmath -I/app/build/Rlibs/include -DHAVE_CONFIG_H  -DHAVE_CONFIG_H     -g -Os  -c util.c -o util.o
-emcc -fPIC -std=gnu11 -I../../src/extra  -I. -I../../src/include  -I/usr/local/include -I../../src/nmath -DHAVE_CONFIG_H     -g -Os  -c version.c -o version.o
+emcc -fPIC -std=gnu11 -I../../src/extra  -I. -I../../src/include  -I/usr/local/include -I../../src/nmath -DHAVE_CONFIG_H -DR_ARCH='""' -g -Os  -c version.c -o version.o
 emcc -fPIC -std=gnu11 -I../../src/extra  -I. -I../../src/include  -I/usr/local/include -I../../src/nmath -DHAVE_CONFIG_H     -g -Os  -c g_alab_her.c -o g_alab_her.o
 emcc -fPIC -std=gnu11 -I../../src/extra  -I. -I../../src/include  -I/usr/local/include -I../../src/nmath -DHAVE_CONFIG_H     -g -Os  -c g_cntrlify.c -o g_cntrlify.o
 emcc -fPIC -std=gnu11 -I../../src/extra  -I. -I../../src/include  -I/usr/local/include -I../../src/nmath -DHAVE_CONFIG_H     -g -Os  -c g_fontdb.c -o g_fontdb.o
@@ -515,5 +531,5 @@ popd
 
 mkdir -p src/main/bin
 pushd src/main/bin
-emcc -g -Os -std=gnu11 -L/usr/local/lib -o R.bin.js ../Rmain.o ../CommandLineArgs.o ../Rdynload.o ../Renviron.o ../RNG.o ../agrep.o ../altclasses.o ../altrep.o ../apply.o ../arithmetic.o ../array.o ../attrib.o ../bind.o ../builtin.o ../character.o ../coerce.o ../colors.o ../complex.o ../connections.o ../context.o ../cum.o ../dcf.o ../datetime.o ../debug.o ../deparse.o ../devices.o ../dotcode.o ../dounzip.o ../dstruct.o ../duplicate.o ../edit.o ../engine.o ../envir.o ../errors.o ../eval.o ../format.o ../gevents.o ../gram.o ../gram-ex.o ../graphics.o ../grep.o ../identical.o ../inlined.o ../inspect.o ../internet.o ../iosupport.o ../lapack.o ../list.o ../localecharset.o ../logic.o ../main.o ../mapply.o ../match.o ../memory.o ../names.o ../objects.o ../options.o ../paste.o ../patterns.o ../platform.o ../plot.o ../plot3d.o ../plotmath.o ../print.o ../printarray.o ../printvector.o ../printutils.o ../qsort.o ../radixsort.o ../random.o ../raw.o ../registration.o ../relop.o ../rlocale.o ../saveload.o ../scan.o ../seq.o ../serialize.o ../sort.o ../source.o ../split.o ../sprintf.o ../startup.o ../subassign.o ../subscript.o ../subset.o ../summary.o ../sysutils.o ../times.o ../unique.o ../util.o ../version.o ../g_alab_her.o ../g_cntrlify.o ../g_fontdb.o ../g_her_glyph.o ../xxxpr.o ../../unix/libunix.a ../../appl/libappl.a ../../nmath/libnmath.a ../../extra/tre/libtre.a ../../extra/blas/libRblas.a ../../extra/xdr/libxdr.a ../../modules/lapack/libRlapack.a ../../library/methods/src/methods.a ../../library/utils/src/utils.a ../../library/stats/src/stats.a ../../library/grDevices/src/grDevices.a ../../library/graphics/src/graphics.a ../../library/tools/src/tools.a ../../library/splines/src/splines.a ../../library/grid/src/grid.a /app/build/Rlibs/lib/libpcre2_8.a /app/build/Rlibs/lib/liblzma.a /app/build/Rlibs/lib/libgfortran.a -lrt -ldl -lm --use-preload-plugins --preload-file /app/build/root@/ -s USE_BZIP2=1 -s USE_ZLIB=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s WASM_BIGINT -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s MAIN_MODULE=1 -s ASSERTIONS=1 -s FETCH=1 -s NO_EXIT_RUNTIME=0
+emcc -g -Os -std=gnu11 -L/usr/local/lib -o R.bin.js ../Rmain.o ../CommandLineArgs.o ../Rdynload.o ../Renviron.o ../RNG.o ../agrep.o ../altclasses.o ../altrep.o ../apply.o ../arithmetic.o ../array.o ../attrib.o ../bind.o ../builtin.o ../character.o ../coerce.o ../colors.o ../complex.o ../connections.o ../context.o ../cum.o ../dcf.o ../datetime.o ../debug.o ../deparse.o ../devices.o ../dotcode.o ../dounzip.o ../dstruct.o ../duplicate.o ../edit.o ../engine.o ../envir.o ../errors.o ../eval.o ../format.o ../gevents.o ../gram.o ../gram-ex.o ../graphics.o ../grep.o ../identical.o ../inlined.o ../inspect.o ../internet.o ../iosupport.o ../lapack.o ../list.o ../localecharset.o ../logic.o ../main.o ../mapply.o ../match.o ../memory.o ../names.o ../objects.o ../options.o ../paste.o ../patterns.o ../platform.o ../plot.o ../plot3d.o ../plotmath.o ../print.o ../printarray.o ../printvector.o ../printutils.o ../qsort.o ../radixsort.o ../random.o ../raw.o ../registration.o ../relop.o ../rlocale.o ../saveload.o ../scan.o ../seq.o ../serialize.o ../sort.o ../source.o ../split.o ../sprintf.o ../startup.o ../subassign.o ../subscript.o ../subset.o ../summary.o ../sysutils.o ../times.o ../unique.o ../util.o ../version.o ../g_alab_her.o ../g_cntrlify.o ../g_fontdb.o ../g_her_glyph.o ../xxxpr.o `ls ../../unix/*.o ../../appl/*.o ../../nmath/*.o` ../../extra/tre/libtre.a ../../extra/blas/libRblas.a ../../extra/xdr/libxdr.a /app/build/Rlibs/lib/libpcre2_8.a /app/build/Rlibs/lib/liblzma.a /app/build/Rlibs/lib/libgfortran.a -lrt -ldl -lm --use-preload-plugins --preload-file /app/build/root@/ -s USE_BZIP2=1 -s USE_ZLIB=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s WASM_BIGINT -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s MAIN_MODULE=1 -s ASSERTIONS=1 -s FETCH=1 -s NO_EXIT_RUNTIME=0
 cp * /app/webR/
