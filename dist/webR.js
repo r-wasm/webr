@@ -53,7 +53,7 @@ function loadWebR(options){
 			},
 			onRuntimeInitialized: function(){
 				options.loadPackages.reduce(function(cur, next) {
-					return cur.then(webR.loadPackage(next));
+					return cur.then(_ => webR.loadPackage(next));
 				}, Promise.resolve()).then(function() {
 					resolve(webR);
 				});
