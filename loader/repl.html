@@ -45,14 +45,27 @@
                            if (url) {
                                var payload = url.split('::');
                                if (payload[1] == 'read') {
-                                   term.read(
-                                       payload.length > 2 ? payload[2] : '',
-                                       function(text) {
-                                           props.responseText = text;
-                                           target.onload();
-                                       }
-                                   );
-								   term.history().enable();
+                                 term.read(
+                                   payload.length > 2 ? payload[2] : '',
+                                   function(text) {
+                                     var reg = /(library|require)\(['"]?(.*?)['"]?\)/g;
+                                     var res;
+                                     var packages = [];
+                                     while((res = reg.exec(text)) !== null) {
+                                       packages.push(res[2]);
+                                     }
+                                     packages.reduce(function(cur, next) {
+                                       return cur.then(_ => loadPackage(next));
+                                     }, Promise.resolve()).then(_ => {
+                                       props.responseText = text;
+                                       target.onload();
+                                     }, function(e) {
+                                       props.responseText = text;
+                                       target.onload()
+                                     });
+                                   }
+                                 );
+                                 term.history().enable();
                                }
                            } else {
                                return target[name].apply(target, arguments);
@@ -67,8 +80,8 @@
            });
        };
    })(window.XMLHttpRequest);
-    // below code modified from emscripten output html
-   var Module = {
+      // below code modified from emscripten output html
+      var Module = {
 	    preRun: [function(){ENV.R_HOME="/usr/lib/R"}],
         postRun: [],
         print: function(text) {
@@ -106,24 +119,29 @@
         };
       };
       var PKG_URL = "https://cdn.jsdelivr.net/gh/georgestagg/webr-ports@latest/dist/";
-      loadPackage = function(package_name){
+      var loadedPackages = [];
+      var loadPackage = function(package_name){
 			return new Promise(function (resolve, reject) {
-				console.log("Loading webR package: " + package_name);
-				window.Module['locateFile'] = function(path, prefix) {
-					return PKG_URL + package_name + "/" + path;
-				}
-				var script = document.createElement('script');
-				script.setAttribute('src',PKG_URL + package_name + "/" + package_name + ".js");
-				script.onerror = reject;
-				Module.monitorRunDependencies = function(left) {
-					Module._monitorRunDependencies(left);
-					if(left == 0){
-						monitorRunDependencies = left => Module._monitorRunDependencies(left);
-						resolve();
+				if (loadedPackages.includes(package_name)){
+					resolve();
+				} else {
+					loadedPackages.push(package_name);
+					console.log("Loading webR package: " + package_name);
+					window.Module['locateFile'] = function(path, prefix) {
+						return PKG_URL + package_name + "/" + path;
 					}
-
-				};
-				document.head.appendChild(script);
+					var script = document.createElement('script');
+					script.setAttribute('src',PKG_URL + package_name + "/" + package_name + ".js");
+					script.onerror = reject;
+					Module.monitorRunDependencies = function(left) {
+						Module._monitorRunDependencies(left);
+						if(left == 0){
+							monitorRunDependencies = left => Module._monitorRunDependencies(left);
+							resolve();
+						}
+					};
+					document.head.appendChild(script);
+				}
 			});
 	  };
     </script>

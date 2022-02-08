@@ -4,6 +4,19 @@ function loadWebR(options){
 	if(options.PKG_URL === undefined) options.PKG_URL = "https://cdn.jsdelivr.net/gh/georgestagg/webr-ports/dist/";
 	var webR = {
 		runRAsync: async function(code){
+			var reg = /(library|require)\(['"]?(.*?)['"]?\)/g;
+			var res;
+			var packages = [];
+			while((res = reg.exec(code)) !== null) {
+				packages.push(res[2]);
+			}
+			try {
+				await packages.reduce(function(cur, next) {
+					return cur.then(_ => webR.loadPackage(next));
+				}, Promise.resolve());
+			} catch (e) {
+				console.log("An error occured loading one or more packages. Perhaps they do not exist in webR-ports.");
+			}
 			return(window.Module._run_R_from_JS(allocate(intArrayFromString(code), 0), code.length));
 		},
 		getFileData: async function(name){
@@ -15,24 +28,30 @@ function loadWebR(options){
 			FS.close(stream);
 			return buf;
 		},
+		loadedPackages: [],
 		loadPackage: function(package_name){
 			return new Promise(function (resolve, reject) {
-				console.log("Loading webR package " + package_name)
-				window.Module['locateFile'] = function(path, prefix) {
-					return options.PKG_URL + package_name + "/" + path;
-				}
-				var script = document.createElement('script');
-				script.setAttribute('src',options.PKG_URL + package_name + "/" + package_name + ".js");
-				script.onerror = reject;
-				window.Module.monitorRunDependencies = function(left) {
-					window.Module._monitorRunDependencies(left);
-					if(left == 0){
-						monitorRunDependencies = left => window.Module._monitorRunDependencies(left);
-						resolve();
+				if (this.loadedPackages.includes(package_name)){
+					resolve();
+				} else {
+					console.log("Loading webR package " + package_name);
+					this.loadedPackages.push(package_name);
+					window.Module['locateFile'] = function(path, prefix) {
+						return options.PKG_URL + package_name + "/" + path;
 					}
-				};
-				document.head.appendChild(script);
-			});
+					var script = document.createElement('script');
+					script.setAttribute('src',options.PKG_URL + package_name + "/" + package_name + ".js");
+					script.onerror = reject;
+					window.Module.monitorRunDependencies = function(left) {
+						window.Module._monitorRunDependencies(left);
+						if(left == 0){
+							monitorRunDependencies = left => window.Module._monitorRunDependencies(left);
+							resolve();
+						}
+					};
+					document.head.appendChild(script);
+				}
+			}.bind(this));
 		}
 	}
 	return new Promise((resolve, reject) => {
