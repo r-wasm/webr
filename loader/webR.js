@@ -23,8 +23,14 @@ function loadWebR(options){
 				}
 				var script = document.createElement('script');
 				script.setAttribute('src',options.PKG_URL + package_name + "/" + package_name + ".js");
-				script.onload = resolve;
 				script.onerror = reject;
+				window.Module.monitorRunDependencies = function(left) {
+					window.Module._monitorRunDependencies(left);
+					if(left == 0){
+						monitorRunDependencies = left => window.Module._monitorRunDependencies(left);
+						resolve();
+					}
+				};
 				document.head.appendChild(script);
 			});
 		}
@@ -54,15 +60,14 @@ function loadWebR(options){
 			onRuntimeInitialized: function(){
 				options.loadPackages.reduce(function(cur, next) {
 					return cur.then(_ => webR.loadPackage(next));
-				}, Promise.resolve()).then(function() {
-					resolve(webR);
-				});
+				}, Promise.resolve()).then(_ => resolve(webR));
 			},
 			totalDependencies: 0,
-			monitorRunDependencies: function(left) {
+			_monitorRunDependencies: function(left) {
 				this.totalDependencies = Math.max(this.totalDependencies, left);
 				window.Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
-			}
+			},
+			monitorRunDependencies: left => window.Module._monitorRunDependencies(left)
 		};
 		window.Module.setStatus('Downloading...');
 		var script = document.createElement('script');

@@ -91,10 +91,11 @@
         setStatus: function(text) {
         },
         totalDependencies: 0,
-        monitorRunDependencies: function(left) {
+        _monitorRunDependencies: function(left) {
           this.totalDependencies = Math.max(this.totalDependencies, left);
           Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
-        }
+        },
+        monitorRunDependencies: left => Module._monitorRunDependencies(left),
       };
       Module.setStatus('Downloading...');
       window.onerror = function(event) {
@@ -104,7 +105,7 @@
           if (text) Module.printErr('[post-exception status] ' + text);
         };
       };
-      var PKG_URL = "https://cdn.jsdelivr.net/gh/georgestagg/webr-ports/dist/";
+      var PKG_URL = "https://cdn.jsdelivr.net/gh/georgestagg/webr-ports@latest/dist/";
       loadPackage = function(package_name){
 			return new Promise(function (resolve, reject) {
 				console.log("Loading webR package: " + package_name);
@@ -113,8 +114,15 @@
 				}
 				var script = document.createElement('script');
 				script.setAttribute('src',PKG_URL + package_name + "/" + package_name + ".js");
-				script.onload = resolve;
 				script.onerror = reject;
+				Module.monitorRunDependencies = function(left) {
+					Module._monitorRunDependencies(left);
+					if(left == 0){
+						monitorRunDependencies = left => Module._monitorRunDependencies(left);
+						resolve();
+					}
+
+				};
 				document.head.appendChild(script);
 			});
 	  };
