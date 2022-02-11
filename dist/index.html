@@ -82,7 +82,7 @@
    })(window.XMLHttpRequest);
       // below code modified from emscripten output html
       var Module = {
-	    preRun: [function(){ENV.R_HOME="/usr/lib/R"}],
+	    preRun: [function(){ENV.R_HOME="/usr/lib/R"; ENV.R_ENABLE_JIT="0"}],
         postRun: [],
         print: function(text) {
             term.echo(text);

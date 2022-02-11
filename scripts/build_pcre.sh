@@ -11,7 +11,7 @@ tar xvf pcre2-${PCRE_VERSION}.tar.gz
 cd pcre2-${PCRE_VERSION}
 mkdir -p build
 cd build
-CFLAGS="-fPIC" emconfigure ../configure --enable-shared=no --enable-static=yes --prefix=/tmp/pcre/
+CFLAGS="-fPIC -Oz" emconfigure ../configure --enable-shared=no --enable-static=yes --prefix=/tmp/pcre/
 emmake make install
 cd src
 emar -cr libpcre2_8.a libpcre2_8_la*.o

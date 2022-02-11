@@ -594,3 +594,542 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
      SEXP Old[NUM_OLD_GENERATIONS], New, Free;
      SEXPREC OldPeg[NUM_OLD_GENERATIONS], NewPeg;
 
+--- R-4.1.2/src/modules/internet/internet.c	2021-05-22 23:15:02.000000000 +0100
++++ R-4.1.2_web/src/modules/internet/internet.c	2022-02-09 14:04:24.825122326 +0000
+@@ -797,124 +797,36 @@
+     return ScalarInteger(status);
+ }
+ 
+-
+ void *in_R_HTTPOpen(const char *url, const char *agent, const char *headers, int cacheOK)
+ {
+-    inetconn *con;
+-    void *ctxt;
+-    int timeout = asInteger(GetOption1(install("timeout")));
+-    DLsize_t len = -1;
+-    char *type = NULL;
+-    char *fullheaders = NULL;
+-
+-    if(timeout == NA_INTEGER || timeout <= 0) timeout = 60;
+-
+-    RxmlNanoHTTPTimeout(timeout);
+-
+-    if (agent || headers) {
+-	fullheaders = malloc((agent ? strlen(agent) : 0) +
+-			     (headers ? strlen(headers) : 0) + 1);
+-	if(!fullheaders) error(_("could not allocate memory for http headers"));
+-	fullheaders[0] = '\0';
+-	if (agent) strcat(fullheaders, agent);
+-	if (headers) strcat(fullheaders, headers);
+-    }
+-
+-    ctxt = RxmlNanoHTTPOpen(url, NULL, fullheaders, cacheOK);
+-    if (fullheaders) free(fullheaders);
+-
+-    if(ctxt != NULL) {
+-	int rc = RxmlNanoHTTPReturnCode(ctxt);
+-	if(rc != 200) {
+-	    // FIXME: should this be ctxt->location, after redirection?
+-	    warning(_("cannot open URL '%s': %s status was '%d %s'"),
+-		    url, "HTTP", rc, RxmlNanoHTTPStatusMsg(ctxt));
+-	    RxmlNanoHTTPClose(ctxt);
+-	    return NULL;
+-	} else {
+-	    type = RxmlNanoHTTPContentType(ctxt);
+-	    len = RxmlNanoHTTPContentLength(ctxt);
+-	    if(!IDquiet){
+-		REprintf("Content type '%s'", type ? type : "unknown");
+-		if(len > 1024*1024)
+-		    // might be longer than long, and is on 64-bit windows
+-		    REprintf(" length %0.0f bytes (%0.1f MB)\n", (double)len,
+-			len/1024.0/1024.0);
+-		else if(len > 10240)
+-		    REprintf(" length %d bytes (%d KB)\n",
+-			     (int)len, (int)(len/1024));
+-		else if(len >= 0)
+-		    REprintf(" length %d bytes\n", (int)len);
+-		else REprintf(" length unknown\n", len);
+-#ifdef Win32
+-		R_FlushConsole();
+-#endif
+-	    }
+-	}
+-    } else return NULL;
+-    con = (inetconn *) malloc(sizeof(inetconn));
+-    if(con) {
+-	con->length = len;
+-	con->type = type;
+-	con->ctxt = ctxt;
+-    }
+-    return con;
++    error(_("R_HTTPOpen is disabled on this system"));
+ }
+-
++ 
+ static int in_R_HTTPRead(void *ctx, char *dest, int len)
+-{
+-    return RxmlNanoHTTPRead(((inetconn *)ctx)->ctxt, dest, len);
++{   
++    error(_("R_HTTPRead is disabled on this system"));
++    return -1;
+ }
+ 
+ static void in_R_HTTPClose(void *ctx)
+ {
+-    if(ctx) {
+-	RxmlNanoHTTPClose(((inetconn *)ctx)->ctxt);
+-	free(ctx);
+-    }
++    error(_("R_HTTPClose is disabled on this system"));
+ }
+ 
+ static void *in_R_FTPOpen(const char *url)
+ {
+-    inetconn *con;
+-    void *ctxt;
+-    int timeout = asInteger(GetOption1(install("timeout")));
+-    DLsize_t len = 0;
+-
+-    if(timeout == NA_INTEGER || timeout <= 0) timeout = 60;
+-    RxmlNanoFTPTimeout(timeout);
+-    ctxt = RxmlNanoFTPOpen(url);
+-    if(!ctxt) return NULL;
+-    if(!IDquiet) {
+-	len = RxmlNanoFTPContentLength(ctxt);
+-	if(len >= 0)
+-	    REprintf("ftp data connection made, file length %ld bytes\n", len);
+-	else
+-	    REprintf("ftp data connection made, file length unknown\n");
+-#ifdef Win32
+-	R_FlushConsole();
+-#endif
+-    }
+-    con = (inetconn *) malloc(sizeof(inetconn));
+-    if(con) {
+-	con->length = len;
+-	con->type = NULL;
+-	con->ctxt = ctxt;
+-    }
+-    return con;
++    error(_("R_FTPOpen is disabled on this system"));
+ }
+ 
+ static int in_R_FTPRead(void *ctx, char *dest, int len)
+-{
+-    return RxmlNanoFTPRead(((inetconn *)ctx)->ctxt, dest, len);
++{   
++    error(_("R_FTPRead is disabled on this system"));
++    return -1;
+ }
+ 
+ static void in_R_FTPClose(void *ctx)
+ {
+-    if(ctx) {
+-	RxmlNanoFTPClose(((inetconn *)ctx)->ctxt);
+-	free(ctx);
+-    }
++    error(_("R_FTPClose is disabled on this system"));
+ }
+ 
+ 
+@@ -1089,27 +1001,6 @@
+ #endif // Win32
+ 
+ 
+-#define MBUFSIZE 8192
+-void RxmlMessage(int level, const char *format, ...)
+-{
+-    int clevel;
+-    char buf[MBUFSIZE], *p;
+-    va_list(ap);
+-
+-    clevel = asInteger(GetOption1(install("internet.info")));
+-    if(clevel == NA_INTEGER) clevel = 2;
+-
+-    if(level < clevel) return;
+-
+-    va_start(ap, format);
+-    vsnprintf(buf, MBUFSIZE, format, ap);
+-    buf[MBUFSIZE-1] = '\0';
+-    va_end(ap);
+-    p = buf + strlen(buf) - 1;
+-    if(strlen(buf) > 0 && *p == '\n') *p = '\0';
+-    warning(buf);
+-}
+-
+ #include "sock.h"
+ #define STRICT_R_HEADERS
+ #include <R_ext/RS.h> /* for R_Calloc */
+--- /dev/null	2022-01-25 23:02:12.136479304 +0000
++++ R-4.1.2_web/src/modules/internet/xhr.c	2022-02-10 13:57:58.304881196 +0000
+@@ -0,0 +1,370 @@
++#ifdef HAVE_CONFIG_H
++#include <config.h>
++#endif
++
++#include <stdio.h>
++#include <unistd.h>
++#include <emscripten/fetch.h>
++#include "Fileio.h"
++
++#define R_USE_SIGNALS 1
++#include <Defn.h>
++#include <Rconnections.h>
++#include <R_ext/R-ftp-http.h>
++#include <errno.h>
++#include <R_ext/Print.h>
++
++int in_R_HTTPDCreate(const char *ip, int port){
++    error(_("in_R_HTTPDCreate is disabled on this system"));
++    return -1;
++}
++void in_R_HTTPDStop(void){
++    error(_("in_R_HTTPDStop is disabled on this system"));
++}
++void in_Rsockopen(int *port)
++{
++    error(_("in_Rsockopen is disabled on this system"));
++}
++void in_Rsocklisten(int *sock, char **buf, int *len)
++{
++    error(_("in_Rsocklisten is disabled on this system"));
++}
++void in_Rsockconnect(int *port, char **host)
++{
++    error(_("in_Rsockconnect is disabled on this system"));
++}
++void in_Rsockclose(int *sockp)
++{
++    error(_("in_Rsockclose is disabled on this system"));
++}
++void in_Rsockread (int *sockp, char **buf, int *maxlen)
++{
++    error(_("in_Rsockread is disabled on this system"));
++}
++void in_Rsockwrite(int *sockp, char **buf, int *start, int *end, int *len)
++{
++    error(_("in_Rsockwrite is disabled on this system"));
++}
++int in_Rsockselect(int nsock, int *insockfd, int *ready, int *write,
++				   double timeout)
++{
++    error(_("in_Rsockselect is disabled on this system"));
++}
++Rconnection in_R_newservsock(int port)
++{
++    error(_("in_R_newservsock is disabled on this system"));
++}
++Rconnection in_R_newsock(const char *host, int port, int server, int serverfd,
++					 const char * const mode, int timeout, int options)
++{
++    error(_("in_R_newsock is disabled on this system"));
++}
++
++SEXP in_do_curlVersion(SEXP call, SEXP op, SEXP args, SEXP rho)
++{
++    checkArity(op, args);
++    SEXP ans = PROTECT(allocVector(STRSXP, 1));
++    SET_STRING_ELT(ans, 0, mkChar("Emscripten FETCH API - libcurl shim"));
++    UNPROTECT(1);
++    return ans;
++}
++
++SEXP in_do_curlGetHeaders(SEXP call, SEXP op, SEXP args, SEXP rho)
++{
++    error(_("in_do_curlGetHeaders is disabled on this system"));
++}
++
++extern void Rsleep(double timeint);
++typedef struct Fetchconn {
++    char *buf, *current; 
++    size_t bufSize;
++    size_t filled;
++    int status;
++    int complete;
++} *RFetchconn;
++
++void downloadSucceeded(emscripten_fetch_t *fetch) {
++  RFetchconn ctxt = (RFetchconn)(fetch->userData);
++  ctxt->status = fetch->status;
++  ctxt->buf = (char*)malloc(fetch->numBytes);
++  ctxt->filled = fetch->numBytes;
++  ctxt->bufSize = fetch->numBytes;
++  memcpy(ctxt->buf, fetch->data, fetch->numBytes);
++  ctxt->current = ctxt->buf;
++  ctxt->complete = 1;
++  emscripten_fetch_close(fetch);
++}
++
++void downloadFailed(emscripten_fetch_t *fetch) {
++  RFetchconn ctxt = (RFetchconn)(fetch->userData);
++  ctxt->status = fetch->status;
++  ctxt->complete = 1;
++  ctxt->filled = 0;
++  emscripten_fetch_close(fetch);
++}
++
++
++static Rboolean Fetch_open(Rconnection con)
++{
++    char *url = con->description;
++    emscripten_fetch_attr_t* attr = (emscripten_fetch_attr_t*) con->private;
++    RFetchconn ctxt = (RFetchconn)(attr->userData);
++    int mlen;
++
++    if (con->mode[0] != 'r') {
++	REprintf("can only open URLs for reading");
++	return FALSE;
++    }
++    
++    ctxt->complete = 0;
++    emscripten_fetch(attr, url);
++
++    R_Busy(1);
++    while (!ctxt->complete) {
++        emscripten_sleep(100);
++    }
++    R_Busy(0);
++
++    if (ctxt->status == 200){
++        con->isopen = TRUE;
++        con->canwrite = (con->mode[0] == 'w' || con->mode[0] == 'a');
++        con->canread = !con->canwrite;
++        mlen = (int) strlen(con->mode);
++        if (mlen >= 2 && con->mode[mlen - 1] == 'b') con->text = FALSE;
++        else con->text = TRUE;
++        con->save = -1000;
++        set_iconv(con);
++    } else {
++        error(_("cannot open the connection to '%s'"), url);
++    }
++    return TRUE;
++}
++
++#define R_MIN(a, b) ((a) < (b) ? (a) : (b))
++
++static size_t Fetch_read(void *ptr, size_t size, size_t nitems,
++			Rconnection con)
++{
++    emscripten_fetch_attr_t* attr = (emscripten_fetch_attr_t*) con->private;
++    RFetchconn ctxt = (RFetchconn)(attr->userData);
++
++    if(!ctxt->complete){
++        error(_("fetch download is incomplete"));
++    }
++    if(ctxt->status != 200){
++        error(_("cannot read result of fetch"));
++    }
++
++    size_t nbytes = size*nitems;
++    size_t total = R_MIN(ctxt->filled, nbytes);
++    memcpy(ptr, ctxt->current, total);
++    ctxt->current += total;
++    ctxt->filled -= total;
++    return total/size;
++}
++
++static int Fetch_fgetc_internal(Rconnection con)
++{
++    unsigned char c;
++    size_t n = Fetch_read(&c, 1, 1, con);
++    return (n == 1) ? c : R_EOF;
++}
++
++static void Fetch_destroy(Rconnection con)
++{
++    RFetchconn ctxt;
++
++    if (NULL == con)
++	return;
++    emscripten_fetch_attr_t* attr = (emscripten_fetch_attr_t*) con->private;
++    ctxt = (RFetchconn)(attr->userData);
++
++    if (NULL == ctxt)
++	return;
++
++    free(ctxt->buf);
++    free(ctxt);
++}
++
++static void Fetch_close(Rconnection con)
++{
++    emscripten_fetch_attr_t* attr = (emscripten_fetch_attr_t*) con->private;
++    RFetchconn ctxt = (RFetchconn)(attr->userData);
++    con->isopen = FALSE;
++}
++
++
++Rconnection
++in_newCurlUrl(const char *description, const char * const mode, SEXP headers, int type)
++{
++    Rconnection new = (Rconnection) malloc(sizeof(struct Rconn));
++    if (!new) error(_("allocation of url connection failed"));
++    new->class = (char *) malloc(strlen("url-libcurl") + 1);
++    if (!new->class) {
++	free(new);
++	error(_("allocation of url connection failed"));
++	/* for Solaris 12.5 */ new = NULL;
++    }
++    strcpy(new->class, "url-libcurl");
++    new->description = (char *) malloc(strlen(description) + 1);
++    if (!new->description) {
++	free(new->class); free(new);
++	error(_("allocation of url connection failed"));
++	/* for Solaris 12.5 */ new = NULL;
++    }
++    init_con(new, description, CE_NATIVE, mode);
++    new->canwrite = FALSE;
++    new->open = &Fetch_open;
++    new->close = &Fetch_close;
++    new->destroy = &Fetch_destroy;
++    new->fgetc_internal = &Fetch_fgetc_internal;
++    new->fgetc = &dummy_fgetc;
++    new->read = &Fetch_read;
++    new->private = (void *) malloc(sizeof(emscripten_fetch_attr_t));
++    if (!new->private) {
++	free(new->description); free(new->class); free(new);
++	error(_("allocation of url connection failed"));
++	/* for Solaris 12.5 */ new = NULL;
++    }
++    emscripten_fetch_attr_t* attr = (emscripten_fetch_attr_t*) new->private;
++    emscripten_fetch_attr_init(attr);
++    strcpy(attr->requestMethod, "GET");
++    attr->attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
++    attr->onsuccess = downloadSucceeded;
++    attr->onerror = downloadFailed;
++    attr->userData = (void *) malloc(sizeof(struct Fetchconn));
++    if (LENGTH(headers) > 0) warning(_("downloading with headers is disabled on this system"));
++    return new;
++}
++
++SEXP in_do_curlDownload(SEXP call, SEXP op, SEXP args, SEXP rho)
++{
++    checkArity(op, args);
++
++    SEXP scmd, sfile, smode, sheaders;
++    const char *url, *file, *mode;
++    int quiet, cacheOK;
++
++    scmd = CAR(args); args = CDR(args);
++    if (!isString(scmd) || length(scmd) < 1)
++        error(_("invalid '%s' argument"), "url");
++    int nurls = length(scmd);
++    sfile = CAR(args); args = CDR(args);
++    if (!isString(sfile) || length(sfile) < 1)
++        error(_("invalid '%s' argument"), "destfile");
++    if (length(sfile) != length(scmd))
++        error(_("lengths of 'url' and 'destfile' must match"));
++    quiet = asLogical(CAR(args)); args = CDR(args);
++    if (quiet == NA_LOGICAL)
++        error(_("invalid '%s' argument"), "quiet");
++    smode =  CAR(args); args = CDR(args);
++    if (!isString(smode) || length(smode) != 1)
++        error(_("invalid '%s' argument"), "mode");
++    mode = CHAR(STRING_ELT(smode, 0));
++    cacheOK = asLogical(CAR(args)); args = CDR(args);
++    if (cacheOK == NA_LOGICAL)
++        error(_("invalid '%s' argument"), "cacheOK");
++    sheaders = CAR(args);
++    if(TYPEOF(sheaders) != NILSXP && !isString(sheaders))
++        error(_("invalid '%s' argument"), "headers");
++    if(TYPEOF(sheaders) != NILSXP) {
++        warning(_("downloading with headers is disabled on this system"));
++    }
++
++    int n_err = 0, n_done = 0;
++    FILE *out[nurls];
++    emscripten_fetch_attr_t attrs[nurls];
++    RFetchconn ctxt;
++
++    for(int i = 0; i < nurls; i++) {
++        /* check that destfile can be written */
++        file = translateChar(STRING_ELT(sfile, i));
++        out[i] = R_fopen(R_ExpandFileName(file), mode);
++        if (!out[i]) {
++            n_err += 1;
++            warning(_("URL %s: cannot open destfile '%s', reason '%s'"),
++                    url, file, strerror(errno));
++            if (nurls == 1) break; else continue;
++        }
++    }
++
++    if (n_err == nurls) {
++        return ScalarInteger(1);
++    }
++
++    R_Busy(1);
++    for(int i = 0; i < nurls; i++) {
++        url = CHAR(STRING_ELT(scmd, i));
++        if (!quiet) REprintf(_("trying URL '%s'\n"), url);
++        emscripten_fetch_attr_init(&(attrs[i]));
++        strcpy(attrs[i].requestMethod, "GET");
++        attrs[i].attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
++        attrs[i].onsuccess = downloadSucceeded;
++        attrs[i].onerror = downloadFailed;
++        attrs[i].userData = (void *) malloc(sizeof(struct Fetchconn));
++        ctxt = (RFetchconn)(attrs[i].userData);
++        ctxt->complete = 0;
++        emscripten_fetch(&(attrs[i]), url);
++    }
++    while(n_done < nurls){
++        n_done = 0;
++        for(int i = 0; i < nurls; i++) {
++            ctxt = (RFetchconn)(attrs[i].userData);
++            n_done += ctxt->complete;
++        }
++        emscripten_sleep(100);
++    }
++    for(int i = 0; i < nurls; i++) {
++        ctxt = (RFetchconn)(attrs[i].userData);
++        if(ctxt->status == 200){
++            fwrite(ctxt->buf, ctxt->bufSize, 1, out[i]);
++        } else {
++            n_err += 1;
++        }
++    }
++    R_Busy(0);
++
++    if (nurls == 1) {
++        long status;
++        double cl, dl;
++        ctxt = (RFetchconn)(attrs[0].userData);
++        status = ctxt->status;
++        dl = ctxt->bufSize;
++
++        if (!quiet && status == 200) {
++            if (dl > 1024*1024)
++                REprintf("downloaded %0.1f MB\n\n", (double)dl/1024/1024);
++            else if (dl > 10240)
++                REprintf("downloaded %d KB\n\n", (int) dl/1024);
++            else
++                REprintf("downloaded %d bytes\n\n", (int) dl);
++        }
++    }
++
++    long status = 0L;
++    for (int i = 0; i < nurls; i++) {
++        if (out[i]) {
++            fclose(out[i]);
++            ctxt = (RFetchconn)(attrs[i].userData);
++            status = ctxt->status;
++            if (status != 200 && strchr(mode, 'w'))
++                unlink(R_ExpandFileName(translateChar(STRING_ELT(sfile, i))));
++        }
++    }
++
++    if(nurls > 1) {
++        if (n_err == nurls) error(_("cannot download any files"));
++        else if (n_err) warning(_("some files were not downloaded"));
++    } else if(n_err) {
++        if (status != 200)
++            error(_("cannot open URL '%s'"), CHAR(STRING_ELT(scmd, 0)));
++        else
++            error(_("download from '%s' failed"), CHAR(STRING_ELT(scmd, 0)));
++    }
++
++    for(int i = 0; i < nurls; i++) {
++        free(attrs[i].userData);
++    }
++
++    return ScalarInteger(0);
++}

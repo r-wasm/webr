@@ -56,7 +56,7 @@ function loadWebR(options){
 	}
 	return new Promise((resolve, reject) => {
 		window.Module = {
-			preRun: [function(){ENV.R_HOME="/usr/lib/R"}],
+			preRun: [function(){ENV.R_HOME="/usr/lib/R"; ENV.R_ENABLE_JIT="0"}],
 			postRun: [],
 			arguments: ['-q'],
 			noExitRuntime: true,

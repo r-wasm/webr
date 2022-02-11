@@ -11,7 +11,7 @@ tar xvf download
 cd xz-${XZ_VERSION}
 mkdir -p build
 cd build
-CFLAGS="-fPIC" emconfigure ../configure --enable-shared=no --enable-static=yes --prefix=/tmp/xz
+CFLAGS="-fPIC -Oz" emconfigure ../configure --enable-shared=no --enable-static=yes --prefix=/tmp/xz
 emmake make install
 
 mkdir -p /app/build/Rlibs/lib
