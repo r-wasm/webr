@@ -251,14 +251,16 @@ emcc -g -Oz -s WASM_BIGINT -s SIDE_MODULE=1 -o lapack.so dlamch.o dlapack.o cmpl
 cp lapack.so /app/build/root/usr/lib/R/modules/
 popd
 
-pushd src/modules/internet
-# Note: xhr.o has been linked into the main module, rather than via internet.so, so that asyncify works
-# emscripten-core/emscripten/issues/15594
-emcc -fPIC -std=gnu11 -I. -I../../../src/include -I/usr/local/include -DHAVE_CONFIG_H -g -Os -c internet.c -o internet.o
-emcc -fPIC -std=gnu11 -I. -I../../../src/include -I/usr/local/include -DHAVE_CONFIG_H -g -Os -c xhr.c -o xhr.o
-emcc -g -Oz -s WASM_BIGINT -s SIDE_MODULE=1 -o internet.so internet.o
-cp internet.so /app/build/root/usr/lib/R/modules/
-popd
+if [[ ! -z "${BUILD_INTERNET}" ]]; then
+	pushd src/modules/internet
+	# Note: xhr.o has been linked into the main module, rather than via internet.so, so that asyncify works
+	# emscripten-core/emscripten/issues/15594
+	emcc -fPIC -std=gnu11 -I. -I../../../src/include -I/usr/local/include -DHAVE_CONFIG_H -g -Os -c internet.c -o internet.o
+	emcc -fPIC -std=gnu11 -I. -I../../../src/include -I/usr/local/include -DHAVE_CONFIG_H -g -Os -c xhr.c -o xhr.o
+	emcc -g -Oz -s WASM_BIGINT -s SIDE_MODULE=1 -o internet.so internet.o
+	cp internet.so /app/build/root/usr/lib/R/modules/
+	popd
+fi
 
 pushd src/library/tools/src
 emcc -fPIC -std=gnu11 -I"../../../../include" -I"../../../../src/main" -DNDEBUG -I../../../include -I/usr/local/include -DHAVE_CONFIG_H -fvisibility=hidden  -g -Oz  -c text.c -o text.o
@@ -538,7 +540,31 @@ emcc -fPIC -std=gnu11 -I../../src/extra  -I. -I../../src/include  -I/usr/local/i
 emcc -fPIC -std=gnu11 -I../../src/extra  -I. -I../../src/include  -I/usr/local/include -I../../src/nmath -DHAVE_CONFIG_H     -g -Oz  -c g_her_glyph.c -o g_her_glyph.o
 popd
 
+EXTRA_FLAGS="${EXTRA_FLAGS:=}"
+if [[ ! -z "${BUILD_INTERNET}" ]]; then
+	EXTRA_FLAGS+="../../modules/internet/xhr.o "
+	BUILD_ASYNC=1
+fi
+if [[ ! -z "${BUILD_ASYNC}" ]]; then
+	EXTRA_FLAGS+="-s ASYNCIFY -s ASYNCIFY_STACK_SIZE=1000000"
+fi
+
 mkdir -p src/main/bin
 pushd src/main/bin
-emcc -g -Oz -std=gnu11 -L/usr/local/lib -o R.bin.js ../Rmain.o ../CommandLineArgs.o ../Rdynload.o ../Renviron.o ../RNG.o ../agrep.o ../altclasses.o ../altrep.o ../apply.o ../arithmetic.o ../array.o ../attrib.o ../bind.o ../builtin.o ../character.o ../coerce.o ../colors.o ../complex.o ../connections.o ../context.o ../cum.o ../dcf.o ../datetime.o ../debug.o ../deparse.o ../devices.o ../dotcode.o ../dounzip.o ../dstruct.o ../duplicate.o ../edit.o ../engine.o ../envir.o ../errors.o ../eval.o ../format.o ../gevents.o ../gram.o ../gram-ex.o ../graphics.o ../grep.o ../identical.o ../inlined.o ../inspect.o ../internet.o ../iosupport.o ../lapack.o ../list.o ../localecharset.o ../logic.o ../main.o ../mapply.o ../match.o ../memory.o ../names.o ../objects.o ../options.o ../paste.o ../patterns.o ../platform.o ../plot.o ../plot3d.o ../plotmath.o ../print.o ../printarray.o ../printvector.o ../printutils.o ../qsort.o ../radixsort.o ../random.o ../raw.o ../registration.o ../relop.o ../rlocale.o ../saveload.o ../scan.o ../seq.o ../serialize.o ../sort.o ../source.o ../split.o ../sprintf.o ../startup.o ../subassign.o ../subscript.o ../subset.o ../summary.o ../sysutils.o ../times.o ../unique.o ../util.o ../version.o ../g_alab_her.o ../g_cntrlify.o ../g_fontdb.o ../g_her_glyph.o ../xxxpr.o ../../modules/internet/xhr.o `ls ../../unix/*.o ../../appl/*.o ../../nmath/*.o` ../../extra/tre/libtre.a ../../extra/blas/libRblas.a ../../extra/xdr/libxdr.a /app/build/Rlibs/lib/libpcre2_8.a /app/build/Rlibs/lib/liblzma.a /app/build/Rlibs/lib/libgfortran.a -lrt -ldl -lm --use-preload-plugins --preload-file /app/build/root@/ -s USE_BZIP2=1 -s USE_ZLIB=1 -s USE_LIBPNG=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s WASM_BIGINT -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s MAIN_MODULE=1 -s ASSERTIONS=1 -s FETCH=1 -s NO_EXIT_RUNTIME=0 -s ASYNCIFY -s ASYNCIFY_STACK_SIZE=1000000
+emcc -g -Oz -std=gnu11 -L/usr/local/lib -o R.bin.js ../Rmain.o ../CommandLineArgs.o ../Rdynload.o ../Renviron.o \
+../RNG.o ../agrep.o ../altclasses.o ../altrep.o ../apply.o ../arithmetic.o ../array.o ../attrib.o ../bind.o \
+../builtin.o ../character.o ../coerce.o ../colors.o ../complex.o ../connections.o ../context.o ../cum.o ../dcf.o \
+../datetime.o ../debug.o ../deparse.o ../devices.o ../dotcode.o ../dounzip.o ../dstruct.o ../duplicate.o ../edit.o \
+../engine.o ../envir.o ../errors.o ../eval.o ../format.o ../gevents.o ../gram.o ../gram-ex.o ../graphics.o ../grep.o \
+../identical.o ../inlined.o ../inspect.o ../internet.o ../iosupport.o ../lapack.o ../list.o ../localecharset.o \
+../logic.o ../main.o ../mapply.o ../match.o ../memory.o ../names.o ../objects.o ../options.o ../paste.o ../patterns.o \
+../platform.o ../plot.o ../plot3d.o ../plotmath.o ../print.o ../printarray.o ../printvector.o ../printutils.o \
+../qsort.o ../radixsort.o ../random.o ../raw.o ../registration.o ../relop.o ../rlocale.o ../saveload.o ../scan.o \
+../seq.o ../serialize.o ../sort.o ../source.o ../split.o ../sprintf.o ../startup.o ../subassign.o ../subscript.o \
+../subset.o ../summary.o ../sysutils.o ../times.o ../unique.o ../util.o ../version.o ../g_alab_her.o ../g_cntrlify.o \
+../g_fontdb.o ../g_her_glyph.o ../xxxpr.o ${EXTRA_FLAGS} `ls ../../unix/*.o ../../appl/*.o ../../nmath/*.o` \
+../../extra/tre/libtre.a ../../extra/blas/libRblas.a ../../extra/xdr/libxdr.a /app/build/Rlibs/lib/libpcre2_8.a \
+/app/build/Rlibs/lib/liblzma.a /app/build/Rlibs/lib/libgfortran.a -lrt -ldl -lm --use-preload-plugins \
+--preload-file /app/build/root@/ -s USE_BZIP2=1 -s USE_ZLIB=1 -s USE_LIBPNG=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
+-s WASM_BIGINT -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s MAIN_MODULE=1 -s ASSERTIONS=1 -s FETCH=1 -s NO_EXIT_RUNTIME=0
 cp * /app/webR/
