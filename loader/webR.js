@@ -7,8 +7,12 @@ function loadWebR(options){
 			var reg = /(library|require)\(['"]?(.*?)['"]?\)/g;
 			var res;
 			var packages = [];
+			const builtin_packages = ['base', 'compiler', 'datasets', 'grDevices', 'graphics', 'grid', 'methods', 'parallel', 'splines',
+				'stats', 'stats4', 'tcltk', 'tools', 'translations', 'utils'];
 			while((res = reg.exec(code)) !== null) {
-				packages.push(res[2]);
+				if(!builtin_packages.includes(res[2])){
+					packages.push(res[2]);
+				}
 			}
 			try {
 				await packages.reduce(function(cur, next) {

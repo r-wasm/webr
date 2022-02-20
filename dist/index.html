@@ -1,88 +1,146 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src="https://cdn.rawgit.com/jcubic/jquery.terminal/master/js/jquery.terminal.min.js"></script>
-<link href="https://cdn.rawgit.com/jcubic/jquery.terminal/master/css/jquery.terminal.min.css" rel="stylesheet"/>
-  <script src="https://unpkg.com/xhr-mock/dist/xhr-mock.js"></script>
-  </head>
-  <body>
-  </body>
-  <script>
-   var term = $('body').terminal([], {
-			    prompt: '',
-			    greetings: false,
-	            history: true
-		});
-   var re = /^___terminal::/;
+    <link href="https://cdn.rawgit.com/jcubic/jquery.terminal/master/css/jquery.terminal.min.css" rel="stylesheet"/>
+    <script src="https://unpkg.com/xhr-mock/dist/xhr-mock.js"></script>
+    <style>
+        body {
+            margin: 0;
+        }
+        .dispbox {
+            display: flex;
+            height: 100vh;
+            justify-content: center;
+        }
+        .box {
+			position: relative;
+            width: 50vw;
+            height: 100wh;
+        }
+        #plot {
+            background-color: #727272;
+            align-items: center;
+        }
+        #plot-canvas {
+            background-color: #FFFFFF;
+            width: 40vw;
+            height: 40vw;
+            max-height: 80vh;
+            max-width: 80vh;
+        }
+		#plot-save {
+			position: absolute;
+			top: 0px;
+			left: 0px;
+		}
+        @media (orientation: portrait) {
+            .dispbox {
+                flex-flow: column;
+            }
+            .box {
+                width: 100vw;
+                height: 50vh;
+            }
+            #plot-canvas {
+                width: 40vh;
+                height: 40vh;
+                max-height: 80vw;
+                max-width: 80vw;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dispbox">
+        <div id='term' class="box"></div>
+        <div id='plot' class="box dispbox">
+			<button id="plot-save">Save Plot</button>
+            <canvas id='plot-canvas' class="box" width="1008" height="1008"></canvas>
+        </div>
+    </div>
+</body>
+<script>
+    var term = $('#term').terminal([], {
+        prompt: '',
+        greetings: false,
+        history: true
+    });
+    term.echo("R is downloading, please wait...");
+    var re = /^___terminal::/;
     // XHR proxy that handle methods from fetch in C
-   window.XMLHttpRequest = (function(xhr) {
-       return function() {
-           var url;
-           var props = {
-               readyState: 4,
-               status: 200
-           };
-           var enc = new TextEncoder("utf-8");
-           return new Proxy(new xhr(), {
-               get: function(target, name) {
-                   if (url && ['response', 'responseText', 'status', 'readyState'].indexOf(name) != -1) {
-                       if (name == 'response') {
-                           var response = enc.encode(props.responseText);
-                           return response;
-                       }
-                       return props[name];
-                   } else if (name == 'open') {
-                       return function(method, open_url) {
-                           if (open_url.match(re)) {
-                               url = open_url;
-                           } else {
-                               return target[name].apply(target, arguments);
-                           }
-                       };
-                   } else if (name == 'send') {
-                       return function(data) {
-                           if (url) {
-                               var payload = url.split('::');
-                               if (payload[1] == 'read') {
-                                 term.read(
-                                   payload.length > 2 ? payload[2] : '',
-                                   function(text) {
-                                     var reg = /(library|require)\(['"]?(.*?)['"]?\)/g;
-                                     var res;
-                                     var packages = [];
-                                     while((res = reg.exec(text)) !== null) {
-                                       packages.push(res[2]);
-                                     }
-                                     packages.reduce(function(cur, next) {
-                                       return cur.then(_ => loadPackage(next));
-                                     }, Promise.resolve()).then(_ => {
-                                       props.responseText = text;
-                                       target.onload();
-                                     }, function(e) {
-                                       props.responseText = text;
-                                       target.onload()
-                                     });
-                                   }
-                                 );
-                                 term.history().enable();
-                               }
-                           } else {
-                               return target[name].apply(target, arguments);
-                           }
-                       };
-                   }
-                   return target[name];
-               },
-               set: function(target, name, value) {
-                   target[name] = value;
-               }
-           });
-       };
-   })(window.XMLHttpRequest);
-      // below code modified from emscripten output html
-      var Module = {
-	    preRun: [function(){ENV.R_HOME="/usr/lib/R"; ENV.R_ENABLE_JIT="0"}],
+    window.XMLHttpRequest = (function(xhr) {
+        return function() {
+            var url;
+            var props = {
+                readyState: 4,
+                status: 200
+            };
+            var enc = new TextEncoder("utf-8");
+            return new Proxy(new xhr(), {
+                get: function(target, name) {
+                    if (url && ['response', 'responseText', 'status', 'readyState'].indexOf(name) != -1) {
+                        if (name == 'response') {
+                            var response = enc.encode(props.responseText);
+                            return response;
+                        }
+                        return props[name];
+                    } else if (name == 'open') {
+                        return function(method, open_url) {
+                            if (open_url.match(re)) {
+                                url = open_url;
+                            } else {
+                                return target[name].apply(target, arguments);
+                            }
+                        };
+                    } else if (name == 'send') {
+                        return function(data) {
+                            if (url) {
+                                var payload = url.split('::');
+                                if (payload[1] == 'read') {
+                                    term.read(
+                                        payload.length > 2 ? payload[2] : '',
+                                        function(text) {
+                                            var reg = /(library|require)\(['"]?(.*?)['"]?\)/g;
+                                            var res;
+                                            var packages = [];
+											const builtin_packages = ['base', 'compiler', 'datasets', 'grDevices', 'graphics', 'grid', 'methods', 'parallel', 'splines',
+												'stats', 'stats4', 'tcltk', 'tools', 'translations', 'utils'];
+                                            while((res = reg.exec(text)) !== null) {
+												if(!builtin_packages.includes(res[2])){
+													packages.push(res[2]);
+												}
+                                            }
+                                            packages.reduce(function(cur, next) {
+                                                return cur.then(_ => loadPackage(next));
+                                            }, Promise.resolve()).then(_ => {
+                                                props.responseText = text;
+                                                target.onload();
+                                            }, function(e) {
+                                                props.responseText = text;
+                                                target.onload()
+                                            });
+                                        }
+                                    );
+                                    term.history().enable();
+                                }
+                            } else {
+                                return target[name].apply(target, arguments);
+                            }
+                        };
+                    }
+                    return target[name];
+                },
+                set: function(target, name, value) {
+                    target[name] = value;
+                }
+            });
+        };
+    })(window.XMLHttpRequest);
+    // below code modified from emscripten output html
+    var Module = {
+        preRun: [function(){ENV.R_HOME="/usr/lib/R"; ENV.R_ENABLE_JIT="0"; ENV.R_DEFAULT_DEVICE="canvas"}],
         postRun: [],
         print: function(text) {
             term.echo(text);
@@ -92,58 +150,67 @@
             term.error(text);
         },
         canvas: (function() {
-          var canvas = document.createElement('canvas');
-
-          // As a default initial behavior, pop up an alert when webgl context is lost. To make your
-          // application robust, you may want to override this behavior before shipping!
-          // See http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
-          canvas.addEventListener("webglcontextlost", function(e) { alert('WebGL context lost. You will need to reload the page.'); e.preventDefault(); }, false);
-
-          return canvas;
+            var canvas = document.createElement('canvas');
+            // As a default initial behavior, pop up an alert when webgl context is lost. To make your
+            // application robust, you may want to override this behavior before shipping!
+            // See http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
+            canvas.addEventListener("webglcontextlost", function(e) { alert('WebGL context lost. You will need to reload the page.'); e.preventDefault(); }, false);
+            return canvas;
         })(),
         setStatus: function(text) {
         },
         totalDependencies: 0,
         _monitorRunDependencies: function(left) {
-          this.totalDependencies = Math.max(this.totalDependencies, left);
-          Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+            this.totalDependencies = Math.max(this.totalDependencies, left);
+            Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
         },
         monitorRunDependencies: left => Module._monitorRunDependencies(left),
-      };
-      Module.setStatus('Downloading...');
-      window.onerror = function(event) {
+		onRuntimeInitialized: function(){
+			term.clear();
+		},
+    };
+    Module.setStatus('Downloading...');
+    window.onerror = function(event) {
         // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
         Module.setStatus('Exception thrown, see JavaScript console');
         Module.setStatus = function(text) {
-          if (text) Module.printErr('[post-exception status] ' + text);
+            if (text) Module.printErr('[post-exception status] ' + text);
         };
-      };
-      var PKG_URL = "https://cdn.jsdelivr.net/gh/georgestagg/webr-ports@latest/dist/";
-      var loadedPackages = [];
-      var loadPackage = function(package_name){
-			return new Promise(function (resolve, reject) {
-				if (loadedPackages.includes(package_name)){
-					resolve();
-				} else {
-					loadedPackages.push(package_name);
-					console.log("Loading webR package: " + package_name);
-					window.Module['locateFile'] = function(path, prefix) {
-						return PKG_URL + package_name + "/" + path;
-					}
-					var script = document.createElement('script');
-					script.setAttribute('src',PKG_URL + package_name + "/" + package_name + ".js");
-					script.onerror = reject;
-					Module.monitorRunDependencies = function(left) {
-						Module._monitorRunDependencies(left);
-						if(left == 0){
-							monitorRunDependencies = left => Module._monitorRunDependencies(left);
-							resolve();
-						}
-					};
-					document.head.appendChild(script);
-				}
-			});
-	  };
-    </script>
-    <script async type="text/javascript" src="R.bin.js"></script>
+    };
+    var PKG_URL = "https://cdn.jsdelivr.net/gh/georgestagg/webr-ports@latest/dist/";
+    var loadedPackages = [];
+    var loadPackage = function(package_name){
+        return new Promise(function (resolve, reject) {
+            if (loadedPackages.includes(package_name)){
+                resolve();
+            } else {
+                loadedPackages.push(package_name);
+                console.log("Loading webR package: " + package_name);
+                window.Module['locateFile'] = function(path, prefix) {
+                    return PKG_URL + package_name + "/" + path;
+                }
+                var script = document.createElement('script');
+                script.setAttribute('src',PKG_URL + package_name + "/" + package_name + ".js");
+                script.onerror = reject;
+                Module.monitorRunDependencies = function(left) {
+                    Module._monitorRunDependencies(left);
+                    if(left == 0){
+                        monitorRunDependencies = left => Module._monitorRunDependencies(left);
+                        resolve();
+                    }
+                };
+                document.head.appendChild(script);
+            }
+        });
+    };
+	const download = document.getElementById('plot-save');
+	download.addEventListener('click', function (e) {
+		const link = document.createElement('a');
+		link.download = 'plot.png';
+		link.href = document.getElementById('plot-canvas').toDataURL();
+		link.click();
+		link.delete;
+	});
+</script>
+<script async type="text/javascript" src="R.bin.js"></script>
 </html>

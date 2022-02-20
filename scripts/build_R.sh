@@ -343,6 +343,8 @@ emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE
 emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Oz  -c devPicTeX.c -o devPicTeX.o
 emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Oz  -c devPS.c -o devPS.o
 emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Oz  -c devQuartz.c -o devQuartz.o
+# Note: devCanvas.o has been linked into the main module, rather than via grDevices.so. At the time of writing EM_ASM does not work in a SIDE_MODULE.
+emcc -fPIC -std=gnu11 -I"../../../../include" -DNDEBUG -I../../../include -DHAVE_CONFIG_H  -I/usr/local/include -g -Oz  -c devCanvas.c -o devCanvas.o
 emar -cr grDevices.a axis_scales.o chull.o devices.o init.o stubs.o colors.o clippath.o patterns.o mask.o devCairo.o devPicTeX.o devPS.o devQuartz.o
 emcc -g -Oz -s WASM_BIGINT -s SIDE_MODULE=1 -o grDevices.so axis_scales.o chull.o devices.o init.o stubs.o colors.o clippath.o patterns.o mask.o devCairo.o devPicTeX.o devPS.o devQuartz.o
 cp grDevices.so /app/build/root/usr/lib/R/library/grDevices/libs/
@@ -541,12 +543,13 @@ emcc -fPIC -std=gnu11 -I../../src/extra  -I. -I../../src/include  -I/usr/local/i
 popd
 
 EXTRA_FLAGS="${EXTRA_FLAGS:=}"
+EXTRA_FLAGS+="../../library/grDevices/src/devCanvas.o "
 if [[ ! -z "${BUILD_INTERNET}" ]]; then
 	EXTRA_FLAGS+="../../modules/internet/xhr.o "
 	BUILD_ASYNC=1
 fi
 if [[ ! -z "${BUILD_ASYNC}" ]]; then
-	EXTRA_FLAGS+="-s ASYNCIFY -s ASYNCIFY_STACK_SIZE=1000000"
+	EXTRA_FLAGS+="-s ASYNCIFY -s ASYNCIFY_STACK_SIZE=1000000 "
 fi
 
 mkdir -p src/main/bin
