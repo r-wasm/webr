@@ -105,29 +105,29 @@
                                             var reg = /(library|require)\(['"]?(.*?)['"]?\)/g;
                                             var res;
                                             var packages = [];
-											const builtin_packages = ['base', 'compiler', 'datasets', 'grDevices', 'graphics', 'grid', 'methods', 'parallel', 'splines',
-												'stats', 'stats4', 'tcltk', 'tools', 'translations', 'utils'];
-											const prereq_table = {
-												'ellipsis': ['rlang'],
-												'ggplot2': ['digest', 'colorspace', 'crayon', 'ellipsis', 'fansi', 'farver', 'glue', 'gtable', 'isoband',
-													'labeling', 'lattice', 'lifecycle', 'MASS', 'Matrix', 'mgcv', 'munsell', 'nlme', 'magrittr', 'pillar', 'pkgconfig',
-													'R6', 'RColorBrewer', 'rlang', 'scales', 'tibble', 'vctrs', 'viridisLite', 'withr', 'utf8'],
-												'lifecycle': ['rlang', 'glue'],
-												'Matrix': ['lattice'],
-												'mgcv': ['nlme', 'Matrix', 'lattice'],
-												'nmle': ['lattice'],
-												'pillar': [	'crayon', 'ellipsis', 'fansi', 'glue', 'lifecycle', 'rlang', 'utf8', 'vctrs'],
-												'tibble': [	'crayon', 'ellipsis', 'fansi', 'glue', 'lifecycle', 'magrittr', 'pillar', 'pkgconfig', 'rlang', 'vctrs', 'utf8'],
-												'scales': ['colorspace', 'farver', 'glue', 'labeling', 'lifecycle', 'munsell', 'R6', 'RColorBrewer', 'rlang', 'viridisLite'],
-												'vctrs': ['ellipsis', 'glue', 'rlang'],
-											};
+                                            const builtin_packages = ['base', 'compiler', 'datasets', 'grDevices', 'graphics', 'grid', 'methods', 'parallel', 'splines',
+                                                'stats', 'stats4', 'tcltk', 'tools', 'translations', 'utils'];
+                                            const prereq_table = {
+                                                'ellipsis': ['rlang'],
+                                                'ggplot2': ['digest', 'colorspace', 'crayon', 'ellipsis', 'fansi', 'farver', 'glue', 'gtable', 'isoband',
+                                                    'labeling', 'lattice', 'lifecycle', 'MASS', 'Matrix', 'mgcv', 'munsell', 'nlme', 'magrittr', 'pillar', 'pkgconfig',
+                                                    'R6', 'RColorBrewer', 'rlang', 'scales', 'tibble', 'vctrs', 'viridisLite', 'withr', 'utf8'],
+                                                'lifecycle': ['rlang', 'glue'],
+                                                'Matrix': ['lattice'],
+                                                'mgcv': ['nlme', 'Matrix', 'lattice'],
+                                                'nmle': ['lattice'],
+                                                'pillar': [	'crayon', 'ellipsis', 'fansi', 'glue', 'lifecycle', 'rlang', 'utf8', 'vctrs'],
+                                                'tibble': [	'crayon', 'ellipsis', 'fansi', 'glue', 'lifecycle', 'magrittr', 'pillar', 'pkgconfig', 'rlang', 'vctrs', 'utf8'],
+                                                'scales': ['colorspace', 'farver', 'glue', 'labeling', 'lifecycle', 'munsell', 'R6', 'RColorBrewer', 'rlang', 'viridisLite'],
+                                                'vctrs': ['ellipsis', 'glue', 'rlang'],
+                                            };
                                             while((res = reg.exec(text)) !== null) {
-												if(!builtin_packages.includes(res[2])){
-													if(res[2] in prereq_table){
-														packages = prereq_table[res[2]].concat(packages);
-													}
-													packages.push(res[2]);
-												}
+                                                if(!builtin_packages.includes(res[2])){
+                                                    if(res[2] in prereq_table){
+                                                        packages = prereq_table[res[2]].concat(packages);
+                                                    }
+                                                    packages.push(res[2]);
+                                                }
                                             }
                                             packages.reduce(function(cur, next) {
                                                 return cur.then(_ => loadPackage(next));
@@ -157,7 +157,13 @@
     })(window.XMLHttpRequest);
     // below code modified from emscripten output html
     var Module = {
-        preRun: [function(){ENV.R_HOME="/usr/lib/R"; ENV.R_ENABLE_JIT="0"; ENV.R_DEFAULT_DEVICE="canvas"}],
+        preRun: [function(){
+            ENV.R_NSIZE="1000000";
+            ENV.R_VSIZE="64M";
+            ENV.R_HOME="/usr/lib/R";
+            ENV.R_ENABLE_JIT="0";
+            ENV.R_DEFAULT_DEVICE="canvas";
+        }],
         postRun: [],
         print: function(text) {
             term.echo(text);
@@ -182,16 +188,16 @@
             Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
         },
         monitorRunDependencies: left => Module._monitorRunDependencies(left),
-		onRuntimeInitialized: function(){
-			term.clear();
-		},
+        onRuntimeInitialized: function(){
+            term.clear();
+        },
     };
     Module.setStatus('Downloading...');
     window.onerror = function(event) {
         // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
         Module.setStatus('Exception thrown, see JavaScript console');
         Module.setStatus = function(text) {
-            if (text) Module.printErr('[post-exception status] ' + text);
+            if (text) console.log('[post-exception status] ' + text);
         };
     };
     var PKG_URL = "https://cdn.jsdelivr.net/gh/georgestagg/webr-ports@latest/dist/";
@@ -220,14 +226,14 @@
             }
         });
     };
-	const download = document.getElementById('plot-save');
-	download.addEventListener('click', function (e) {
-		const link = document.createElement('a');
-		link.download = 'plot.png';
-		link.href = document.getElementById('plot-canvas').toDataURL();
-		link.click();
-		link.delete;
-	});
+    const download = document.getElementById('plot-save');
+    download.addEventListener('click', function (e) {
+        const link = document.createElement('a');
+        link.download = 'plot.png';
+        link.href = document.getElementById('plot-canvas').toDataURL();
+        link.click();
+        link.delete;
+    });
 </script>
 <script async type="text/javascript" src="R.bin.js"></script>
 </html>

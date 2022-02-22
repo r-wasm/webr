@@ -55,7 +55,7 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
 +}
 --- /dev/null	2022-01-25 23:02:12.136479304 +0000
 +++ R-4.1.2_web/src/library/grDevices/src/devCanvas.c	2022-02-20 08:29:30.037459437 +0000
-@@ -0,0 +1,424 @@
+@@ -0,0 +1,468 @@
 +/*
 +R graphics device targeting the HTML canvas element
 +Author: George Stagg, based on the canvas package created by Jeffrey Horner (http://www.rforge.net/canvas/)
@@ -176,7 +176,7 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
 +{
 +	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
 +#ifdef CANVASDEBUG
-+	Rprintf("Clip(x0=%f,y0=%f,x1=%f,y1=%f,RGD=0x%x)\n",2*x0,2*y0,2*x1,2*y1,RGD);
++	Rprintf("Clip(x0=%f,y0=%f,x1=%f,y1=%f,RGD=0x%x)\n",2.*x0,2.*y0,2.*x1,2.*y1,RGD);
 +#endif
 +}
 +
@@ -253,8 +253,9 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
 +		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').fillRect(0,0,$1,$2);}, cGD->sel, 2*RGD->right,2*RGD->bottom);
 +	}
 +
-+#ifdef CANVASDEBUG
-+	Rprintf("NewPage(gc=0x%x,RGD=0x%x)\n",gc,RGD);
++#ifdef CANVASDEBUG2
++	//Rprintf("NewPage(gc=0x%x,RGD=0x%x)\n",gc,RGD);
++	Rprintf("NewPage()\n");
 +#endif
 +}
 +
@@ -377,6 +378,39 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
 +	}
 +}
 +
++SEXP void_setPattern(SEXP pattern, pDevDesc RGD) {
++	return R_NilValue;
++}
++void void_releasePattern(SEXP ref, pDevDesc RGD) {
++	return;
++}
++SEXP void_setClipPath(SEXP path, SEXP ref, pDevDesc RGD) {
++	return R_NilValue;
++}
++void void_releaseClipPath(SEXP ref, pDevDesc RGD) {
++	return;
++}
++SEXP void_setMask(SEXP path, SEXP ref, pDevDesc RGD) {
++	return R_NilValue;
++}
++void void_releaseMask(SEXP ref, pDevDesc RGD) {
++	return;
++}
++void void_raster(unsigned int *raster, int w, int h,
++                double x, double y,
++                double width, double height,
++                double rot,
++                Rboolean interpolate,
++                const pGEcontext gc, pDevDesc dd) {
++	return;
++}
++void void_path(double *x, double *y,
++              int npoly, int *nper,
++              Rboolean winding,
++              const pGEcontext gc, pDevDesc dd) {
++	return;
++}
++
 +SEXP _canvas_new_device(SEXP args)
 +{
 +        /* R Graphics Device: in GraphicsDevice.h */
@@ -407,7 +441,7 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
 +                error("invalid color specification for `bg'");
 +        bgcolor = RGBpar(v, 0);
 +#ifdef CANVASDEBUG
-+        Rprintf("canvas_new_device(sel='%s')\n", sel);
++        Rprintf("canvas_new_device()\n");
 +#endif
 +
 +	R_CheckDeviceAvailable();
@@ -446,7 +480,17 @@ diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --excl
 +	RGD->strWidthUTF8 = canvasStrWidth;
 +	RGD->textUTF8 = canvasText;
 +	RGD->wantSymbolUTF8 = TRUE;
-+
++	RGD->path = void_path;
++	RGD->raster = void_raster;
++#if R_GE_version >= 13
++	RGD->setPattern      = void_setPattern;
++	RGD->releasePattern  = void_releasePattern;
++	RGD->setClipPath     = void_setClipPath;
++	RGD->releaseClipPath = void_releaseClipPath;
++	RGD->setMask         = void_setMask;
++	RGD->releaseMask     = void_releaseMask;
++	RGD->deviceVersion = R_GE_definitions;
++#endif
 +	/* Initialise RGD */
 +	RGD->left = RGD->clipLeft = 0;
 +	RGD->top = RGD->clipTop = 0;
