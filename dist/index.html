@@ -107,8 +107,25 @@
                                             var packages = [];
 											const builtin_packages = ['base', 'compiler', 'datasets', 'grDevices', 'graphics', 'grid', 'methods', 'parallel', 'splines',
 												'stats', 'stats4', 'tcltk', 'tools', 'translations', 'utils'];
+											const prereq_table = {
+												'ellipsis': ['rlang'],
+												'ggplot2': ['digest', 'colorspace', 'crayon', 'ellipsis', 'fansi', 'farver', 'glue', 'gtable', 'isoband',
+													'labeling', 'lattice', 'lifecycle', 'MASS', 'Matrix', 'mgcv', 'munsell', 'nlme', 'magrittr', 'pillar', 'pkgconfig',
+													'R6', 'RColorBrewer', 'rlang', 'scales', 'tibble', 'vctrs', 'viridisLite', 'withr', 'utf8'],
+												'lifecycle': ['rlang', 'glue'],
+												'Matrix': ['lattice'],
+												'mgcv': ['nlme', 'Matrix', 'lattice'],
+												'nmle': ['lattice'],
+												'pillar': [	'crayon', 'ellipsis', 'fansi', 'glue', 'lifecycle', 'rlang', 'utf8', 'vctrs'],
+												'tibble': [	'crayon', 'ellipsis', 'fansi', 'glue', 'lifecycle', 'magrittr', 'pillar', 'pkgconfig', 'rlang', 'vctrs', 'utf8'],
+												'scales': ['colorspace', 'farver', 'glue', 'labeling', 'lifecycle', 'munsell', 'R6', 'RColorBrewer', 'rlang', 'viridisLite'],
+												'vctrs': ['ellipsis', 'glue', 'rlang'],
+											};
                                             while((res = reg.exec(text)) !== null) {
 												if(!builtin_packages.includes(res[2])){
+													if(res[2] in prereq_table){
+														packages = prereq_table[res[2]].concat(packages);
+													}
 													packages.push(res[2]);
 												}
                                             }
@@ -185,7 +202,7 @@
                 resolve();
             } else {
                 loadedPackages.push(package_name);
-                console.log("Loading webR package: " + package_name);
+                term.echo("Downloading webR package: " + package_name);
                 window.Module['locateFile'] = function(path, prefix) {
                     return PKG_URL + package_name + "/" + path;
                 }
