@@ -15,7 +15,7 @@
             justify-content: center;
         }
         .box {
-			position: relative;
+            position: relative;
             width: 50vw;
             height: 100wh;
         }
@@ -30,11 +30,11 @@
             max-height: 80vh;
             max-width: 80vh;
         }
-		#plot-save {
-			position: absolute;
-			top: 0px;
-			left: 0px;
-		}
+        #plot-save {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+        }
         @media (orientation: portrait) {
             .dispbox {
                 flex-flow: column;
@@ -56,7 +56,7 @@
     <div class="dispbox">
         <div id='term' class="box"></div>
         <div id='plot' class="box dispbox">
-			<button id="plot-save">Save Plot</button>
+            <button id="plot-save">Save Plot</button>
             <canvas id='plot-canvas' class="box" width="1008" height="1008"></canvas>
         </div>
     </div>
@@ -108,16 +108,20 @@
                                             const builtin_packages = ['base', 'compiler', 'datasets', 'grDevices', 'graphics', 'grid', 'methods', 'parallel', 'splines',
                                                 'stats', 'stats4', 'tcltk', 'tools', 'translations', 'utils'];
                                             const prereq_table = {
+                                                'dplyr': [ 'cli', 'crayon', 'ellipsis', 'fansi', 'generics', 'glue', 'lifecycle', 'magrittr', 'pillar', 'pkgconfig', 'purrr',
+                                                    'R6', 'rlang', 'tibble', 'tidyselect','vctrs', 'utf8'],
                                                 'ellipsis': ['rlang'],
-                                                'ggplot2': ['digest', 'colorspace', 'crayon', 'ellipsis', 'fansi', 'farver', 'glue', 'gtable', 'isoband',
+                                                'ggplot2': ['digest', 'cli', 'colorspace', 'crayon', 'ellipsis', 'fansi', 'farver', 'glue', 'gtable', 'isoband',
                                                     'labeling', 'lattice', 'lifecycle', 'MASS', 'Matrix', 'mgcv', 'munsell', 'nlme', 'magrittr', 'pillar', 'pkgconfig',
                                                     'R6', 'RColorBrewer', 'rlang', 'scales', 'tibble', 'vctrs', 'viridisLite', 'withr', 'utf8'],
                                                 'lifecycle': ['rlang', 'glue'],
                                                 'Matrix': ['lattice'],
                                                 'mgcv': ['nlme', 'Matrix', 'lattice'],
                                                 'nmle': ['lattice'],
-                                                'pillar': [	'crayon', 'ellipsis', 'fansi', 'glue', 'lifecycle', 'rlang', 'utf8', 'vctrs'],
-                                                'tibble': [	'crayon', 'ellipsis', 'fansi', 'glue', 'lifecycle', 'magrittr', 'pillar', 'pkgconfig', 'rlang', 'vctrs', 'utf8'],
+                                                'pillar': ['crayon', 'ellipsis', 'fansi', 'glue', 'lifecycle', 'rlang', 'utf8', 'vctrs'],
+                                                'purrr': ['magrittr', 'rlang'],
+                                                'tibble': ['crayon', 'ellipsis', 'fansi', 'glue', 'lifecycle', 'magrittr', 'pillar', 'pkgconfig', 'rlang', 'vctrs', 'utf8'],
+                                                'tidyselect': ['ellipsis', 'glue', 'purrr', 'rlang', 'vctrs'],
                                                 'scales': ['colorspace', 'farver', 'glue', 'labeling', 'lifecycle', 'munsell', 'R6', 'RColorBrewer', 'rlang', 'viridisLite'],
                                                 'vctrs': ['ellipsis', 'glue', 'rlang'],
                                             };
