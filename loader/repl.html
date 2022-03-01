@@ -197,38 +197,53 @@
 </script>
 <script type="text/javascript" src="webR.js"></script>
 <script>
-    var FS_get_tree = function(node){
-        if(node.isFolder){
-            var info = {
-                'text': node.name,
-                'children':
-                Object.entries(node.contents).map(
-                    ([k, v], i) => FS_get_tree(v)
-                )
-            };
-            if(['/','home','web_user'].includes(node.name)){
-                info['state'] = {'opened': true};
+    var FSTree = {
+        jstree: null,
+        init: function(){
+            $('#jstree_fs').jstree({
+                "core" : {
+                    "check_callback" : true,
+                    "data" : this.cbNodeJSON(),
+                },
+                "plugins" : [ "contextmenu" ]
+            });
+            this.jstree = $('#jstree_fs').jstree();
+        },
+        getNodeJSON: function(node){
+            if(node.isFolder){
+                var info = {
+                    'text': node.name,
+                    'children':
+                    Object.entries(node.contents).map(
+                        ([k, v], i) => this.getNodeJSON(v)
+                    )
+                };
+                if(['/','home','web_user'].includes(node.name)){
+                    info['state'] = {'opened': true};
+                }
+                return info;
             }
-            return info;
-        }
-        return {'text': node.name, 'icon': 'jstree-file'};
-    };
-    var FS_node_info = function(obj, cb) {
-        var root = FS_get_tree(FS.open('/').node);
-        root['parent'] = '#';
-        cb.call(this, root);
+            return {'text': node.name, 'icon': 'jstree-file'};
+        },
+        cbNodeJSON: function(){
+            var self = this;
+            return function(obj, cb) {
+                console.log(obj);
+                var json;
+                if(obj.id === '#'){
+                    json = self.getNodeJSON(FS.open('/').node);
+                    json['parent'] = '#';
+                    json['state']['selected'] = true;
+                }
+                cb.call(this, json);
+            };
+        },
     };
     var webRPromise = loadWebR({
         Rargs: [],
         runtimeInitializedCB: function(){
+            FSTree.init();
             term.clear();
-            $('#jstree_fs').jstree({
-                "core" : {
-                    "check_callback" : true,
-                    "data" : FS_node_info
-                },
-                "plugins" : [ "contextmenu" ]
-            });
         },
         loadingPackageCB: function(packageName){
             term.echo("Downloading webR package: " + packageName);

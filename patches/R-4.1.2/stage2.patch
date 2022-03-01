@@ -207,10 +207,8 @@ diff -ur R-4.1.2_web/src/library/stats/src/ppr.f R-4.1.2/src/library/stats/src/p
      R_CheckUserInterrupt();
  }
 diff -ur --exclude '*.o' --exclude '*.d' --exclude '*.so' --exclude '*.a' --exclude '*.s' --exclude Makefile --exclude Makeconf --exclude libtool --exclude config.log R-4.1.2/src/main/main.c R-4.1.2_web/src/main/main.c
---- R-4.1.2/src/main/main.c 2021-09-30 10:22:47.000000000 +0100                                                                                                                                                                               +++ R-4.1.2_web/src/main/main.c 2022-01-21 17:29:19.381163092 +0000                                                                                                                                                                           @@ -206,7 +206,7 @@                                                                                                                                                                                                                                /* clear warnings that might have accumulated during a jump to top level */                                                                                                                                                                   if (R_CollectWarnings)                                                                                                                                                                                                                         PrintWarnings();                                                                                                                                                                                                                        -                                                                                                                                                                                                                                             +
-     if(!*state->bufp) {
-          R_Busy(0);
-          if (R_ReadConsole(R_PromptString(browselevel, state->prompt_type),
+--- R-4.1.2/src/main/main.c 2021-09-30 10:22:47.000000000 +0100
++++ R-4.1.2_web/src/main/main.c 2022-01-21 17:29:19.381163092 +0000
 @@ -300,26 +300,68 @@
      return(0);
  }
