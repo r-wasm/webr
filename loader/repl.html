@@ -5,24 +5,68 @@
     <script src="https://cdn.rawgit.com/jcubic/jquery.terminal/master/js/jquery.terminal.min.js"></script>
     <link href="https://cdn.rawgit.com/jcubic/jquery.terminal/master/css/jquery.terminal.min.css" rel="stylesheet"/>
     <script src="https://cdn.rawgit.com/jcubic/jquery.terminal/master/js/unix_formatting.js"></script>
-    <script src="https://unpkg.com/xhr-mock/dist/xhr-mock.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
     <style>
         body {
             margin: 0;
+            font-family: sans-serif;
+            overflow:hidden;
+        }
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            background: #eee;
+            height: 100%;
+            min-height: 100%;
+            align-items: flex-start;
+            align-content: flex-start;
+        }
+        .tabs label {
+            order: 1;
+            display: block;
+            padding: 6px 25px;
+            margin-right: 0.2rem;
+            cursor: pointer;
+            background: #ccc;
+            font-weight: bold;
+            transition: background ease 0.2s;
+        }
+        .tabs .tab {
+            order: 99;
+            flex-grow: 1;
+            width: 100%;
+            display: none;
+            background: #fff;
+            padding-top: 5px;
+            height: calc(100% - 30px);
+        }
+        .tabs input[type="radio"] {
+            display: none;
+        }
+        .tabs input[type="radio"]:checked + label {
+            background: #fff;
+        }
+        .tabs input[type="radio"]:checked + label + .tab {
+            display: block;
         }
         .dispbox {
             display: flex;
-            height: 100vh;
             justify-content: center;
+        }
+        .main {
+            height: 100vh;
         }
         .box {
             position: relative;
             width: 50vw;
-            height: 100wh;
+            height: 100vh;
         }
         #plot {
             background-color: #727272;
             align-items: center;
+            height: 100%;
+            position: relative;
         }
         #plot-canvas {
             background-color: #FFFFFF;
@@ -33,8 +77,8 @@
         }
         #plot-save {
             position: absolute;
-            top: 0px;
-            left: 0px;
+            top: 5px;
+            right: 5px;
         }
         @media (orientation: portrait) {
             .dispbox {
@@ -54,11 +98,25 @@
     </style>
 </head>
 <body>
-    <div class="dispbox">
+    <div class="main dispbox">
         <div id='term' class="box"></div>
-        <div id='plot' class="box dispbox">
-            <button id="plot-save">Save Plot</button>
-            <canvas id='plot-canvas' class="box" width="1008" height="1008"></canvas>
+        <div class="box">
+            <div class="tabs">
+                <input type="radio" id="plots-tab" name="tab-group-1" checked="checked">
+                <label for="plots-tab">Plots</label>
+                <div class="tab">
+                    <div id='plot' class="dispbox">
+                        <button id="plot-save">Save Plot</button>
+                        <canvas id='plot-canvas' class="box" width="1008" height="1008"></canvas>
+                    </div>
+                </div>
+                <input type="radio" id="files-tab" name="tab-group-1">
+                <label for="files-tab">Files</label>
+                <div class="tab">
+                    <div id="jstree_fs">
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </body>
@@ -106,42 +164,18 @@
                                             var reg = /(library|require)\(['"]?(.*?)['"]?\)/g;
                                             var res;
                                             var packages = [];
-                                            const builtin_packages = ['base', 'compiler', 'datasets', 'grDevices', 'graphics', 'grid', 'methods', 'parallel', 'splines',
-                                                'stats', 'stats4', 'tcltk', 'tools', 'translations', 'utils'];
-                                            const prereq_table = {
-                                                'dplyr': [ 'cli', 'crayon', 'ellipsis', 'fansi', 'generics', 'glue', 'lifecycle', 'magrittr', 'pillar', 'pkgconfig', 'purrr',
-                                                    'R6', 'rlang', 'tibble', 'tidyselect','vctrs', 'utf8'],
-                                                'ellipsis': ['rlang'],
-                                                'ggplot2': ['digest', 'cli', 'colorspace', 'crayon', 'ellipsis', 'fansi', 'farver', 'glue', 'gtable', 'isoband',
-                                                    'labeling', 'lattice', 'lifecycle', 'MASS', 'Matrix', 'mgcv', 'munsell', 'nlme', 'magrittr', 'pillar', 'pkgconfig',
-                                                    'R6', 'RColorBrewer', 'rlang', 'scales', 'tibble', 'vctrs', 'viridisLite', 'withr', 'utf8'],
-                                                'lifecycle': ['rlang', 'glue'],
-                                                'Matrix': ['lattice'],
-                                                'mgcv': ['nlme', 'Matrix', 'lattice'],
-                                                'nmle': ['lattice'],
-                                                'pillar': ['crayon', 'ellipsis', 'fansi', 'glue', 'lifecycle', 'rlang', 'utf8', 'vctrs'],
-                                                'purrr': ['magrittr', 'rlang'],
-                                                'tibble': ['crayon', 'ellipsis', 'fansi', 'glue', 'lifecycle', 'magrittr', 'pillar', 'pkgconfig', 'rlang', 'vctrs', 'utf8'],
-                                                'tidyselect': ['ellipsis', 'glue', 'purrr', 'rlang', 'vctrs'],
-                                                'scales': ['colorspace', 'farver', 'glue', 'labeling', 'lifecycle', 'munsell', 'R6', 'RColorBrewer', 'rlang', 'viridisLite'],
-                                                'vctrs': ['ellipsis', 'glue', 'rlang'],
-                                            };
                                             while((res = reg.exec(text)) !== null) {
-                                                if(!builtin_packages.includes(res[2])){
-                                                    if(res[2] in prereq_table){
-                                                        packages = prereq_table[res[2]].concat(packages);
-                                                    }
-                                                    packages.push(res[2]);
-                                                }
+                                                packages.push(res[2]);
                                             }
-                                            packages.reduce(function(cur, next) {
-                                                return cur.then(_ => loadPackage(next));
-                                            }, Promise.resolve()).then(_ => {
-                                                props.responseText = text;
-                                                target.onload();
-                                            }, function(e) {
-                                                props.responseText = text;
-                                                target.onload()
+                                            webRPromise.then( function(webR) {
+                                                webR.loadPackages(packages).then(_ => {
+                                                    props.responseText = text;
+                                                    target.onload();
+                                                }, function(e) {
+                                                    console.log("An error occured loading one or more packages. Perhaps they do not exist in webR-ports.");
+                                                    props.responseText = text;
+                                                    target.onload()
+                                                });
                                             });
                                         }
                                     );
@@ -160,78 +194,61 @@
             });
         };
     })(window.XMLHttpRequest);
-    // below code modified from emscripten output html
-    var Module = {
-        preRun: [function(){
-            ENV.R_NSIZE="1000000";
-            ENV.R_VSIZE="64M";
-            ENV.R_HOME="/usr/lib/R";
-            ENV.R_ENABLE_JIT="0";
-            ENV.R_DEFAULT_DEVICE="canvas";
-            ENV.COLORTERM="truecolor";
-        }],
-        postRun: [],
-        print: function(text) {
+</script>
+<script type="text/javascript" src="webR.js"></script>
+<script>
+    var FS_get_tree = function(node){
+        if(node.isFolder){
+            var info = {
+                'text': node.name,
+                'children':
+                Object.entries(node.contents).map(
+                    ([k, v], i) => FS_get_tree(v)
+                )
+            };
+            if(['/','home','web_user'].includes(node.name)){
+                info['state'] = {'opened': true};
+            }
+            return info;
+        }
+        return {'text': node.name, 'icon': 'jstree-file'};
+    };
+    var FS_node_info = function(obj, cb) {
+        var root = FS_get_tree(FS.open('/').node);
+        root['parent'] = '#';
+        cb.call(this, root);
+    };
+    var webRPromise = loadWebR({
+        Rargs: [],
+        runtimeInitializedCB: function(){
+            term.clear();
+            $('#jstree_fs').jstree({
+                "core" : {
+                    "check_callback" : true,
+                    "data" : FS_node_info
+                },
+                "plugins" : [ "contextmenu" ]
+            });
+        },
+        loadingPackageCB: function(packageName){
+            term.echo("Downloading webR package: " + packageName);
+        },
+        ENV: {
+            R_NSIZE: "1000000",
+            R_VSIZE: "64M",
+            R_HOME: "/usr/lib/R",
+            R_ENABLE_JIT: "0",
+            R_DEFAULT_DEVICE: "canvas",
+            COLORTERM: "truecolor",
+        },
+        stdout: function(text) {
             term.echo(text);
         },
-        printErr: function(text) {
+        stderr: function(text) {
             if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
             term.error(text);
         },
-        canvas: (function() {
-            var canvas = document.createElement('canvas');
-            // As a default initial behavior, pop up an alert when webgl context is lost. To make your
-            // application robust, you may want to override this behavior before shipping!
-            // See http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
-            canvas.addEventListener("webglcontextlost", function(e) { alert('WebGL context lost. You will need to reload the page.'); e.preventDefault(); }, false);
-            return canvas;
-        })(),
-        setStatus: function(text) {
-        },
-        totalDependencies: 0,
-        _monitorRunDependencies: function(left) {
-            this.totalDependencies = Math.max(this.totalDependencies, left);
-            Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
-        },
-        monitorRunDependencies: left => Module._monitorRunDependencies(left),
-        onRuntimeInitialized: function(){
-            term.clear();
-        },
-    };
-    Module.setStatus('Downloading...');
-    window.onerror = function(event) {
-        // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
-        Module.setStatus('Exception thrown, see JavaScript console');
-        Module.setStatus = function(text) {
-            if (text) console.log('[post-exception status] ' + text);
-        };
-    };
-    var PKG_URL = "https://cdn.jsdelivr.net/gh/georgestagg/webr-ports@latest/dist/";
-    var loadedPackages = [];
-    var loadPackage = function(package_name){
-        return new Promise(function (resolve, reject) {
-            if (loadedPackages.includes(package_name)){
-                resolve();
-            } else {
-                loadedPackages.push(package_name);
-                term.echo("Downloading webR package: " + package_name);
-                window.Module['locateFile'] = function(path, prefix) {
-                    return PKG_URL + package_name + "/" + path;
-                }
-                var script = document.createElement('script');
-                script.setAttribute('src',PKG_URL + package_name + "/" + package_name + ".js");
-                script.onerror = reject;
-                Module.monitorRunDependencies = function(left) {
-                    Module._monitorRunDependencies(left);
-                    if(left == 0){
-                        monitorRunDependencies = left => Module._monitorRunDependencies(left);
-                        resolve();
-                    }
-                };
-                document.head.appendChild(script);
-            }
-        });
-    };
+    });
     const download = document.getElementById('plot-save');
     download.addEventListener('click', function (e) {
         const link = document.createElement('a');
@@ -241,5 +258,4 @@
         link.delete;
     });
 </script>
-<script async type="text/javascript" src="R.bin.js"></script>
 </html>
