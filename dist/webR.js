@@ -54,6 +54,9 @@ function loadWebR(options){
             FS.close(stream);
             return buf;
         },
+        putFileData: async function(name, data){
+            window.Module['FS_createDataFile']('/', name, data, true, true, true);
+        },
         loadedPackages: [],
         loadPackages: function(packages){
             return packages.reduce(function(curPromise, packageName) {

@@ -80,6 +80,13 @@
             top: 5px;
             right: 5px;
         }
+        #files-bar {
+            display: flex;
+            flex-wrap: wrap;
+            flex-direction: row;
+            align-items: stretch;
+            width: 100%;
+        }
         @media (orientation: portrait) {
             .dispbox {
                 flex-flow: column;
@@ -103,7 +110,7 @@
         <div class="box">
             <div class="tabs">
                 <input type="radio" id="plots-tab" name="tab-group-1" checked="checked">
-                <label for="plots-tab">Plots</label>
+                <label for="plots-tab">Plotting</label>
                 <div class="tab">
                     <div id='plot' class="dispbox">
                         <button id="plot-save">Save Plot</button>
@@ -113,6 +120,13 @@
                 <input type="radio" id="files-tab" name="tab-group-1">
                 <label for="files-tab">Files</label>
                 <div class="tab">
+                    <div>
+                        <div id="files-bar">
+                            <button id="upload-file" onclick="document.getElementById('input-upload').click();" style="flex: 1">Upload File</button>
+                            <input id="input-upload" type="file" onchange="FSTree.uploadFile(this);" style="display: none"/>
+                            <button id="download-file" disabled style="flex: 1">Download File</button>
+                        </div>
+                    </div>
                     <div id="jstree_fs">
                     </div>
                 </div>
@@ -171,6 +185,7 @@
                                                 webR.loadPackages(packages).then(_ => {
                                                     props.responseText = text;
                                                     target.onload();
+                                                    FSTree.jstree.refresh();
                                                 }, function(e) {
                                                     console.log("An error occured loading one or more packages. Perhaps they do not exist in webR-ports.");
                                                     props.responseText = text;
@@ -200,14 +215,70 @@
     var FSTree = {
         jstree: null,
         init: function(){
-            $('#jstree_fs').jstree({
+            $('#jstree_fs').on('changed.jstree', function (e, data) {
+                if(data.selected.length > 0){
+                    var node = this.jstree.get_node(data.selected[0]);
+                    if(node.icon == "jstree-file"){
+                        $('#download-file').prop('disabled', false);
+                        $('#upload-file').prop('disabled', true);
+                    } else {
+                        $('#download-file').prop('disabled', true);
+                        $('#upload-file').prop('disabled', false);
+                    }
+                }
+            }.bind(this)).jstree({
                 "core" : {
                     "check_callback" : true,
                     "data" : this.cbNodeJSON(),
+                    "multiple": false,
                 },
-                "plugins" : [ "contextmenu" ]
             });
             this.jstree = $('#jstree_fs').jstree();
+        },
+        getSelectedNode: function(){
+            var nodes = this.jstree.get_selected(true);
+            if (nodes.length > 0){
+                return nodes[0];
+            }
+            return null;
+        },
+        getNodeFileName: function(node){
+            var parents = node.parents.map(nid => this.jstree.get_node(nid).text).reverse().slice(1);
+            parents.push(node.text);
+            parents[0]='';
+            return parents.join('/');
+        },
+        downloadNodeasFile: function(node){
+            var filename = node.text;
+            var filepath = this.getNodeFileName(node);
+            webRPromise.then(webR => webR.getFileData(filepath)).then( data => {
+                var blob = new Blob([data], {type: "application/octet-stream"});
+                var url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = url;
+                link.click();
+                link.delete;
+            });
+        },
+        uploadFile: function(fileInput){
+            var node = this.getSelectedNode();
+            var filepath = this.getNodeFileName(node);
+            if (filepath === ''){
+                filepath = '/';
+            }
+            if (fileInput.files.length == 0)
+                return;
+            var file = fileInput.files[0];
+            var fr = new FileReader();
+            fr.onload = function () {
+                var data = new Uint8Array(fr.result);
+                webRPromise.then(webR => webR.putFileData(filepath + '/' + file.name, data)).then( function(){
+                    this.jstree.refresh()
+                }.bind(this));
+                fileInput.value = '';
+            }.bind(this);
+            fr.readAsArrayBuffer(file);
         },
         getNodeJSON: function(node){
             if(node.isFolder){
@@ -218,7 +289,7 @@
                         ([k, v], i) => this.getNodeJSON(v)
                     )
                 };
-                if(['/','home','web_user'].includes(node.name)){
+                if(['/'].includes(node.name)){
                     info['state'] = {'opened': true};
                 }
                 return info;
@@ -228,7 +299,6 @@
         cbNodeJSON: function(){
             var self = this;
             return function(obj, cb) {
-                console.log(obj);
                 var json;
                 if(obj.id === '#'){
                     json = self.getNodeJSON(FS.open('/').node);
@@ -264,8 +334,12 @@
             term.error(text);
         },
     });
-    const download = document.getElementById('plot-save');
+    const download = document.getElementById('download-file');
     download.addEventListener('click', function (e) {
+        FSTree.downloadNodeasFile(FSTree.getSelectedNode());
+    });
+    const plotsave = document.getElementById('plot-save');
+    plotsave.addEventListener('click', function (e) {
         const link = document.createElement('a');
         link.download = 'plot.png';
         link.href = document.getElementById('plot-canvas').toDataURL();
