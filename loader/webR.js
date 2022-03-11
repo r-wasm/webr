@@ -26,11 +26,13 @@ function loadWebR(options){
             'nlme': ['lattice'],
             'pillar': ['cli', 'crayon', 'ellipsis', 'fansi', 'glue', 'lifecycle', 'rlang', 'utf8', 'vctrs'],
             'purrr': ['magrittr', 'rlang'],
+            'readr': ['cli', 'clipr', 'crayon', 'hms', 'lifecycle', 'R6', 'rlang', 'tibble', 'vroom'],
             'stringr': ['glue', 'magrittr', 'stringi'],
             'tibble': ['ellipsis', 'fansi', 'lifecycle', 'magrittr', 'pillar', 'pkgconfig', 'rlang', 'vctrs'],
             'tidyselect': ['ellipsis', 'glue', 'purrr', 'rlang', 'vctrs'],
             'scales': ['farver', 'labeling', 'lifecycle', 'munsell', 'R6', 'RColorBrewer', 'viridisLite'],
             'vctrs': ['ellipsis', 'glue', 'rlang'],
+            'vroom': ['bit64', 'crayon', 'cli', 'glue', 'hms', 'lifecycle', 'rlang', 'tibble', 'tzdb', 'vctrs', 'tidyselect', 'withr'],
         },
         runRAsync: async function(code){
             var reg = /(library|require)\(['"]?(.*?)['"]?\)/g;
