@@ -26,6 +26,7 @@ function loadWebR(options){
             'nlme': ['lattice'],
             'pillar': ['cli', 'crayon', 'ellipsis', 'fansi', 'glue', 'lifecycle', 'rlang', 'utf8', 'vctrs'],
             'purrr': ['magrittr', 'rlang'],
+            'stringr': ['glue', 'magrittr', 'stringi'],
             'tibble': ['ellipsis', 'fansi', 'lifecycle', 'magrittr', 'pillar', 'pkgconfig', 'rlang', 'vctrs'],
             'tidyselect': ['ellipsis', 'glue', 'purrr', 'rlang', 'vctrs'],
             'scales': ['farver', 'labeling', 'lifecycle', 'munsell', 'R6', 'RColorBrewer', 'viridisLite'],
