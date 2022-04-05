@@ -1,6 +1,14 @@
 #!/bin/bash
-OUT=`echo "$@" | sed -n 's/.* -o \(.*\).*/\1/p' | cut -d " " -f1`
-gfortran-4.6 -emit-llvm -S -flto -m32 -fverbose-asm -nostdlib -fplugin=/app/bin/dragonegg.so "$@" && \
+
+# Find the object name
+OUT=`echo "$@" | sed -n 's/.*-o \(.*\).*/\1/p' | cut -d " " -f1`
+if [[ -z "${OUT}" ]]; then
+  OUT=`echo "$@" | grep -o "[^ ]*\.f"`
+  OUT="${OUT%.*}.o"
+  EXTRA_FFLAGS="-o ${OUT}"
+fi
+
+gfortran-4.6 -emit-llvm -S -flto -m32 -fverbose-asm -nostdlib -fplugin=/app/bin/dragonegg.so "$@" ${EXTRA_FFLAGS} && \
 sed -i 's/^\(target\sdatalayout\s*=\s*\).*$/\1"e-m:e-p:32:32-i64:64-n32:64-S128"/' "$OUT" && \
 sed -i 's/^\(target\striple\s*=\s*\).*$/\1"wasm32-unknown-emscripten"/' "$OUT" && \
 
@@ -13,10 +21,12 @@ while read -r line ; do
     symbol=`echo $line | cut -d' ' -f3 | cut -d'(' -f1`
     cast=`egrep -o "${symbol} to ${retval} \([^)]+\)"  "${OUT}.ll.orig" | head -n 1`
     args=`echo ${cast} | cut -d'(' -f2 | cut -d')' -f1`
-    sed -i "s/declare ${retval} ${symbol}(\.\.\.)/declare ${retval} ${symbol}(${args})/" "${OUT}"
-    sed -i "s/${retval} (\.\.\.)\* ${symbol} to ${retval}/${retval} (${args})* ${symbol} to ${retval}/" "${OUT}"
-    echo "patching ${retval} ${symbol}(...) to ${retval} ${symbol}(${args})"
-done < <(egrep '@.*_\(\.\.\.\)' "${OUT}.ll.orig")
+    sed -i "s/declare ${retval} ${symbol}([^)(]*,\?\s\?\.\.\.)/declare ${retval} ${symbol}(${args})/" "${OUT}"
+    sed -i "s/${retval} ([^)(]*,\?\s\?\.\.\.)\* ${symbol} to ${retval}/${retval} (${args})* ${symbol} to ${retval}/" "${OUT}"
+    echo "patching ${retval} ${symbol} to ${retval} ${symbol}(${args})"
+done < <(egrep '@.*_\([^)(]*,?\s?\.\.\.\)' "${OUT}.ll.orig")
+sed -i "s/@cabs(/@cabs_alt(/" "${OUT}"
+sed -i "s/@csqrt(/@csqrt_alt(/" "${OUT}"
 if [ -z "$KEEP_TEMPS" ]; then rm "${OUT}.ll.orig"; fi
 ########
 

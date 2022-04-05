@@ -11,10 +11,9 @@ tar xvf download
 cd xz-${XZ_VERSION}
 mkdir -p build
 cd build
-CFLAGS="-fPIC -Oz" emconfigure ../configure --enable-shared=no --enable-static=yes --prefix=/tmp/xz
+CFLAGS="-fPIC -Oz" emconfigure ../configure --enable-shared=yes --enable-static=yes --prefix=/app/build/Rlibs
 emmake make install
 
-mkdir -p /app/build/Rlibs/lib
-mkdir -p /app/build/Rlibs/include
-cp src/liblzma/.libs/liblzma.a /app/build/Rlibs/lib/
-cp -r /tmp/xz/include/* /app/build/Rlibs/include/
+# Remove symlinks to avoid overriding native system libraries
+cd /app/build/Rlibs/lib/
+rm liblzma.so liblzma.so.5

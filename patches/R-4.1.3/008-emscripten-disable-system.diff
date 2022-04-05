@@ -1,0 +1,17 @@
+Index: R-4.1.3_quilt/src/library/base/R/unix/system.unix.R
+===================================================================
+--- R-4.1.3_quilt.orig/src/library/base/R/unix/system.unix.R
++++ R-4.1.3_quilt/src/library/base/R/unix/system.unix.R
+@@ -35,6 +35,12 @@ system <- function(command, intern = FAL
+     if(!is.logical(wait) || is.na(wait))
+         stop("'wait' must be TRUE or FALSE")
+ 
++    # Disable system() command when running under emscripten
++    # Try to carry on regardless, as if it had worked but produced no output
++    if(grepl("emscripten", R.version$os)) {
++    	return(c("", ""))
++    }
++
+     if(ignore.stdout) command <- paste(command, ">/dev/null")
+     if(ignore.stderr) command <- paste(command, "2>/dev/null")
+     if(!is.null(input)) {

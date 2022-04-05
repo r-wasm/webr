@@ -1,0 +1,20 @@
+Index: R-4.1.3_quilt/src/main/platform.c
+===================================================================
+--- R-4.1.3_quilt.orig/src/main/platform.c
++++ R-4.1.3_quilt/src/main/platform.c
+@@ -3395,6 +3395,7 @@ do_eSoftVersion(SEXP call, SEXP op, SEXP
+     if (!dladdr((void *)do_eSoftVersion, &dl_info1)) ok = FALSE;
+     if (!dladdr((void *)dladdr, &dl_info2)) ok = FALSE;
+ 
++#ifndef __EMSCRIPTEN__
+     if (ok && !strcmp(dl_info1.dli_fname, dl_info2.dli_fname)) {
+ 
+ 	/* dladdr is not inside R, hence we probably have the PLT for
+@@ -3422,6 +3423,7 @@ do_eSoftVersion(SEXP call, SEXP op, SEXP
+ 		dgemm_addr = dgemm_next_addr;
+ 	}
+     }
++#endif
+ 
+     char buf[PATH_MAX+1];
+     if (ok && dladdr(dgemm_addr, &dl_info1)) {

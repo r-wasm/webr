@@ -1,0 +1,74 @@
+Index: R-4.1.3_quilt/src/include/Defn.h
+===================================================================
+--- R-4.1.3_quilt.orig/src/include/Defn.h
++++ R-4.1.3_quilt/src/include/Defn.h
+@@ -581,32 +581,33 @@ typedef struct RCNTXT {
+  *   CTXT_NEWTYPE & CTXT_FUNCTION > 0
+  */
+ enum {
+-    CTXT_TOPLEVEL = 0,
+-    CTXT_NEXT	  = 1,
+-    CTXT_BREAK	  = 2,
+-    CTXT_LOOP	  = 3,	/* break OR next target */
+-    CTXT_FUNCTION = 4,
+-    CTXT_CCODE	  = 8,
+-    CTXT_RETURN	  = 12,
+-    CTXT_BROWSER  = 16,
+-    CTXT_GENERIC  = 20,
+-    CTXT_RESTART  = 32,
+-    CTXT_BUILTIN  = 64, /* used in profiling */
+-    CTXT_UNWIND   = 128
++    CTXT_UNUSED   = 0,
++    CTXT_TOPLEVEL = 1,
++    CTXT_NEXT	  = 2,
++    CTXT_BREAK	  = 4,
++    CTXT_LOOP	  = 6,	/* break OR next target */
++    CTXT_FUNCTION = 8,
++    CTXT_CCODE	  = 16,
++    CTXT_RETURN	  = 24,
++    CTXT_BROWSER  = 32,
++    CTXT_GENERIC  = 40,
++    CTXT_RESTART  = 64,
++    CTXT_BUILTIN  = 128, /* used in profiling */
++    CTXT_UNWIND   = 256
+ };
+ 
+ /*
+-TOP   0 0 0 0 0 0  = 0
+-NEX   1 0 0 0 0 0  = 1
+-BRE   0 1 0 0 0 0  = 2
+-LOO   1 1 0 0 0 0  = 3
+-FUN   0 0 1 0 0 0  = 4
+-CCO   0 0 0 1 0 0  = 8
+-BRO   0 0 0 0 1 0  = 16
+-RET   0 0 1 1 0 0  = 12
+-GEN   0 0 1 0 1 0  = 20
+-RES   0 0 0 0 0 0 1 = 32
+-BUI   0 0 0 0 0 0 0 1 = 64
++TOP   1 0 0 0 0 0  = 1
++NEX   0 1 0 0 0 0  = 2
++BRE   0 0 1 0 0 0  = 4
++LOO   0 1 1 0 0 0   = 6
++FUN   0 0 0 1 0 0   = 8
++CCO   0 0 0 0 1 0   = 16
++BRO   0 0 0 0 0 1   = 32
++RET   0 0 0 1 1 0   = 24
++GEN   0 0 0 1 0 1   = 40
++RES   0 0 0 0 0 0 1 = 64
++BUI   0 0 0 0 0 0 0 1 = 128
+ */
+ 
+ #define IS_RESTART_BIT_SET(flags) ((flags) & CTXT_RESTART)
+Index: R-4.1.3_quilt/src/main/errors.c
+===================================================================
+--- R-4.1.3_quilt.orig/src/main/errors.c
++++ R-4.1.3_quilt/src/main/errors.c
+@@ -1075,7 +1075,7 @@ static void jump_to_top_ex(Rboolean trac
+ 	}
+     }
+ 
+-    R_jumpctxt(R_ToplevelContext, 0, NULL);
++    R_jumpctxt(R_ToplevelContext, CTXT_TOPLEVEL, NULL);
+ }
+ 
+ void NORET jump_to_toplevel()

@@ -1,0 +1,39 @@
+Index: R-4.1.3_quilt/Makefile.in
+===================================================================
+--- R-4.1.3_quilt.orig/Makefile.in
++++ R-4.1.3_quilt/Makefile.in
+@@ -90,6 +90,11 @@ stamp-java : etc/Makeconf etc/javaconf $
+ javaconf: R
+ 	@$(MAKE) stamp-java
+ 
++install-wasm:
++	@for d in $(SUBDIRS); do \
++	  (cd $${d} && $(MAKE) install) \
++	done
++	-@(cd src/main && $(MAKE) $@)
+ 
+ install install-strip: installdirs svnonly
+ 	@for d in $(SUBDIRS); do \
+Index: R-4.1.3_quilt/src/main/Makefile.in
+===================================================================
+--- R-4.1.3_quilt.orig/src/main/Makefile.in
++++ R-4.1.3_quilt/src/main/Makefile.in
+@@ -147,6 +147,18 @@ R: Makedeps
+ $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
+ 	$(MAIN_LINK) -o $@ $(R_bin_OBJECTS) $(R_bin_LDADD)
+ 
++$(R_binary).js: $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
++	$(MAIN_LINK) --use-preload-plugins \
++	--preload-file "$(prefix)/lib@/usr/lib" \
++	-o $(prefix)/dist/$(R_binary).js \
++	$(R_bin_OBJECTS) -lRlapack -lgfortran $(R_bin_LDADD)
++
++install-wasm: $(R_bin_DEPENDENCIES)
++	@$(MKINSTALLDIRS) "$(prefix)/dist"
++	@mv "$(Rexeclibdir)/libRblas.so" "$(prefix)/dist/libRblas.so"
++	@mv "$(Rexeclibdir)/libRlapack.so" "$(prefix)/dist/libRlapack.so"
++	@$(MAKE) $(R_binary).js
++
+ libR.a: $(OBJECTS) $(STATIC_LIBS)
+ 	-@mkdir libs
+ 	@(cd libs; for l in $(STATIC_LIBS); do $(AR) -x ../$$l; done)

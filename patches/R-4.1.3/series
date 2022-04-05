@@ -1,0 +1,13 @@
+000-emscripten-configure.diff
+001-emscripten-makefiles.diff
+003-emscripten-unimplmented.diff
+004-emscripten-includes.diff
+005-emscripten-xdr.diff
+006-emscripten-dotcall-trampoline.diff
+007-emscripten-linklist-hack.diff
+008-emscripten-disable-system.diff
+009-emscripten-input.diff
+010-emscripten-canvas-device.diff
+011-emscripten-no-blas-dlsym-search.diff
+100-dynload-remove-extra-path-separator.diff
+101-context-shift.diff

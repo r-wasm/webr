@@ -1,0 +1,156 @@
+Index: R-4.1.3_quilt/src/main/main.c
+===================================================================
+--- R-4.1.3_quilt.orig/src/main/main.c
++++ R-4.1.3_quilt/src/main/main.c
+@@ -306,6 +306,68 @@ Rf_ReplIteration(SEXP rho, int savestack
+     return(0);
+ }
+ 
++#ifdef __EMSCRIPTEN__
++#include <emscripten.h>
++#include <emscripten/fetch.h>
++
++R_ReplState global_repl_state_async;
++SEXP global_rho_async;
++int global_savestack_async;
++int global_browselevel_async;
++
++int EMSCRIPTEN_KEEPALIVE run_R_from_JS(unsigned char* evalString, unsigned int n) {
++    R_IoBufferReadReset(&R_ConsoleIob);
++    R_IoBufferWriteReset(&R_ConsoleIob);
++    if(SETJMP(R_ToplevelContext->cjmpbuf) > 0){
++        return -1;
++    }
++    unsigned char * buf = (unsigned char *) malloc(n+2);
++    strncpy((char*) buf, (char*)evalString, n);
++    buf[n] = '\n';
++    buf[n+1] = '\0';
++    global_repl_state_async.bufp = buf;
++    while(*global_repl_state_async.bufp && Rf_ReplIteration(global_rho_async, global_savestack_async, global_browselevel_async, &global_repl_state_async) >= 0);
++    free(buf);
++    free(evalString);
++    return 0;
++}
++
++void repl_read_success(emscripten_fetch_t *fetch) {
++    memset(global_repl_state_async.buf, 0, CONSOLE_BUFFER_SIZE+1);
++    strncpy((char*)(global_repl_state_async.buf), fetch->data, CONSOLE_BUFFER_SIZE+1);
++    global_repl_state_async.buf[fetch->numBytes] = '\n';
++    global_repl_state_async.buf[fetch->numBytes+1] = '\0';
++    emscripten_fetch_close(fetch);
++    if(SETJMP(R_ToplevelContext->cjmpbuf) > 0){
++        R_IoBufferReadReset(&R_ConsoleIob);
++     R_IoBufferWriteReset(&R_ConsoleIob);
++     memset(global_repl_state_async.buf, 0, CONSOLE_BUFFER_SIZE+1);
++    }
++    global_repl_state_async.bufp = global_repl_state_async.buf;
++    while(Rf_ReplIteration(global_rho_async, global_savestack_async, global_browselevel_async, &global_repl_state_async) >= 0);
++}
++
++void repl_read_fail(emscripten_fetch_t *fetch) {
++    emscripten_fetch_close(fetch);
++}
++
++static void R_ReplConsole(SEXP rho, int savestack, int browselevel)
++{
++    global_repl_state_async.status = PARSE_NULL;
++    global_repl_state_async.prompt_type = 1;
++    global_repl_state_async.browselevel = 0;
++    global_repl_state_async.bufp = NULL;
++    R_IoBufferWriteReset(&R_ConsoleIob);
++    global_repl_state_async.buf[0] = '\0';
++    global_repl_state_async.buf[CONSOLE_BUFFER_SIZE] = '\0';
++    global_repl_state_async.bufp = global_repl_state_async.buf;
++    global_rho_async = rho;
++    global_savestack_async = savestack;
++    global_browselevel_async = browselevel;
++
++    Rf_ReplIteration(global_rho_async, global_savestack_async, global_browselevel_async, &global_repl_state_async);
++}
++#else
+ static void R_ReplConsole(SEXP rho, int savestack, int browselevel)
+ {
+     int status;
+@@ -327,6 +389,7 @@ static void R_ReplConsole(SEXP rho, int
+ 	}
+     }
+ }
++#endif
+ 
+ 
+ static unsigned char DLLbuf[CONSOLE_BUFFER_SIZE+1], *DLLbufp;
+@@ -1118,12 +1181,14 @@ extern SA_TYPE SaveAction; /* from src/m
+ 
+ static void end_Rmainloop(void)
+ {
++#ifndef __EMSCRIPTEN__
+     /* refrain from printing trailing '\n' in no-echo mode */
+     if (!R_NoEcho)
+ 	Rprintf("\n");
+     /* run the .Last function. If it gives an error, will drop back to main
+        loop. */
+     R_CleanUp(SA_DEFAULT, 0, 1);
++#endif
+ }
+ 
+ void run_Rmainloop(void)
+Index: R-4.1.3_quilt/src/unix/sys-std.c
+===================================================================
+--- R-4.1.3_quilt.orig/src/unix/sys-std.c
++++ R-4.1.3_quilt/src/unix/sys-std.c
+@@ -61,6 +61,7 @@
+ 
+ #ifdef __EMSCRIPTEN__
+ #include <ctype.h>              /* for isspace */
++#include "Parse.h"
+ #endif
+ 
+ extern SA_TYPE SaveAction;
+@@ -949,6 +950,12 @@ handleInterrupt(void)
+ }
+ #endif /* HAVE_LIBREADLINE */
+ 
++#ifdef __EMSCRIPTEN__
++#include <emscripten/fetch.h>
++#include <emscripten.h>
++void repl_read_success(emscripten_fetch_t *fetch);
++void repl_read_fail(emscripten_fetch_t *fetch);
++#endif
+ 
+ /* Fill a text buffer from stdin or with user typed console input. */
+ static void *cd = NULL;
+@@ -1030,8 +1037,10 @@ Rstd_ReadConsole(const char *prompt, uns
+ 	else
+ #endif /* HAVE_LIBREADLINE */
+ 	{
++#ifndef __EMSCRIPTEN__
+ 	    fputs(prompt, stdout);
+ 	    fflush(stdout);
++#endif
+ 	}
+ 
+ 	if(R_InputHandlers == NULL)
+@@ -1089,10 +1098,23 @@ Rstd_ReadConsole(const char *prompt, uns
+ 		else
+ #endif /* HAVE_LIBREADLINE */
+ 		{
++#ifdef __EMSCRIPTEN__
++		    char scr[1024];
++		    sprintf(scr, "___terminal::read::%s", prompt);
++		    emscripten_fetch_attr_t attr;
++		    emscripten_fetch_attr_init(&attr);
++		    strcpy(attr.requestMethod, "GET");
++		    attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
++		    attr.onsuccess = repl_read_success;
++		    attr.onerror = repl_read_fail;
++		    emscripten_fetch(&attr, scr);
++		    return 0;
++#else
+ 		    if(fgets((char *)buf, len, stdin) == NULL)
+ 			return 0;
+ 		    else
+ 			return 1;
++#endif
+ 		}
+ 	    }
+ 	}

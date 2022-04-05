@@ -1,0 +1,529 @@
+Index: R-4.1.3_quilt/src/library/grDevices/NAMESPACE
+===================================================================
+--- R-4.1.3_quilt.orig/src/library/grDevices/NAMESPACE
++++ R-4.1.3_quilt/src/library/grDevices/NAMESPACE
+@@ -70,6 +70,8 @@ if(tools:::.OStype() == "windows") {
+     S3method("[", SavedPlots)
+     S3method(print, SavedPlots)
+     importFrom("utils", "shortPathName")
++} else if(R.version$os == "emscripten") {
++    export(canvas)
+ } else {
+     export(X11.options, X11Font, X11Fonts,
+            quartz, quartz.options, quartz.save, quartzFont, quartzFonts)
+Index: R-4.1.3_quilt/src/library/grDevices/R/canvas.R
+===================================================================
+--- /dev/null
++++ R-4.1.3_quilt/src/library/grDevices/R/canvas.R
+@@ -0,0 +1,3 @@
++canvas <- function(sel="#plot-canvas", bg="transparent") {
++       .External("canvas_new_device", sel, bg)
++}
+Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
+===================================================================
+--- /dev/null
++++ R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
+@@ -0,0 +1,470 @@
++/*
++R graphics device targeting the HTML canvas element
++Author: George Stagg, based on the canvas package created by Jeffrey Horner (http://www.rforge.net/canvas/)
++Description: R graphics device interfacing with a HTML canvas element for use with webR. Based on the canvas package created by Jeffrey Horner
++License: GPL version 2
++*/
++
++#include <stdio.h>
++
++#include <R.h>
++#include <Rversion.h>
++#include <Rinternals.h>
++#include <R_ext/Rdynload.h>
++#include <R_ext/GraphicsEngine.h>
++#include <R_ext/GraphicsDevice.h>
++
++#if R_VERSION >= R_Version(2,8,0)
++#ifndef NewDevDesc
++#define NewDevDesc DevDesc
++#endif
++#endif
++
++#define CREDC(C) (((unsigned int)(C))&0xff)
++#define CGREENC(C) ((((unsigned int)(C))&0xff00)>>8)
++#define CBLUEC(C) ((((unsigned int)(C))&0xff0000)>>16)
++#define CALPHA(C) ((((unsigned int)(C))&0xff000000)>>24)
++
++#ifdef __EMSCRIPTEN__
++#include <emscripten.h>
++
++#define canvasColor(sel, prop, col) { if (CALPHA(col)==255) { EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').prop = 'rgb('+$1+','+$2+','+$3+')';}, sel, CREDC(col), CGREENC(col), CBLUEC(col)); } else { EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').prop = 'rgba('+$1+','+$2+','+$3+','+$4+')';}, sel, CREDC(col), CGREENC(col), CBLUEC(col), ((double)CALPHA(col))/255.); }; }
++
++typedef struct _canvasDesc {
++	/* device specific stuff */
++	int col;
++	int fill;
++
++	/* Line characteristics */
++	double lwd;
++	int lty;
++	R_GE_lineend lend;
++	R_GE_linejoin ljoin;
++	double lmitre;
++
++
++	char sel[128];
++	pGEDevDesc RGE;
++} canvasDesc;
++
++void canvasSetLineType( canvasDesc *cGD, pGEcontext gc)
++{
++#ifdef CANVASDEBUG
++	Rprintf("canvasSetLineType()\n");
++#endif
++	/* Line width */
++	if (cGD->lwd != gc->lwd){
++		cGD->lwd = gc->lwd;
++		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineWidth = $1;}, cGD->sel, 2*cGD->lwd);
++	}
++
++	/* Line end: par lend  */
++	if (cGD->lend != gc->lend){
++		cGD->lend = gc->lend;
++		if (cGD->lend == GE_ROUND_CAP)
++			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineCap = 'round';}, cGD->sel);
++		if (cGD->lend == GE_BUTT_CAP)
++			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineCap = 'butt';}, cGD->sel);
++		if (cGD->lend == GE_SQUARE_CAP)
++			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineCap = 'butt';}, cGD->sel);
++	}
++
++	/* Line join: par ljoin */
++	if (cGD->ljoin != gc->ljoin){
++		cGD->ljoin = gc->ljoin;
++		if (cGD->ljoin == GE_ROUND_JOIN)
++			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineJoin = 'round';}, cGD->sel);
++		if (cGD->ljoin == GE_MITRE_JOIN)
++			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineJoin = 'miter';}, cGD->sel);
++		if (cGD->ljoin == GE_BEVEL_JOIN)
++			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineJoin = 'bevel';}, cGD->sel);
++	}
++
++	/* Miter limit */
++	if (cGD->lmitre != gc->lmitre){
++		cGD->lmitre = gc->lmitre;
++		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').miterLimit = $1;}, cGD->sel, cGD->lmitre);
++	}
++}
++
++void canvasActivate(const pDevDesc RGD)
++{
++#ifdef CANVASDEBUG
++	Rprintf("canvasActivate()\n");
++#endif
++	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
++}
++
++void canvasCircle(double x, double y, double r, const pGEcontext gc, pDevDesc RGD)
++{
++#ifdef CANVASDEBUG
++	Rprintf("canvasCircle(%f, %f, %f)\n", x, y, r);
++#endif
++	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
++
++	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').beginPath();}, cGD->sel);
++	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').arc($1,$2,$3,0,Math.PI*2,true);}, cGD->sel, 2*x, 2*y, 2*r);
++	if (CALPHA(gc->fill)){
++		canvasColor(cGD->sel,fillStyle,gc->fill);
++		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').fill();}, cGD->sel);
++	}
++	if (CALPHA(gc->col) && gc->lty!=-1){
++		canvasSetLineType(cGD,gc);
++		canvasColor(cGD->sel,strokeStyle,gc->col);
++		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').stroke();}, cGD->sel);
++	}
++}
++
++void canvasClip(double x0, double x1, double y0, double y1, pDevDesc RGD)
++{
++	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
++#ifdef CANVASDEBUG
++	Rprintf("Clip(x0=%f,y0=%f,x1=%f,y1=%f,RGD=0x%x)\n",2.*x0,2.*y0,2.*x1,2.*y1,RGD);
++#endif
++}
++
++void canvasClose(pDevDesc RGD)
++{
++	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
++
++	/* Save plot */
++	free(cGD);
++	RGD->deviceSpecific = NULL;
++#ifdef CANVASDEBUG
++	Rprintf("Close(RGD=0x%x)\n",RGD);
++#endif
++}
++
++void canvasDeactivate(pDevDesc RGD)
++{
++#ifdef CANVASDEBUG
++	Rprintf("Deactivate(RGD=0x%x)\n",RGD);
++#endif
++}
++static Rboolean canvasLocator(double *x, double *y, pDevDesc RGD)
++{
++#ifdef CANVASDEBUG
++	Rprintf("Locator(x=%f,y=%f,RGD=0x%x)\n",x,y,RGD);
++#endif
++	return FALSE;
++}
++
++void canvasLine(double x1, double y1, double x2, double y2, const pGEcontext gc, pDevDesc RGD)
++{
++#ifdef CANVASDEBUG
++	Rprintf("canvasLine()\n");
++#endif
++	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
++
++	if (CALPHA(gc->col) && gc->lty!=-1){
++	canvasSetLineType(cGD,gc);
++	canvasColor(cGD->sel,strokeStyle,gc->col);
++	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').beginPath();}, cGD->sel);
++	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').moveTo($1,$2);}, cGD->sel, 2*x1, 2*y1);
++	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineTo($1,$2);}, cGD->sel, 2*x2, 2*y2);
++	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').stroke();}, cGD->sel);
++	}
++}
++
++void canvasMetricInfo(int c, const pGEcontext gc, double* ascent, double* descent, double* width, pDevDesc RGD)
++{
++	/* Unsure if we'll be able to provide this, as this relies entirely on the fonts
++	 * installed on the browser system
++	 */
++	*ascent = *descent = *width = 0.0;
++#ifdef CANVASDEBUG
++	Rprintf("MetricInfo(c=%d,gc=0x%x,ascent=%f,descent=%f,width=%f,RGD=0x%x)\n",c,gc,*ascent,*descent,*width,RGD);
++#endif
++}
++
++void canvasMode(int mode, pDevDesc RGD)
++{
++#ifdef CANVASDEBUG
++	Rprintf("Mode(mode=%d,RGD=0x%x)\n",mode,RGD);
++#endif
++}
++
++void canvasNewPage(const pGEcontext gc, pDevDesc RGD)
++{
++	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
++
++	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').clearRect(0,0,$1,$2);}, cGD->sel, 2*RGD->right,2*RGD->bottom);
++
++	/* Set background only if we have a color */
++	if (CALPHA(gc->fill)){
++		canvasColor(cGD->sel,fillStyle,gc->fill);
++		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').fillRect(0,0,$1,$2);}, cGD->sel, 2*RGD->right,2*RGD->bottom);
++	}
++
++#ifdef CANVASDEBUG2
++	//Rprintf("NewPage(gc=0x%x,RGD=0x%x)\n",gc,RGD);
++	Rprintf("NewPage()\n");
++#endif
++}
++
++void canvasPolygon(int n, double *x, double *y, const pGEcontext gc, pDevDesc RGD)
++{
++#ifdef CANVASDEBUG
++	Rprintf("canvasPolygon()\n");
++#endif
++	int i=1;
++	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
++
++	if(n<2) return;
++
++	canvasSetLineType(cGD,gc);
++
++	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').beginPath();}, cGD->sel);
++	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').moveTo($1,$2);}, cGD->sel,2*x[0],2*y[0]);
++	while (i<n) { EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineTo($1,$2);}, cGD->sel,2*x[i],2*y[i]); i++; }
++	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').closePath();}, cGD->sel);
++	if (CALPHA(gc->fill)) {
++		canvasColor(cGD->sel,fillStyle,gc->fill);
++		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').fill();}, cGD->sel);
++	}
++	if (CALPHA(gc->col) && gc->lty!=-1) {
++		canvasColor(cGD->sel,strokeStyle,gc->col);
++		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').stroke();}, cGD->sel);
++	}
++}
++
++void canvasPolyline(int n, double *x, double *y, const pGEcontext gc, pDevDesc RGD)
++{
++#ifdef CANVASDEBUG
++	Rprintf("canvasPolyline()\n");
++#endif
++	int i=1;
++	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
++
++	if (n<2) return;
++
++	if (CALPHA(gc->col) && gc->lty!=-1) {
++	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').beginPath();}, cGD->sel);
++	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').moveTo($1,$2);}, cGD->sel,2*x[0],2*y[0]);
++		while(i<n) { EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineTo($1,$2);}, cGD->sel,2*x[i],2*y[i]); i++; }
++		canvasSetLineType(cGD,gc);
++		canvasColor(cGD->sel,strokeStyle,gc->col);
++		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').stroke();}, cGD->sel);
++	}
++}
++
++void canvasRect(double x0, double y0, double x1, double y1, const pGEcontext gc, pDevDesc RGD)
++{
++#ifdef CANVASDEBUG
++	Rprintf("canvasRect()\n");
++#endif
++	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
++	if (CALPHA(gc->fill)){
++		canvasColor(cGD->sel,fillStyle,gc->fill);
++		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').fillRect($1,$2,$3,$4);}, cGD->sel,2*x0,2*y0,2*x1-2*x0,2*y1-2*y0);
++	}
++	if (CALPHA(gc->col) && gc->lty!=-1){
++		canvasSetLineType(cGD,gc);
++		canvasColor(cGD->sel,strokeStyle,gc->col);
++		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').strokeRect($1,$2,$3,$4);}, cGD->sel,2*x0,2*y0,2*x1-2*x0,2*y1-2*y0);
++	}
++}
++
++void canvasSize(double *left, double *right, double *bottom, double *top, pDevDesc RGD)
++{
++	*left = *top = 0.0;
++	*right = RGD->right;
++	*bottom = RGD->bottom;
++#ifdef CANVASDEBUG
++	Rprintf("Size(left=%f,right=%f,bottom=%f,top=%f,RGD=0x%x)\n",*left,*right,*bottom,*top,RGD);
++#endif
++}
++
++static double canvasStrWidth(const char *str, const pGEcontext gc, pDevDesc RGD)
++{
++	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
++	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').font = $1+'px sans-serif';}, cGD->sel, 2*gc->ps);
++	double w = EM_ASM_DOUBLE({
++		return document.querySelector(UTF8ToString($0)).getContext('2d').measureText(UTF8ToString($1)).width;
++	}, cGD->sel, str);
++	return w;
++
++#ifdef CANVASDEBUG
++	Rprintf("StrWidth(str=%s,gc=0x%x,RGD=0x%x)\n",str,gc,RGD);
++#endif
++}
++
++void canvasText(double x, double y, const char *str, double rot, double hadj, const pGEcontext gc, pDevDesc RGD)
++{
++#ifdef CANVASDEBUG
++        Rprintf("canvasText()\n");
++#endif
++	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
++	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').font = $1+'px sans-serif';}, cGD->sel, 2*gc->ps);
++
++	if (hadj!=0. || rot != 0.){
++		if (rot!=0.){
++			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').save();}, cGD->sel);
++			canvasColor(cGD->sel,fillStyle,gc->col);
++			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').translate($1,$2);}, cGD->sel, 2*x, 2*y);
++			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').rotate(-$1 / 180 * Math.PI);}, cGD->sel, rot);
++			EM_ASM({
++				var strextent = document.querySelector(UTF8ToString($0)).getContext('2d').measureText(UTF8ToString($1)).width;
++				document.querySelector(UTF8ToString($0)).getContext('2d').fillText(UTF8ToString($1),-strextent*$2,0);
++			}, cGD->sel, str, hadj);
++			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').restore();}, cGD->sel);
++		} else {
++			canvasColor(cGD->sel,fillStyle,gc->col);
++			EM_ASM({
++				var strextent = document.querySelector(UTF8ToString($0)).getContext('2d').measureText(UTF8ToString($1)).width;
++				document.querySelector(UTF8ToString($0)).getContext('2d').fillText(UTF8ToString($1),$2-strextent*$3,$4);
++			}, cGD->sel, str, 2*x, hadj, 2*y);
++		}
++	} else {
++		canvasColor(cGD->sel,fillStyle,gc->col);
++		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').fillText(UTF8ToString($1),$2,$3);}, cGD->sel, str, 2*x, 2*y);
++	}
++}
++
++SEXP void_setPattern(SEXP pattern, pDevDesc RGD) {
++	return R_NilValue;
++}
++void void_releasePattern(SEXP ref, pDevDesc RGD) {
++	return;
++}
++SEXP void_setClipPath(SEXP path, SEXP ref, pDevDesc RGD) {
++	return R_NilValue;
++}
++void void_releaseClipPath(SEXP ref, pDevDesc RGD) {
++	return;
++}
++SEXP void_setMask(SEXP path, SEXP ref, pDevDesc RGD) {
++	return R_NilValue;
++}
++void void_releaseMask(SEXP ref, pDevDesc RGD) {
++	return;
++}
++void void_raster(unsigned int *raster, int w, int h,
++                double x, double y,
++                double width, double height,
++                double rot,
++                Rboolean interpolate,
++                const pGEcontext gc, pDevDesc dd) {
++	return;
++}
++void void_path(double *x, double *y,
++              int npoly, int *nper,
++              Rboolean winding,
++              const pGEcontext gc, pDevDesc dd) {
++	return;
++}
++
++SEXP _canvas_new_device(SEXP args)
++{
++        /* R Graphics Device: in GraphicsDevice.h */
++        pDevDesc RGD;
++
++        /* R Graphics Engine: in GraphicsEngine.h */
++        pGEDevDesc RGE;
++
++        /* canvas Graphics Device */
++        canvasDesc *cGD;
++
++        const char *sel = NULL;
++        int bgcolor;
++
++        SEXP v;
++        args=CDR(args);
++        v=CAR(args); args=CDR(args);
++        if (isString(v)){
++                PROTECT(v);
++                sel = CHAR(STRING_ELT(v,0));
++                UNPROTECT(1);
++        } else {
++                error("selector must be a string");
++        }
++
++        v=CAR(args); args=CDR(args);
++        if (!isString(v) && !isInteger(v) && !isLogical(v) && !isReal(v))
++                error("invalid color specification for `bg'");
++        bgcolor = RGBpar(v, 0);
++#ifdef CANVASDEBUG
++        Rprintf("canvas_new_device()\n");
++#endif
++
++	R_CheckDeviceAvailable();
++
++        if (!(RGD = (pDevDesc)calloc(1, sizeof(NewDevDesc)))){
++		error("calloc failed for canvas device");
++        }
++
++	if (!(cGD = (canvasDesc *)calloc(1, sizeof(canvasDesc)))){
++		free(RGD);
++		error("calloc failed for canvas device");
++        }
++
++        strncpy(cGD->sel, sel, 128);
++
++	RGD->deviceSpecific = (void *) cGD;
++
++	/* Callbacks */
++	RGD->close = canvasClose;
++	RGD->activate = canvasActivate;
++	RGD->deactivate = canvasDeactivate;
++	RGD->size = canvasSize;
++	RGD->newPage = canvasNewPage;
++	RGD->clip = canvasClip;
++	RGD->strWidth = canvasStrWidth;
++	RGD->text = canvasText;
++	RGD->rect = canvasRect;
++	RGD->circle = canvasCircle;
++	RGD->line = canvasLine;
++	RGD->polyline = canvasPolyline;
++	RGD->polygon = canvasPolygon;
++	RGD->locator = canvasLocator;
++	RGD->mode = canvasMode;
++	RGD->metricInfo = canvasMetricInfo;
++	RGD->hasTextUTF8 = TRUE;
++	RGD->strWidthUTF8 = canvasStrWidth;
++	RGD->textUTF8 = canvasText;
++	RGD->wantSymbolUTF8 = TRUE;
++	RGD->path = void_path;
++	RGD->raster = void_raster;
++#if R_GE_version >= 13
++	RGD->setPattern      = void_setPattern;
++	RGD->releasePattern  = void_releasePattern;
++	RGD->setClipPath     = void_setClipPath;
++	RGD->releaseClipPath = void_releaseClipPath;
++	RGD->setMask         = void_setMask;
++	RGD->releaseMask     = void_releaseMask;
++	RGD->deviceVersion = R_GE_definitions;
++#endif
++	/* Initialise RGD */
++	RGD->left = RGD->clipLeft = 0;
++	RGD->top = RGD->clipTop = 0;
++	RGD->right = RGD->clipRight = 504;
++	RGD->bottom = RGD->clipBottom = 504;
++	RGD->xCharOffset = 0.4900;
++	RGD->yCharOffset = 0.3333;
++	RGD->yLineBias = 0.1;
++	RGD->ipr[0] = 1.0/72.0;
++	RGD->ipr[1] = 1.0/72.0;
++	RGD->cra[0] = 0.9 * 10;
++	RGD->cra[1] = 1.2 * 10;
++	RGD->gamma = 1.0;
++	RGD->canClip = FALSE;
++	RGD->canChangeGamma = FALSE;
++	RGD->canHAdj = 2;
++	RGD->startps = 12.0;
++	RGD->startcol = R_RGB(0,0,0);
++	RGD->startfill = bgcolor;
++	RGD->startlty = LTY_SOLID;
++	RGD->startfont = 1;
++	RGD->startgamma = RGD->gamma;
++	RGD->displayListOn = FALSE;
++
++	/* Add to the device list */
++	RGE = GEcreateDevDesc(RGD);
++	cGD->RGE = RGE;
++	GEaddDevice(RGE);
++	GEinitDisplayList(RGE);
++
++	/*return ScalarInteger(1 + GEdeviceNumber(RGE));*/
++	return R_NilValue;
++}
++#endif
+Index: R-4.1.3_quilt/src/library/grDevices/src/grDevices.h
+===================================================================
+--- R-4.1.3_quilt.orig/src/library/grDevices/src/grDevices.h
++++ R-4.1.3_quilt/src/library/grDevices/src/grDevices.h
+@@ -33,6 +33,9 @@ SEXP R_CreateAtVector(SEXP axp, SEXP usr
+ SEXP R_GAxisPars(SEXP usr, SEXP is_log, SEXP nintLog);
+ 
+ SEXP PicTeX(SEXP);
++#ifdef __EMSCRIPTEN__
++extern SEXP _canvas_new_device(SEXP);
++#endif
+ 
+ SEXP PostScript(SEXP);
+ SEXP XFig(SEXP);
+Index: R-4.1.3_quilt/src/library/grDevices/src/init.c
+===================================================================
+--- R-4.1.3_quilt.orig/src/library/grDevices/src/init.c
++++ R-4.1.3_quilt/src/library/grDevices/src/init.c
+@@ -87,8 +87,14 @@ static const R_CallMethodDef CallEntries
+ };
+ 
+ #define EXTDEF(name, n)  {#name, (DL_FUNC) &name, n}
++#ifdef __EMSCRIPTEN__
++SEXP canvas_new_device(SEXP args){return _canvas_new_device(args);}
++#endif
+ 
+ static const R_ExternalMethodDef ExtEntries[] = {
++#ifdef __EMSCRIPTEN__
++    EXTDEF(canvas_new_device, 2),
++#endif
+     EXTDEF(PicTeX, 6),
+     EXTDEF(PostScript, 19),
+     EXTDEF(XFig, 14),

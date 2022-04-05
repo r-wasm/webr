@@ -1,0 +1,24 @@
+Index: R-4.1.3/src/extra/xdr/rpc/xdr.h
+===================================================================
+--- R-4.1.3.orig/src/extra/xdr/rpc/xdr.h
++++ R-4.1.3/src/extra/xdr/rpc/xdr.h
+@@ -176,12 +176,19 @@ typedef struct {
+ #define	xdr_inline(xdrs, len)				\
+ 	(*(xdrs)->x_ops->x_inline)(xdrs, len)
+ 
++#ifdef __EMSCRIPTEN__
++// TODO: This should be able to be handled with another trampoline
++// via JS.
++#define	XDR_DESTROY(xdrs) do {} while (0)
++#define	xdr_destroy(xdrs) do {} while (0)
++#else
+ #define	XDR_DESTROY(xdrs)				\
+ 	if ((xdrs)->x_ops->x_destroy) 			\
+ 		(*(xdrs)->x_ops->x_destroy)(xdrs)
+ #define	xdr_destroy(xdrs)				\
+ 	if ((xdrs)->x_ops->x_destroy) 			\
+ 		(*(xdrs)->x_ops->x_destroy)(xdrs)
++#endif
+ 
+ /*
+  * Support struct for discriminated unions.

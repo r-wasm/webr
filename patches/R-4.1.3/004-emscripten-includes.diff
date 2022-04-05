@@ -1,0 +1,15 @@
+Index: R-4.1.3/src/unix/sys-std.c
+===================================================================
+--- R-4.1.3.orig/src/unix/sys-std.c
++++ R-4.1.3/src/unix/sys-std.c
+@@ -59,6 +59,10 @@
+ # include <unistd.h>		/* for unlink */
+ #endif
+ 
++#ifdef __EMSCRIPTEN__
++#include <ctype.h>              /* for isspace */
++#endif
++
+ extern SA_TYPE SaveAction;
+ extern Rboolean UsingReadline;
+ extern FILE* ifp; /* from system.c */
