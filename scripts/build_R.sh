@@ -37,8 +37,8 @@ make clean
 # Stage 2: Reconfigure and build for wasm32-unknown-emscripten target
 MAIN_LDFLAGS="-s WASM_BIGINT -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s MAIN_MODULE=1 -s FETCH=1 -s NO_EXIT_RUNTIME=0 -s ERROR_ON_UNDEFINED_SYMBOLS=0" \
 SHLIB_LDFLAGS="-s SIDE_MODULE=1 -s WASM_BIGINT" \
-CPPFLAGS="-Oz -fPIC -I/app/build/Rlibs/include -DEXPEL_OLD_TO_NEW=1" \
-CFLAGS="-Oz -fPIC -I/app/build/Rlibs/include -DEXPEL_OLD_TO_NEW=1" \
+CPPFLAGS="-s USE_BZIP2=1 -s USE_ZLIB=1 -s USE_LIBPNG=1 -Oz -fPIC -I/app/build/Rlibs/include -DEXPEL_OLD_TO_NEW=1" \
+CFLAGS="-s USE_BZIP2=1 -s USE_ZLIB=1 -s USE_LIBPNG=1 -Oz -fPIC -I/app/build/Rlibs/include -DEXPEL_OLD_TO_NEW=1" \
 LDFLAGS="-L/app/build/Rlibs/lib" FPICFLAGS="-fPIC" FC=emfc \
 emconfigure ./configure --prefix="/tmp/webR-${R_VERSION}"  --with-x=no \
 --with-readline=no --with-jpeglib=no --with-cairo=no --disable-openmp \
