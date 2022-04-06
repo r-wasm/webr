@@ -2,15 +2,14 @@ Index: R-4.1.3_quilt/src/library/grDevices/NAMESPACE
 ===================================================================
 --- R-4.1.3_quilt.orig/src/library/grDevices/NAMESPACE
 +++ R-4.1.3_quilt/src/library/grDevices/NAMESPACE
-@@ -70,6 +70,8 @@ if(tools:::.OStype() == "windows") {
-     S3method("[", SavedPlots)
+@@ -71,6 +71,6 @@ if(tools:::.OStype() == "windows") {
      S3method(print, SavedPlots)
      importFrom("utils", "shortPathName")
-+} else if(R.version$os == "emscripten") {
-+    export(canvas)
  } else {
-     export(X11.options, X11Font, X11Fonts,
+-    export(X11.options, X11Font, X11Fonts,
++    export(canvas, X11.options, X11Font, X11Fonts,
             quartz, quartz.options, quartz.save, quartzFont, quartzFonts)
+ }
 Index: R-4.1.3_quilt/src/library/grDevices/R/canvas.R
 ===================================================================
 --- /dev/null
@@ -23,11 +22,11 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 ===================================================================
 --- /dev/null
 +++ R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
-@@ -0,0 +1,470 @@
+@@ -0,0 +1,501 @@
 +/*
 +R graphics device targeting the HTML canvas element
 +Author: George Stagg, based on the canvas package created by Jeffrey Horner (http://www.rforge.net/canvas/)
-+Description: R graphics device interfacing with a HTML canvas element for use with webR. Based on the canvas package created by Jeffrey Horner
++Description: R graphics device interfacing with a HTML canvas element for use with webR.
 +License: GPL version 2
 +*/
 +
@@ -54,7 +53,36 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +#ifdef __EMSCRIPTEN__
 +#include <emscripten.h>
 +
-+#define canvasColor(sel, prop, col) { if (CALPHA(col)==255) { EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').prop = 'rgb('+$1+','+$2+','+$3+')';}, sel, CREDC(col), CGREENC(col), CBLUEC(col)); } else { EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').prop = 'rgba('+$1+','+$2+','+$3+','+$4+')';}, sel, CREDC(col), CGREENC(col), CBLUEC(col), ((double)CALPHA(col))/255.); }; }
++/* Interact with the HTML canvas 2D context API by building Javascript
++ * commands and running them with emscripten_run_script().
++ * We avoid using EM_ASM and friends because this code will be compiled
++ * in an emscripten SIDE_MODULE, where they not work at time of writing.
++*/
++#define canvasExecBufferMax 1024
++#define _E(...) "document.querySelector(UTF8ToString(%p)).getContext('2d')." __VA_ARGS__ ";"
++
++#define canvasContextRender(cGD, op, ...) { \
++	const char template[] = _E op; \
++	int ret = snprintf(cGD->buffer, canvasExecBufferMax, template, cGD->sel, ##  __VA_ARGS__); \
++	if (ret < 0 || ret >= canvasExecBufferMax) \
++		error("problem writing canvas context property in canvas graphics device"); \
++	}
++
++#define canvasContextExec(cGD, op, ...) \
++	canvasContextRender(cGD, op, ## __VA_ARGS__) \
++	emscripten_run_script(cGD->buffer)
++
++#define canvasContextExecInt(res, cGD, op, ...) \
++	canvasContextRender(cGD, op, ## __VA_ARGS__) \
++	res = emscripten_run_script_int(cGD->buffer)
++
++#define canvasColor(sel, prop, col) { \
++	if (CALPHA(col)==255) { \
++		canvasContextExec(cGD, (#prop " = 'rgb(%d, %d, %d)'"), CREDC(col), CGREENC(col), CBLUEC(col)); \
++	} else { \
++		canvasContextExec(cGD, (#prop " = 'rgba(%d, %d, %d, %f)'"), CREDC(col), CGREENC(col), CBLUEC(col), ((double)CALPHA(col))/255.); \
++	} \
++}
 +
 +typedef struct _canvasDesc {
 +	/* device specific stuff */
@@ -68,8 +96,8 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +	R_GE_linejoin ljoin;
 +	double lmitre;
 +
-+
 +	char sel[128];
++	char buffer[canvasExecBufferMax];
 +	pGEDevDesc RGE;
 +} canvasDesc;
 +
@@ -81,35 +109,35 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +	/* Line width */
 +	if (cGD->lwd != gc->lwd){
 +		cGD->lwd = gc->lwd;
-+		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineWidth = $1;}, cGD->sel, 2*cGD->lwd);
++		canvasContextExec(cGD, ("lineWidth = %f"), 2*cGD->lwd);
 +	}
 +
 +	/* Line end: par lend  */
 +	if (cGD->lend != gc->lend){
 +		cGD->lend = gc->lend;
 +		if (cGD->lend == GE_ROUND_CAP)
-+			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineCap = 'round';}, cGD->sel);
++			canvasContextExec(cGD, ("lineCap = 'round'"));
 +		if (cGD->lend == GE_BUTT_CAP)
-+			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineCap = 'butt';}, cGD->sel);
++			canvasContextExec(cGD, ("lineCap = 'butt'"));
 +		if (cGD->lend == GE_SQUARE_CAP)
-+			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineCap = 'butt';}, cGD->sel);
++			canvasContextExec(cGD, ("lineCap = 'butt'"));
 +	}
 +
 +	/* Line join: par ljoin */
 +	if (cGD->ljoin != gc->ljoin){
 +		cGD->ljoin = gc->ljoin;
 +		if (cGD->ljoin == GE_ROUND_JOIN)
-+			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineJoin = 'round';}, cGD->sel);
++			canvasContextExec(cGD, ("lineJoin = 'round'"));
 +		if (cGD->ljoin == GE_MITRE_JOIN)
-+			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineJoin = 'miter';}, cGD->sel);
++			canvasContextExec(cGD, ("lineJoin = 'miter'"));
 +		if (cGD->ljoin == GE_BEVEL_JOIN)
-+			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineJoin = 'bevel';}, cGD->sel);
++			canvasContextExec(cGD, ("lineJoin = 'bevel'"));
 +	}
 +
 +	/* Miter limit */
 +	if (cGD->lmitre != gc->lmitre){
 +		cGD->lmitre = gc->lmitre;
-+		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').miterLimit = $1;}, cGD->sel, cGD->lmitre);
++		canvasContextExec(cGD, ("miterLimit = %f"), cGD->lmitre);
 +	}
 +}
 +
@@ -128,16 +156,16 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +#endif
 +	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
 +
-+	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').beginPath();}, cGD->sel);
-+	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').arc($1,$2,$3,0,Math.PI*2,true);}, cGD->sel, 2*x, 2*y, 2*r);
++	canvasContextExec(cGD, ("beginPath()"));
++	canvasContextExec(cGD, ("arc(%f,%f,%f,0,Math.PI*2,true)"), 2*x, 2*y, 2*r);
 +	if (CALPHA(gc->fill)){
 +		canvasColor(cGD->sel,fillStyle,gc->fill);
-+		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').fill();}, cGD->sel);
++		canvasContextExec(cGD, ("fill()"));
 +	}
 +	if (CALPHA(gc->col) && gc->lty!=-1){
 +		canvasSetLineType(cGD,gc);
 +		canvasColor(cGD->sel,strokeStyle,gc->col);
-+		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').stroke();}, cGD->sel);
++		canvasContextExec(cGD, ("stroke()"));
 +	}
 +}
 +
@@ -185,10 +213,10 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +	if (CALPHA(gc->col) && gc->lty!=-1){
 +	canvasSetLineType(cGD,gc);
 +	canvasColor(cGD->sel,strokeStyle,gc->col);
-+	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').beginPath();}, cGD->sel);
-+	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').moveTo($1,$2);}, cGD->sel, 2*x1, 2*y1);
-+	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineTo($1,$2);}, cGD->sel, 2*x2, 2*y2);
-+	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').stroke();}, cGD->sel);
++	canvasContextExec(cGD, ("beginPath()"));
++	canvasContextExec(cGD, ("moveTo(%f,%f)"), 2*x1, 2*y1);
++	canvasContextExec(cGD, ("lineTo(%f,%f)"), 2*x2, 2*y2);
++	canvasContextExec(cGD, ("stroke()"));
 +	}
 +}
 +
@@ -214,16 +242,15 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +{
 +	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
 +
-+	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').clearRect(0,0,$1,$2);}, cGD->sel, 2*RGD->right,2*RGD->bottom);
++	canvasContextExec(cGD, ("clearRect(0,0,%f,%f)"), 2*RGD->right,2*RGD->bottom);
 +
 +	/* Set background only if we have a color */
 +	if (CALPHA(gc->fill)){
 +		canvasColor(cGD->sel,fillStyle,gc->fill);
-+		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').fillRect(0,0,$1,$2);}, cGD->sel, 2*RGD->right,2*RGD->bottom);
++		canvasContextExec(cGD, ("fillRect(0,0,%f,%f)"), 2*RGD->right,2*RGD->bottom);
 +	}
 +
-+#ifdef CANVASDEBUG2
-+	//Rprintf("NewPage(gc=0x%x,RGD=0x%x)\n",gc,RGD);
++#ifdef CANVASDEBUG
 +	Rprintf("NewPage()\n");
 +#endif
 +}
@@ -240,17 +267,17 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +
 +	canvasSetLineType(cGD,gc);
 +
-+	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').beginPath();}, cGD->sel);
-+	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').moveTo($1,$2);}, cGD->sel,2*x[0],2*y[0]);
-+	while (i<n) { EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineTo($1,$2);}, cGD->sel,2*x[i],2*y[i]); i++; }
-+	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').closePath();}, cGD->sel);
++	canvasContextExec(cGD, ("beginPath()"));
++	canvasContextExec(cGD, ("moveTo(%f,%f)"), 2*x[0], 2*y[0]);
++	while (i<n) { canvasContextExec(cGD, ("lineTo(%f, %f)"), 2*x[i], 2*y[i]); i++; }
++	canvasContextExec(cGD, ("closePath()"));
 +	if (CALPHA(gc->fill)) {
 +		canvasColor(cGD->sel,fillStyle,gc->fill);
-+		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').fill();}, cGD->sel);
++		canvasContextExec(cGD, ("fill()"));
 +	}
 +	if (CALPHA(gc->col) && gc->lty!=-1) {
 +		canvasColor(cGD->sel,strokeStyle,gc->col);
-+		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').stroke();}, cGD->sel);
++		canvasContextExec(cGD, ("stroke()"));
 +	}
 +}
 +
@@ -265,12 +292,12 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +	if (n<2) return;
 +
 +	if (CALPHA(gc->col) && gc->lty!=-1) {
-+	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').beginPath();}, cGD->sel);
-+	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').moveTo($1,$2);}, cGD->sel,2*x[0],2*y[0]);
-+		while(i<n) { EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').lineTo($1,$2);}, cGD->sel,2*x[i],2*y[i]); i++; }
++	canvasContextExec(cGD, ("beginPath()"));
++	canvasContextExec(cGD, ("moveTo(%f,%f)"), 2*x[0], 2*y[0]);
++		while(i<n) { canvasContextExec(cGD, ("lineTo(%f, %f)"), 2*x[i], 2*y[i]); i++; }
 +		canvasSetLineType(cGD,gc);
 +		canvasColor(cGD->sel,strokeStyle,gc->col);
-+		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').stroke();}, cGD->sel);
++		canvasContextExec(cGD, ("stroke()"));
 +	}
 +}
 +
@@ -282,12 +309,12 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
 +	if (CALPHA(gc->fill)){
 +		canvasColor(cGD->sel,fillStyle,gc->fill);
-+		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').fillRect($1,$2,$3,$4);}, cGD->sel,2*x0,2*y0,2*x1-2*x0,2*y1-2*y0);
++		canvasContextExec(cGD, ("fillRect(%f,%f,%f,%f)"), 2*x0, 2*y0, 2*x1-2*x0, 2*y1-2*y0);
 +	}
 +	if (CALPHA(gc->col) && gc->lty!=-1){
 +		canvasSetLineType(cGD,gc);
 +		canvasColor(cGD->sel,strokeStyle,gc->col);
-+		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').strokeRect($1,$2,$3,$4);}, cGD->sel,2*x0,2*y0,2*x1-2*x0,2*y1-2*y0);
++		canvasContextExec(cGD, ("strokeRect(%f,%f,%f,%f)"), 2*x0, 2*y0, 2*x1-2*x0, 2*y1-2*y0);
 +	}
 +}
 +
@@ -304,11 +331,16 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +static double canvasStrWidth(const char *str, const pGEcontext gc, pDevDesc RGD)
 +{
 +	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
-+	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').font = $1+'px sans-serif';}, cGD->sel, 2*gc->ps);
-+	double w = EM_ASM_DOUBLE({
-+		return document.querySelector(UTF8ToString($0)).getContext('2d').measureText(UTF8ToString($1)).width;
-+	}, cGD->sel, str);
-+	return w;
++	canvasContextExec(cGD, ("font = %f+'px sans-serif'"), 2*gc->ps);
++	/* Use fixed point arithmetic to retrieve results via an int type.
++	 * Ideally, we'd rather use something like
++	 *  double w = EM_ASM_DOUBLE({
++	 *   return document.querySelector(UTF8ToString($0)).getContext('2d').measureText(UTF8ToString($1)).width;
++	 * }, cGD->sel, str);
++	 */
++	int wi = 0;
++	canvasContextExecInt(wi, cGD, ("measureText(UTF8ToString(%p)).width * 10000"), str);
++	return (double)wi/10000.;
 +
 +#ifdef CANVASDEBUG
 +	Rprintf("StrWidth(str=%s,gc=0x%x,RGD=0x%x)\n",str,gc,RGD);
@@ -321,29 +353,26 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +        Rprintf("canvasText()\n");
 +#endif
 +	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
-+	EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').font = $1+'px sans-serif';}, cGD->sel, 2*gc->ps);
++	canvasContextExec(cGD, ("font = %f+'px sans-serif'"), 2*gc->ps);
 +
++	int wi = 0;
 +	if (hadj!=0. || rot != 0.){
 +		if (rot!=0.){
-+			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').save();}, cGD->sel);
++			canvasContextExec(cGD, ("save()"));
 +			canvasColor(cGD->sel,fillStyle,gc->col);
-+			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').translate($1,$2);}, cGD->sel, 2*x, 2*y);
-+			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').rotate(-$1 / 180 * Math.PI);}, cGD->sel, rot);
-+			EM_ASM({
-+				var strextent = document.querySelector(UTF8ToString($0)).getContext('2d').measureText(UTF8ToString($1)).width;
-+				document.querySelector(UTF8ToString($0)).getContext('2d').fillText(UTF8ToString($1),-strextent*$2,0);
-+			}, cGD->sel, str, hadj);
-+			EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').restore();}, cGD->sel);
++			canvasContextExec(cGD, ("translate(%f,%f)"), 2*x, 2*y);
++			canvasContextExec(cGD, ("rotate(-%f / 180 * Math.PI)"), rot);
++			canvasContextExecInt(wi, cGD, ("measureText(UTF8ToString(%p)).width * 10000"), str);
++			canvasContextExec(cGD, ("fillText(UTF8ToString(%p),-%f*%f,0)"), str, (double)wi/10000., hadj);
++			canvasContextExec(cGD, ("restore()"));
 +		} else {
 +			canvasColor(cGD->sel,fillStyle,gc->col);
-+			EM_ASM({
-+				var strextent = document.querySelector(UTF8ToString($0)).getContext('2d').measureText(UTF8ToString($1)).width;
-+				document.querySelector(UTF8ToString($0)).getContext('2d').fillText(UTF8ToString($1),$2-strextent*$3,$4);
-+			}, cGD->sel, str, 2*x, hadj, 2*y);
++			canvasContextExecInt(wi, cGD, ("measureText(UTF8ToString(%p)).width * 10000"), str);
++			canvasContextExec(cGD, ("fillText(UTF8ToString(%p),%f-%f*%f,%f)"), str, 2*x, (double)wi/10000., hadj, 2*y);
 +		}
 +	} else {
 +		canvasColor(cGD->sel,fillStyle,gc->col);
-+		EM_ASM({document.querySelector(UTF8ToString($0)).getContext('2d').fillText(UTF8ToString($1),$2,$3);}, cGD->sel, str, 2*x, 2*y);
++		canvasContextExec(cGD, ("fillText(UTF8ToString(%p),%f,%f)"), str, 2*x, 2*y);
 +	}
 +}
 +
@@ -494,6 +523,7 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +	return R_NilValue;
 +}
 +#endif
++
 Index: R-4.1.3_quilt/src/library/grDevices/src/grDevices.h
 ===================================================================
 --- R-4.1.3_quilt.orig/src/library/grDevices/src/grDevices.h
@@ -527,3 +557,16 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/init.c
      EXTDEF(PicTeX, 6),
      EXTDEF(PostScript, 19),
      EXTDEF(XFig, 14),
+Index: R-4.1.3_quilt/src/library/grDevices/src/Makefile.in
+===================================================================
+--- R-4.1.3_quilt.orig/src/library/grDevices/src/Makefile.in
++++ R-4.1.3_quilt/src/library/grDevices/src/Makefile.in
+@@ -15,7 +15,7 @@ R_INCLUDE_DIR = $(R_HOME)/include
+ 
+ SOURCES_C = axis_scales.c chull.c devices.c init.c stubs.c colors.c \
+   clippath.c patterns.c mask.c \
+-  devCairo.c devPicTeX.c devPS.c \
++  devCairo.c devPicTeX.c devPS.c devCanvas.c \
+   devQuartz.c @BUILD_AQUA_TRUE@ qdBitmap.c qdPDF.c
+ SOURCES_M = @BUILD_AQUA_TRUE@ qdCocoa.m
+ 
