@@ -9,9 +9,13 @@ R_VERSION=4.1.3
 
 cd /app/build
 
+# Ensure script is idempotent
 rm -rf "R-${R_VERSION}"
 rm -rf "/tmp/R-${R_VERSION}"
+rm -rf "/tmp/webR-${R_VERSION}"
 rm -f "R-${R_VERSION}.tar.gz"
+
+# Download R
 wget "https://cran.r-project.org/src/base/R-4/R-${R_VERSION}.tar.gz"
 tar xvf "R-${R_VERSION}.tar.gz"
 cd "R-${R_VERSION}"
@@ -45,7 +49,7 @@ emconfigure ./configure --prefix="/tmp/webR-${R_VERSION}"  --with-x=no \
 --with-recommended-packages=no --enable-R-profiling=no --with-pcre2 --disable-nls \
 --enable-byte-compiled-packages=no --enable-static=yes --host=wasm32-unknown-emscripten
 
-# Remove lazy loaded base package so that it can cleanly rebuild
+# Remove lazy loaded base package so that R can cleanly rebuild
 rm "/tmp/R-${R_VERSION}/lib/R/library/base/R/base"*
 pushd src/library/base
 make R_EXE="/tmp/R-${R_VERSION}/bin/R --vanilla --no-echo" Rsimple
@@ -55,11 +59,14 @@ cp -r library/base/R/. "/tmp/R-${R_VERSION}/lib/R/library/base/R"
 # Build R for wasm32-unknown-emscripten
 make R_EXE="/tmp/R-${R_VERSION}/bin/R --vanilla --no-echo" R
 
-# Copy the lazy loaded packages back into the build tree
+# Install lazy loaded packages by copying back into the build tree
 cp -r "/tmp/R-${R_VERSION}/lib/R/library/base/R/base"* library/base/R/
 cp -r "/tmp/R-${R_VERSION}/lib/R/library/methods/R/methods"* library/methods/R/
+make R_EXE="/tmp/R-${R_VERSION}/bin/R --vanilla --no-echo" install-wasm
 
-# Build R.bin.js and R.bin.data
-make install-wasm
+
+# Rebuild R.bin.js and R.bin.data
+make R_EXE="/tmp/R-${R_VERSION}/bin/R --vanilla --no-echo" R
+make R_EXE="/tmp/R-${R_VERSION}/bin/R --vanilla --no-echo" install-wasm
 
 cp -r "/tmp/webR-${R_VERSION}/dist/." /app/webR/

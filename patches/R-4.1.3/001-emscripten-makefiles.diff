@@ -2,11 +2,12 @@ Index: R-4.1.3_quilt/Makefile.in
 ===================================================================
 --- R-4.1.3_quilt.orig/Makefile.in
 +++ R-4.1.3_quilt/Makefile.in
-@@ -90,6 +90,11 @@ stamp-java : etc/Makeconf etc/javaconf $
+@@ -90,6 +90,12 @@ stamp-java : etc/Makeconf etc/javaconf $
  javaconf: R
  	@$(MAKE) stamp-java
  
 +install-wasm:
++	@mkdir -p "$(prefix)/lib/R/doc/html"
 +	@for d in $(SUBDIRS); do \
 +	  (cd $${d} && $(MAKE) install) \
 +	done
