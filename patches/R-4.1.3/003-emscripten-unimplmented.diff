@@ -23,8 +23,8 @@ Index: R-4.1.3/src/main/main.c
  
 +#ifdef __EMSCRIPTEN__
 +/* Don't attempt to setup an alternative signal stack
-+ *  * when running under emscripten.
-+ *   */
++ * when running under emscripten.
++*/
 +#undef HAVE_SIGALTSTACK
 +#endif
  
