@@ -1,1 +1,7 @@
 dist
+host
+wasm
+tools/dragonegg/build
+tools/libgfortran/build
+R/download
+R/build
