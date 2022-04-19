@@ -33,6 +33,9 @@ XZ_A = $(WASM)/lib/liblzma.a
 # Configure your local environment in this file
 -include ~/.webr-config.mk
 
+WASM_CFLAGS := $(WASM_CFLAGS)
+WASM_CFLAGS += -fPIC -Oz
+
 
 .PHONY: all
 all: R
@@ -92,8 +95,8 @@ STAGE2_CPPFLAGS := $(STAGE2_CPPFLAGS)
 STAGE2_CPPFLAGS += -I$(WASM)/include -DEXPEL_OLD_TO_NEW=1
 STAGE2_CPPFLAGS += -s USE_BZIP2=1 -s USE_ZLIB=1 -s USE_LIBPNG=1
 
-STAGE2_CFLAGS := $(STAGE2_CFLAGS) $(STAGE2_CPPFLAGS)
-STAGE2_CFLAGS += -Oz -fPIC
+STAGE2_CFLAGS := $(STAGE2_CFLAGS)
+STAGE2_CFLAGS += $(STAGE2_CPPFLAGS) $(WASM_CFLAGS)
 
 STAGE2_LDFLAGS := $(STAGE2_LDFLAGS)
 STAGE2_LDFLAGS += -L$(WASM)/lib
@@ -181,7 +184,7 @@ $(XZ_A): $(XZ_TARBALL)
 	( \
 	  cd $(BUILD)/xz-$(XZ_VERSION); \
 	  mkdir -p build && cd build; \
-	  CFLAGS=$(LOCAL_CFLAGS) emconfigure ../configure \
+	  CFLAGS="$(WASM_CFLAGS)" emconfigure ../configure \
 	    --enable-shared=no \
 	    --enable-static=yes \
 	    --prefix=$(WASM); \
@@ -203,7 +206,7 @@ $(PCRE_A): $(PCRE_TARBALL)
 	( \
 	  cd $(BUILD)/pcre2-$(PCRE_VERSION); \
 	  mkdir -p build && cd build; \
-	  CFLAGS=$(LOCAL_CFLAGS) emconfigure ../configure \
+	  CFLAGS="$(WASM_CFLAGS)" emconfigure ../configure \
 	    --enable-shared=no \
 	    --enable-static=yes \
 	    --prefix=$(WASM); \
