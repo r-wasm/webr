@@ -51,6 +51,7 @@ $(R_TARBALL):
 
 $(BUILD)/state/r-patched: $(R_TARBALL)
 	rm -rf $(R_SOURCE)
+	mkdir -p $(BUILD)
 	tar -C $(BUILD) -xf $(R_TARBALL)
 	cp -r "$(WEBR_ROOT)/patches/R-$(R_VERSION)/." "$(R_SOURCE)/patches"
 	cd "$(R_SOURCE)/patches" && quilt push -a
