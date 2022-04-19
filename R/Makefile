@@ -72,9 +72,9 @@ $(BUILD)/state/r-stage1: $(BUILD)/state/r-patched
 	)
 	( \
 	  cd $(R_SOURCE)/build-stage1; \
-	  FC=$(STAGE1_FC) \
-	    CXX=$(STAGE1_CXX) \
-	    CC=$(STAGE1_CC) \
+	  FC="$(STAGE1_FC)" \
+	    CXX="$(STAGE1_CXX)" \
+	    CC="$(STAGE1_CC)" \
 	    ../configure --prefix="$(R_HOST)" \
 	      --with-x=no \
 	      --with-readline=no \
@@ -121,7 +121,7 @@ $(BUILD)/state/r-stage2-configured: $(BUILD)/state/r-patched $(DRAGONEGG_LIB) $(
 	    CFLAGS="$(STAGE2_CFLAGS)" \
 	    LDFLAGS="$(STAGE2_LDFLAGS)" \
 	    FPICFLAGS="-fPIC" \
-	    FC=$(EMFC) \
+	    FC="$(EMFC)" \
 	    emconfigure ../configure \
 	      --prefix="$(R_WASM)" \
 	      --with-x=no \
