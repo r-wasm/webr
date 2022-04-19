@@ -18,6 +18,7 @@ R_HOST = $(HOST)/R-$(R_VERSION)
 R_WASM = $(WASM)/lib/R-$(R_VERSION)
 
 DRAGONEGG_LIB = $(HOST)/lib/dragonegg.so
+GFORTRAN_WASM_LIB = $(WASM)/lib/libgfortran.a
 
 PCRE_VERSION = 10.39
 PCRE_TARBALL = $(DOWNLOAD)/pcre2-$(PCRE_VERSION).tar.gz
@@ -29,7 +30,7 @@ XZ_TARBALL = $(DOWNLOAD)/xz-$(XZ_VERSION).tar.gz
 XZ_URL = https://tukaani.org/xz/xz-$(XZ_VERSION).tar.gz/download
 XZ_WASM_LIB = $(WASM)/lib/liblzma.a
 
-WASM_LIBS = $(PCRE_WASM_LIB) $(XZ_WASM_LIB)
+WASM_LIBS = $(PCRE_WASM_LIB) $(XZ_WASM_LIB) $(GFORTRAN_WASM_LIB)
 
 # Configure your local environment in this file
 -include ~/.webr-config.mk
@@ -170,6 +171,9 @@ $(BUILD)/state/r-stage2: $(BUILD)/state/r-stage1 $(BUILD)/state/r-stage2-configu
 
 $(DRAGONEGG_LIB):
 	cd $(TOOLS)/dragonegg && $(MAKE) && $(MAKE) install
+
+$(GFORTRAN_WASM_LIB):
+	cd $(TOOLS)/libgfortran && $(MAKE) && $(MAKE) install
 
 
 .PHONY: XZ
