@@ -22,13 +22,14 @@ DRAGONEGG_LIB = $(HOST)/lib/dragonegg.so
 PCRE_VERSION = 10.39
 PCRE_TARBALL = $(DOWNLOAD)/pcre2-$(PCRE_VERSION).tar.gz
 PCRE_URL = https://github.com/PhilipHazel/pcre2/releases/download/pcre2-${PCRE_VERSION}/pcre2-$(PCRE_VERSION).tar.gz
-PCRE_A = $(WASM)/lib/libpcre2-8.a
+PCRE_WASM_LIB = $(WASM)/lib/libpcre2-8.a
 
 XZ_VERSION = 5.2.5
 XZ_TARBALL = $(DOWNLOAD)/xz-$(XZ_VERSION).tar.gz
 XZ_URL = https://tukaani.org/xz/xz-$(XZ_VERSION).tar.gz/download
-XZ_A = $(WASM)/lib/liblzma.a
+XZ_WASM_LIB = $(WASM)/lib/liblzma.a
 
+WASM_LIBS = $(PCRE_WASM_LIB) $(XZ_WASM_LIB)
 
 # Configure your local environment in this file
 -include ~/.webr-config.mk
@@ -41,7 +42,7 @@ WASM_CFLAGS += -fPIC -Oz
 all: R
 
 .PHONY: R
-R: $(PCRE_A) $(XZ_A) $(DRAGONEGG_LIB) $(BUILD)/state/r-stage2
+R: $(BUILD)/state/r-stage2
 
 $(R_TARBALL):
 	mkdir -p $(DOWNLOAD)
@@ -108,7 +109,7 @@ MAIN_LDFLAGS += -s ERROR_ON_UNDEFINED_SYMBOLS=0
 SHLIB_LDFLAGS = -s SIDE_MODULE=1 -s WASM_BIGINT
 
 # Stage 2: Reconfigure and build for wasm32-unknown-emscripten target
-$(BUILD)/state/r-stage2-configured: $(BUILD)/state/r-patched
+$(BUILD)/state/r-stage2-configured: $(BUILD)/state/r-patched $(DRAGONEGG_LIB) $(WASM_LIBS)
 	mkdir -p $(R_SOURCE)/build
 	( \
 	  cd $(R_SOURCE)/build; \
@@ -172,13 +173,13 @@ $(DRAGONEGG_LIB):
 
 
 .PHONY: XZ
-XZ: $(XZ_A)
+XZ: $(XZ_WASM_LIB)
 
 $(XZ_TARBALL):
 	mkdir -p $(DOWNLOAD)
 	wget $(XZ_URL) -O $@
 
-$(XZ_A): $(XZ_TARBALL)
+$(XZ_WASM_LIB): $(XZ_TARBALL)
 	mkdir -p $(BUILD)
 	tar -C $(BUILD) -xf $(XZ_TARBALL)
 	( \
@@ -194,13 +195,13 @@ $(XZ_A): $(XZ_TARBALL)
 
 
 .PHONY: PCRE
-PCRE: $(PCRE_A)
+PCRE: $(PCRE_WASM_LIB)
 
 $(PCRE_TARBALL):
 	mkdir -p $(DOWNLOAD)
 	wget -q -O $@ $(PCRE_URL)
 
-$(PCRE_A): $(PCRE_TARBALL)
+$(PCRE_WASM_LIB): $(PCRE_TARBALL)
 	mkdir -p $(BUILD)
 	tar -C $(BUILD) -xf $(PCRE_TARBALL)
 	( \
