@@ -59,7 +59,7 @@ $(BUILD)/state/r-patched: $(R_TARBALL)
 
 STAGE1_CC ?= clang
 STAGE1_CXX ?= clang++
-STAGE1_FC ?= gfortran-4.6
+STAGE1_FC ?= gfortran
 
 # Stage 1: Build a native version of R so we can compile the default packages
 $(BUILD)/state/r-stage1-configured: $(BUILD)/state/r-patched
@@ -71,7 +71,12 @@ $(BUILD)/state/r-stage1-configured: $(BUILD)/state/r-patched
 	  FC="$(STAGE1_FC)" \
 	    CXX="$(STAGE1_CXX)" \
 	    CC="$(STAGE1_CC)" \
-	    ../configure --prefix="$(R_HOST)" \
+	    FC="$(STAGE1_FC)" \
+	    CPPFLAGS="$(STAGE1_CPPFLAGS)" \
+	    CFLAGS="$(STAGE1_CFLAGS)" \
+	    LDFLAGS="$(STAGE1_LDFLAGS)" \
+	    ../configure \
+	      --prefix="$(R_HOST)" \
 	      --with-x=no \
 	      --with-readline=no \
 	      --with-jpeglib=no \
