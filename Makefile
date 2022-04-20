@@ -23,6 +23,7 @@ clean:
 	rm -rf host wasm
 	cd R && $(MAKE) clean
 	cd tools/dragonegg && $(MAKE) clean
+	cd tools/flang && $(MAKE) clean
 
 .PHONY: distclean
 distclean: clean
