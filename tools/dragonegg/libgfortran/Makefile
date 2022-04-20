@@ -1,4 +1,4 @@
-WEBR_ROOT = $(abspath ../..)
+WEBR_ROOT = $(abspath ../../..)
 ROOT = $(abspath .)
 
 BUILD = $(ROOT)/build

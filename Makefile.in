@@ -10,7 +10,7 @@ webr: tools/emfc
 	cd loader && $(MAKE)
 
 tools/emfc:
-	cd $(EMFC_DIR) && $(MAKE)
+	cd $(EMFC_DIR) && $(MAKE) && $(MAKE) install
 
 # Build webR in a temporary docker container
 .PHONY: docker-webr

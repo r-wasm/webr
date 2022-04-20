@@ -1,15 +1,16 @@
-WEBR_ROOT=$(abspath ../..)
-ROOT=$(abspath .)
+WEBR_ROOT = $(abspath ../..)
+ROOT = $(abspath .)
 
-BUILD=$(ROOT)/build
-SOURCE=$(ROOT)/f18-llvm-project
+BUILD = $(ROOT)/build
+SOURCE = $(ROOT)/f18-llvm-project
 
-HOST=$(WEBR_ROOT)/host
-WASM=$(WEBR_ROOT)/wasm
+TOOLS = $(WEBR_ROOT)/tools
+HOST = $(WEBR_ROOT)/host
+WASM = $(WEBR_ROOT)/wasm
 
-BIN_FILES = build/bin/flang-new build/bin/tco build/bin/bbc
-FLANG_BIN = $(BUILD)/bin/flang-new
+FLANG_BIN = $(BUILD)/bin/tco $(BUILD)/bin/bbc
 RUNTIME_WASM_LIB = $(BUILD)/webr/libFortranRuntime.a
+EMFC = $(TOOLS)/emfc
 
 
 # Configure your local environment in this file
@@ -25,7 +26,7 @@ all: $(FLANG_BIN) $(RUNTIME_WASM_LIB)
 $(SOURCE):
 	git clone --single-branch -b fix-webr --depth=1 https://github.com/lionel-/f18-llvm-project
 
-$(BUILD)/bin/flang-new: $(SOURCE)
+$(FLANG_BIN): $(SOURCE)
 	mkdir -p $(BUILD) && \
 	cd $(BUILD) && \
 	CMAKE_BUILD_PARALLEL_LEVEL=$(NUM_CORES) cmake ../f18-llvm-project/llvm \
@@ -57,12 +58,13 @@ $(RUNTIME_WASM_LIB):
 	  SOURCE="$(SOURCE)" \
 	  ./build-runtime.sh
 
-
 .PHONY: install
 install: $(FLANG_BIN) $(RUNTIME_WASM_LIB)
 	mkdir -p $(HOST)/bin $(WASM)/lib
-	cp $(BIN_FILES) $(HOST)/bin
+	cp $(FLANG_BIN) $(HOST)/bin
 	cp $(RUNTIME_WASM_LIB) $(WASM)/lib
+	sed -e "s|@BIN_PATH@|$(HOST)/bin|" emfc.in > $(EMFC)
+	chmod +x $(EMFC)
 
 .PHONY: check
 check:
