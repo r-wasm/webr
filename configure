@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -eu
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --with-dragonegg)
+            USE_DRAGONEGG="true"
+            shift
+            ;;
+        *)
+            echo "Unknown argument $1"
+            exit 1
+            ;;
+    esac
+done
+
+if [ -z ${USE_DRAGONEGG-} ]
+then
+    echo "TODO" && exit 1
+else
+    sed -e "s|@EMFC_DIR@|emfc-dragonegg|" Makefile.in > Makefile
+    sed -e "s|@FORTRAN_WASM_LIB@|libgfortran.a|" R/Makefile.in > R/Makefile
+fi

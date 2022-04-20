@@ -1,8 +1,16 @@
+WEBR_ROOT = $(abspath .)
+TOOLS = $(WEBR_ROOT)/tools
+
+EMFC_DIR = $(TOOLS)/@EMFC_DIR@
+
 # Build webR and install the web app in `./dist`
 .PHONY: webr
-webr:
+webr: tools/emfc
 	cd R && $(MAKE) && $(MAKE) install
 	cd loader && $(MAKE)
+
+tools/emfc:
+	cd $(EMFC_DIR) && $(MAKE)
 
 # Build webR in a temporary docker container
 .PHONY: docker-webr

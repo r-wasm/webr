@@ -8,6 +8,8 @@ TOOLS = $(WEBR_ROOT)/tools
 HOST = $(WEBR_ROOT)/host
 WASM = $(WEBR_ROOT)/wasm
 
+FORTRAN_WASM_LIB = $(WASM)/lib/@FORTRAN_WASM_LIB@
+
 R_VERSION = 4.1.3
 R_TARBALL = $(DOWNLOAD)/R-$(R_VERSION).tar.gz
 R_SOURCE = $(BUILD)/R-$(R_VERSION)
@@ -16,9 +18,6 @@ R_URL = https://cran.r-project.org/src/base/R-4/R-$(R_VERSION).tar.gz
 R_BUILD = $(R_SOURCE)/build
 R_HOST = $(HOST)/R-$(R_VERSION)
 R_WASM = $(WASM)/R-$(R_VERSION)
-
-DRAGONEGG_LIB = $(HOST)/lib/dragonegg.so
-GFORTRAN_WASM_LIB = $(WASM)/lib/libgfortran.a
 
 PCRE_VERSION = 10.39
 PCRE_TARBALL = $(DOWNLOAD)/pcre2-$(PCRE_VERSION).tar.gz
@@ -30,7 +29,7 @@ XZ_TARBALL = $(DOWNLOAD)/xz-$(XZ_VERSION).tar.gz
 XZ_URL = https://tukaani.org/xz/xz-$(XZ_VERSION).tar.gz/download
 XZ_WASM_LIB = $(WASM)/lib/liblzma.a
 
-WASM_LIBS = $(PCRE_WASM_LIB) $(XZ_WASM_LIB) $(GFORTRAN_WASM_LIB)
+WASM_LIBS = $(PCRE_WASM_LIB) $(XZ_WASM_LIB) $(FORTRAN_WASM_LIB)
 
 # Configure your local environment in this file
 -include ~/.webr-config.mk
@@ -111,7 +110,7 @@ MAIN_LDFLAGS += -s ERROR_ON_UNDEFINED_SYMBOLS=0
 SHLIB_LDFLAGS = -s SIDE_MODULE=1 -s WASM_BIGINT
 
 # Stage 2: Reconfigure and build for wasm32-unknown-emscripten target
-$(BUILD)/state/r-stage2-configured: $(BUILD)/state/r-patched $(DRAGONEGG_LIB) $(WASM_LIBS)
+$(BUILD)/state/r-stage2-configured: $(BUILD)/state/r-patched $(WASM_LIBS)
 	mkdir -p $(R_SOURCE)/build
 	cd $(R_SOURCE)/build && \
 	  MAIN_LDFLAGS="$(MAIN_LDFLAGS)" \
@@ -159,13 +158,6 @@ install: $(BUILD)/state/r-stage2
 	cd $(R_SOURCE)/build && \
 	  $(MAKE_WASM_INSTALL) install-wasm; \
 	cp -r "$(R_WASM)/dist/." $(DIST)
-
-
-$(DRAGONEGG_LIB):
-	cd $(TOOLS)/dragonegg && $(MAKE) && $(MAKE) install
-
-$(GFORTRAN_WASM_LIB):
-	cd $(TOOLS)/libgfortran && $(MAKE) && $(MAKE) install
 
 
 .PHONY: XZ
