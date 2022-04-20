@@ -26,4 +26,4 @@ RUN mkdir -p /webr-tools && \
 ENV PATH="/app/bin:/webr-tools/emsdk:/webr-tools/emsdk/node/12.9.1_64bit/bin:/webr-tools/emsdk/upstream/emscripten:${PATH}"
 ENV LIBRARY_PATH="/app/lib:${LIBRARY_PATH}"
 
-CMD cd /app/R && make && make install
+CMD cd /app && make webr
