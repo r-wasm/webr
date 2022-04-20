@@ -14,6 +14,8 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+rm -f tools/emfc
+
 if [ -z ${USE_DRAGONEGG-} ]
 then
     sed -e "s|@EMFC_DIR@|flang|" \
