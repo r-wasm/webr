@@ -16,9 +16,15 @@ done
 
 if [ -z ${USE_DRAGONEGG-} ]
 then
-    sed -e "s|@EMFC_DIR@|flang|" Makefile.in > Makefile
-    sed -e "s|@FORTRAN_WASM_LIB@|libFortranRuntime.a|" R/Makefile.in > R/Makefile
+    sed -e "s|@EMFC_DIR@|flang|" \
+        -e "s|@FORTRAN_WASM_LIB@|libFortranRuntime.a|" \
+        Makefile.in > Makefile
+    sed -e "s|@FORTRAN_WASM_LIB@|libFortranRuntime.a|" \
+        R/Makefile.in > R/Makefile
 else
-    sed -e "s|@EMFC_DIR@|dragonegg|" Makefile.in > Makefile
-    sed -e "s|@FORTRAN_WASM_LIB@|libgfortran.a|" R/Makefile.in > R/Makefile
+    sed -e "s|@EMFC_DIR@|dragonegg|" \
+        -e "s|@FORTRAN_WASM_LIB@|libgfortran.a|" \
+        Makefile.in > Makefile
+    sed -e "s|@FORTRAN_WASM_LIB@|libgfortran.a|" \
+        R/Makefile.in > R/Makefile
 fi

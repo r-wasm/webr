@@ -1,15 +1,18 @@
 WEBR_ROOT = $(abspath .)
+WASM = $(WEBR_ROOT)/wasm
 TOOLS = $(WEBR_ROOT)/tools
 
+FORTRAN_WASM_LIB = $(WASM)/lib/@FORTRAN_WASM_LIB@
 EMFC_DIR = $(TOOLS)/@EMFC_DIR@
+EMFC_FILES = tools/emfc $(FORTRAN_WASM_LIB)
 
 # Build webR and install the web app in `./dist`
 .PHONY: webr
-webr: tools/emfc
+webr: $(EMFC_FILES)
 	cd R && $(MAKE) && $(MAKE) install
 	cd loader && $(MAKE)
 
-tools/emfc:
+$(EMFC_FILES):
 	cd $(EMFC_DIR) && $(MAKE) && $(MAKE) install
 
 # Build webR in a temporary docker container
