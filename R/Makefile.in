@@ -123,6 +123,7 @@ $(BUILD)/state/r-stage2-configured: $(BUILD)/state/r-patched $(WASM_LIBS)
 	    CPPFLAGS="$(STAGE2_CPPFLAGS)" \
 	    CFLAGS="$(STAGE2_CFLAGS)" \
 	    LDFLAGS="$(STAGE2_LDFLAGS)" \
+	    FFLAGS="" \
 	    FPICFLAGS="-fPIC" \
 	    FC="$(EMFC)" \
 	    emconfigure ../configure \
