@@ -15,7 +15,7 @@ R_URL = https://cran.r-project.org/src/base/R-4/R-$(R_VERSION).tar.gz
 
 R_BUILD = $(R_SOURCE)/build
 R_HOST = $(HOST)/R-$(R_VERSION)
-R_WASM = $(WASM)/lib/R-$(R_VERSION)
+R_WASM = $(WASM)/R-$(R_VERSION)
 
 DRAGONEGG_LIB = $(HOST)/lib/dragonegg.so
 GFORTRAN_WASM_LIB = $(WASM)/lib/libgfortran.a
@@ -148,7 +148,7 @@ $(BUILD)/state/r-stage2: $(BUILD)/state/r-stage1 $(BUILD)/state/r-stage2-configu
 	  cd $(R_BUILD)/src/library/base; \
 	  $(MAKE_WASM) Rsimple; \
 	)
-	cp -r "$(R_SOURCE)/build/library/base/R/." "$(R_HOST)/lib/R/library/base/R"
+	cp -r "$(R_SOURCE)/build/library/base/R" "$(R_HOST)/lib/R/library/base"
 # Build R for wasm32-unknown-emscripten
 	( \
 	  cd $(R_BUILD); \
@@ -168,6 +168,7 @@ $(BUILD)/state/r-stage2: $(BUILD)/state/r-stage1 $(BUILD)/state/r-stage2-configu
 	  $(MAKE_WASM) install-wasm; \
 	)
 	cp -r "$(R_WASM)/dist/." $(DIST)
+	touch $@
 
 
 $(DRAGONEGG_LIB):
