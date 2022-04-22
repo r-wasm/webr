@@ -13,4 +13,9 @@ container-%:
 
 .PHONY: clean
 clean:
+	cd R && $(MAKE) clean
+	cd tools/dragonegg && $(MAKE) clean
+
+.PHONY: distclean
+distclean: clean
 	rm -rf dist

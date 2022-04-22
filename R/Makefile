@@ -220,3 +220,8 @@ $(PCRE_WASM_LIB): $(PCRE_TARBALL)
 	  emmake make install; \
 	)
 	touch $@
+
+
+.PHONY: clean
+clean:
+	rm -rf $(BUILD) $(DOWNLOAD)
