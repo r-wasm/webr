@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -eu
 
 # Find the object name
 OUT=`echo "$@" | sed -n 's/.*-o \(.*\).*/\1/p' | cut -d " " -f1`
@@ -8,7 +10,9 @@ if [[ -z "${OUT}" ]]; then
   EXTRA_FFLAGS="-o ${OUT}"
 fi
 
-gfortran-4.6 -emit-llvm -S -flto -m32 -fverbose-asm -nostdlib -fplugin=/app/bin/dragonegg.so "$@" ${EXTRA_FFLAGS} && \
+DRAGONEGG_SO="${DRAGONEGG_SO-/app/host/lib/dragonegg.so}"
+
+gfortran-4.6 -emit-llvm -S -flto -m32 -fverbose-asm -nostdlib -fplugin="${DRAGONEGG_SO}" "$@" ${EXTRA_FFLAGS-} && \
 sed -i 's/^\(target\sdatalayout\s*=\s*\).*$/\1"e-m:e-p:32:32-i64:64-n32:64-S128"/' "$OUT" && \
 sed -i 's/^\(target\striple\s*=\s*\).*$/\1"wasm32-unknown-emscripten"/' "$OUT" && \
 
@@ -27,10 +31,10 @@ while read -r line ; do
 done < <(egrep '@.*_\([^)(]*,?\s?\.\.\.\)' "${OUT}.ll.orig")
 sed -i "s/@cabs(/@cabs_alt(/" "${OUT}"
 sed -i "s/@csqrt(/@csqrt_alt(/" "${OUT}"
-if [ -z "$KEEP_TEMPS" ]; then rm "${OUT}.ll.orig"; fi
+if [ -z "${KEEP_TEMPS-}" ]; then rm "${OUT}.ll.orig"; fi
 ########
 
 llvm-as-3.3 "$OUT" -o "$OUT.bc" && \
 mv "$OUT" "$OUT.ll" && \
 mv "$OUT.bc" "$OUT" && \
-if [ -z "$KEEP_TEMPS" ]; then rm "$OUT.ll"; fi
+if [ -z "${KEEP_TEMPS-}" ]; then rm "$OUT.ll"; fi

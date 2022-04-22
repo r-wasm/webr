@@ -3,7 +3,7 @@ function loadWebR(options){
     if(options.Rargs === undefined) options.Rargs = ['-q'];
     if(options.runtimeInitializedCB === undefined) options.runtimeInitializedCB = function(){};
     if(options.loadingPackageCB === undefined) options.loadingPackageCB = function(packageName){ console.log("Loading webR package " + packageName) };
-    if(options.WEBR_URL === undefined) options.WEBR_URL = "https://cdn.jsdelivr.net/gh/georgestagg/webR/dist/";
+    if(options.WEBR_URL === undefined) options.WEBR_URL = "@@BASE_URL@@";
     if(options.PKG_URL === undefined) options.PKG_URL = "https://cdn.jsdelivr.net/gh/georgestagg/webr-ports/dist/";
     if(options.ENV === undefined) options.ENV = {
         "R_NSIZE"      : "1000000",
