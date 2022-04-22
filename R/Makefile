@@ -148,7 +148,7 @@ $(BUILD)/state/r-stage2: $(BUILD)/state/r-stage1 $(BUILD)/state/r-stage2-configu
 	  cd $(R_BUILD)/src/library/base; \
 	  $(MAKE_WASM) Rsimple; \
 	)
-	cp -r "$(R_SOURCE)/build/library/base/R" "$(R_HOST)/lib/R/library/base"
+	cp -r "$(R_SOURCE)/build/library/base/R/." "$(R_HOST)/lib/R/library/base/R"
 # Build R for wasm32-unknown-emscripten
 	( \
 	  cd $(R_BUILD); \
