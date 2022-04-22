@@ -137,31 +137,27 @@ $(BUILD)/state/r-stage2-configured: $(BUILD)/state/r-patched $(DRAGONEGG_LIB) $(
 	      --host=wasm32-unknown-emscripten
 	touch $@
 
-MAKE_WASM = $(MAKE) R_EXE="$(R_HOST)/bin/R --vanilla --no-echo"
+STAGE2_BUILD = $(R_SOURCE)/build
+
+MAKE_WASM := $(MAKE)
+MAKE_WASM += R_EXE="$(R_HOST)/bin/R --vanilla --no-echo"
+
+MAKE_WASM_BUILD := $(MAKE_WASM)
+MAKE_WASM_BUILD += R_INSTALL_LIBRARY="$(STAGE2_BUILD)/library"
+MAKE_WASM_BUILD += R_ENABLE_JIT="false"
+MAKE_WASM_BUILD += WEBR_HOST_METHODS="$(R_HOST)/lib/R/library/methods"
+
+MAKE_WASM_INSTALL := $(MAKE_WASM)
 
 $(BUILD)/state/r-stage2: $(BUILD)/state/r-stage1 $(BUILD)/state/r-stage2-configured
-# Remove lazy loaded base package so that R can cleanly rebuild
-	rm -f "$(R_HOST)/lib/R/library/base/R/base"*
-	cd $(R_BUILD)/src/library/base && \
-	  $(MAKE_WASM) Rsimple
-	cp -r "$(R_SOURCE)/build/library/base/R/." "$(R_HOST)/lib/R/library/base/R"
-# Build R for wasm32-unknown-emscripten
-	cd $(R_BUILD) && \
-	  $(MAKE_WASM) R
-# Install lazy loaded packages by copying back into the build tree
-	cp -r "$(R_HOST)/lib/R/library/base/R/base"* "$(R_BUILD)/library/base/R/"
-	cp -r "$(R_HOST)/lib/R/library/methods/R/methods"* "$(R_BUILD)/library/methods/R/"
-	cd $(R_BUILD) && \
-	  $(MAKE_WASM) install-wasm
-# Rebuild R.bin.js and R.bin.data
-	cd $(R_BUILD) && \
-	  $(MAKE_WASM) R
+	cd $(STAGE2_BUILD) && \
+	  $(MAKE_WASM_BUILD) R
 	touch $@
 
 .PHONY: install
 install: $(BUILD)/state/r-stage2
 	cd $(R_SOURCE)/build && \
-	  $(MAKE_WASM) install-wasm
+	  $(MAKE_WASM_INSTALL) install-wasm; \
 	cp -r "$(R_WASM)/dist/." $(DIST)
 
 
