@@ -13,6 +13,7 @@ container-%:
 
 .PHONY: clean
 clean:
+	rm -rf host wasm
 	cd R && $(MAKE) clean
 	cd tools/dragonegg && $(MAKE) clean
 
