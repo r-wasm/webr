@@ -18,15 +18,17 @@ rm -f tools/emfc
 
 if [ -z ${USE_DRAGONEGG-} ]
 then
-    sed -e "s|@EMFC_DIR@|flang|" \
-        -e "s|@FORTRAN_WASM_LIB@|libFortranRuntime.a|" \
+    sed -e "s|@@EMFC_DIR@@|flang|" \
+        -e "s|@@FORTRAN_WASM_LIB@@|libFortranRuntime.a|" \
         Makefile.in > Makefile
-    sed -e "s|@FORTRAN_WASM_LIB@|libFortranRuntime.a|" \
+    sed -e "s|@@FORTRAN_WASM_LIB@@|libFortranRuntime.a|" \
+        -e "s|@@FORTRAN_WASM_LDFLAG@@|-lFortranRuntime|" \
         R/Makefile.in > R/Makefile
 else
-    sed -e "s|@EMFC_DIR@|dragonegg|" \
-        -e "s|@FORTRAN_WASM_LIB@|libgfortran.a|" \
+    sed -e "s|@@EMFC_DIR@@|dragonegg|" \
+        -e "s|@@FORTRAN_WASM_LIB@@|libgfortran.a|" \
         Makefile.in > Makefile
-    sed -e "s|@FORTRAN_WASM_LIB@|libgfortran.a|" \
+    sed -e "s|@@FORTRAN_WASM_LIB@@|libgfortran.a|" \
+        -e "s|@@FORTRAN_WASM_LDFLAG@@|-lgfortran|" \
         R/Makefile.in > R/Makefile
 fi

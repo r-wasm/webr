@@ -27,7 +27,7 @@ Index: R-4.1.3/src/main/Makefile.in
 +	$(MAIN_LINK) --use-preload-plugins \
 +	--preload-file "$(prefix)/lib@/usr/lib" \
 +	-o $(prefix)/dist/$(R_binary).js \
-+	$(R_bin_OBJECTS) -lRlapack -lgfortran $(R_bin_LDADD)
++	$(R_bin_OBJECTS) -lRlapack $(FORTRAN_WASM_LDFLAG) $(R_bin_LDADD)
 +
 +install-wasm: $(R_bin_DEPENDENCIES)
 +	@$(MKINSTALLDIRS) "$(prefix)/dist"
