@@ -1,0 +1,13 @@
+Index: R-4.1.3/src/library/base/R/library.R
+===================================================================
+--- R-4.1.3.orig/src/library/base/R/library.R
++++ R-4.1.3/src/library/base/R/library.R
+@@ -770,7 +770,7 @@ function(package = NULL, lib.loc = NULL,
+     ## don't waste time looking for the standard packages:
+     ## we know where they are and this can take a significant
+     ## time with 1000+ packages installed.
+-    if(length(package) == 1L  &&
++    if(length(package) == 1L  && is.null(lib.loc) &&
+        package %in% c("base", "tools", "utils", "grDevices", "graphics",
+                       "stats", "datasets", "methods", "grid", "parallel",
+                       "splines", "stats4", "tcltk", "compiler"))

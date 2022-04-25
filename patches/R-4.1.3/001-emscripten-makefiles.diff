@@ -1,7 +1,7 @@
-Index: R-4.1.3_quilt/Makefile.in
+Index: R-4.1.3/Makefile.in
 ===================================================================
---- R-4.1.3_quilt.orig/Makefile.in
-+++ R-4.1.3_quilt/Makefile.in
+--- R-4.1.3.orig/Makefile.in
++++ R-4.1.3/Makefile.in
 @@ -90,6 +90,12 @@ stamp-java : etc/Makeconf etc/javaconf $
  javaconf: R
  	@$(MAKE) stamp-java
@@ -15,10 +15,10 @@ Index: R-4.1.3_quilt/Makefile.in
  
  install install-strip: installdirs svnonly
  	@for d in $(SUBDIRS); do \
-Index: R-4.1.3_quilt/src/main/Makefile.in
+Index: R-4.1.3/src/main/Makefile.in
 ===================================================================
---- R-4.1.3_quilt.orig/src/main/Makefile.in
-+++ R-4.1.3_quilt/src/main/Makefile.in
+--- R-4.1.3.orig/src/main/Makefile.in
++++ R-4.1.3/src/main/Makefile.in
 @@ -147,6 +147,18 @@ R: Makedeps
  $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
  	$(MAIN_LINK) -o $@ $(R_bin_OBJECTS) $(R_bin_LDADD)
@@ -38,3 +38,16 @@ Index: R-4.1.3_quilt/src/main/Makefile.in
  libR.a: $(OBJECTS) $(STATIC_LIBS)
  	-@mkdir libs
  	@(cd libs; for l in $(STATIC_LIBS); do $(AR) -x ../$$l; done)
+Index: R-4.1.3/src/library/datasets/Makefile.in
+===================================================================
+--- R-4.1.3.orig/src/library/datasets/Makefile.in
++++ R-4.1.3/src/library/datasets/Makefile.in
+@@ -26,7 +26,7 @@ all: Makefile DESCRIPTION
+ 	  $(INSTALL_DATA) $${f} $(top_builddir)/library/$(pkg)/data; \
+ 	done
+ 	@rm -f $(top_builddir)/library/$(pkg)/data/Rdata.*
+-	@$(ECHO) "tools:::data2LazyLoadDB(\"$(pkg)\", compress=3)" | \
++	@$(ECHO) "tools:::data2LazyLoadDB(\"$(pkg)\", lib.loc = \"$(top_builddir)/library/\", compress=3)" | \
+ 	  R_DEFAULT_PACKAGES=NULL LC_ALL=C $(R_EXE) > /dev/null
+ 	@$(INSTALL_DATA) $(srcdir)/data/morley.tab \
+ 	  $(top_builddir)/library/$(pkg)/data
