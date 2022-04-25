@@ -327,7 +327,7 @@
             COLORTERM: "truecolor",
         },
         stdout: function(text) {
-            term.echo(text);
+            term.echo(text, {exec: false});
         },
         stderr: function(text) {
             if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
