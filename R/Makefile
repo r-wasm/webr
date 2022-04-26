@@ -63,7 +63,7 @@ STAGE1_CXX ?= clang++
 STAGE1_FC ?= gfortran-4.6
 
 # Stage 1: Build a native version of R so we can compile the default packages
-$(BUILD)/state/r-stage1: $(BUILD)/state/r-patched
+$(BUILD)/state/r-stage1-configured: $(BUILD)/state/r-patched
 	mkdir -p $(R_SOURCE)/build-stage1/doc
 # Workaround for the lack of LaTeX packages
 	cd $(R_SOURCE)/build-stage1/doc && \
@@ -83,9 +83,13 @@ $(BUILD)/state/r-stage1: $(BUILD)/state/r-patched
 	      --with-pcre2 \
 	      --disable-nls \
 	      --enable-byte-compiled-packages=no \
-	      --enable-long-double=no && \
-	    $(MAKE) R && \
-	    $(MAKE) install
+	      --enable-long-double=no
+	touch $@
+
+$(BUILD)/state/r-stage1: $(BUILD)/state/r-stage1-configured
+	cd $(R_SOURCE)/build-stage1 && \
+	  $(MAKE) R && \
+	  $(MAKE) install
 	touch $@
 
 EMFC ?= $(WEBR_ROOT)/tools/emfc
