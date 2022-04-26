@@ -155,10 +155,14 @@ $(BUILD)/state/r-stage2: $(BUILD)/state/r-stage1 $(BUILD)/state/r-stage2-configu
 	  $(MAKE_WASM) install-wasm
 # Rebuild R.bin.js and R.bin.data
 	cd $(R_BUILD) && \
-	  $(MAKE_WASM) R && \
+	  $(MAKE_WASM) R
+	touch $@
+
+.PHONY: install
+install: $(BUILD)/state/r-stage2
+	cd $(R_SOURCE)/build && \
 	  $(MAKE_WASM) install-wasm
 	cp -r "$(R_WASM)/dist/." $(DIST)
-	touch $@
 
 
 $(DRAGONEGG_LIB):
