@@ -216,3 +216,7 @@ $(PCRE_WASM_LIB): $(PCRE_TARBALL)
 .PHONY: clean
 clean:
 	rm -rf $(BUILD) $(DOWNLOAD)
+
+# Print Makefile variable
+.PHONY: print-%
+print-%  : ; @echo $* = $($*)
