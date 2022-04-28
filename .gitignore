@@ -1,11 +1,11 @@
-/Makefile
-/R/Makefile
 dist
 host
 wasm
+tools/fortran.mk
 tools/dragonegg/build
+tools/dragonegg/emfc
 tools/flang/build
+tools/flang/emfc
 tools/flang/f18-llvm-project
-tools/emfc
 R/download
 R/build

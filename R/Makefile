@@ -8,8 +8,8 @@ TOOLS = $(WEBR_ROOT)/tools
 HOST = $(WEBR_ROOT)/host
 WASM = $(WEBR_ROOT)/wasm
 
-FORTRAN_WASM_LIB = $(WASM)/lib/@@FORTRAN_WASM_LIB@@
-FORTRAN_WASM_LDFLAG = -L$(WASM)/lib @@FORTRAN_WASM_LDFLAG@@
+# This is symlinked at configure-time
+include $(TOOLS)/fortran.mk
 
 R_VERSION = 4.1.3
 R_TARBALL = $(DOWNLOAD)/R-$(R_VERSION).tar.gz
@@ -96,8 +96,6 @@ $(BUILD)/state/r-stage1: $(BUILD)/state/r-stage1-configured
 	  $(MAKE) R && \
 	  $(MAKE) install
 	touch $@
-
-EMFC ?= $(WEBR_ROOT)/tools/emfc
 
 STAGE2_CPPFLAGS := $(STAGE2_CPPFLAGS)
 STAGE2_CPPFLAGS += -I$(WASM)/include -DEXPEL_OLD_TO_NEW=1

@@ -12,7 +12,6 @@ TOOLS = $(WEBR_ROOT)/tools
 DRAGONEGG_SOURCE = $(BUILD)/dragonegg
 DRAGONEGG_LIB = $(DRAGONEGG_SOURCE)/dragonegg.so
 LIBGFORTRAN_WASM_LIB = $(BUILD)/libgfortran/libgfortran.a
-EMFC = $(TOOLS)/emfc
 
 # Configure your local environment in this file
 -include ~/.webr-config.mk
@@ -55,8 +54,8 @@ install:
 	mkdir -p $(HOST)/lib $(WASM)/lib
 	cp $(DRAGONEGG_LIB) $(HOST)/lib
 	cp $(LIBGFORTRAN_WASM_LIB) $(WASM)/lib/
-	sed -e "s|@LIB_PATH@|$(HOST)/lib|" emfc.in > $(EMFC)
-	chmod +x $(EMFC)
+	sed -e "s|@LIB_PATH@|$(HOST)/lib|" emfc.in > emfc
+	chmod +x emfc
 
 .PHONY: clean
 clean:

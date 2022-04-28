@@ -2,9 +2,10 @@ WEBR_ROOT = $(abspath .)
 WASM = $(WEBR_ROOT)/wasm
 TOOLS = $(WEBR_ROOT)/tools
 
-FORTRAN_WASM_LIB = $(WASM)/lib/@@FORTRAN_WASM_LIB@@
-EMFC_DIR = $(TOOLS)/@@EMFC_DIR@@
-EMFC_FILES = tools/emfc $(FORTRAN_WASM_LIB)
+# This is symlinked at configure-time
+include $(TOOLS)/fortran.mk
+
+EMFC_FILES = $(EMFC) $(FORTRAN_WASM_LIB)
 
 # Build webR and install the web app in `./dist`
 .PHONY: webr

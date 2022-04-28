@@ -10,8 +10,6 @@ WASM = $(WEBR_ROOT)/wasm
 
 FLANG_BIN = $(BUILD)/bin/tco $(BUILD)/bin/bbc
 RUNTIME_WASM_LIB = $(BUILD)/webr/libFortranRuntime.a
-EMFC = $(TOOLS)/emfc
-
 
 # Configure your local environment in this file
 -include ~/.webr-config.mk
@@ -63,8 +61,8 @@ install: $(FLANG_BIN) $(RUNTIME_WASM_LIB)
 	mkdir -p $(HOST)/bin $(WASM)/lib
 	cp $(FLANG_BIN) $(HOST)/bin
 	cp $(RUNTIME_WASM_LIB) $(WASM)/lib
-	sed -e "s|@BIN_PATH@|$(HOST)/bin|" emfc.in > $(EMFC)
-	chmod +x $(EMFC)
+	sed -e "s|@BIN_PATH@|$(HOST)/bin|" emfc.in > emfc
+	chmod +x emfc
 
 .PHONY: check
 check:
