@@ -14,7 +14,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-rm tools/fortran.mk
+rm -f tools/fortran.mk
 
 if [ -z ${USE_DRAGONEGG-} ]
 then
