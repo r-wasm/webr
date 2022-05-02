@@ -4,6 +4,7 @@ set -eu
 BIN_PATH=@BIN_PATH@
 BBC=${BIN_PATH}/bbc
 TCO=${BIN_PATH}/tco
+LLC=${BIN_PATH}/llc
 
 ARGS=()
 
@@ -50,8 +51,8 @@ sed -i "" "s/_QQcl\./_QQcl_/g" ${OUT_BASE}.ll
 
 if [ -z ${NO_LINKING-} ]
 then
-    llc -march=wasm32 -filetype=obj --relocation-model=pic "${OUT_BASE}.ll" -o "${OUT_BASE}.s"
+    ${LLC} -march=wasm32 -filetype=obj --relocation-model=pic "${OUT_BASE}.ll" -o "${OUT_BASE}.s"
     wasm-ld "${OUT_BASE}.s" -o "${OUT}" --no-entry --allow-undefined --relocatable --experimental-pic
 else
-    llc -march=wasm32 -filetype=obj --relocation-model=pic "${OUT_BASE}.ll" -o "${OUT}"
+    ${LLC} -march=wasm32 -filetype=obj --relocation-model=pic "${OUT_BASE}.ll" -o "${OUT}"
 fi

@@ -8,7 +8,7 @@ TOOLS = $(WEBR_ROOT)/tools
 HOST = $(WEBR_ROOT)/host
 WASM = $(WEBR_ROOT)/wasm
 
-FLANG_BIN = $(BUILD)/bin/tco $(BUILD)/bin/bbc
+FLANG_BIN = $(BUILD)/bin/tco $(BUILD)/bin/bbc $(BUILD)/bin/llc
 RUNTIME_WASM_LIB = $(BUILD)/webr/libFortranRuntime.a
 
 # Configure your local environment in this file
