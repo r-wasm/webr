@@ -1,13 +1,20 @@
-.PHONY: webR
-webR:
+# Build webR in a temporary docker container
+.PHONY: docker-webr
+docker-webr:
 	mkdir -p dist
 	docker build -t webr-build .
 	docker run --rm --mount type=bind,source=$(PWD),target=/app webr-build
-	cp loader/repl.html dist/index.html
-	cp loader/webR.js dist/webR.js
 
-.PHONY: container-%
-container-%:
+# Build webR and install the web app in `./dist`
+.PHONY: webr
+webr:
+	cd R && $(MAKE) && $(MAKE) install
+	cd loader && $(MAKE)
+
+# Create a permanent docker container for building webR. Call `make`
+# from within the container to start the build.
+.PHONY: docker-container-%
+docker-container-%:
 	docker build -t webr-build .
 	docker run -dit --name $* --mount type=bind,source=$(PWD),target=/app webr-build bash
 

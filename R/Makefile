@@ -63,15 +63,12 @@ STAGE1_CXX ?= clang++
 STAGE1_FC ?= gfortran-4.6
 
 # Stage 1: Build a native version of R so we can compile the default packages
-$(BUILD)/state/r-stage1: $(BUILD)/state/r-patched
+$(BUILD)/state/r-stage1-configured: $(BUILD)/state/r-patched
 	mkdir -p $(R_SOURCE)/build-stage1/doc
 # Workaround for the lack of LaTeX packages
-	( \
-	  cd $(R_SOURCE)/build-stage1/doc; \
-	  touch NEWS NEWS.pdf NEWS.rds NEWS.2.rds NEWS.3.rds; \
-	)
-	( \
-	  cd $(R_SOURCE)/build-stage1; \
+	cd $(R_SOURCE)/build-stage1/doc && \
+	  touch NEWS NEWS.pdf NEWS.rds NEWS.2.rds NEWS.3.rds
+	cd $(R_SOURCE)/build-stage1 && \
 	  FC="$(STAGE1_FC)" \
 	    CXX="$(STAGE1_CXX)" \
 	    CC="$(STAGE1_CC)" \
@@ -86,10 +83,13 @@ $(BUILD)/state/r-stage1: $(BUILD)/state/r-patched
 	      --with-pcre2 \
 	      --disable-nls \
 	      --enable-byte-compiled-packages=no \
-	      --enable-long-double=no; \
-	    $(MAKE) R; \
-	    $(MAKE) install; \
-	)
+	      --enable-long-double=no
+	touch $@
+
+$(BUILD)/state/r-stage1: $(BUILD)/state/r-stage1-configured
+	cd $(R_SOURCE)/build-stage1 && \
+	  $(MAKE) R && \
+	  $(MAKE) install
 	touch $@
 
 EMFC ?= $(WEBR_ROOT)/tools/emfc
@@ -113,8 +113,7 @@ SHLIB_LDFLAGS = -s SIDE_MODULE=1 -s WASM_BIGINT
 # Stage 2: Reconfigure and build for wasm32-unknown-emscripten target
 $(BUILD)/state/r-stage2-configured: $(BUILD)/state/r-patched $(DRAGONEGG_LIB) $(WASM_LIBS)
 	mkdir -p $(R_SOURCE)/build
-	( \
-	  cd $(R_SOURCE)/build; \
+	cd $(R_SOURCE)/build && \
 	  MAIN_LDFLAGS="$(MAIN_LDFLAGS)" \
 	    SHLIB_LDFLAGS="$(SHLIB_LDFLAGS)" \
 	    CPPFLAGS="$(STAGE2_CPPFLAGS)" \
@@ -135,8 +134,7 @@ $(BUILD)/state/r-stage2-configured: $(BUILD)/state/r-patched $(DRAGONEGG_LIB) $(
 	      --disable-nls \
 	      --enable-byte-compiled-packages=no \
 	      --enable-static=yes \
-	      --host=wasm32-unknown-emscripten; \
-	)
+	      --host=wasm32-unknown-emscripten
 	touch $@
 
 MAKE_WASM = $(MAKE) R_EXE="$(R_HOST)/bin/R --vanilla --no-echo"
@@ -144,31 +142,27 @@ MAKE_WASM = $(MAKE) R_EXE="$(R_HOST)/bin/R --vanilla --no-echo"
 $(BUILD)/state/r-stage2: $(BUILD)/state/r-stage1 $(BUILD)/state/r-stage2-configured
 # Remove lazy loaded base package so that R can cleanly rebuild
 	rm -f "$(R_HOST)/lib/R/library/base/R/base"*
-	( \
-	  cd $(R_BUILD)/src/library/base; \
-	  $(MAKE_WASM) Rsimple; \
-	)
+	cd $(R_BUILD)/src/library/base && \
+	  $(MAKE_WASM) Rsimple
 	cp -r "$(R_SOURCE)/build/library/base/R/." "$(R_HOST)/lib/R/library/base/R"
 # Build R for wasm32-unknown-emscripten
-	( \
-	  cd $(R_BUILD); \
-	  $(MAKE_WASM) R; \
-	)
+	cd $(R_BUILD) && \
+	  $(MAKE_WASM) R
 # Install lazy loaded packages by copying back into the build tree
 	cp -r "$(R_HOST)/lib/R/library/base/R/base"* "$(R_BUILD)/library/base/R/"
 	cp -r "$(R_HOST)/lib/R/library/methods/R/methods"* "$(R_BUILD)/library/methods/R/"
-	( \
-	  cd $(R_BUILD); \
-	  $(MAKE_WASM) install-wasm; \
-	)
+	cd $(R_BUILD) && \
+	  $(MAKE_WASM) install-wasm
 # Rebuild R.bin.js and R.bin.data
-	( \
-	  cd $(R_BUILD); \
-	  $(MAKE_WASM) R; \
-	  $(MAKE_WASM) install-wasm; \
-	)
-	cp -r "$(R_WASM)/dist/." $(DIST)
+	cd $(R_BUILD) && \
+	  $(MAKE_WASM) R
 	touch $@
+
+.PHONY: install
+install: $(BUILD)/state/r-stage2
+	cd $(R_SOURCE)/build && \
+	  $(MAKE_WASM) install-wasm
+	cp -r "$(R_WASM)/dist/." $(DIST)
 
 
 $(DRAGONEGG_LIB):
@@ -188,15 +182,14 @@ $(XZ_TARBALL):
 $(XZ_WASM_LIB): $(XZ_TARBALL)
 	mkdir -p $(BUILD)
 	tar -C $(BUILD) -xf $(XZ_TARBALL)
-	( \
-	  cd $(BUILD)/xz-$(XZ_VERSION); \
-	  mkdir -p build && cd build; \
+	cd $(BUILD)/xz-$(XZ_VERSION) && \
+	  mkdir -p build && \
+	  cd build && \
 	  CFLAGS="$(WASM_CFLAGS)" emconfigure ../configure \
 	    --enable-shared=no \
 	    --enable-static=yes \
-	    --prefix=$(WASM); \
-	  emmake make install; \
-	)
+	    --prefix=$(WASM) && \
+	  emmake make install
 	touch $@
 
 
@@ -210,18 +203,20 @@ $(PCRE_TARBALL):
 $(PCRE_WASM_LIB): $(PCRE_TARBALL)
 	mkdir -p $(BUILD)
 	tar -C $(BUILD) -xf $(PCRE_TARBALL)
-	( \
-	  cd $(BUILD)/pcre2-$(PCRE_VERSION); \
-	  mkdir -p build && cd build; \
+	mkdir -p $(BUILD)/pcre2-$(PCRE_VERSION)/build
+	cd $(BUILD)/pcre2-$(PCRE_VERSION)/build && \
 	  CFLAGS="$(WASM_CFLAGS)" emconfigure ../configure \
 	    --enable-shared=no \
 	    --enable-static=yes \
-	    --prefix=$(WASM); \
-	  emmake make install; \
-	)
+	    --prefix=$(WASM) && \
+	  emmake make install
 	touch $@
 
 
 .PHONY: clean
 clean:
 	rm -rf $(BUILD) $(DOWNLOAD)
+
+# Print Makefile variable
+.PHONY: print-%
+print-%  : ; @echo $* = $($*)
