@@ -61,6 +61,8 @@ em++ ${CXXFLAGS} -c utf.cpp -o utf.o
 em++ ${CXXFLAGS} -c ${SOURCE}/flang/lib/Decimal/decimal-to-binary.cpp -o decimal-to-binary.o
 em++ ${CXXFLAGS} -c ${SOURCE}/flang/lib/Decimal/binary-to-decimal.cpp -o binary-to-decimal.o
 
+emcc ${CFLAGS} -c ${ROOT}/missing-math.c -o missing-math.o
+
 mkdir -p ${BUILD}/webr/
 rm -f ${BUILD}/webr/libFortranRuntime.a
 
@@ -74,4 +76,4 @@ emar -cr ${BUILD}/webr/libFortranRuntime.a \
   numeric.o ragged.o random.o reduction.o pointer.o product.o stat.o \
   sum.o support.o terminator.o time-intrinsic.o tools.o transformational.o \
   type-code.o type-info.o unit.o unit-map.o utf.o \
-  binary-to-decimal.o decimal-to-binary.o
+  binary-to-decimal.o decimal-to-binary.o missing-math.o
