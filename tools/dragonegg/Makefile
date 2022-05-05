@@ -42,6 +42,7 @@ $(DRAGONEGG_LIB): $(DRAGONEGG_SOURCE)
 $(LIBGFORTRAN_WASM_LIB):
 	mkdir -p $(LIBGFORTRAN_BUILD)
 	( \
+	  set -e; \
 	  cd $(LIBGFORTRAN_BUILD); \
 	  emcc -fPIC -std=gnu11 -g -Os -c $(LIBGFORTRAN_SOURCE)/pow_i4_i4.c -o pow_i4_i4.o; \
 	  emcc -fPIC -std=gnu11 -g -Os -c $(LIBGFORTRAN_SOURCE)/string_intrinsics_inc.c -o string_intrinsics_inc.o; \
