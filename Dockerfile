@@ -23,6 +23,8 @@ RUN mkdir -p /webr-tools && \
     ./emsdk install "3.1.1" && \
     ./emsdk activate "3.1.1"
 
+RUN ln -s /usr/bin/gfortran-4.6 /usr/bin/gfortran
+
 ENV PATH="/app/bin:/webr-tools/emsdk:/webr-tools/emsdk/node/12.9.1_64bit/bin:/webr-tools/emsdk/upstream/emscripten:${PATH}"
 ENV LIBRARY_PATH="/app/lib:${LIBRARY_PATH}"
 

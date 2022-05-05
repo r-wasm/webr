@@ -10,7 +10,7 @@ if [[ -z "${OUT}" ]]; then
   EXTRA_FFLAGS="-o ${OUT}"
 fi
 
-DRAGONEGG_SO="${DRAGONEGG_SO-/app/host/lib/dragonegg.so}"
+DRAGONEGG_SO="${DRAGONEGG_SO-@LIB_PATH@/dragonegg.so}"
 
 gfortran-4.6 -emit-llvm -S -flto -m32 -fverbose-asm -nostdlib -fplugin="${DRAGONEGG_SO}" "$@" ${EXTRA_FFLAGS-} && \
 sed -i 's/^\(target\sdatalayout\s*=\s*\).*$/\1"e-m:e-p:32:32-i64:64-n32:64-S128"/' "$OUT" && \

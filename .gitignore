@@ -1,7 +1,11 @@
 dist
 host
 wasm
+tools/fortran.mk
 tools/dragonegg/build
-tools/libgfortran/build
+tools/dragonegg/emfc
+tools/flang/build
+tools/flang/emfc
+tools/flang/f18-llvm-project
 R/download
 R/build

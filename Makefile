@@ -1,15 +1,27 @@
+WEBR_ROOT = $(abspath .)
+WASM = $(WEBR_ROOT)/wasm
+TOOLS = $(WEBR_ROOT)/tools
+
+# This is symlinked at configure-time
+include $(TOOLS)/fortran.mk
+
+EMFC_FILES = $(EMFC) $(FORTRAN_WASM_LIB)
+
+# Build webR and install the web app in `./dist`
+.PHONY: webr
+webr: $(EMFC_FILES)
+	cd R && $(MAKE) && $(MAKE) install
+	cd loader && $(MAKE)
+
+$(EMFC_FILES):
+	cd $(EMFC_DIR) && $(MAKE) && $(MAKE) install
+
 # Build webR in a temporary docker container
 .PHONY: docker-webr
 docker-webr:
 	mkdir -p dist
 	docker build -t webr-build .
 	docker run --rm --mount type=bind,source=$(PWD),target=/app webr-build
-
-# Build webR and install the web app in `./dist`
-.PHONY: webr
-webr:
-	cd R && $(MAKE) && $(MAKE) install
-	cd loader && $(MAKE)
 
 # Create a permanent docker container for building webR. Call `make`
 # from within the container to start the build.
@@ -23,6 +35,7 @@ clean:
 	rm -rf host wasm
 	cd R && $(MAKE) clean
 	cd tools/dragonegg && $(MAKE) clean
+	cd tools/flang && $(MAKE) clean
 
 .PHONY: distclean
 distclean: clean
