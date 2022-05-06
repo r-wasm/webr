@@ -180,6 +180,13 @@ Rprofile: $(BUILD)/state/r-stage2
 	mkdir -p "$(R_WASM)/lib/R/etc/"
 	echo "options(expressions=400)" > "$(R_WASM)/lib/R/etc/Rprofile.site"
 
+.PHONY: install-tests
+install-tests: $(BUILD)/state/r-stage2
+	cd $(R_SOURCE)/build && \
+		$(MAKE_WASM_BUILD) docs && \
+		$(MAKE_WASM_INSTALL) install-tests
+	$(MAKE) install
+
 .PHONY: install
 install: $(BUILD)/state/r-stage2 Rprofile
 	mkdir -p $(R_SOURCE)/build/doc
