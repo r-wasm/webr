@@ -1,0 +1,135 @@
+Index: R-4.1.3/src/library/tools/R/testing.R
+===================================================================
+--- R-4.1.3.orig/src/library/tools/R/testing.R
++++ R-4.1.3/src/library/tools/R/testing.R
+@@ -195,6 +195,11 @@ Rdiff <- function(from, to, useDiff = FA
+     }
+     clean2 <- function(txt)
+     {
++        # Remove extra newlines inserted during emscripten testing
++        if(R.version$os == "emscripten"){
++            txt <- txt[which(txt!="")]
++            txt <- txt[which(txt!="> ")]
++        }
+         eoh <- grep("^> options\\(warn = 1\\)$", txt)
+         if(length(eoh)) txt[-(1L:eoh[1L])] else txt
+     }
+@@ -302,6 +307,17 @@ testInstalledPackages <-
+     invisible(status)
+ }
+ 
++internal_runR <- function(Rfile, outfile)
++{
++    con <- file(outfile, open = "wt")
++    sink(con)
++    sink(con, type = "message")
++    source(Rfile, echo=TRUE, max.deparse.length=10000)
++    sink(type = "message")
++    sink()
++    return(0)
++}
++
+ testInstalledPackage <-
+     function(pkg, lib.loc = NULL, outDir = ".",
+              types = c("examples", "tests", "vignettes"),
+@@ -323,15 +339,18 @@ testInstalledPackage <-
+             savefile <- paste0(outfile, ".prev")
+             if (file.exists(outfile)) file.rename(outfile, savefile)
+             unlink(failfile)
+-            ## Create as .fail in case this R session gets killed
+-            cmd <- paste(shQuote(file.path(R.home("bin"), "R")),
+-                         "CMD BATCH --vanilla --no-timing", Ropts,
+-                         shQuote(Rfile), shQuote(failfile))
+-            if (.Platform$OS.type == "windows") Sys.setenv(R_LIBS="")
+-            else cmd <- paste("R_LIBS=", cmd)
+-            res <- system(cmd)
++            if(R.version$os == "emscripten"){
++                res <- internal_runR(Rfile, failfile)
++            } else {
++                ## Create as .fail in case this R session gets killed
++                cmd <- paste(shQuote(file.path(R.home("bin"), "R")),
++                            "CMD BATCH --vanilla --no-timing", Ropts,
++                            shQuote(Rfile), shQuote(failfile))
++                if (.Platform$OS.type == "windows") Sys.setenv(R_LIBS="")
++                else cmd <- paste("R_LIBS=", cmd)
++                res <- system(cmd)
++            }
+             if (res) return(invisible(1L)) else file.rename(failfile, outfile)
+-
+             savefile <- paste0(outfile, ".save")
+             if (!is.null(srcdir)) savefile <- file.path(srcdir, savefile)
+             else {
+@@ -344,11 +363,15 @@ testInstalledPackage <-
+                    message(gettextf("  comparing %s to %s ...",
+                                     sQuote(outfile), sQuote(basename(savefile))),
+                            appendLF = FALSE, domain = NA)
+-                   cmd <-
+-                       sprintf("invisible(tools::Rdiff('%s','%s',TRUE,TRUE))",
+-                               outfile, savefile)
+-                   out <- R_runR(cmd, "--vanilla --no-echo")
+-                   if(length(out)) {
++                   if(R.version$os == "emscripten"){
++                       out <- Rdiff(outfile,savefile,FALSE,TRUE)
++                   } else {
++                       cmd <-
++                           sprintf("invisible(tools::Rdiff('%s','%s',TRUE,TRUE))",
++                                   outfile, savefile)
++                       out <- R_runR(cmd, "--vanilla --no-echo")
++                   }
++                   if(out && length(out)) {
+                        if(strict)
+                            message(" ERROR")
+                        else
+@@ -367,11 +390,15 @@ testInstalledPackage <-
+                     message(gettextf("  comparing %s to %s ...",
+                             sQuote(outfile), sQuote(basename(prevfile))),
+                             appendLF = FALSE, domain = NA)
+-                    cmd <-
+-                        sprintf("invisible(tools::Rdiff('%s','%s',TRUE,TRUE))",
+-                                outfile, prevfile)
+-                    out <- R_runR(cmd, "--vanilla --no-echo")
+-                    if(length(out)) {
++                    if(R.version$os == "emscripten"){
++                        out <- Rdiff(outfile,prevfile,FALSE,TRUE)
++                    } else {
++                        cmd <-
++                            sprintf("invisible(tools::Rdiff('%s','%s',TRUE,TRUE))",
++                                    outfile, prevfile)
++                        out <- R_runR(cmd, "--vanilla --no-echo")
++                    }
++                    if(out && length(out)) {
+                         message(" NOTE")
+                         writeLines(paste0("  ", out))
+                     } else {
+@@ -398,12 +425,16 @@ testInstalledPackage <-
+         for(f in Rfiles) {
+             message(gettextf("  Running %s", sQuote(f)), domain = NA)
+             outfile <- sub("rout$", "Rout", paste0(f, "out"))
+-            cmd <- paste(shQuote(file.path(R.home("bin"), "R")),
+-                         "CMD BATCH --vanilla --no-timing", Ropts,
+-                         shQuote(f), shQuote(outfile))
+-            cmd <- if (.Platform$OS.type == "windows") paste(cmd, "LANGUAGE=C")
+-            else paste("LANGUAGE=C", cmd)
+-           res <- system(cmd)
++            if(R.version$os == "emscripten"){
++                res <- internal_runR(Rfile, failfile)
++            } else {
++                cmd <- paste(shQuote(file.path(R.home("bin"), "R")),
++                             "CMD BATCH --vanilla --no-timing", Ropts,
++                             shQuote(f), shQuote(outfile))
++                cmd <- if (.Platform$OS.type == "windows") paste(cmd, "LANGUAGE=C")
++                else paste("LANGUAGE=C", cmd)
++                res <- system(cmd)
++            }
+             if (res) {
+                 file.rename(outfile, paste0(outfile, ".fail"))
+                 return(invisible(1L))
+@@ -413,7 +444,7 @@ testInstalledPackage <-
+                 message(gettextf("  comparing %s to %s ...",
+                                  sQuote(outfile), sQuote(savefile)),
+                         appendLF = FALSE, domain = NA)
+-                res <- Rdiff(outfile, savefile)
++                res <- Rdiff(outfile, savefile, FALSE)
+                 if (!res) message(" OK")
+             }
+         }

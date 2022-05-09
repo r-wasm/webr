@@ -14,3 +14,5 @@ find-default-packages.diff
 tre-fix-rf_error-args.diff
 emscripten-disable-bcEval.diff
 emscripten-xhr-download.diff
+emscripten-package-testing.diff
+emscripten-quit.diff
