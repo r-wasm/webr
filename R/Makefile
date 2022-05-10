@@ -163,6 +163,9 @@ $(BUILD)/state/r-stage2: $(BUILD)/state/r-stage1 $(BUILD)/state/r-stage2-configu
 
 .PHONY: install
 install: $(BUILD)/state/r-stage2
+	mkdir -p $(R_SOURCE)/build/doc
+	cd $(R_SOURCE)/build/doc && \
+	  touch NEWS NEWS.pdf NEWS.rds NEWS.2.rds NEWS.3.rds
 	cd $(R_SOURCE)/build && \
 	  $(MAKE_WASM_INSTALL) install-wasm; \
 	cp -r "$(R_WASM)/dist/." $(DIST)
