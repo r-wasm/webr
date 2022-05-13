@@ -316,7 +316,6 @@
         Rargs: [],
         runtimeInitializedCB: function(){
             FSTree.init();
-            term.clear();
         },
         loadingPackageCB: function(packageName){
             term.echo("Downloading webR package: " + packageName);
@@ -337,6 +336,9 @@
             term.error(text);
         },
     });
+    webRPromise.then(_ => {
+        FSTree.init();
+    })
     const download = document.getElementById('download-file');
     download.addEventListener('click', function (e) {
         FSTree.downloadNodeasFile(FSTree.getSelectedNode());

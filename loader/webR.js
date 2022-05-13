@@ -66,6 +66,8 @@ function loadWebR(options){
 
         _loadedPackages: [],
         loadPackages: async function(packages) {
+            await webR._initialised;
+
             for (const pkg of packages) {
                 if (this.isLoaded(pkg)) {
                     continue;
@@ -84,44 +86,57 @@ function loadWebR(options){
 
         isLoaded: function(pkg) {
             return this._loadedPackages.includes(pkg) || this.builtinPackages.includes(pkg);
+        },
+
+        _initialised: null,
+        _init: function() {
+            webR._initialised = new Promise((resolve, _reject) => {
+                window.Module = {
+                    preRun: [function() { ENV = options.ENV }],
+                    postRun: [],
+                    arguments: options.Rargs,
+                    noExitRuntime: true,
+                    locateFile: function(path, _prefix) {
+                        return( options.WEBR_URL + path);
+                    },
+                    print: function(text){
+                        options.stdout(text);
+                    },
+                    printErr: function(text) {
+                        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+                        options.stderr(text);
+                    },
+                    canvas: (function() {})(),
+                    setStatus: function(text) {
+                        if (!window.Module.setStatus.last) window.Module.setStatus.last = { time: Date.now(), text: '' };
+                        if (text === window.Module.setStatus.last.text) return;
+                    },
+                    onRuntimeInitialized: function() {
+                        resolve(webR);
+                    },
+                    totalDependencies: 0,
+                    _monitorRunDependencies: function(left) {
+                        this.totalDependencies = Math.max(this.totalDependencies, left);
+                        window.Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' +
+                                                this.totalDependencies + ')' : 'All downloads complete.');
+                    },
+                    monitorRunDependencies: left => window.Module._monitorRunDependencies(left)
+                };
+                window.Module.setStatus('Downloading...');
+                loadScript(options.WEBR_URL + 'R.bin.js');
+
+                return webR;
+            });
+
+            return webR._initialised.then(_ => {
+                options.runtimeInitializedCB();
+                webR.loadPackages(options.packages);
+                return webR;
+            })
         }
     }
-    return new Promise((resolve, reject) => {
-        window.Module = {
-            preRun: [function(){ENV = options.ENV}],
-            postRun: [],
-            arguments: options.Rargs,
-            noExitRuntime: true,
-            locateFile: function(path, prefix) {
-                return( options.WEBR_URL + path);
-            },
-            print: function(text){
-                options.stdout(text);
-            },
-            printErr: function(text) {
-                if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-                options.stderr(text);
-            },
-            canvas: (function() {})(),
-            setStatus: function(text) {
-                if (!window.Module.setStatus.last) window.Module.setStatus.last = { time: Date.now(), text: '' };
-                if (text === window.Module.setStatus.last.text) return;
-            },
-            onRuntimeInitialized: function(){
-                options.runtimeInitializedCB();
-                webR.loadPackages(options.packages).then(_ => resolve(webR));
-            },
-            totalDependencies: 0,
-            _monitorRunDependencies: function(left) {
-                this.totalDependencies = Math.max(this.totalDependencies, left);
-                window.Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' +
-                    this.totalDependencies + ')' : 'All downloads complete.');
-            },
-            monitorRunDependencies: left => window.Module._monitorRunDependencies(left)
-        };
-        window.Module.setStatus('Downloading...');
-        loadScript(options.WEBR_URL + 'R.bin.js');
-    });
+
+    return webR._init();
 }
 
 async function loadScript(src) {
