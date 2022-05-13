@@ -64,14 +64,6 @@ function loadWebR(options){
         },
 
         _loadedPackages: [],
-        _loadPackage: async function(pkg) {
-            if (this.isLoaded(pkg)) {
-                return;
-            }
-
-            this._loadedPackages.push(pkg);
-            await loadPackageUrl(options.PKG_URL, pkg);
-        },
         loadPackages: async function(packages) {
             for (const pkg of packages) {
                 if (this.isLoaded(pkg)) {
@@ -84,7 +76,8 @@ function loadWebR(options){
                     await this.loadPackages(deps);
                 }
 
-                await this._loadPackage(pkg);
+                this._loadedPackages.push(pkg);
+                await loadPackageUrl(options.PKG_URL, pkg);
             }
         },
 
