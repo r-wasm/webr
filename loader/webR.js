@@ -62,38 +62,34 @@ function loadWebR(options){
         putFileData: async function(name, data){
             window.Module['FS_createDataFile']('/', name, data, true, true, true);
         },
-        loadedPackages: [],
-        loadPackages: function(packages){
-            return packages.reduce(function(curPromise, packageName) {
-                return curPromise.then(_ => {
-                    var nextPromise = new Promise(function (resolve, reject) {
-                        if (this.loadedPackages.includes(packageName)){
-                            resolve();
-                        } else if (this.builtinPackages.includes(packageName)){
-                            resolve();
-                        } else {
-                            options.loadingPackageCB(packageName);
-                            this.loadedPackages.push(packageName);
-                            window.Module['locateFile'] = function(path, prefix) {
-                                return options.PKG_URL + packageName + "/" + path;
-                            }
-                            var script = document.createElement('script');
-                            script.setAttribute('src', options.PKG_URL + packageName + "/" + packageName + ".js");
-                            script.onerror = reject;
-                            window.Module.monitorRunDependencies = function(left) {
-                                window.Module._monitorRunDependencies(left);
-                                if(left == 0){
-                                    monitorRunDependencies = left => window.Module._monitorRunDependencies(left);
-                                    resolve();
-                                }
-                            };
-                            document.head.appendChild(script);
-                        }
-                    }.bind(this));
-                    var prereq = (packageName in this.preReqPackages)?this.preReqPackages[packageName]:[];
-                    return nextPromise.then(_ => this.loadPackages(prereq));
-                });
-            }.bind(this), Promise.resolve());
+
+        _loadedPackages: [],
+        _loadPackage: async function(pkg) {
+            if (this.isLoaded(pkg)) {
+                return;
+            }
+
+            this._loadedPackages.push(pkg);
+            await loadPackageUrl(options.PKG_URL, pkg);
+        },
+        loadPackages: async function(packages) {
+            for (const pkg of packages) {
+                if (this.isLoaded(pkg)) {
+                    continue;
+                }
+                options.loadingPackageCB(pkg);
+
+                let deps = this.preReqPackages[pkg];
+                if (deps) {
+                    await this.loadPackages(deps);
+                }
+
+                await this._loadPackage(pkg);
+            }
+        },
+
+        isLoaded: function(pkg) {
+            return this._loadedPackages.includes(pkg) || this.builtinPackages.includes(pkg);
         }
     }
     return new Promise((resolve, reject) => {
@@ -130,8 +126,47 @@ function loadWebR(options){
             monitorRunDependencies: left => window.Module._monitorRunDependencies(left)
         };
         window.Module.setStatus('Downloading...');
-        var script = document.createElement('script');
-        script.setAttribute('src',options.WEBR_URL+'R.bin.js');
+        loadScript(options.WEBR_URL + 'R.bin.js');
+    });
+}
+
+async function loadScript(src) {
+  return new Promise(function (resolve, reject) {
+    let script = document.createElement('script');
+
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = reject;
+
+    document.head.appendChild(script);
+  });
+}
+
+async function loadPackageUrl(baseUrl, pkg) {
+    return new Promise(function (resolve, reject) {
+        const oldLocateFile = window.Module['locateFile'];
+        const oldMonitorRunDependencies = window.Module['monitorRunDependencies'];
+
+        let reset = function() {
+            window.Module['monitorRunDependencies'] = oldMonitorRunDependencies;
+            window.Module['locateFile'] = oldLocateFile;
+        }
+
+        const url = baseUrl + pkg;
+        window.Module['locateFile'] = function(path, _prefix) { return url + "/" + path; }
+
+        let script = document.createElement('script');
+        script.src = url + '/' + pkg + '.js';
+        script.onerror = reject;
+
+        window.Module['monitorRunDependencies'] = function(left) {
+            window.Module['_monitorRunDependencies'](left);
+            if (left == 0) {
+                reset();
+                resolve();
+            }
+        };
+
         document.head.appendChild(script);
     });
 }
