@@ -29,7 +29,7 @@ export interface WebRBackend {
   getFSNode: typeof getFSNode;
 }
 
-type WebRConfig = {
+export type WebRConfig = {
   RArgs: string[];
   REnv: { [key: string]: string };
   WEBR_URL: string;

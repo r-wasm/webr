@@ -23,9 +23,12 @@ import {
   getFSNode,
 } as WebRBackend;
 
+let args = process.argv;
+args.splice(0, 1);
+
 (async () => {
   await init({
-    RArgs: [],
+    RArgs: args,
   });
 
   for (;;) {
