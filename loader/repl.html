@@ -175,23 +175,26 @@
                                     term.read(
                                         payload.length > 2 ? payload[2] : '',
                                         function(text) {
-                                            var reg = /(library|require)\(['"]?(.*?)['"]?\)/g;
-                                            var res;
-                                            var packages = [];
-                                            while((res = reg.exec(text)) !== null) {
+                                            const reg = /(library|require)\(['"]?(.*?)['"]?\)/g;
+                                            let res, packages = [];
+                                            while ((res = reg.exec(text)) !== null) {
                                                 packages.push(res[2]);
                                             }
-                                            webRPromise.then( function(webR) {
-                                                webR.loadPackages(packages).then(_ => {
+
+                                            (async () => {
+                                                let webR = await webRPromise;
+                                                try {
+                                                    await webR.loadPackages(packages);
                                                     props.responseText = text;
                                                     target.onload();
                                                     FSTree.jstree.refresh();
-                                                }, function(e) {
+                                                } catch(err) {
                                                     console.log("An error occured loading one or more packages. Perhaps they do not exist in webR-ports.");
+                                                    console.log(err);
                                                     props.responseText = text;
-                                                    target.onload()
-                                                });
-                                            });
+                                                    target.onload();
+                                                }
+                                            })();
                                         }
                                     );
                                     term.history().enable();
