@@ -1,4 +1,4 @@
-function loadWebR(options){
+function newWebr(options) {
     if(options.packages === undefined) options.packages = [];
     if(options.Rargs === undefined) options.Rargs = ['-q'];
     if(options.runtimeInitializedCB === undefined) options.runtimeInitializedCB = function(){};
@@ -52,6 +52,8 @@ function loadWebR(options){
             return(window.Module._run_R_from_JS(allocate(intArrayFromString(code), 0), code.length));
         },
         getFileData: async function(name){
+            await webR._initialised;
+
             var FS = window.FS;
             var size = FS.stat(name).size;
             var stream = FS.open(name, 'r');
@@ -89,7 +91,7 @@ function loadWebR(options){
         },
 
         _initialised: null,
-        _init: function() {
+        init: function() {
             webR._initialised = new Promise((resolve, _reject) => {
                 window.Module = {
                     preRun: [function() { ENV = options.ENV }],
@@ -136,7 +138,7 @@ function loadWebR(options){
         }
     }
 
-    return webR._init();
+    return webR;
 }
 
 async function loadScript(src) {

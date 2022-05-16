@@ -182,7 +182,6 @@
                                             }
 
                                             (async () => {
-                                                let webR = await webRPromise;
                                                 try {
                                                     await webR.loadPackages(packages);
                                                     props.responseText = text;
@@ -251,36 +250,42 @@
             parents[0]='';
             return parents.join('/');
         },
-        downloadNodeasFile: function(node){
-            var filename = node.text;
-            var filepath = this.getNodeFileName(node);
-            webRPromise.then(webR => webR.getFileData(filepath)).then( data => {
-                var blob = new Blob([data], {type: "application/octet-stream"});
-                var url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.download = filename;
-                link.href = url;
-                link.click();
-                link.delete;
-            });
+        downloadNodeasFile: async function(node) {
+            let filepath = this.getNodeFileName(node);
+            let data = await webR.getFileData(filepath);
+
+            let filename = node.text;
+            let blob = new Blob([data], { type: "application/octet-stream" });
+            let url = URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = url;
+            link.click();
+            link.delete;
         },
-        uploadFile: function(fileInput){
-            var node = this.getSelectedNode();
-            var filepath = this.getNodeFileName(node);
+        uploadFile: function(fileInput) {
+            let node = this.getSelectedNode();
+            let filepath = this.getNodeFileName(node);
+
             if (filepath === ''){
                 filepath = '/';
             }
-            if (fileInput.files.length == 0)
+            if (fileInput.files.length == 0) {
                 return;
-            var file = fileInput.files[0];
-            var fr = new FileReader();
-            fr.onload = function () {
-                var data = new Uint8Array(fr.result);
-                webRPromise.then(webR => webR.putFileData(filepath + '/' + file.name, data)).then( function(){
-                    this.jstree.refresh()
-                }.bind(this));
+            }
+
+            let file = fileInput.files[0];
+            let fr = new FileReader();
+
+            let jstree = this.jstree;
+            fr.onload = async function () {
                 fileInput.value = '';
-            }.bind(this);
+                var data = new Uint8Array(fr.result);
+                await webR.putFileData(filepath + '/' + file.name, data);
+                jstree.refresh()
+            };
+
             fr.readAsArrayBuffer(file);
         },
         getNodeJSON: function(node){
@@ -312,7 +317,8 @@
             };
         },
     };
-    var webRPromise = loadWebR({
+
+    var webR = newWebr({
         Rargs: [],
         runtimeInitializedCB: function(){
             FSTree.init();
@@ -336,9 +342,12 @@
             term.error(text);
         },
     });
-    webRPromise.then(_ => {
+
+    (async () => {
+        await webR.init();
         FSTree.init();
-    })
+    })();
+
     const download = document.getElementById('download-file');
     download.addEventListener('click', function (e) {
         FSTree.downloadNodeasFile(FSTree.getSelectedNode());
