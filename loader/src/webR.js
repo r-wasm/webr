@@ -1,9 +1,11 @@
-function newWebR(options) {
+import { BASE_URL } from './config.js';
+
+export function newWebR(options) {
     if(options.packages === undefined) options.packages = [];
     if(options.Rargs === undefined) options.Rargs = ['-q'];
     if(options.runtimeInitializedCB === undefined) options.runtimeInitializedCB = function(){};
     if(options.loadingPackageCB === undefined) options.loadingPackageCB = function(packageName){ console.log("Loading webR package " + packageName) };
-    if(options.WEBR_URL === undefined) options.WEBR_URL = "@@BASE_URL@@";
+    if(options.WEBR_URL === undefined) options.WEBR_URL = BASE_URL;
     if(options.PKG_URL === undefined) options.PKG_URL = "https://cdn.jsdelivr.net/gh/georgestagg/webr-ports/dist/";
     if(options.ENV === undefined) options.ENV = {
         "R_NSIZE"      : "3000000",

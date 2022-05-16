@@ -1,0 +1,2 @@
+export { BASE_URL };
+let BASE_URL = '@@BASE_URL@@';
