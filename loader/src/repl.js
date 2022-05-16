@@ -1,4 +1,4 @@
-import { newWebR } from './webR';
+import { WebR } from './webR';
 
 var term = $('#term').terminal([], {
     prompt: '',
@@ -110,7 +110,7 @@ window.FSTree = {
     },
 };
 
-var webR = newWebR({
+var webR = new WebR({
     Rargs: [],
     runtimeInitializedCB: function() {
         FSTree.init();

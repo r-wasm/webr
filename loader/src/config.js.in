@@ -1,2 +1,4 @@
-export { BASE_URL };
+export { BASE_URL, PKG_BASE_URL };
+
 let BASE_URL = '@@BASE_URL@@';
+let PKG_BASE_URL = "https://cdn.jsdelivr.net/gh/georgestagg/webr-ports/dist/";
