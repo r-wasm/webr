@@ -31,6 +31,7 @@ function loadWebR(options){
             'readr': ['cli', 'clipr', 'crayon', 'hms', 'lifecycle', 'R6', 'rlang', 'tibble', 'vroom'],
             'stringr': ['glue', 'magrittr', 'stringi'],
             'tibble': ['ellipsis', 'fansi', 'lifecycle', 'magrittr', 'pillar', 'pkgconfig', 'rlang', 'vctrs'],
+            'tidyr': ['dplyr', 'rlang', 'vctrs'],
             'tidyselect': ['ellipsis', 'glue', 'purrr', 'rlang', 'vctrs'],
             'scales': ['farver', 'labeling', 'lifecycle', 'munsell', 'R6', 'RColorBrewer', 'viridisLite'],
             'vctrs': ['ellipsis', 'glue', 'rlang'],
