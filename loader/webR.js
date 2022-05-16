@@ -91,7 +91,7 @@ function newWebr(options) {
         },
 
         _initialised: null,
-        init: function() {
+        init: async function() {
             webR._initialised = new Promise((resolve, _reject) => {
                 window.Module = {
                     preRun: [function() { ENV = options.ENV }],
@@ -99,7 +99,7 @@ function newWebr(options) {
                     arguments: options.Rargs,
                     noExitRuntime: true,
                     locateFile: function(path, _prefix) {
-                        return( options.WEBR_URL + path);
+                        return(options.WEBR_URL + path);
                     },
                     print: function(text){
                         options.stdout(text);
@@ -130,11 +130,11 @@ function newWebr(options) {
                 return webR;
             });
 
-            return webR._initialised.then(_ => {
-                options.runtimeInitializedCB();
-                webR.loadPackages(options.packages);
-                return webR;
-            })
+            await webR._initialised;
+
+            options.runtimeInitializedCB();
+            webR.loadPackages(options.packages);
+            return webR;
         }
     }
 
