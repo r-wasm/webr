@@ -1,4 +1,5 @@
 import { BASE_URL } from './config.js';
+import { AsyncQueue } from './queue.ts';
 
 export function newWebR(options) {
     if(options.packages === undefined) options.packages = [];
@@ -92,8 +93,15 @@ export function newWebR(options) {
             return this._loadedPackages.includes(pkg) || this.builtinPackages.includes(pkg);
         },
 
+        _outputQueue: new AsyncQueue(),
+
+        readOutput: async function() {
+            return await this._outputQueue.get();
+        },
+
         _initialised: null,
         init: async function() {
+            let queue = this._outputQueue;
             webR._initialised = new Promise((resolve, _reject) => {
                 window.Module = {
                     preRun: [function() { ENV = options.ENV }],
@@ -103,12 +111,14 @@ export function newWebR(options) {
                     locateFile: function(path, _prefix) {
                         return(options.WEBR_URL + path);
                     },
-                    print: function(text){
-                        options.stdout(text);
+                    print: function(text) {
+                        queue.put({ type: 'stdout', text: text });
                     },
                     printErr: function(text) {
-                        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-                        options.stderr(text);
+                        if (arguments.length > 1) {
+                            text = Array.prototype.slice.call(arguments).join(' ');
+                        }
+                        queue.put({ type: 'stderr', text: text });
                     },
                     canvas: (function() {})(),
                     setStatus: function(text) {

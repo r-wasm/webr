@@ -200,19 +200,21 @@ var webR = newWebR({
         R_ENABLE_JIT: "0",
         R_DEFAULT_DEVICE: "canvas",
         COLORTERM: "truecolor",
-    },
-    stdout: function(text) {
-        term.echo(text, {exec: false});
-    },
-    stderr: function(text) {
-        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-        term.error(text);
-    },
+    }
 });
 
 (async () => {
     await webR.init();
     FSTree.init();
+
+    while (true) {
+        let output = await webR.readOutput();
+        if (output.type == 'stdout') {
+            term.echo(output.text, { exec: false });
+        } else {
+            term.error(output.text);
+        }
+    }
 })();
 
 const download = document.getElementById('download-file');
