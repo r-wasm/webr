@@ -1,5 +1,5 @@
-import { BASE_URL } from './config.js';
-import { AsyncQueue } from './queue.ts';
+import { BASE_URL } from './config';
+import { AsyncQueue } from './queue';
 
 export function newWebR(options) {
     if(options.packages === undefined) options.packages = [];
@@ -152,6 +152,63 @@ export function newWebR(options) {
 
     return webR;
 }
+
+
+const xhrRegex = /^___terminal::/;
+
+// XHR proxy that handle methods from fetch in C
+XMLHttpRequest = (function(xhr) {
+    return function() {
+        let url;
+        let props = {
+            readyState: 4,
+            status: 200
+        };
+        let enc = new TextEncoder('utf-8');
+        return new Proxy(new xhr(), {
+            get: function(target, name) {
+                if (url && ['response', 'responseText', 'status', 'readyState'].indexOf(name) != -1) {
+                    if (name == 'response') {
+                        var response = enc.encode(props.responseText);
+                        return response;
+                    }
+                    return props[name];
+                } else if (name == 'open') {
+                    return function(_method, open_url) {
+                        if (open_url.match(xhrRegex)) {
+                            url = open_url;
+                        } else {
+                            return target[name].apply(target, arguments);
+                        }
+                    };
+                } else if (name == 'send') {
+                    return function(_data) {
+                        if (!url) {
+                            return target[name].apply(target, arguments);
+                        }
+
+                        var payload = url.split('::');
+                        if (payload[1] != 'read') {
+                            return target[name].apply(target, arguments);
+                        }
+
+                        let prompt = payload.length > 2 ? payload[2] : '';
+                        (async () => {
+                            let input = await window.webRFrontend.readInput(prompt);
+                            props.responseText = input;
+                            target.onload();
+                        })();
+                    };
+                } else {
+                    return target[name];
+                }
+            },
+            set: function(target, name, value) {
+                target[name] = value;
+            }
+        });
+    };
+})(self.XMLHttpRequest);
 
 async function loadScript(src) {
   return new Promise(function (resolve, reject) {

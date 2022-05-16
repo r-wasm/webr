@@ -1,85 +1,10 @@
-import { newWebR } from './webR.js';
+import { newWebR } from './webR';
 
 var term = $('#term').terminal([], {
     prompt: '',
     greetings: false,
     history: true
 });
-
-term.echo("R is downloading, please wait...");
-
-
-// XHR proxy that handle methods from fetch in C
-var re = /^___terminal::/;
-
-window.XMLHttpRequest = (function(xhr) {
-    return function() {
-        var url;
-        var props = {
-            readyState: 4,
-            status: 200
-        };
-        var enc = new TextEncoder("utf-8");
-        return new Proxy(new xhr(), {
-            get: function(target, name) {
-                if (url && ['response', 'responseText', 'status', 'readyState'].indexOf(name) != -1) {
-                    if (name == 'response') {
-                        var response = enc.encode(props.responseText);
-                        return response;
-                    }
-                    return props[name];
-                } else if (name == 'open') {
-                    return function(method, open_url) {
-                        if (open_url.match(re)) {
-                            url = open_url;
-                        } else {
-                            return target[name].apply(target, arguments);
-                        }
-                    };
-                } else if (name == 'send') {
-                    return function(data) {
-                        if (url) {
-                            var payload = url.split('::');
-                            if (payload[1] == 'read') {
-                                term.read(
-                                    payload.length > 2 ? payload[2] : '',
-                                    function(text) {
-                                        const reg = /(library|require)\(['"]?(.*?)['"]?\)/g;
-                                        let res, packages = [];
-                                        while ((res = reg.exec(text)) !== null) {
-                                            packages.push(res[2]);
-                                        }
-
-                                        (async () => {
-                                            try {
-                                                await webR.loadPackages(packages);
-                                                props.responseText = text;
-                                                target.onload();
-                                                FSTree.jstree.refresh();
-                                            } catch(err) {
-                                                console.log("An error occured loading one or more packages. Perhaps they do not exist in webR-ports.");
-                                                console.log(err);
-                                                props.responseText = text;
-                                                target.onload();
-                                            }
-                                        })();
-                                    }
-                                );
-                                term.history().enable();
-                            }
-                        } else {
-                            return target[name].apply(target, arguments);
-                        }
-                    };
-                }
-                return target[name];
-            },
-            set: function(target, name, value) {
-                target[name] = value;
-            }
-        });
-    };
-})(window.XMLHttpRequest);
 
 window.FSTree = {
     jstree: null,
@@ -203,7 +128,36 @@ var webR = newWebR({
     }
 });
 
+// Should be exposed as an interface from webR.ts
+class WebRFrontend {
+    async readInput(prompt) {
+        let textProm = term.read(prompt);
+        term.history().enable();
+
+        let text = await textProm;
+
+        const reg = /(library|require)\(['"]?(.*?)['"]?\)/g;
+        let res, packages = [];
+        while ((res = reg.exec(text)) !== null) {
+            packages.push(res[2]);
+        }
+
+        try {
+            await webR.loadPackages(packages);
+        } catch(err) {
+            console.log("An error occured loading one or more packages. Perhaps they do not exist in webR-ports.");
+            console.log(err);
+        }
+
+        return text;
+    };
+}
+
+window.webRFrontend = new WebRFrontend();
+
 (async () => {
+    term.echo("R is downloading, please wait...");
+
     await webR.init();
     FSTree.init();
 
@@ -214,6 +168,8 @@ var webR = newWebR({
         } else {
             term.error(output.text);
         }
+
+        FSTree.jstree.refresh();
     }
 })();
 
