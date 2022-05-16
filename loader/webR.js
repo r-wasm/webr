@@ -1,4 +1,4 @@
-function newWebr(options) {
+function newWebR(options) {
     if(options.packages === undefined) options.packages = [];
     if(options.Rargs === undefined) options.Rargs = ['-q'];
     if(options.runtimeInitializedCB === undefined) options.runtimeInitializedCB = function(){};
