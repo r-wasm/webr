@@ -81,7 +81,7 @@ window.XMLHttpRequest = (function(xhr) {
     };
 })(window.XMLHttpRequest);
 
-var FSTree = {
+window.FSTree = {
     jstree: null,
     init: function() {
         $('#jstree_fs').on('changed.jstree', function (e, data) {
