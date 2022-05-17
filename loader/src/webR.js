@@ -31,38 +31,77 @@ const preReqPackages = {
 };
 
 const defaultEnv = {
-    "R_NSIZE"      : "3000000",
-    "R_VSIZE"      : "64M",
-    "R_HOME"       : "/usr/lib/R",
-    "R_ENABLE_JIT" : "0",
+    R_NSIZE: "3000000",
+    R_VSIZE: "64M",
+    R_HOME: "/usr/lib/R",
+    R_ENABLE_JIT: "0"
 }
 
 export class WebR {
-    WEBR_URL;
     PKG_URL;
 
-    #Rargs;
-    #ENV;
-    #packages;
-    #runtimeInitializedCB;
     #loadingPackageCB;
+    #initialised;
 
-    constructor({packages = [],
-                 Rargs = ['-q'],
-                 runtimeInitializedCB = function() {},
-                 loadingPackageCB = this.#defaultLoadingPackageCB,
-                 WEBR_URL = BASE_URL,
-                 PKG_URL = PKG_BASE_URL,
-                 ENV = defaultEnv}) {
-        this.WEBR_URL = WEBR_URL;
+    async init({initPackages = [],
+                RArgs = ['-q'],
+                REnv = defaultEnv,
+                runtimeInitializedCB = function() {},
+                loadingPackageCB = this.#defaultLoadingPackageCB,
+                WEBR_URL = BASE_URL,
+                PKG_URL = PKG_BASE_URL}) {
         this.PKG_URL = PKG_URL;
-
-        this.#Rargs = Rargs;
-        this.#ENV = ENV;
-
-        this.#packages = packages;
-        this.#runtimeInitializedCB = runtimeInitializedCB;
         this.#loadingPackageCB = loadingPackageCB;
+
+        let queue = this.#outputQueue;
+        let webR = this;
+
+        webR.#initialised = new Promise((resolve, _reject) => {
+            window.Module = {
+                preRun: [function() { self.ENV = REnv }],
+                postRun: [],
+                arguments: RArgs,
+                noExitRuntime: true,
+                locateFile: function(path, _prefix) {
+                    return(WEBR_URL + path);
+                },
+                print: function(text) {
+                    queue.put({ type: 'stdout', text: text });
+                },
+                printErr: function(text) {
+                    if (arguments.length > 1) {
+                        text = Array.prototype.slice.call(arguments).join(' ');
+                    }
+                    queue.put({ type: 'stderr', text: text });
+                },
+                canvas: (function() {})(),
+                setStatus: function(_text) {
+                    if (!window.Module.setStatus.last) {
+                        window.Module.setStatus.last = { time: Date.now(), text: '' };
+                    }
+                },
+                onRuntimeInitialized: function() {
+                    resolve(webR);
+                },
+                totalDependencies: 0,
+                _monitorRunDependencies: function(left) {
+                    this.totalDependencies = Math.max(this.totalDependencies, left);
+                    window.Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' +
+                                            this.totalDependencies + ')' : 'All downloads complete.');
+                },
+                monitorRunDependencies: left => window.Module._monitorRunDependencies(left)
+            };
+            window.Module.setStatus('Downloading...');
+            loadScript(WEBR_URL + 'R.bin.js');
+
+            return webR;
+        });
+
+        await this.#initialised;
+
+        runtimeInitializedCB();
+        this.loadPackages(initPackages);
+        return webR;
     }
 
     #defaultLoadingPackageCB(packageName) {
@@ -131,61 +170,6 @@ export class WebR {
 
     async readOutput() {
         return await this.#outputQueue.get();
-    }
-
-
-    #initialised;
-
-    async init() {
-        let queue = this.#outputQueue;
-        let webR = this;
-
-        webR.#initialised = new Promise((resolve, _reject) => {
-            window.Module = {
-                preRun: [function() { ENV = webR.#ENV }],
-                postRun: [],
-                arguments: webR.#Rargs,
-                noExitRuntime: true,
-                locateFile: function(path, _prefix) {
-                    return(webR.WEBR_URL + path);
-                },
-                print: function(text) {
-                    queue.put({ type: 'stdout', text: text });
-                },
-                printErr: function(text) {
-                    if (arguments.length > 1) {
-                        text = Array.prototype.slice.call(arguments).join(' ');
-                    }
-                    queue.put({ type: 'stderr', text: text });
-                },
-                canvas: (function() {})(),
-                setStatus: function(_text) {
-                    if (!window.Module.setStatus.last) {
-                        window.Module.setStatus.last = { time: Date.now(), text: '' };
-                    }
-                },
-                onRuntimeInitialized: function() {
-                    resolve(webR);
-                },
-                totalDependencies: 0,
-                _monitorRunDependencies: function(left) {
-                    this.totalDependencies = Math.max(this.totalDependencies, left);
-                    window.Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' +
-                                            this.totalDependencies + ')' : 'All downloads complete.');
-                },
-                monitorRunDependencies: left => window.Module._monitorRunDependencies(left)
-            };
-            window.Module.setStatus('Downloading...');
-            loadScript(webR.WEBR_URL + 'R.bin.js');
-
-            return webR;
-        });
-
-        await this.#initialised;
-
-        this.#runtimeInitializedCB();
-        this.loadPackages(this.#packages);
-        return webR;
     }
 }
 

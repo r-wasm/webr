@@ -110,23 +110,7 @@ window.FSTree = {
     },
 };
 
-var webR = new WebR({
-    Rargs: [],
-    runtimeInitializedCB: function() {
-        FSTree.init();
-    },
-    loadingPackageCB: function(packageName) {
-        term.echo("Downloading webR package: " + packageName);
-    },
-    ENV: {
-        R_NSIZE: "3000000",
-        R_VSIZE: "64M",
-        R_HOME: "/usr/lib/R",
-        R_ENABLE_JIT: "0",
-        R_DEFAULT_DEVICE: "canvas",
-        COLORTERM: "truecolor",
-    }
-});
+let webR = new WebR();
 
 // Should be exposed as an interface from webR.ts
 class WebRFrontend {
@@ -158,7 +142,23 @@ window.webRFrontend = new WebRFrontend();
 (async () => {
     term.echo("R is downloading, please wait...");
 
-    await webR.init();
+    await webR.init({
+        RArgs: [],
+        REnv: {
+            R_NSIZE: "3000000",
+            R_VSIZE: "64M",
+            R_HOME: "/usr/lib/R",
+            R_ENABLE_JIT: "0",
+            R_DEFAULT_DEVICE: "canvas",
+            COLORTERM: "truecolor"
+        },
+        runtimeInitializedCB: function() {
+            FSTree.init();
+        },
+        loadingPackageCB: function(packageName) {
+            term.echo("Downloading webR package: " + packageName);
+        }
+    });
     FSTree.init();
 
     while (true) {
