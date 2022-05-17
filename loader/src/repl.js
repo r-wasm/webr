@@ -1,4 +1,4 @@
-import { WebR } from './webR';
+import * as Comlink from 'comlink';
 
 var term = $('#term').terminal([], {
     prompt: '',
@@ -93,8 +93,6 @@ window.FSTree = {
     },
 };
 
-let webR = new WebR();
-
 // Should be exposed as an interface from webR.ts
 class WebRFrontend {
     async readInput(prompt) {
@@ -120,7 +118,11 @@ class WebRFrontend {
     };
 }
 
-window.webRFrontend = new WebRFrontend();
+const worker = new Worker('webR.js');
+const webR = Comlink.wrap(worker);
+
+const webRFrontend = new WebRFrontend();
+Comlink.expose(webRFrontend, worker);
 
 (async () => {
     term.echo("R is downloading, please wait...");

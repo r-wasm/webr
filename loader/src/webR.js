@@ -1,5 +1,6 @@
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { AsyncQueue } from './queue';
+import * as Comlink from 'comlink';
 
 const builtinPackages = [
     'base', 'compiler', 'datasets', 'grDevices', 'graphics', 'grid', 'methods', 'parallel',
@@ -191,6 +192,11 @@ export class WebR {
     }
 }
 
+let webR = new WebR();
+Comlink.expose(webR);
+
+const webRFrontend = Comlink.wrap(self);
+
 
 const xhrRegex = /^___terminal::/;
 
@@ -232,7 +238,7 @@ XMLHttpRequest = (function(xhr) {
 
                         let prompt = payload.length > 2 ? payload[2] : '';
                         (async () => {
-                            let input = await window.webRFrontend.readInput(prompt);
+                            let input = await webRFrontend.readInput(prompt);
                             props.responseText = input;
                             target.onload();
                         })();
