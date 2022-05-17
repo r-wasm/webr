@@ -130,6 +130,30 @@ export class WebR {
         return buf;
     }
 
+    async getFileNode() {
+        await this.#initialised;
+
+        let node = FS.open("/").node;
+        return this.#getNodeJSON(node);
+    }
+
+    #getNodeJSON(node) {
+        if (node.isFolder) {
+            let info = {
+                'text': node.name,
+                'children': Object.entries(node.contents).map(
+                    ([_k, v], _i) => this.#getNodeJSON(v)
+                )
+            };
+            if (['/'].includes(node.name)) {
+                info['state'] = {'opened': true};
+            }
+            return info;
+        }
+        // FIXME: Shouldn't mention JStree here
+        return {'text': node.name, 'icon': 'jstree-file'};
+    }
+
     async putFileData(name, data) {
         self.Module['FS_createDataFile']('/', name, data, true, true, true);
     }

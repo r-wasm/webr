@@ -80,28 +80,11 @@ window.FSTree = {
 
         fr.readAsArrayBuffer(file);
     },
-    getNodeJSON: function(node) {
-        if (node.isFolder){
-            var info = {
-                'text': node.name,
-                'children':
-                Object.entries(node.contents).map(
-                    ([k, v], i) => this.getNodeJSON(v)
-                )
-            };
-            if (['/'].includes(node.name)){
-                info['state'] = {'opened': true};
-            }
-            return info;
-        }
-        return {'text': node.name, 'icon': 'jstree-file'};
-    },
     cbNodeJSON: function() {
-        var self = this;
-        return function(obj, cb) {
-            var json;
+        return async function(obj, cb) {
+            let json;
             if (obj.id === '#'){
-                json = self.getNodeJSON(FS.open('/').node);
+                json = await webR.getFileNode();
                 json['parent'] = '#';
                 json['state']['selected'] = true;
             }
