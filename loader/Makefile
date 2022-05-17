@@ -13,7 +13,7 @@ TS_SOURCES = $(shell ls src/*.ts)
 BASE_URL ?= "./"
 
 
-$(DIST): $(JS_SOURCES) $(TS_SOURCES) $(HTML_INDEX) Makefile
+$(DIST): $(JS_SOURCES) $(TS_SOURCES) $(HTML_INDEX) Makefile node_modules
 	sed -e "s|@@BASE_URL@@|$(BASE_URL)|" src/config.js.in > src/config.js
 	cp $(HTML_INDEX) $(DIST)/index.html
 	esbuild $(ENTRY_POINT) \
@@ -21,4 +21,8 @@ $(DIST): $(JS_SOURCES) $(TS_SOURCES) $(HTML_INDEX) Makefile
 	  --bundle \
 	  --target="es2015" \
 	  --sourcemap
+	touch $@
+
+node_modules: package.json
+	npm install comlink
 	touch $@
