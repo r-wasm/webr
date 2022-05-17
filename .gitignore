@@ -9,3 +9,4 @@ tools/flang/emfc
 tools/flang/f18-llvm-project
 R/download
 R/build
+loader/src/config.js
