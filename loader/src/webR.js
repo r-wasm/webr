@@ -92,7 +92,7 @@ export class WebR {
                 monitorRunDependencies: left => self.Module._monitorRunDependencies(left)
             };
             self.Module.setStatus('Downloading...');
-            loadScript(WEBR_URL + 'R.bin.js');
+            importScripts(WEBR_URL + 'R.bin.js');
         });
 
         return await this.#initialised;
@@ -224,20 +224,8 @@ XMLHttpRequest = (function(xhr) {
     };
 })(self.XMLHttpRequest);
 
-async function loadScript(src) {
-  return new Promise(function (resolve, reject) {
-    let script = document.createElement('script');
-
-    script.src = src;
-    script.onload = resolve;
-    script.onerror = reject;
-
-    document.head.appendChild(script);
-  });
-}
-
 async function loadPackageUrl(baseUrl, pkg) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve) {
         const oldLocateFile = self.Module['locateFile'];
         const oldMonitorRunDependencies = self.Module['monitorRunDependencies'];
 
@@ -246,12 +234,8 @@ async function loadPackageUrl(baseUrl, pkg) {
             self.Module['locateFile'] = oldLocateFile;
         }
 
-        const url = baseUrl + pkg;
-        self.Module['locateFile'] = function(path, _prefix) { return url + "/" + path; }
-
-        let script = document.createElement('script');
-        script.src = url + '/' + pkg + '.js';
-        script.onerror = reject;
+        const pkgBaseUrl = baseUrl + pkg;
+        self.Module['locateFile'] = function(path, _prefix) { return pkgBaseUrl + "/" + path; }
 
         self.Module['monitorRunDependencies'] = function(left) {
             self.Module['_monitorRunDependencies'](left);
@@ -261,6 +245,7 @@ async function loadPackageUrl(baseUrl, pkg) {
             }
         };
 
-        document.head.appendChild(script);
+        const pkgUrl = pkgBaseUrl + '/' + pkg + '.js';
+        importScripts(pkgUrl);
     });
 }
