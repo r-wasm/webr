@@ -142,10 +142,17 @@ Comlink.expose(webRFrontend, worker);
 
     while (true) {
         let output = await webR.readOutput();
-        if (output.type == 'stdout') {
+
+        switch (output.type) {
+        case 'stdout':
             term.echo(output.text, { exec: false });
-        } else {
+            break;
+        case 'stderr':
             term.error(output.text);
+            break;
+        case 'packageLoading':
+            term.echo("Downloading webR package: " + output.text);
+            break;
         }
 
         FSTree.jstree.refresh();

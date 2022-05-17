@@ -42,17 +42,13 @@ const defaultEnv = {
 
 export class WebR {
     PKG_URL;
-
-    #loadingPackageCB;
     #initialised;
 
     async init({RArgs = defaultArgs,
                 REnv = defaultEnv,
-                loadingPackageCB = this.#defaultLoadingPackageCB,
                 WEBR_URL = BASE_URL,
                 PKG_URL = PKG_BASE_URL}) {
         this.PKG_URL = PKG_URL;
-        this.#loadingPackageCB = loadingPackageCB;
 
         let queue = this.#outputQueue;
         let webR = this;
@@ -97,10 +93,6 @@ export class WebR {
         });
 
         return await this.#initialised;
-    }
-
-    #defaultLoadingPackageCB(packageName) {
-        console.log("Loading webR package " + packageName)
     }
 
     async runRAsync(code) {
@@ -168,7 +160,7 @@ export class WebR {
             if (this.isLoaded(pkg)) {
                 continue;
             }
-            this.#loadingPackageCB(pkg);
+            this.#outputQueue.put({ type: 'packageLoading', text: pkg });
 
             let deps = preReqPackages[pkg];
             if (deps) {
