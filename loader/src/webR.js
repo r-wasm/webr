@@ -30,6 +30,8 @@ const preReqPackages = {
     'vroom': ['bit64', 'crayon', 'cli', 'glue', 'hms', 'lifecycle', 'rlang', 'tibble', 'tzdb', 'vctrs', 'tidyselect', 'withr'],
 };
 
+const defaultArgs = ['-q']
+
 const defaultEnv = {
     R_NSIZE: "3000000",
     R_VSIZE: "64M",
@@ -43,10 +45,8 @@ export class WebR {
     #loadingPackageCB;
     #initialised;
 
-    async init({initPackages = [],
-                RArgs = ['-q'],
+    async init({RArgs = defaultArgs,
                 REnv = defaultEnv,
-                runtimeInitializedCB = function() {},
                 loadingPackageCB = this.#defaultLoadingPackageCB,
                 WEBR_URL = BASE_URL,
                 PKG_URL = PKG_BASE_URL}) {
@@ -93,15 +93,9 @@ export class WebR {
             };
             window.Module.setStatus('Downloading...');
             loadScript(WEBR_URL + 'R.bin.js');
-
-            return webR;
         });
 
-        await this.#initialised;
-
-        runtimeInitializedCB();
-        this.loadPackages(initPackages);
-        return webR;
+        return await this.#initialised;
     }
 
     #defaultLoadingPackageCB(packageName) {

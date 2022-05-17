@@ -151,12 +151,6 @@ window.webRFrontend = new WebRFrontend();
             R_ENABLE_JIT: "0",
             R_DEFAULT_DEVICE: "canvas",
             COLORTERM: "truecolor"
-        },
-        runtimeInitializedCB: function() {
-            FSTree.init();
-        },
-        loadingPackageCB: function(packageName) {
-            term.echo("Downloading webR package: " + packageName);
         }
     });
     FSTree.init();
