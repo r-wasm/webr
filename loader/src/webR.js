@@ -57,7 +57,7 @@ export class WebR {
         let webR = this;
 
         webR.#initialised = new Promise((resolve, _reject) => {
-            window.Module = {
+            self.Module = {
                 preRun: [function() { self.ENV = REnv }],
                 postRun: [],
                 arguments: RArgs,
@@ -76,8 +76,8 @@ export class WebR {
                 },
                 canvas: (function() {})(),
                 setStatus: function(_text) {
-                    if (!window.Module.setStatus.last) {
-                        window.Module.setStatus.last = { time: Date.now(), text: '' };
+                    if (!self.Module.setStatus.last) {
+                        self.Module.setStatus.last = { time: Date.now(), text: '' };
                     }
                 },
                 onRuntimeInitialized: function() {
@@ -86,12 +86,12 @@ export class WebR {
                 totalDependencies: 0,
                 _monitorRunDependencies: function(left) {
                     this.totalDependencies = Math.max(this.totalDependencies, left);
-                    window.Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' +
+                    self.Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' +
                                             this.totalDependencies + ')' : 'All downloads complete.');
                 },
-                monitorRunDependencies: left => window.Module._monitorRunDependencies(left)
+                monitorRunDependencies: left => self.Module._monitorRunDependencies(left)
             };
-            window.Module.setStatus('Downloading...');
+            self.Module.setStatus('Downloading...');
             loadScript(WEBR_URL + 'R.bin.js');
         });
 
@@ -115,13 +115,13 @@ export class WebR {
         } catch (e) {
             console.log("An error occured loading one or more packages. Perhaps they do not exist in webR-ports.");
         }
-        return(window.Module._run_R_from_JS(allocate(intArrayFromString(code), 0), code.length));
+        return(self.Module._run_R_from_JS(allocate(intArrayFromString(code), 0), code.length));
     }
 
     async getFileData(name) {
         await this.#initialised;
 
-        let FS = window.FS;
+        let FS = self.FS;
         let size = FS.stat(name).size;
         let stream = FS.open(name, 'r');
         let buf = new Uint8Array(size);
@@ -131,7 +131,7 @@ export class WebR {
     }
 
     async putFileData(name, data) {
-        window.Module['FS_createDataFile']('/', name, data, true, true, true);
+        self.Module['FS_createDataFile']('/', name, data, true, true, true);
     }
 
     #loadedPackages = [];
@@ -238,23 +238,23 @@ async function loadScript(src) {
 
 async function loadPackageUrl(baseUrl, pkg) {
     return new Promise(function (resolve, reject) {
-        const oldLocateFile = window.Module['locateFile'];
-        const oldMonitorRunDependencies = window.Module['monitorRunDependencies'];
+        const oldLocateFile = self.Module['locateFile'];
+        const oldMonitorRunDependencies = self.Module['monitorRunDependencies'];
 
         let reset = function() {
-            window.Module['monitorRunDependencies'] = oldMonitorRunDependencies;
-            window.Module['locateFile'] = oldLocateFile;
+            self.Module['monitorRunDependencies'] = oldMonitorRunDependencies;
+            self.Module['locateFile'] = oldLocateFile;
         }
 
         const url = baseUrl + pkg;
-        window.Module['locateFile'] = function(path, _prefix) { return url + "/" + path; }
+        self.Module['locateFile'] = function(path, _prefix) { return url + "/" + path; }
 
         let script = document.createElement('script');
         script.src = url + '/' + pkg + '.js';
         script.onerror = reject;
 
-        window.Module['monitorRunDependencies'] = function(left) {
-            window.Module['_monitorRunDependencies'](left);
+        self.Module['monitorRunDependencies'] = function(left) {
+            self.Module['_monitorRunDependencies'](left);
             if (left == 0) {
                 reset();
                 resolve();
