@@ -1,4 +1,4 @@
-import * as Comlink from 'comlink';
+import { WebR } from '../webR/webR';
 
 var term = $('#term').terminal([], {
     prompt: '',

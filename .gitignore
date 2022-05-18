@@ -9,6 +9,6 @@ tools/flang/emfc
 tools/flang/f18-llvm-project
 R/download
 R/build
-loader/package-lock.json
-loader/src/config.js
-node_modules
+src/webR/config.js
+src/node_modules
+**/.DS_Store
