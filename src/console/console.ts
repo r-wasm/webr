@@ -1,4 +1,4 @@
-import {WebR} from '../webR/webR';
+import { WebR } from '../webR/webR';
 
 class WebRFrontend {
   readInput = async () => undefined;
@@ -14,7 +14,7 @@ const webR = new WebR();
 
   for (;;) {
     const output = await webR.readOutput();
-    if (output.type == 'stdout') {
+    if (output.type === 'stdout') {
       console.log(output.text);
     } else {
       console.error(output.text);
