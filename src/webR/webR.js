@@ -86,7 +86,10 @@ export class WebR {
                     self.Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' +
                                             this.totalDependencies + ')' : 'All downloads complete.');
                 },
-                monitorRunDependencies: left => self.Module._monitorRunDependencies(left)
+                monitorRunDependencies: left => window.Module._monitorRunDependencies(left),
+                setPromptCallback: function(prompt) {
+                    queue.put({ type: 'prompt', text: prompt });
+                },
             };
             self.Module.setStatus('Downloading...');
             importScripts(WEBR_URL + 'R.bin.js');
@@ -109,6 +112,22 @@ export class WebR {
             console.log("An error occured loading one or more packages. Perhaps they do not exist in webR-ports.");
         }
         return(self.Module._run_R_from_JS(allocate(intArrayFromString(code), 0), code.length));
+    }
+
+    async readInput(code) {
+        const reg = /(library|require)\(['"]?(.*?)['"]?\)/g;
+        let res;
+        let packages = [];
+        while ((res = reg.exec(code)) !== null) {
+            packages.push(res[2]);
+        }
+
+        try {
+            await this.loadPackages(packages);
+        } catch (e) {
+            console.log("An error occured loading one or more packages. Perhaps they do not exist in webR-ports.");
+        }
+        return(window.Module._EM_ReplRead(allocate(intArrayFromString(code), 0), code.length));
     }
 
     async getFileData(name) {
@@ -184,67 +203,17 @@ export class WebR {
     }
 }
 
-let webR = new WebR();
-Comlink.expose(webR);
+async function loadScript(src) {
+  return new Promise(function (resolve, reject) {
+    let script = document.createElement('script');
 
-const webRFrontend = Comlink.wrap(self);
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = reject;
 
-
-const xhrRegex = /^___terminal::/;
-
-// XHR proxy that handle methods from fetch in C
-XMLHttpRequest = (function(xhr) {
-    return function() {
-        let url;
-        let props = {
-            readyState: 4,
-            status: 200
-        };
-        let enc = new TextEncoder('utf-8');
-        return new Proxy(new xhr(), {
-            get: function(target, name) {
-                if (url && ['response', 'responseText', 'status', 'readyState'].indexOf(name) != -1) {
-                    if (name == 'response') {
-                        let response = enc.encode(props.responseText);
-                        return response;
-                    }
-                    return props[name];
-                } else if (name == 'open') {
-                    return function(_method, open_url) {
-                        if (open_url.match(xhrRegex)) {
-                            url = open_url;
-                        } else {
-                            return target[name].apply(target, arguments);
-                        }
-                    };
-                } else if (name == 'send') {
-                    return function(_data) {
-                        if (!url) {
-                            return target[name].apply(target, arguments);
-                        }
-
-                        let payload = url.split('::');
-                        if (payload[1] != 'read') {
-                            return target[name].apply(target, arguments);
-                        }
-
-                        let prompt = payload.length > 2 ? payload[2] : '';
-                        (async () => {
-                            let input = await webRFrontend.readInput(prompt);
-                            props.responseText = input;
-                            target.onload();
-                        })();
-                    };
-                } else {
-                    return target[name];
-                }
-            },
-            set: function(target, name, value) {
-                target[name] = value;
-            }
-        });
-    };
-})(self.XMLHttpRequest);
+    document.head.appendChild(script);
+  });
+}
 
 async function loadPackageUrl(baseUrl, pkg) {
     return new Promise(function (resolve) {

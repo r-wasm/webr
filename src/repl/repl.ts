@@ -12,41 +12,19 @@ type webROutput = {
 
 let FSTree: FSTreeInterface;
 
-const term = $('#term').terminal([], {
-  prompt: '',
-  greetings: 'R is downloading, please wait...',
-  history: true,
-});
-
-// Should be exposed as an interface from webR.ts
-class WebRFrontend {
-  async readInput(prompt: string) {
-    const textProm = term.read(prompt);
-    term.history().enable();
-
-    const text = await textProm;
-
-    const reg = /(library|require)\(['"]?(.*?)['"]?\)/g;
-    let res;
-    const packages = [];
-    while ((res = reg.exec(text)) !== null) {
-      packages.push(res[2]);
-    }
-
-    try {
-      await webR.loadPackages(packages);
-    } catch (err) {
-      console.log(
-        'An error occured loading one or more packages. Perhaps they do not exist in webR-ports.'
-      );
-      console.log(err);
-    }
-
-    return text;
+const term = $('#term').terminal(
+  (command) => {
+    term.pause();
+    (async () => {
+      await webR.readInput(command);
+    })();
+  },
+  {
+    prompt: '',
+    greetings: 'R is downloading, please wait...',
+    history: true,
   }
-}
-
-(globalThis as any).webRFrontend = new WebRFrontend();
+);
 
 function onFSTreeChange(event: Event, data: { selected: JSTreeNode[] }) {
   if (data.selected.length > 0) {
@@ -174,10 +152,12 @@ const webR = new WebR();
     const output = (await webR.readOutput()) as webROutput;
     if (output.type === 'stdout') {
       term.echo(output.text, { exec: false });
+    } else if (output.type === 'prompt') {
+      term.set_prompt(output.text);
+      term.resume();
     } else {
       term.error(output.text);
     }
-
     FSTree.refresh();
   }
 })();

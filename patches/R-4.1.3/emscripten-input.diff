@@ -2,7 +2,7 @@ Index: R-4.1.3/src/main/main.c
 ===================================================================
 --- R-4.1.3.orig/src/main/main.c
 +++ R-4.1.3/src/main/main.c
-@@ -306,6 +306,92 @@ Rf_ReplIteration(SEXP rho, int savestack
+@@ -306,6 +306,88 @@ Rf_ReplIteration(SEXP rho, int savestack
      return(0);
  }
  
@@ -45,20 +45,16 @@ Index: R-4.1.3/src/main/main.c
 +    return 0;
 +}
 +
-+void EM_ReplReadSuccess(emscripten_fetch_t *fetch) {
++void EMSCRIPTEN_KEEPALIVE EM_ReplRead(unsigned char* evalString, unsigned int n) {
 +    memset(EM_ctx.state.buf, 0, CONSOLE_BUFFER_SIZE+1);
-+    strncpy((char*)(EM_ctx.state.buf), fetch->data, CONSOLE_BUFFER_SIZE+1);
-+    EM_ctx.state.buf[fetch->numBytes] = '\n';
-+    EM_ctx.state.buf[fetch->numBytes+1] = '\0';
++
++    unsigned int limit = (n < CONSOLE_BUFFER_SIZE-2)?n:(CONSOLE_BUFFER_SIZE-2);
++    strncpy((char*)(EM_ctx.state.buf), (char*)evalString, limit);
++    EM_ctx.state.buf[limit] = '\n';
++    EM_ctx.state.buf[limit+1] = '\0';
 +    EM_ctx.state.bufp = EM_ctx.state.buf;
 +
-+    emscripten_fetch_close(fetch);
 +    emscripten_resume_main_loop();
-+}
-+
-+void EM_ReplReadFail(emscripten_fetch_t *fetch) {
-+    emscripten_fetch_close(fetch);
-+    emscripten_cancel_main_loop();
 +}
 +
 +void EM_ReplIteration(){
@@ -95,7 +91,7 @@ Index: R-4.1.3/src/main/main.c
  static void R_ReplConsole(SEXP rho, int savestack, int browselevel)
  {
      int status;
-@@ -327,6 +413,7 @@ static void R_ReplConsole(SEXP rho, int
+@@ -327,6 +409,7 @@ static void R_ReplConsole(SEXP rho, int 
  	}
      }
  }
@@ -103,7 +99,7 @@ Index: R-4.1.3/src/main/main.c
  
  
  static unsigned char DLLbuf[CONSOLE_BUFFER_SIZE+1], *DLLbufp;
-@@ -1118,12 +1205,14 @@ extern SA_TYPE SaveAction; /* from src/m
+@@ -1118,12 +1201,14 @@ extern SA_TYPE SaveAction; /* from src/m
  
  static void end_Rmainloop(void)
  {
@@ -130,44 +126,34 @@ Index: R-4.1.3/src/unix/sys-std.c
  #endif
  
  extern SA_TYPE SaveAction;
-@@ -949,6 +950,12 @@ handleInterrupt(void)
+@@ -949,6 +950,9 @@ handleInterrupt(void)
  }
  #endif /* HAVE_LIBREADLINE */
  
 +#ifdef __EMSCRIPTEN__
-+#include <emscripten/fetch.h>
 +#include <emscripten.h>
-+void EM_ReplReadSuccess(emscripten_fetch_t *fetch);
-+void EM_ReplReadFail(emscripten_fetch_t *fetch);
 +#endif
  
  /* Fill a text buffer from stdin or with user typed console input. */
  static void *cd = NULL;
-@@ -1030,8 +1037,10 @@ Rstd_ReadConsole(const char *prompt, uns
+@@ -1030,8 +1034,12 @@ Rstd_ReadConsole(const char *prompt, uns
  	else
  #endif /* HAVE_LIBREADLINE */
  	{
-+#ifndef __EMSCRIPTEN__
++#ifdef __EMSCRIPTEN__
++        EM_ASM(window.Module.setPromptCallback(UTF8ToString($0)), prompt);
++#else
  	    fputs(prompt, stdout);
  	    fflush(stdout);
 +#endif
  	}
  
  	if(R_InputHandlers == NULL)
-@@ -1089,10 +1098,24 @@ Rstd_ReadConsole(const char *prompt, uns
+@@ -1089,10 +1097,15 @@ Rstd_ReadConsole(const char *prompt, uns
  		else
  #endif /* HAVE_LIBREADLINE */
  		{
 +#ifdef __EMSCRIPTEN__
-+		    char scr[1024];
-+		    sprintf(scr, "___terminal::read::%s", prompt);
-+		    emscripten_fetch_attr_t attr;
-+		    emscripten_fetch_attr_init(&attr);
-+		    strcpy(attr.requestMethod, "GET");
-+		    attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
-+		    attr.onsuccess = EM_ReplReadSuccess;
-+		    attr.onerror = EM_ReplReadFail;
-+		    emscripten_fetch(&attr, scr);
 +		    emscripten_pause_main_loop();
 +		    return 0;
 +#else

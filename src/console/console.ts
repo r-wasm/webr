@@ -5,15 +5,6 @@ type webROutput = {
   text: string;
 };
 
-type WebRReadInputFunction = () => Promise<string>;
-
-class WebRFrontend {
-  readInput: WebRReadInputFunction = async () => {
-    return await new Promise(() => {});
-  };
-}
-(globalThis as any).webRFrontend = new WebRFrontend();
-
 const webR = new WebR();
 
 (async () => {
@@ -25,7 +16,7 @@ const webR = new WebR();
     const output = (await webR.readOutput()) as webROutput;
     if (output.type === 'stdout') {
       console.log(output.text);
-    } else {
+    } else if (output.type === 'stderr') {
       console.error(output.text);
     }
   }
