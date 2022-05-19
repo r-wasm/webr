@@ -1,19 +1,28 @@
 import { WebR } from '../webR/webR';
 
+type webROutput = {
+  type: string;
+  text: string;
+};
+
+type WebRReadInputFunction = () => Promise<string>;
+
 class WebRFrontend {
-  readInput = async () => undefined;
+  readInput: WebRReadInputFunction = async () => {
+    return await new Promise(() => {});
+  };
 }
-globalThis.webRFrontend = new WebRFrontend();
+(globalThis as any).webRFrontend = new WebRFrontend();
 
 const webR = new WebR();
 
 (async () => {
-  globalThis.webR = await webR.init({
+  (globalThis as any).webR = await webR.init({
     RArgs: [],
   });
 
   for (;;) {
-    const output = await webR.readOutput();
+    const output = (await webR.readOutput()) as webROutput;
     if (output.type === 'stdout') {
       console.log(output.text);
     } else {

@@ -2,7 +2,7 @@ WEBR_ROOT = $(abspath ..)
 DIST = $(WEBR_ROOT)/dist
 
 HTML_TEMPLATES = console.html repl.html
-ENTRY_POINTS = console/console.ts repl/repl.js webR/webR.js
+ENTRY_POINTS = console/console.ts repl/repl.ts webR/webR.js
 HTML_INDEX = repl.html
 
 JS_SOURCES = $(shell ls **/*.js)
@@ -29,6 +29,10 @@ $(DIST)/%.html: templates/%.html
 
 webR/config.js: webR/config.js.in
 	sed -e "s|@@BASE_URL@@|$(BASE_URL)|" webR/config.js.in > webR/config.js
+
+.PHONY: check
+check:
+	npx tsc
 
 node_modules: package.json
 	npm ci

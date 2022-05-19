@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "outDir": "../dist",
+    "target": "ES2017",
+    "module": "ES2020",
+    "strict": true,
+    "noUnusedLocals": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "types": ["node", "emscripten", "jquery", "jquery.terminal"],
+    "noEmit": true,
+  },
+  "include": ["**/*.ts"],
+}
