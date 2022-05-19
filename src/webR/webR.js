@@ -99,34 +99,10 @@ export class WebR {
     }
 
     async runRAsync(code) {
-        const reg = /(library|require)\(['"]?(.*?)['"]?\)/g;
-        let res;
-        let packages = [];
-        while ((res = reg.exec(code)) !== null) {
-            packages.push(res[2]);
-        }
-
-        try {
-            await this.loadPackages(packages);
-        } catch (e) {
-            console.log("An error occured loading one or more packages. Perhaps they do not exist in webR-ports.");
-        }
-        return(self.Module._run_R_from_JS(allocate(intArrayFromString(code), 0), code.length));
+        return(window.Module._run_R_from_JS(allocate(intArrayFromString(code), 0), code.length));
     }
 
     async readInput(code) {
-        const reg = /(library|require)\(['"]?(.*?)['"]?\)/g;
-        let res;
-        let packages = [];
-        while ((res = reg.exec(code)) !== null) {
-            packages.push(res[2]);
-        }
-
-        try {
-            await this.loadPackages(packages);
-        } catch (e) {
-            console.log("An error occured loading one or more packages. Perhaps they do not exist in webR-ports.");
-        }
         return(window.Module._EM_ReplRead(allocate(intArrayFromString(code), 0), code.length));
     }
 

@@ -16,6 +16,19 @@ const term = $('#term').terminal(
   (command) => {
     term.pause();
     (async () => {
+      const reg = /(library|require)\(['"]?(.*?)['"]?\)/g;
+      let res;
+      const packages = [];
+      while ((res = reg.exec(command)) !== null) {
+        packages.push(res[2]);
+      }
+      try {
+        await webR.loadPackages(packages);
+      } catch (e) {
+        console.log(
+          'An error occured loading one or more packages. Perhaps they do not exist in webR-ports?'
+        );
+      }
       await webR.readInput(command);
     })();
   },
