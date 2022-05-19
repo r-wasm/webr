@@ -174,6 +174,8 @@ install: $(BUILD)/state/r-stage2
 .PHONY: rebuild-main
 rebuild-main:
 	rm -f $(BUILD)/state/r-stage2
+	cd $(STAGE2_BUILD)/src/unix && \
+	  $(MAKE_WASM_BUILD)
 	cd $(STAGE2_BUILD)/src/main && \
 	  $(MAKE_WASM_BUILD) R && \
 	  $(MAKE_WASM_INSTALL) install-wasm
