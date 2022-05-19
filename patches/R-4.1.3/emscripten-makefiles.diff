@@ -35,8 +35,8 @@ Index: R-4.1.3/src/main/Makefile.in
 +
 +install-wasm: $(R_bin_DEPENDENCIES)
 +	@$(MKINSTALLDIRS) "$(prefix)/dist"
-+	@mv "$(Rexeclibdir)/libRblas.so" "$(prefix)/dist/libRblas.so"
-+	@mv "$(Rexeclibdir)/libRlapack.so" "$(prefix)/dist/libRlapack.so"
++	@cp "$(Rexeclibdir)/libRblas.so" "$(prefix)/dist/libRblas.so"
++	@cp "$(Rexeclibdir)/libRlapack.so" "$(prefix)/dist/libRlapack.so"
 +	@$(MAKE) $(R_binary).js
 +
  libR.a: $(OBJECTS) $(STATIC_LIBS)

@@ -167,9 +167,17 @@ install: $(BUILD)/state/r-stage2
 	cd $(R_SOURCE)/build/doc && \
 	  touch NEWS NEWS.pdf NEWS.rds NEWS.2.rds NEWS.3.rds
 	cd $(R_SOURCE)/build && \
-	  $(MAKE_WASM_INSTALL) install-wasm; \
+	  $(MAKE_WASM_INSTALL) install-wasm
 	cp -r "$(R_WASM)/dist/." $(DIST)
 
+
+.PHONY: rebuild-main
+rebuild-main:
+	rm -f $(BUILD)/state/r-stage2
+	cd $(STAGE2_BUILD)/src/main && \
+	  $(MAKE_WASM_BUILD) R && \
+	  $(MAKE_WASM_INSTALL) install-wasm
+	cp -r "$(R_WASM)/dist/." $(DIST)
 
 .PHONY: XZ
 XZ: $(XZ_WASM_LIB)
