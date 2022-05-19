@@ -24,5 +24,5 @@ $(DIST): $(JS_SOURCES) $(TS_SOURCES) $(HTML_INDEX) Makefile node_modules
 	touch $@
 
 node_modules: package.json
-	npm install comlink
+	npm ci
 	touch $@
