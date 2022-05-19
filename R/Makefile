@@ -171,8 +171,8 @@ install: $(BUILD)/state/r-stage2
 	cp -r "$(R_WASM)/dist/." $(DIST)
 
 
-.PHONY: rebuild-main
-rebuild-main:
+.PHONY: rebuild-core
+rebuild-core:
 	rm -f $(BUILD)/state/r-stage2
 	cd $(STAGE2_BUILD)/src/unix && \
 	  $(MAKE_WASM_BUILD)
