@@ -1,14 +1,12 @@
-import { WebR } from '../webR/webR';
+import { loadWebR, WebRAPIInterface } from '../webR/webR';
 
 type webROutput = {
   type: string;
   text: string;
 };
 
-const webR = new WebR();
-
 (async () => {
-  (globalThis as any).webR = await webR.init({
+  const webR: WebRAPIInterface = await loadWebR({
     RArgs: [],
   });
 

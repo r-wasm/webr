@@ -10,6 +10,7 @@ function build({ input, output, format, minify }) {
     sourcemap: true,
     outfile: `../dist/${output}`,
     logLevel: 'info',
+    platform: 'node',
     assetNames: 'assets/[name]-[hash]',
     loader: {
       '.jpg': 'file',
@@ -26,7 +27,7 @@ function build({ input, output, format, minify }) {
 
 [
   {
-    input: "webR/webR.js",
+    input: "webR/webR.ts",
     output: "../dist/webR.js",
     format: "umd",
     minify: true,

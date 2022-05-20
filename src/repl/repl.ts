@@ -1,4 +1,4 @@
-import { WebR } from '../webR/webR';
+import { loadWebR, WebRAPIInterface } from '../webR/webR';
 import { initFSTree, FSTreeInterface, JSTreeNode, FSNode } from './fstree';
 
 import $ from 'jquery';
@@ -70,9 +70,10 @@ function FSTreeData(
   }
 }
 
-const webR = new WebR();
+let webR: WebRAPIInterface;
+
 (async () => {
-  await webR.init({
+  webR = await loadWebR({
     RArgs: [],
     REnv: {
       R_NSIZE: '3000000',
@@ -169,6 +170,8 @@ const webR = new WebR();
     } else if (output.type === 'prompt') {
       term.set_prompt(output.text);
       term.resume();
+    } else if (output.type === 'packageLoading') {
+      console.log(`Loading package: ${output.text}`);
     } else {
       term.error(output.text);
     }
