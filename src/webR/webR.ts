@@ -2,13 +2,30 @@ import { BASE_URL, PKG_BASE_URL } from './config';
 import { AsyncQueue } from './queue';
 import { IN_NODE, loadScript } from './compat';
 
-(globalThis).Module = {};
-
-export interface WebRAPIInterface {
-  FS: typeof FS;
+interface Module {
+  _run_R_from_JS: (code: number, length: number) => Promise<string>;
+  _EM_ReplRead: (code: number, length: number) => Promise;
 }
 
-const builtinPackages = [
+export interface WebRAPIInterface extends Module {
+  FS: FS;
+  ENV: { [key: string]: string };
+  preRun: (() => void)[];
+  isLoaded: (pkg) => boolean;
+  loadPackages: (packages: string[]) => Promise;
+  runRAsync: (code: number) => Promise<string>;
+  readInput: (code: string) => Promise;
+  readOutput: () => Promise<WebROutput>;
+  putFileData: (name, data) => Promise;
+  getFileData: (name: string) => Promise<Uint8Array>;
+}
+
+type WebROutput = {
+  type: string;
+  text: string;
+};
+
+const builtinPackages: string[] = [
   'base',
   'compiler',
   'datasets',
@@ -26,7 +43,7 @@ const builtinPackages = [
   'utils',
 ];
 
-const preReqPackages = {
+const preReqPackages: { [key: string]: string } = {
   dplyr: [
     'generics',
     'glue',
@@ -103,58 +120,24 @@ const defaultOptions = {
 const outputQueue = new AsyncQueue();
 const loadedPackages = [];
 
-function defaultLoadingPackageCallback(packageName) {
-  console.log('Loading webR package ' + packageName);
-}
-
-/*
-async function loadPackageUrl(baseUrl, pkg) {
-  return new Promise((resolve, reject) => {
-    const oldLocateFile = globalThis.Module['locateFile'];
-    const oldMonitorRunDependencies = globalThis.Module['monitorRunDependencies'];
-
-    const reset = function () {
-      globalThis.Module['monitorRunDependencies'] = oldMonitorRunDependencies;
-      globalThis.Module['locateFile'] = oldLocateFile;
-    };
-
-    const url = baseUrl + pkg;
-    globalThis.Module['locateFile'] = function (path, _prefix) {
-      return url + '/' + path;
-    };
-
-    const script = document.createElement('script');
-    script.src = url + '/' + pkg + '.js';
-    script.onerror = reject;
-
-    globalThis.Module['monitorRunDependencies'] = function (left) {
-      globalThis.Module['_monitorRunDependencies'](left);
-      if (left == 0) {
-        reset();
-        resolve();
-      }
-    };
-
-    document.head.appendChild(script);
-  });
-}
-*/
-
 export async function loadWebR(
   options: {
     RArgs?: string[];
-    REnv?: {[key: string]: string};
+    REnv?: { [key: string]: string };
     WEBR_URL?: string;
     PKG_URL?: string;
     homedir?: string;
   } = {}
 ): Promise<WebRAPIInterface> {
   const config = Object.assign(defaultOptions, options);
+
+  globalThis.Module = {};
+  const Module = globalThis.Module as WebRAPIInterface;
   Module.preRun = [];
   Module.arguments = config.RArgs;
   Module.noExitRuntime = true;
 
-  Module.preRun.push(function () {
+  Module.preRun.push(() => {
     Module.FS.mkdirTree(config.homedir);
     Module.ENV.HOME = config.homedir;
     Module.FS.chdir(config.homedir);
@@ -164,15 +147,15 @@ export async function loadWebR(
   const initialised = new Promise((r) => (Module.postRun = r));
   Module.locateFile = (path: string) => config.WEBR_URL + path;
 
-  Module.runRAsync = async function (code) {
+  Module.runRAsync = async function (code: string): Promise<string> {
     return await Module._run_R_from_JS(allocate(intArrayFromString(code), 0), code.length);
-  }
+  };
 
-  Module.readInput = async function(code) {
-    return await Module._EM_ReplRead(allocate(intArrayFromString(code), 0), code.length);
-  }
+  Module.readInput = async function (code: string): Promise {
+    await Module._EM_ReplRead(allocate(intArrayFromString(code), 0), code.length);
+  };
 
-  Module.getFileData = async function (name) {
+  Module.getFileData = async function (name: string): Uint8Array {
     await initialised;
     const FS = Module.FS;
     const size = FS.stat(name).size;
@@ -181,9 +164,9 @@ export async function loadWebR(
     FS.read(stream, buf, 0, size, 0);
     FS.close(stream);
     return buf;
-  }
+  };
 
-  Module.loadPackages = async function (packages) {
+  Module.loadPackages = async function (packages: string[]): Promise {
     await initialised;
     for (const pkg of packages) {
       if (Module.isLoaded(pkg)) {
@@ -197,9 +180,8 @@ export async function loadWebR(
       }
 
       loadedPackages.push(pkg);
-      //await loadPackageUrl(config.PKG_URL, pkg);
 
-      Module['locateFile'] = function(path) { return config.PKG_URL + pkg + '/' + path; }
+      Module['locateFile'] = (path: string) => config.PKG_URL + pkg + '/' + path;
       const src = config.PKG_URL + pkg + '/' + pkg + '.js';
       await loadScript(src);
 
@@ -209,31 +191,32 @@ export async function loadWebR(
         };
       });
     }
-  }
+  };
 
-  Module.isLoaded = function (pkg) {
+  Module.isLoaded = function (pkg: string): boolean {
     return loadedPackages.includes(pkg) || builtinPackages.includes(pkg);
-  }
+  };
 
-  Module.readOutput = async function () {
+  Module.readOutput = async function (): Promise<WebROutput> {
     return await outputQueue.get();
-  }
+  };
 
-  Module.putFileData = async function (name, data) {
-    await Module['FS_createDataFile']('/', name, data, true, true, true);
-  }
+  Module.putFileData = async function (name, data): Promise {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, new-cap
+    await Module.FS_createDataFile('/', name, data, true, true, true);
+  };
 
-  Module.print = (text) => {
+  Module.print = (text: string) => {
     outputQueue.put({ type: 'stdout', text: text });
   };
 
-  Module.printErr = (text) =>{
+  Module.printErr = (text: string) => {
     outputQueue.put({ type: 'stderr', text: text });
-  }
+  };
 
-  Module.setPromptCallback = (prompt) => {
+  Module.setPromptCallback = (prompt: string) => {
     outputQueue.put({ type: 'prompt', text: prompt });
-  }
+  };
 
   const scriptSrc = `${config.WEBR_URL}R.bin.js`;
   await loadScript(scriptSrc);

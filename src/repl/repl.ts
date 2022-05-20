@@ -6,11 +6,6 @@ import 'jquery.terminal/css/jquery.terminal.css';
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
 require('jquery.terminal')($);
 
-type webROutput = {
-  type: string;
-  text: string;
-};
-
 let FSTree: FSTreeInterface;
 
 const term = $('#term').terminal(
@@ -164,7 +159,7 @@ let webR: WebRAPIInterface;
     });
 
   for (;;) {
-    const output = (await webR.readOutput()) as webROutput;
+    const output = await webR.readOutput();
     if (output.type === 'stdout') {
       term.echo(output.text, { exec: false });
     } else if (output.type === 'prompt') {
