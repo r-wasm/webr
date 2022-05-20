@@ -14,14 +14,10 @@ TS_SOURCES = $(shell ls **/*.ts)
 BASE_URL ?= "./"
 
 HTML_DIST = $(addprefix $(DIST)/,$(HTML_TEMPLATES))
-$(DIST): $(JS_SOURCES) $(TS_SOURCES) $(HTML_DIST) Makefile webR/config.js node_modules
+$(DIST): $(JS_SOURCES) $(TS_SOURCES) $(HTML_DIST) \
+  Makefile webR/config.js node_modules esbuild.js
 	cp $(DIST)/$(HTML_INDEX) $(DIST)/index.html
-	npx esbuild \
-	  $(join $(addsuffix =,$(basename $(notdir $(ENTRY_POINTS)))),$(ENTRY_POINTS)) \
-	  --outdir=$(DIST) \
-	  --bundle \
-	  --target="es2015" \
-	  --sourcemap
+	npm run build
 	touch $@
 
 $(DIST)/%.html: templates/%.html

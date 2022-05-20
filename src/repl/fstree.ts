@@ -2,6 +2,7 @@ import $ from 'jquery';
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
 require('jstree');
+import 'jstree/dist/themes/default/style.css';
 
 interface JQueryJSTreeElement extends Omit<JQuery, 'on'> {
   jstree(options?: {}): JQueryJSTree;

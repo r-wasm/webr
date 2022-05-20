@@ -2,6 +2,7 @@ import { WebR } from '../webR/webR';
 import { initFSTree, FSTreeInterface, JSTreeNode, FSNode } from './fstree';
 
 import $ from 'jquery';
+import 'jquery.terminal/css/jquery.terminal.css';
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
 require('jquery.terminal')($);
 
