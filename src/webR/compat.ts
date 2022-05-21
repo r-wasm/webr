@@ -1,3 +1,9 @@
+interface Process {
+  browser: string | undefined;
+  release: { [key: string]: string};
+}
+declare let process: Process;
+
 export const IN_NODE =
   typeof process !== 'undefined' &&
   process.release &&

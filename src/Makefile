@@ -2,10 +2,9 @@ WEBR_ROOT = $(abspath ..)
 DIST = $(WEBR_ROOT)/dist
 
 HTML_TEMPLATES = console.html repl.html
-ENTRY_POINTS = console/console.ts repl/repl.ts webR/webR.js
+ENTRY_POINTS = console/console.ts repl/repl.ts webR/webR.ts
 HTML_INDEX = repl.html
 
-JS_SOURCES = $(shell ls **/*.js)
 TS_SOURCES = $(shell ls **/*.ts)
 
 # Configure your local environment in this file
@@ -14,8 +13,8 @@ TS_SOURCES = $(shell ls **/*.ts)
 BASE_URL ?= "./"
 
 HTML_DIST = $(addprefix $(DIST)/,$(HTML_TEMPLATES))
-$(DIST): $(JS_SOURCES) $(TS_SOURCES) $(HTML_DIST) \
-  Makefile webR/config.js node_modules esbuild.js
+$(DIST): $(TS_SOURCES) $(HTML_DIST) \
+  Makefile webR/config.ts node_modules esbuild.js
 	cp $(DIST)/$(HTML_INDEX) $(DIST)/index.html
 	npm run build
 	touch $@
@@ -23,8 +22,8 @@ $(DIST): $(JS_SOURCES) $(TS_SOURCES) $(HTML_DIST) \
 $(DIST)/%.html: templates/%.html
 	sed -e "s|@@BASE_URL@@|$(BASE_URL)|" $< > $@
 
-webR/config.js: webR/config.js.in
-	sed -e "s|@@BASE_URL@@|$(BASE_URL)|" webR/config.js.in > webR/config.js
+webR/config.ts: webR/config.ts.in
+	sed -e "s|@@BASE_URL@@|$(BASE_URL)|" webR/config.ts.in > webR/config.ts
 
 .PHONY: check
 check:
@@ -35,4 +34,4 @@ node_modules: package.json
 	touch $@
 
 clean:
-	rm -f webR/config.js
+	rm -f webR/config.ts

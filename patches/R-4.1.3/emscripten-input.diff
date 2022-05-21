@@ -141,7 +141,7 @@ Index: R-4.1.3/src/unix/sys-std.c
  #endif /* HAVE_LIBREADLINE */
  	{
 +#ifdef __EMSCRIPTEN__
-+        EM_ASM(window.Module.setPromptCallback(UTF8ToString($0)), prompt);
++        EM_ASM(globalThis.Module.setPrompt(UTF8ToString($0)), prompt);
 +#else
  	    fputs(prompt, stdout);
  	    fflush(stdout);
