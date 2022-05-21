@@ -5,6 +5,8 @@ import $ from 'jquery';
 import 'jquery.terminal/css/jquery.terminal.css';
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
 require('jquery.terminal')($);
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+require('jquery.terminal/js/unix_formatting.js')();
 
 let FSTree: FSTreeInterface;
 
