@@ -1,5 +1,6 @@
-import { loadWebR, WebRAPIInterface } from '../webR/webR';
 import { initFSTree, FSTreeInterface, JSTreeNode, FSNode } from './fstree';
+import { WebRAPIInterface } from '../webR/webR';
+import { wrap } from 'comlink';
 
 import $ from 'jquery';
 import 'jquery.terminal/css/jquery.terminal.css';
@@ -58,19 +59,22 @@ function FSTreeData(
 ) {
   if (!FSTree) return;
   if (obj.id === '#') {
-    const jsTreeNode = FSTree.createJSTreeNodefromFSNode(FS.lookupPath('/', {}).node as FSNode);
-    jsTreeNode.parents = [];
-    jsTreeNode.state = Object.assign(jsTreeNode.state, {
-      selected: true,
+    webR.getFSNode('/').then((node: FSNode) => {
+      const jsTreeNode = FSTree.createJSTreeNodefromFSNode(node);
+      jsTreeNode.parents = [];
+      jsTreeNode.state = Object.assign(jsTreeNode.state, {
+        selected: true,
+      });
+      cb.call(FSTree, jsTreeNode);
     });
-    cb.call(FSTree, jsTreeNode);
   }
 }
 
-let webR: WebRAPIInterface;
+const worker = new Worker('./webR.js');
+const webR = wrap(worker) as WebRAPIInterface;
 
 (async () => {
-  webR = await loadWebR({
+  await webR.loadWebR({
     RArgs: [],
     REnv: {
       R_NSIZE: '3000000',

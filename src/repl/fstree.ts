@@ -27,7 +27,6 @@ interface JQueryJSTree extends JQuery {
 }
 
 export type FSNode = {
-  parent: FSNode;
   id: number;
   name: string;
   mode: number;
@@ -53,7 +52,7 @@ type FSTreeOptions = {
     check_callback: boolean;
     data: (
       obj: { id: string },
-      cb: { call: (FSTree: FSTreeInterface, jsTreeNode: JSTreeNode) => void }
+      cb: { call: (FSTree: FSTreeInterface, jsTreeNode: JSTreeNode) => any }
     ) => void;
     multiple: boolean;
   };

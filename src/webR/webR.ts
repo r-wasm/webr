@@ -21,15 +21,25 @@ interface Module extends EmscriptenModule {
   _EM_ReplRead: (code: number, length: number) => Promise<void>;
 }
 
-export interface WebRAPIInterface extends Module {
-  isLoaded: (pkg: string) => boolean;
-  loadPackages: (packages: string[]) => Promise<void>;
-  runRAsync: (code: string) => Promise<string>;
-  readInput: (code: string) => Promise<void>;
-  readOutput: () => Promise<WebROutput>;
-  putFileData: (name: string, data: Uint8Array) => Promise<void>;
-  getFileData: (name: string) => Promise<Uint8Array>;
+export interface WebRAPIInterface {
+  runRAsync: typeof runRAsync;
+  readInput: typeof readInput;
+  readOutput: typeof readOutput;
+  putFileData: typeof putFileData;
+  getFileData: typeof getFileData;
+  loadPackages: typeof loadPackages;
+  isLoaded: typeof isLoaded;
+  loadWebR: typeof loadWebR;
+  getFSNode: typeof getFSNode;
 }
+
+type WebRConfigType = {
+  RArgs: string[];
+  REnv: { [key: string]: string };
+  WEBR_URL: string;
+  PKG_URL: string;
+  homedir: string;
+};
 
 type WebROutput = {
   type: string;
@@ -128,8 +138,103 @@ const defaultOptions = {
   homedir: '/home/web_user',
 };
 
+const Module = {} as Module;
 const outputQueue = new AsyncQueue();
 const loadedPackages: string[] = [];
+let _config: WebRConfigType;
+let initialised: Promise<void>;
+
+type FSNode = {
+  id: number;
+  name: string;
+  mode: number;
+  isFolder: boolean;
+  contents: { [key: string]: FSNode };
+};
+
+export async function getFSNode(path: string): Promise<FSNode> {
+  await initialised;
+  const FS = Module.FS;
+  const node = FS.lookupPath(path).node;
+  return copyFSNode(node);
+}
+
+function copyFSNode(obj: FSNode): FSNode {
+  const retObj = {
+    id: obj.id,
+    name: obj.name,
+    mode: obj.mode,
+    isFolder: obj.isFolder,
+    contents: {},
+  };
+  if (obj.isFolder) {
+    retObj.contents = Object.entries(obj.contents).map(([, node]) => copyFSNode(node));
+  }
+  return retObj;
+}
+
+export async function runRAsync(code: string): Promise<string> {
+  await initialised;
+  return await Module._run_R_from_JS(allocate(intArrayFromString(code), 0), code.length);
+}
+
+export async function readOutput(): Promise<WebROutput> {
+  return (await outputQueue.get()) as WebROutput;
+}
+
+export async function readInput(code: string): Promise<void> {
+  await initialised;
+  await Module._EM_ReplRead(allocate(intArrayFromString(code), 0), code.length);
+}
+
+export async function getFileData(name: string): Promise<Uint8Array> {
+  await initialised;
+  const FS = Module.FS;
+  const size = FS.stat(name).size;
+  const stream = FS.open(name, 'r');
+  const buf = new Uint8Array(size);
+  FS.read(stream, buf, 0, size, 0);
+  FS.close(stream);
+  return buf;
+}
+
+export async function loadPackages(packages: string[]): Promise<void> {
+  await initialised;
+  for (const pkg of packages) {
+    if (await isLoaded(pkg)) {
+      continue;
+    }
+    outputQueue.put({ type: 'packageLoading', text: pkg });
+
+    const deps = preReqPackages[pkg];
+    if (deps) {
+      await loadPackages(deps);
+    }
+
+    loadedPackages.push(pkg);
+
+    Module['locateFile'] = (path: string) => _config.PKG_URL + pkg + '/' + path;
+    const src = _config.PKG_URL + pkg + '/' + pkg + '.js';
+    await loadScript(src);
+
+    await new Promise<void>((resolve) => {
+      Module.monitorRunDependencies = (n) => {
+        if (n === 0) resolve();
+      };
+    });
+  }
+}
+
+export async function isLoaded(pkg: string): Promise<boolean> {
+  await initialised;
+  return loadedPackages.includes(pkg) || builtinPackages.includes(pkg);
+}
+
+export async function putFileData(name: string, data: Uint8Array): Promise<void> {
+  await initialised;
+  // eslint-disable-next-line new-cap
+  Module.FS_createDataFile('/', name, data, true, true, true);
+}
 
 export async function loadWebR(
   options: {
@@ -139,86 +244,23 @@ export async function loadWebR(
     PKG_URL?: string;
     homedir?: string;
   } = {}
-): Promise<WebRAPIInterface> {
-  const config = Object.assign(defaultOptions, options);
+): Promise<void> {
+  _config = Object.assign(defaultOptions, options);
 
-  const Module = {} as WebRAPIInterface;
   Module.preRun = [];
   Module.postRun = [];
-  Module.arguments = config.RArgs;
+  Module.arguments = _config.RArgs;
   Module.noExitRuntime = true;
 
   Module.preRun.push(() => {
-    Module.FS.mkdirTree(config.homedir);
-    Module.ENV.HOME = config.homedir;
-    Module.FS.chdir(config.homedir);
-    Module.ENV = Object.assign(Module.ENV, config.REnv);
+    Module.FS.mkdirTree(_config.homedir);
+    Module.ENV.HOME = _config.homedir;
+    Module.FS.chdir(_config.homedir);
+    Module.ENV = Object.assign(Module.ENV, _config.REnv);
   });
 
-  const initialised = new Promise<void>((r) => Module.postRun.push(r));
-  Module.locateFile = (path: string) => config.WEBR_URL + path;
-
-  Module.runRAsync = async function (code: string): Promise<string> {
-    await initialised;
-    return await Module._run_R_from_JS(allocate(intArrayFromString(code), 0), code.length);
-  };
-
-  Module.readInput = async function (code: string): Promise<void> {
-    await initialised;
-    await Module._EM_ReplRead(allocate(intArrayFromString(code), 0), code.length);
-  };
-
-  Module.getFileData = async function (name: string): Promise<Uint8Array> {
-    await initialised;
-    const FS = Module.FS;
-    const size = FS.stat(name).size;
-    const stream = FS.open(name, 'r');
-    const buf = new Uint8Array(size);
-    FS.read(stream, buf, 0, size, 0);
-    FS.close(stream);
-    return buf;
-  };
-
-  Module.loadPackages = async function (packages: string[]): Promise<void> {
-    await initialised;
-    for (const pkg of packages) {
-      if (Module.isLoaded(pkg)) {
-        continue;
-      }
-      outputQueue.put({ type: 'packageLoading', text: pkg });
-
-      const deps = preReqPackages[pkg];
-      if (deps) {
-        await Module.loadPackages(deps);
-      }
-
-      loadedPackages.push(pkg);
-
-      Module['locateFile'] = (path: string) => config.PKG_URL + pkg + '/' + path;
-      const src = config.PKG_URL + pkg + '/' + pkg + '.js';
-      await loadScript(src);
-
-      await new Promise<void>((resolve) => {
-        Module.monitorRunDependencies = (n) => {
-          if (n === 0) resolve();
-        };
-      });
-    }
-  };
-
-  Module.isLoaded = function (pkg: string): boolean {
-    return loadedPackages.includes(pkg) || builtinPackages.includes(pkg);
-  };
-
-  Module.readOutput = async function (): Promise<WebROutput> {
-    return (await outputQueue.get()) as WebROutput;
-  };
-
-  Module.putFileData = async function (name, data): Promise<void> {
-    await initialised;
-    // eslint-disable-next-line new-cap
-    Module.FS_createDataFile('/', name, data, true, true, true);
-  };
+  initialised = new Promise<void>((r) => Module.postRun.push(r));
+  Module.locateFile = (path: string) => _config.WEBR_URL + path;
 
   Module.print = (text: string) => {
     outputQueue.put({ type: 'stdout', text: text });
@@ -235,9 +277,8 @@ export async function loadWebR(
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   (globalThis as any).Module = Module;
 
-  const scriptSrc = `${config.WEBR_URL}R.bin.js`;
+  const scriptSrc = `${_config.WEBR_URL}R.bin.js`;
   await loadScript(scriptSrc);
 
   await initialised;
-  return Module;
 }

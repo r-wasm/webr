@@ -1,7 +1,7 @@
 const esbuild = require('esbuild');
 const cssModulesPlugin = require('esbuild-css-modules-plugin');
 
-function build({ input, output, format, minify }) {
+function build({ input, output, minify }) {
   esbuild.build({
     entryPoints: [`${input}`],
     bundle: true,
@@ -27,21 +27,18 @@ function build({ input, output, format, minify }) {
 
 [
   {
-    input: "webR/webR.ts",
+    input: "webR/worker.ts",
     output: "../dist/webR.js",
-    format: "umd",
-    minify: true,
+    minify: false,
   },
   {
     input: "repl/repl.ts",
     output: "../dist/repl.js",
-    format: "umd",
     minify: true,
   },
   {
     input: "console/console.ts",
     output: "../dist/console.js",
-    format: "umd",
     minify: true,
   },
 ].map(build);
