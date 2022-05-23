@@ -252,6 +252,8 @@ export async function loadWebR(
   Module.postRun = [];
   Module.arguments = _config.RArgs;
   Module.noExitRuntime = true;
+  Module.noImageDecoding = true;
+  Module.noAudioDecoding = true;
 
   Module.preRun.push(() => {
     Module.FS.mkdirTree(_config.homedir);
