@@ -170,12 +170,15 @@ const webR = wrap(worker) as WebRAPIInterface;
       term.echo(output.text, { exec: false });
     } else if (output.type === 'prompt') {
       term.set_prompt(output.text);
+      FSTree.refresh();
       term.resume();
     } else if (output.type === 'packageLoading') {
       console.log(`Loading package: ${output.text}`);
+      FSTree.refresh();
+    } else if (output.type === 'canvasExec') {
+      Function(`document.getElementById('plot-canvas').getContext('2d').${output.text}`)();
     } else {
       term.error(output.text);
     }
-    FSTree.refresh();
   }
 })();

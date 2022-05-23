@@ -1,7 +1,7 @@
-Index: R-4.1.3_quilt/src/library/grDevices/NAMESPACE
+Index: R-4.1.3/src/library/grDevices/NAMESPACE
 ===================================================================
---- R-4.1.3_quilt.orig/src/library/grDevices/NAMESPACE
-+++ R-4.1.3_quilt/src/library/grDevices/NAMESPACE
+--- R-4.1.3.orig/src/library/grDevices/NAMESPACE
++++ R-4.1.3/src/library/grDevices/NAMESPACE
 @@ -71,6 +71,6 @@ if(tools:::.OStype() == "windows") {
      S3method(print, SavedPlots)
      importFrom("utils", "shortPathName")
@@ -10,19 +10,19 @@ Index: R-4.1.3_quilt/src/library/grDevices/NAMESPACE
 +    export(canvas, X11.options, X11Font, X11Fonts,
             quartz, quartz.options, quartz.save, quartzFont, quartzFonts)
  }
-Index: R-4.1.3_quilt/src/library/grDevices/R/canvas.R
+Index: R-4.1.3/src/library/grDevices/R/canvas.R
 ===================================================================
 --- /dev/null
-+++ R-4.1.3_quilt/src/library/grDevices/R/canvas.R
++++ R-4.1.3/src/library/grDevices/R/canvas.R
 @@ -0,0 +1,3 @@
-+canvas <- function(sel="#plot-canvas", bg="transparent") {
-+       .External("canvas_new_device", sel, bg)
++canvas <- function(bg="transparent") {
++       .External("canvas_new_device", bg)
 +}
-Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
+Index: R-4.1.3/src/library/grDevices/src/devCanvas.c
 ===================================================================
 --- /dev/null
-+++ R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
-@@ -0,0 +1,501 @@
++++ R-4.1.3/src/library/grDevices/src/devCanvas.c
+@@ -0,0 +1,488 @@
 +/*
 +R graphics device targeting the HTML canvas element
 +Author: George Stagg, based on the canvas package created by Jeffrey Horner (http://www.rforge.net/canvas/)
@@ -31,6 +31,7 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +*/
 +
 +#include <stdio.h>
++#include <ctype.h>
 +
 +#include <R.h>
 +#include <Rversion.h>
@@ -56,14 +57,14 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +/* Interact with the HTML canvas 2D context API by building Javascript
 + * commands and running them with emscripten_run_script().
 + * We avoid using EM_ASM and friends because this code will be compiled
-+ * in an emscripten SIDE_MODULE, where they not work at time of writing.
++ * in an emscripten SIDE_MODULE, where they do not work at time of writing.
 +*/
-+#define canvasExecBufferMax 1024
-+#define _E(...) "document.querySelector(UTF8ToString(%p)).getContext('2d')." __VA_ARGS__ ";"
++#define canvasExecBufferMax 8192
++#define _E(op) "Module.canvasExec(`" op "`);"
 +
 +#define canvasContextRender(cGD, op, ...) { \
 +	const char template[] = _E op; \
-+	int ret = snprintf(cGD->buffer, canvasExecBufferMax, template, cGD->sel, ##  __VA_ARGS__); \
++	int ret = snprintf(cGD->buffer, canvasExecBufferMax, template, ##  __VA_ARGS__); \
 +	if (ret < 0 || ret >= canvasExecBufferMax) \
 +		error("problem writing canvas context property in canvas graphics device"); \
 +	}
@@ -72,11 +73,7 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +	canvasContextRender(cGD, op, ## __VA_ARGS__) \
 +	emscripten_run_script(cGD->buffer)
 +
-+#define canvasContextExecInt(res, cGD, op, ...) \
-+	canvasContextRender(cGD, op, ## __VA_ARGS__) \
-+	res = emscripten_run_script_int(cGD->buffer)
-+
-+#define canvasColor(sel, prop, col) { \
++#define canvasColor(prop, col) { \
 +	if (CALPHA(col)==255) { \
 +		canvasContextExec(cGD, (#prop " = 'rgb(%d, %d, %d)'"), CREDC(col), CGREENC(col), CBLUEC(col)); \
 +	} else { \
@@ -96,7 +93,6 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +	R_GE_linejoin ljoin;
 +	double lmitre;
 +
-+	char sel[128];
 +	char buffer[canvasExecBufferMax];
 +	pGEDevDesc RGE;
 +} canvasDesc;
@@ -159,12 +155,12 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +	canvasContextExec(cGD, ("beginPath()"));
 +	canvasContextExec(cGD, ("arc(%f,%f,%f,0,Math.PI*2,true)"), 2*x, 2*y, 2*r);
 +	if (CALPHA(gc->fill)){
-+		canvasColor(cGD->sel,fillStyle,gc->fill);
++		canvasColor(fillStyle,gc->fill);
 +		canvasContextExec(cGD, ("fill()"));
 +	}
 +	if (CALPHA(gc->col) && gc->lty!=-1){
 +		canvasSetLineType(cGD,gc);
-+		canvasColor(cGD->sel,strokeStyle,gc->col);
++		canvasColor(strokeStyle,gc->col);
 +		canvasContextExec(cGD, ("stroke()"));
 +	}
 +}
@@ -212,7 +208,7 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +
 +	if (CALPHA(gc->col) && gc->lty!=-1){
 +	canvasSetLineType(cGD,gc);
-+	canvasColor(cGD->sel,strokeStyle,gc->col);
++	canvasColor(strokeStyle,gc->col);
 +	canvasContextExec(cGD, ("beginPath()"));
 +	canvasContextExec(cGD, ("moveTo(%f,%f)"), 2*x1, 2*y1);
 +	canvasContextExec(cGD, ("lineTo(%f,%f)"), 2*x2, 2*y2);
@@ -246,7 +242,7 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +
 +	/* Set background only if we have a color */
 +	if (CALPHA(gc->fill)){
-+		canvasColor(cGD->sel,fillStyle,gc->fill);
++		canvasColor(fillStyle,gc->fill);
 +		canvasContextExec(cGD, ("fillRect(0,0,%f,%f)"), 2*RGD->right,2*RGD->bottom);
 +	}
 +
@@ -272,11 +268,11 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +	while (i<n) { canvasContextExec(cGD, ("lineTo(%f, %f)"), 2*x[i], 2*y[i]); i++; }
 +	canvasContextExec(cGD, ("closePath()"));
 +	if (CALPHA(gc->fill)) {
-+		canvasColor(cGD->sel,fillStyle,gc->fill);
++		canvasColor(fillStyle,gc->fill);
 +		canvasContextExec(cGD, ("fill()"));
 +	}
 +	if (CALPHA(gc->col) && gc->lty!=-1) {
-+		canvasColor(cGD->sel,strokeStyle,gc->col);
++		canvasColor(strokeStyle,gc->col);
 +		canvasContextExec(cGD, ("stroke()"));
 +	}
 +}
@@ -296,7 +292,7 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +	canvasContextExec(cGD, ("moveTo(%f,%f)"), 2*x[0], 2*y[0]);
 +		while(i<n) { canvasContextExec(cGD, ("lineTo(%f, %f)"), 2*x[i], 2*y[i]); i++; }
 +		canvasSetLineType(cGD,gc);
-+		canvasColor(cGD->sel,strokeStyle,gc->col);
++		canvasColor(strokeStyle,gc->col);
 +		canvasContextExec(cGD, ("stroke()"));
 +	}
 +}
@@ -308,12 +304,12 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +#endif
 +	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
 +	if (CALPHA(gc->fill)){
-+		canvasColor(cGD->sel,fillStyle,gc->fill);
++		canvasColor(fillStyle,gc->fill);
 +		canvasContextExec(cGD, ("fillRect(%f,%f,%f,%f)"), 2*x0, 2*y0, 2*x1-2*x0, 2*y1-2*y0);
 +	}
 +	if (CALPHA(gc->col) && gc->lty!=-1){
 +		canvasSetLineType(cGD,gc);
-+		canvasColor(cGD->sel,strokeStyle,gc->col);
++		canvasColor(strokeStyle,gc->col);
 +		canvasContextExec(cGD, ("strokeRect(%f,%f,%f,%f)"), 2*x0, 2*y0, 2*x1-2*x0, 2*y1-2*y0);
 +	}
 +}
@@ -328,23 +324,28 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +#endif
 +}
 +
++// Estimate the width of a string using character width heuristics
++double canvasTextWidthEstimate(const char *str, double ps){
++	double w = 0;
++	for (int i = 0; i < strlen(str); i++) {
++		char c = str[i];
++		if (c == 'W' || c == 'M') w += 15;
++		else if (c == 'w' || c == 'm') w += 12;
++		else if (c == 'I' || c == 'i' || c == 'l' || c == 't' || c == 'f' ||
++				c == '[' || c == ']' || c == '1' || c == '(' || c == ')') w += 4;
++		else if (c == 'r') w += 8;
++		else if (isupper(c)) w += 12;
++		else w += 10;
++	}
++	return ps*w/16.;
++}
++
 +static double canvasStrWidth(const char *str, const pGEcontext gc, pDevDesc RGD)
 +{
-+	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
-+	canvasContextExec(cGD, ("font = %f+'px sans-serif'"), 2*gc->ps);
-+	/* Use fixed point arithmetic to retrieve results via an int type.
-+	 * Ideally, we'd rather use something like
-+	 *  double w = EM_ASM_DOUBLE({
-+	 *   return document.querySelector(UTF8ToString($0)).getContext('2d').measureText(UTF8ToString($1)).width;
-+	 * }, cGD->sel, str);
-+	 */
-+	int wi = 0;
-+	canvasContextExecInt(wi, cGD, ("measureText(UTF8ToString(%p)).width * 10000"), str);
-+	return (double)wi/10000.;
-+
 +#ifdef CANVASDEBUG
 +	Rprintf("StrWidth(str=%s,gc=0x%x,RGD=0x%x)\n",str,gc,RGD);
 +#endif
++	return canvasTextWidthEstimate(str, gc->ps);
 +}
 +
 +void canvasText(double x, double y, const char *str, double rot, double hadj, const pGEcontext gc, pDevDesc RGD)
@@ -354,25 +355,23 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +#endif
 +	canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
 +	canvasContextExec(cGD, ("font = %f+'px sans-serif'"), 2*gc->ps);
++	double wi = canvasTextWidthEstimate(str, gc->ps);
 +
-+	int wi = 0;
 +	if (hadj!=0. || rot != 0.){
 +		if (rot!=0.){
 +			canvasContextExec(cGD, ("save()"));
-+			canvasColor(cGD->sel,fillStyle,gc->col);
++			canvasColor(fillStyle,gc->col);
 +			canvasContextExec(cGD, ("translate(%f,%f)"), 2*x, 2*y);
 +			canvasContextExec(cGD, ("rotate(-%f / 180 * Math.PI)"), rot);
-+			canvasContextExecInt(wi, cGD, ("measureText(UTF8ToString(%p)).width * 10000"), str);
-+			canvasContextExec(cGD, ("fillText(UTF8ToString(%p),-%f*%f,0)"), str, (double)wi/10000., hadj);
++			canvasContextExec(cGD, ("fillText('%s',-%f*%f,0)"), str, 2*wi, hadj);
 +			canvasContextExec(cGD, ("restore()"));
 +		} else {
-+			canvasColor(cGD->sel,fillStyle,gc->col);
-+			canvasContextExecInt(wi, cGD, ("measureText(UTF8ToString(%p)).width * 10000"), str);
-+			canvasContextExec(cGD, ("fillText(UTF8ToString(%p),%f-%f*%f,%f)"), str, 2*x, (double)wi/10000., hadj, 2*y);
++			canvasColor(fillStyle,gc->col);
++			canvasContextExec(cGD, ("fillText('%s',%f-%f*%f,%f)"), str, 2*x, 2*wi, hadj, 2*y);
 +		}
 +	} else {
-+		canvasColor(cGD->sel,fillStyle,gc->col);
-+		canvasContextExec(cGD, ("fillText(UTF8ToString(%p),%f,%f)"), str, 2*x, 2*y);
++		canvasColor(fillStyle,gc->col);
++		canvasContextExec(cGD, ("fillText('%s',%f,%f)"), str, 2*x, 2*y);
 +	}
 +}
 +
@@ -420,20 +419,10 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +        /* canvas Graphics Device */
 +        canvasDesc *cGD;
 +
-+        const char *sel = NULL;
 +        int bgcolor;
 +
 +        SEXP v;
 +        args=CDR(args);
-+        v=CAR(args); args=CDR(args);
-+        if (isString(v)){
-+                PROTECT(v);
-+                sel = CHAR(STRING_ELT(v,0));
-+                UNPROTECT(1);
-+        } else {
-+                error("selector must be a string");
-+        }
-+
 +        v=CAR(args); args=CDR(args);
 +        if (!isString(v) && !isInteger(v) && !isLogical(v) && !isReal(v))
 +                error("invalid color specification for `bg'");
@@ -452,8 +441,6 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +		free(RGD);
 +		error("calloc failed for canvas device");
 +        }
-+
-+        strncpy(cGD->sel, sel, 128);
 +
 +	RGD->deviceSpecific = (void *) cGD;
 +
@@ -524,10 +511,10 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/devCanvas.c
 +}
 +#endif
 +
-Index: R-4.1.3_quilt/src/library/grDevices/src/grDevices.h
+Index: R-4.1.3/src/library/grDevices/src/grDevices.h
 ===================================================================
---- R-4.1.3_quilt.orig/src/library/grDevices/src/grDevices.h
-+++ R-4.1.3_quilt/src/library/grDevices/src/grDevices.h
+--- R-4.1.3.orig/src/library/grDevices/src/grDevices.h
++++ R-4.1.3/src/library/grDevices/src/grDevices.h
 @@ -33,6 +33,9 @@ SEXP R_CreateAtVector(SEXP axp, SEXP usr
  SEXP R_GAxisPars(SEXP usr, SEXP is_log, SEXP nintLog);
  
@@ -538,10 +525,10 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/grDevices.h
  
  SEXP PostScript(SEXP);
  SEXP XFig(SEXP);
-Index: R-4.1.3_quilt/src/library/grDevices/src/init.c
+Index: R-4.1.3/src/library/grDevices/src/init.c
 ===================================================================
---- R-4.1.3_quilt.orig/src/library/grDevices/src/init.c
-+++ R-4.1.3_quilt/src/library/grDevices/src/init.c
+--- R-4.1.3.orig/src/library/grDevices/src/init.c
++++ R-4.1.3/src/library/grDevices/src/init.c
 @@ -87,8 +87,14 @@ static const R_CallMethodDef CallEntries
  };
  
@@ -552,15 +539,15 @@ Index: R-4.1.3_quilt/src/library/grDevices/src/init.c
  
  static const R_ExternalMethodDef ExtEntries[] = {
 +#ifdef __EMSCRIPTEN__
-+    EXTDEF(canvas_new_device, 2),
++    EXTDEF(canvas_new_device, 1),
 +#endif
      EXTDEF(PicTeX, 6),
      EXTDEF(PostScript, 19),
      EXTDEF(XFig, 14),
-Index: R-4.1.3_quilt/src/library/grDevices/src/Makefile.in
+Index: R-4.1.3/src/library/grDevices/src/Makefile.in
 ===================================================================
---- R-4.1.3_quilt.orig/src/library/grDevices/src/Makefile.in
-+++ R-4.1.3_quilt/src/library/grDevices/src/Makefile.in
+--- R-4.1.3.orig/src/library/grDevices/src/Makefile.in
++++ R-4.1.3/src/library/grDevices/src/Makefile.in
 @@ -15,7 +15,7 @@ R_INCLUDE_DIR = $(R_HOME)/include
  
  SOURCES_C = axis_scales.c chull.c devices.c init.c stubs.c colors.c \

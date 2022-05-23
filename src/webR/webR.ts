@@ -17,6 +17,7 @@ interface Module extends EmscriptenModule {
     canOwn: boolean
   ) => void;
   setPrompt: (prompt: string) => void;
+  canvasExec: (op: string) => void;
   _run_R_from_JS: (code: number, length: number) => Promise<string>;
   _EM_ReplRead: (code: number, length: number) => Promise<void>;
 }
@@ -272,6 +273,10 @@ export async function loadWebR(
 
   Module.setPrompt = (prompt: string) => {
     outputQueue.put({ type: 'prompt', text: prompt });
+  };
+
+  Module.canvasExec = (op: string) => {
+    outputQueue.put({ type: 'canvasExec', text: op });
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
