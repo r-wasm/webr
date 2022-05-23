@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "comlink": "^4.3.1"
+  },
+  "scripts": {
+    "build": "make dist"
+  }
+}

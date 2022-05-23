@@ -1,5 +1,6 @@
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { AsyncQueue } from './queue';
+import * as Comlink from 'comlink';
 
 const builtinPackages = [
     'base', 'compiler', 'datasets', 'grDevices', 'graphics', 'grid', 'methods', 'parallel',
@@ -41,23 +42,19 @@ const defaultEnv = {
 
 export class WebR {
     PKG_URL;
-
-    #loadingPackageCB;
     #initialised;
 
     async init({RArgs = defaultArgs,
                 REnv = defaultEnv,
-                loadingPackageCB = this.#defaultLoadingPackageCB,
                 WEBR_URL = BASE_URL,
                 PKG_URL = PKG_BASE_URL}) {
         this.PKG_URL = PKG_URL;
-        this.#loadingPackageCB = loadingPackageCB;
 
         let queue = this.#outputQueue;
         let webR = this;
 
         webR.#initialised = new Promise((resolve, _reject) => {
-            window.Module = {
+            self.Module = {
                 preRun: [function() { self.ENV = REnv }],
                 postRun: [],
                 arguments: RArgs,
@@ -76,8 +73,8 @@ export class WebR {
                 },
                 canvas: (function() {})(),
                 setStatus: function(_text) {
-                    if (!window.Module.setStatus.last) {
-                        window.Module.setStatus.last = { time: Date.now(), text: '' };
+                    if (!self.Module.setStatus.last) {
+                        self.Module.setStatus.last = { time: Date.now(), text: '' };
                     }
                 },
                 onRuntimeInitialized: function() {
@@ -86,20 +83,16 @@ export class WebR {
                 totalDependencies: 0,
                 _monitorRunDependencies: function(left) {
                     this.totalDependencies = Math.max(this.totalDependencies, left);
-                    window.Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' +
+                    self.Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' +
                                             this.totalDependencies + ')' : 'All downloads complete.');
                 },
-                monitorRunDependencies: left => window.Module._monitorRunDependencies(left)
+                monitorRunDependencies: left => self.Module._monitorRunDependencies(left)
             };
-            window.Module.setStatus('Downloading...');
-            loadScript(WEBR_URL + 'R.bin.js');
+            self.Module.setStatus('Downloading...');
+            importScripts(WEBR_URL + 'R.bin.js');
         });
 
         return await this.#initialised;
-    }
-
-    #defaultLoadingPackageCB(packageName) {
-        console.log("Loading webR package " + packageName)
     }
 
     async runRAsync(code) {
@@ -115,13 +108,13 @@ export class WebR {
         } catch (e) {
             console.log("An error occured loading one or more packages. Perhaps they do not exist in webR-ports.");
         }
-        return(window.Module._run_R_from_JS(allocate(intArrayFromString(code), 0), code.length));
+        return(self.Module._run_R_from_JS(allocate(intArrayFromString(code), 0), code.length));
     }
 
     async getFileData(name) {
         await this.#initialised;
 
-        let FS = window.FS;
+        let FS = self.FS;
         let size = FS.stat(name).size;
         let stream = FS.open(name, 'r');
         let buf = new Uint8Array(size);
@@ -130,8 +123,32 @@ export class WebR {
         return buf;
     }
 
+    async getFileNode() {
+        await this.#initialised;
+
+        let node = FS.open("/").node;
+        return this.#getNodeJSON(node);
+    }
+
+    #getNodeJSON(node) {
+        if (node.isFolder) {
+            let info = {
+                'text': node.name,
+                'children': Object.entries(node.contents).map(
+                    ([_k, v], _i) => this.#getNodeJSON(v)
+                )
+            };
+            if (['/'].includes(node.name)) {
+                info['state'] = {'opened': true};
+            }
+            return info;
+        }
+        // FIXME: Shouldn't mention JStree here
+        return {'text': node.name, 'icon': 'jstree-file'};
+    }
+
     async putFileData(name, data) {
-        window.Module['FS_createDataFile']('/', name, data, true, true, true);
+        self.Module['FS_createDataFile']('/', name, data, true, true, true);
     }
 
     #loadedPackages = [];
@@ -143,7 +160,7 @@ export class WebR {
             if (this.isLoaded(pkg)) {
                 continue;
             }
-            this.#loadingPackageCB(pkg);
+            this.#outputQueue.put({ type: 'packageLoading', text: pkg });
 
             let deps = preReqPackages[pkg];
             if (deps) {
@@ -166,6 +183,11 @@ export class WebR {
         return await this.#outputQueue.get();
     }
 }
+
+let webR = new WebR();
+Comlink.expose(webR);
+
+const webRFrontend = Comlink.wrap(self);
 
 
 const xhrRegex = /^___terminal::/;
@@ -208,7 +230,7 @@ XMLHttpRequest = (function(xhr) {
 
                         let prompt = payload.length > 2 ? payload[2] : '';
                         (async () => {
-                            let input = await window.webRFrontend.readInput(prompt);
+                            let input = await webRFrontend.readInput(prompt);
                             props.responseText = input;
                             target.onload();
                         })();
@@ -224,43 +246,28 @@ XMLHttpRequest = (function(xhr) {
     };
 })(self.XMLHttpRequest);
 
-async function loadScript(src) {
-  return new Promise(function (resolve, reject) {
-    let script = document.createElement('script');
-
-    script.src = src;
-    script.onload = resolve;
-    script.onerror = reject;
-
-    document.head.appendChild(script);
-  });
-}
-
 async function loadPackageUrl(baseUrl, pkg) {
-    return new Promise(function (resolve, reject) {
-        const oldLocateFile = window.Module['locateFile'];
-        const oldMonitorRunDependencies = window.Module['monitorRunDependencies'];
+    return new Promise(function (resolve) {
+        const oldLocateFile = self.Module['locateFile'];
+        const oldMonitorRunDependencies = self.Module['monitorRunDependencies'];
 
         let reset = function() {
-            window.Module['monitorRunDependencies'] = oldMonitorRunDependencies;
-            window.Module['locateFile'] = oldLocateFile;
+            self.Module['monitorRunDependencies'] = oldMonitorRunDependencies;
+            self.Module['locateFile'] = oldLocateFile;
         }
 
-        const url = baseUrl + pkg;
-        window.Module['locateFile'] = function(path, _prefix) { return url + "/" + path; }
+        const pkgBaseUrl = baseUrl + pkg;
+        self.Module['locateFile'] = function(path, _prefix) { return pkgBaseUrl + "/" + path; }
 
-        let script = document.createElement('script');
-        script.src = url + '/' + pkg + '.js';
-        script.onerror = reject;
-
-        window.Module['monitorRunDependencies'] = function(left) {
-            window.Module['_monitorRunDependencies'](left);
+        self.Module['monitorRunDependencies'] = function(left) {
+            self.Module['_monitorRunDependencies'](left);
             if (left == 0) {
                 reset();
                 resolve();
             }
         };
 
-        document.head.appendChild(script);
+        const pkgUrl = pkgBaseUrl + '/' + pkg + '.js';
+        importScripts(pkgUrl);
     });
 }

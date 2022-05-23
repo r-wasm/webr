@@ -1,4 +1,4 @@
-import { WebR } from './webR';
+import * as Comlink from 'comlink';
 
 var term = $('#term').terminal([], {
     prompt: '',
@@ -80,28 +80,11 @@ window.FSTree = {
 
         fr.readAsArrayBuffer(file);
     },
-    getNodeJSON: function(node) {
-        if (node.isFolder){
-            var info = {
-                'text': node.name,
-                'children':
-                Object.entries(node.contents).map(
-                    ([k, v], i) => this.getNodeJSON(v)
-                )
-            };
-            if (['/'].includes(node.name)){
-                info['state'] = {'opened': true};
-            }
-            return info;
-        }
-        return {'text': node.name, 'icon': 'jstree-file'};
-    },
     cbNodeJSON: function() {
-        var self = this;
-        return function(obj, cb) {
-            var json;
+        return async function(obj, cb) {
+            let json;
             if (obj.id === '#'){
-                json = self.getNodeJSON(FS.open('/').node);
+                json = await webR.getFileNode();
                 json['parent'] = '#';
                 json['state']['selected'] = true;
             }
@@ -109,8 +92,6 @@ window.FSTree = {
         };
     },
 };
-
-let webR = new WebR();
 
 // Should be exposed as an interface from webR.ts
 class WebRFrontend {
@@ -137,7 +118,11 @@ class WebRFrontend {
     };
 }
 
-window.webRFrontend = new WebRFrontend();
+const worker = new Worker('webR.js');
+const webR = Comlink.wrap(worker);
+
+const webRFrontend = new WebRFrontend();
+Comlink.expose(webRFrontend, worker);
 
 (async () => {
     term.echo("R is downloading, please wait...");
@@ -157,10 +142,17 @@ window.webRFrontend = new WebRFrontend();
 
     while (true) {
         let output = await webR.readOutput();
-        if (output.type == 'stdout') {
+
+        switch (output.type) {
+        case 'stdout':
             term.echo(output.text, { exec: false });
-        } else {
+            break;
+        case 'stderr':
             term.error(output.text);
+            break;
+        case 'packageLoading':
+            term.echo("Downloading webR package: " + output.text);
+            break;
         }
 
         FSTree.jstree.refresh();

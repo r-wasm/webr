@@ -2,7 +2,7 @@ WEBR_ROOT = $(abspath ..)
 DIST = $(WEBR_ROOT)/dist
 
 HTML_INDEX = repl.html
-ENTRY_POINT = src/repl.js
+ENTRY_POINTS = src/repl.js src/webR.js
 
 JS_SOURCES = $(shell ls src/*.js)
 TS_SOURCES = $(shell ls src/*.ts)
@@ -13,12 +13,16 @@ TS_SOURCES = $(shell ls src/*.ts)
 BASE_URL ?= "./"
 
 
-$(DIST): $(JS_SOURCES) $(TS_SOURCES) $(HTML_INDEX) Makefile
+$(DIST): $(JS_SOURCES) $(TS_SOURCES) $(HTML_INDEX) Makefile node_modules
 	sed -e "s|@@BASE_URL@@|$(BASE_URL)|" src/config.js.in > src/config.js
 	cp $(HTML_INDEX) $(DIST)/index.html
-	esbuild $(ENTRY_POINT) \
+	esbuild $(ENTRY_POINTS) \
 	  --outdir=$(DIST) \
 	  --bundle \
 	  --target="es2015" \
 	  --sourcemap
+	touch $@
+
+node_modules: package.json
+	npm ci
 	touch $@
