@@ -1,10 +1,10 @@
 import { wrap } from 'comlink';
-import { WebRAPIInterface } from '../webR/webR';
+import { WebRBackend } from '../webR/webR';
 
 (async () => {
   const worker = new Worker('./webR.js');
-  const webR = wrap(worker) as WebRAPIInterface;
-  await webR.loadWebR({
+  const webR = wrap(worker) as WebRBackend;
+  await webR.init({
     RArgs: [],
   });
 

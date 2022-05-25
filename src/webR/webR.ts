@@ -2,39 +2,33 @@ import { BASE_URL, PKG_BASE_URL } from './config';
 import { AsyncQueue } from './queue';
 import { loadScript } from './compat';
 
-declare function allocate(slab: number[] | ArrayBufferView | number, allocator: number): number;
-
 interface Module extends EmscriptenModule {
   FS: any;
   ENV: { [key: string]: string };
   monitorRunDependencies: (n: number) => void;
-  FS_createDataFile: (
-    parent: string,
-    name: string,
-    data: Uint8Array,
-    canRead: boolean,
-    canWrite: boolean,
-    canOwn: boolean
-  ) => void;
+  noImageDecoding: boolean;
+  noAudioDecoding: boolean;
   setPrompt: (prompt: string) => void;
   canvasExec: (op: string) => void;
-  _run_R_from_JS: (code: number, length: number) => Promise<string>;
-  _EM_ReplRead: (code: number, length: number) => Promise<void>;
+  _runRCode: (code: number, length: number) => Promise<string>;
+  _readInput: (code: number, length: number) => Promise<void>;
+  allocate(slab: number[] | ArrayBufferView | number, allocator: number): number;
+  intArrayFromString(stringy: string, dontAddNull?: boolean, length?: number): number[];
 }
 
-export interface WebRAPIInterface {
-  runRAsync: typeof runRAsync;
+export interface WebRBackend {
+  runRCode: typeof runRCode;
   readInput: typeof readInput;
   readOutput: typeof readOutput;
   putFileData: typeof putFileData;
   getFileData: typeof getFileData;
   loadPackages: typeof loadPackages;
   isLoaded: typeof isLoaded;
-  loadWebR: typeof loadWebR;
+  init: typeof init;
   getFSNode: typeof getFSNode;
 }
 
-type WebRConfigType = {
+type WebRConfig = {
   RArgs: string[];
   REnv: { [key: string]: string };
   WEBR_URL: string;
@@ -142,7 +136,7 @@ const defaultOptions = {
 const Module = {} as Module;
 const outputQueue = new AsyncQueue();
 const loadedPackages: string[] = [];
-let _config: WebRConfigType;
+let _config: WebRConfig;
 let initialised: Promise<void>;
 
 type FSNode = {
@@ -155,8 +149,7 @@ type FSNode = {
 
 export async function getFSNode(path: string): Promise<FSNode> {
   await initialised;
-  const FS = Module.FS;
-  const node = FS.lookupPath(path).node;
+  const node = Module.FS.lookupPath(path).node;
   return copyFSNode(node);
 }
 
@@ -174,9 +167,9 @@ function copyFSNode(obj: FSNode): FSNode {
   return retObj;
 }
 
-export async function runRAsync(code: string): Promise<string> {
+export async function runRCode(code: string): Promise<string> {
   await initialised;
-  return await Module._run_R_from_JS(allocate(intArrayFromString(code), 0), code.length);
+  return await Module._runRCode(Module.allocate(Module.intArrayFromString(code), 0), code.length);
 }
 
 export async function readOutput(): Promise<WebROutput> {
@@ -185,7 +178,7 @@ export async function readOutput(): Promise<WebROutput> {
 
 export async function readInput(code: string): Promise<void> {
   await initialised;
-  await Module._EM_ReplRead(allocate(intArrayFromString(code), 0), code.length);
+  await Module._readInput(Module.allocate(Module.intArrayFromString(code), 0), code.length);
 }
 
 export async function getFileData(name: string): Promise<Uint8Array> {
@@ -233,11 +226,10 @@ export async function isLoaded(pkg: string): Promise<boolean> {
 
 export async function putFileData(name: string, data: Uint8Array): Promise<void> {
   await initialised;
-  // eslint-disable-next-line new-cap
-  Module.FS_createDataFile('/', name, data, true, true, true);
+  Module.FS.createDataFile('/', name, data, true, true, true);
 }
 
-export async function loadWebR(
+export async function init(
   options: {
     RArgs?: string[];
     REnv?: { [key: string]: string };

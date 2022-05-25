@@ -1,11 +1,13 @@
 import $ from 'jquery';
-
-// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-require('jstree');
 import 'jstree/dist/themes/default/style.css';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import jsTree from 'jstree/dist/jstree.js';
+jsTree;
+
 interface JQueryJSTreeElement extends Omit<JQuery, 'on'> {
-  jstree(options?: {}): JQueryJSTree;
+  jstree(options?: {}): JSTree;
   on(
     eventName: string,
     callback: (
@@ -13,17 +15,11 @@ interface JQueryJSTreeElement extends Omit<JQuery, 'on'> {
       data: {
         node: JSTreeNode;
         action: any;
-        selected: JSTreeNode[];
+        selected: string[];
         event: Event;
       }
     ) => void
   ): this;
-}
-
-interface JQueryJSTree extends JQuery {
-  get_selected: (full: boolean) => JSTreeNode[];
-  get_node: (obj: string | HTMLElement | JSTreeNode) => JSTreeNode;
-  refresh: () => void;
 }
 
 export type FSNode = {
@@ -43,7 +39,9 @@ export type JSTreeNode = {
     selected?: boolean;
   };
   parents?: JSTreeNode[];
-  children: JSTreeNode[];
+  children?: JSTreeNode[];
+  original?: { [key: string]: any };
+  isFolder?: boolean;
 };
 
 type FSTreeOptions = {
@@ -58,7 +56,7 @@ type FSTreeOptions = {
   };
 };
 
-let _jstree: JQueryJSTree;
+let _jstree: JSTree;
 let _config: FSTreeOptions;
 
 export interface FSTreeInterface {
@@ -68,7 +66,6 @@ export interface FSTreeInterface {
   createJSTreeNodefromFSNode: typeof createJSTreeNodefromFSNode;
   getJSTreeElement: typeof getJSTreeElement;
   getNodeFileName: typeof getNodeFileName;
-  _jstree: JQueryJSTree;
 }
 
 export function initFSTree(options: FSTreeOptions): FSTreeInterface {
@@ -82,10 +79,10 @@ export function initFSTree(options: FSTreeOptions): FSTreeInterface {
   _config = Object.assign(defaultConfig, options);
 
   // Initialise jstree instance
-  ($(_config.selector) as unknown as JQueryJSTreeElement).jstree(_config);
+  $(_config.selector).jstree(_config);
 
   // Get the new instance
-  _jstree = ($(_config.selector) as unknown as JQueryJSTreeElement).jstree();
+  _jstree = $(_config.selector).jstree();
 
   const namespace: FSTreeInterface = {
     getSelectedNodes,
@@ -94,7 +91,6 @@ export function initFSTree(options: FSTreeOptions): FSTreeInterface {
     createJSTreeNodefromFSNode,
     getJSTreeElement,
     getNodeFileName,
-    _jstree,
   };
   return namespace;
 }
@@ -104,11 +100,11 @@ export function getJSTreeElement(): JQueryJSTreeElement {
 }
 
 export function getSelectedNodes(): JSTreeNode[] {
-  return _jstree.get_selected(true);
+  return _jstree.get_selected(true) as JSTreeNode[];
 }
 
 export function getSelectedNode(): JSTreeNode | undefined {
-  const nodes: JSTreeNode[] = _jstree.get_selected(true);
+  const nodes = _jstree.get_selected(true) as JSTreeNode[];
   if (nodes.length > 0) {
     return nodes[0];
   }
@@ -118,7 +114,7 @@ export function getSelectedNode(): JSTreeNode | undefined {
 export function getNodeFileName(node: JSTreeNode): string {
   if (node.parents) {
     const parentText = node.parents
-      .map((nid) => _jstree.get_node(nid).text)
+      .map((nid) => (_jstree.get_node(nid) as JSTreeNode).text)
       .reverse()
       .slice(1);
     parentText.push(node.text);
@@ -135,7 +131,7 @@ export function refresh(): void {
 export function createJSTreeNodefromFSNode(fsNode: FSNode): JSTreeNode {
   const jsTreeNode: JSTreeNode = {
     text: fsNode.name,
-    children: [],
+    isFolder: fsNode.isFolder,
   };
   if (fsNode.isFolder) {
     jsTreeNode.children = Object.entries(fsNode.contents).map(([, node]) =>

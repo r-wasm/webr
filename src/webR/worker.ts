@@ -1,26 +1,26 @@
 import {
-  runRAsync,
+  runRCode,
   readInput,
   readOutput,
   putFileData,
   getFileData,
   loadPackages,
   isLoaded,
-  loadWebR,
-  WebRAPIInterface,
+  init,
+  WebRBackend,
   getFSNode,
 } from './webR';
 import { expose } from 'comlink';
 
-const exports: WebRAPIInterface = {
-  runRAsync,
+const exports: WebRBackend = {
+  runRCode,
   readInput,
   readOutput,
   putFileData,
   getFileData,
   loadPackages,
   isLoaded,
-  loadWebR,
+  init,
   getFSNode,
 };
 

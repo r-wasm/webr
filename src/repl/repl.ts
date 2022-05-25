@@ -1,13 +1,18 @@
 import { initFSTree, FSTreeInterface, JSTreeNode, FSNode } from './fstree';
-import { WebRAPIInterface } from '../webR/webR';
+import { WebRBackend } from '../webR/webR';
 import { wrap } from 'comlink';
 
 import $ from 'jquery';
 import 'jquery.terminal/css/jquery.terminal.css';
-// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-require('jquery.terminal')($);
-// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-require('jquery.terminal/js/unix_formatting.js')();
+
+/* eslint-disable */
+// @ts-ignore
+import jQueryTerminal from 'jquery.terminal';
+jQueryTerminal($);
+// @ts-ignore
+import unixFormatting from 'jquery.terminal/js/unix_formatting.js';
+unixFormatting();
+/* eslint-enable */
 
 let FSTree: FSTreeInterface;
 
@@ -38,10 +43,9 @@ const term = $('#term').terminal(
   }
 );
 
-function onFSTreeChange(event: Event, data: { selected: JSTreeNode[] }) {
-  if (data.selected.length > 0) {
-    const node = FSTree._jstree.get_node(data.selected[0]);
-    if (node.children.length === 0) {
+function onFSTreeChange(event: Event, data: { node: JSTreeNode }) {
+  if (data.node && data.node.original) {
+    if (!data.node.original.isFolder) {
       $('#download-file').prop('disabled', false);
       $('#upload-file').prop('disabled', true);
     } else {
@@ -57,7 +61,6 @@ function FSTreeData(
     call: (FSTree: FSTreeInterface, jsTreeNode: JSTreeNode) => void;
   }
 ) {
-  if (!FSTree) return;
   if (obj.id === '#') {
     webR.getFSNode('/').then((node: FSNode) => {
       const jsTreeNode = FSTree.createJSTreeNodefromFSNode(node);
@@ -71,10 +74,10 @@ function FSTreeData(
 }
 
 const worker = new Worker('./webR.js');
-const webR = wrap(worker) as WebRAPIInterface;
+const webR = wrap(worker) as WebRBackend;
 
 (async () => {
-  await webR.loadWebR({
+  await webR.init({
     RArgs: [],
     REnv: {
       R_NSIZE: '3000000',
@@ -166,19 +169,29 @@ const webR = wrap(worker) as WebRAPIInterface;
 
   for (;;) {
     const output = await webR.readOutput();
-    if (output.type === 'stdout') {
-      term.echo(output.text, { exec: false });
-    } else if (output.type === 'prompt') {
-      term.set_prompt(output.text);
-      FSTree.refresh();
-      term.resume();
-    } else if (output.type === 'packageLoading') {
-      console.log(`Loading package: ${output.text}`);
-      FSTree.refresh();
-    } else if (output.type === 'canvasExec') {
-      Function(`document.getElementById('plot-canvas').getContext('2d').${output.text}`)();
-    } else {
-      term.error(output.text);
+    switch (output.type) {
+      case 'stdout':
+        term.echo(output.text, { exec: false });
+        break;
+      case 'stderr':
+        term.error(output.text);
+        break;
+      case 'prompt':
+        term.set_prompt(output.text);
+        FSTree.refresh();
+        term.resume();
+        break;
+      case 'packageLoading':
+        console.log(`Loading package: ${output.text}`);
+        FSTree.refresh();
+        break;
+      case 'canvasExec':
+        // eslint-disable-next-line @typescript-eslint/no-implied-eval
+        Function(`document.getElementById('plot-canvas').getContext('2d').${output.text}`)();
+        break;
+      default:
+        console.error(`Unimplemented output type: ${output.type}`);
+        console.error(output.text);
     }
   }
 })();

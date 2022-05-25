@@ -17,7 +17,7 @@ Index: R-4.1.3/src/main/main.c
 +    int browselevel;
 +} EM_ctx;
 +
-+int EMSCRIPTEN_KEEPALIVE run_R_from_JS(unsigned char* evalString, unsigned int n) {
++int EMSCRIPTEN_KEEPALIVE runRCode(unsigned char* evalString, unsigned int n) {
 +    char *endline;
 +    int status;
 +
@@ -45,7 +45,7 @@ Index: R-4.1.3/src/main/main.c
 +    return 0;
 +}
 +
-+void EMSCRIPTEN_KEEPALIVE EM_ReplRead(unsigned char* evalString, unsigned int n) {
++void EMSCRIPTEN_KEEPALIVE readInput(unsigned char* evalString, unsigned int n) {
 +    memset(EM_ctx.state.buf, 0, CONSOLE_BUFFER_SIZE+1);
 +
 +    unsigned int limit = (n < CONSOLE_BUFFER_SIZE-2)?n:(CONSOLE_BUFFER_SIZE-2);
