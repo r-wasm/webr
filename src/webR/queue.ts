@@ -37,8 +37,10 @@ export class AsyncQueue<T> {
   }
 
   #add() {
-    this.#promises.push(new Promise(resolve => {
-      this.#resolvers.push(resolve);
-    }));
+    this.#promises.push(
+      new Promise((resolve) => {
+        this.#resolvers.push(resolve);
+      })
+    );
   }
 }
