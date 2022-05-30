@@ -163,8 +163,12 @@ $(BUILD)/state/r-stage2: $(BUILD)/state/r-stage1 $(BUILD)/state/r-stage2-configu
 	  $(MAKE_WASM_BUILD) R
 	touch $@
 
+.PHONY: Rprofile
+Rprofile: $(BUILD)/state/r-stage2
+	echo "options(expressions=400)" > "$(R_WASM)/lib/R/etc/Rprofile.site"
+
 .PHONY: install
-install: $(BUILD)/state/r-stage2
+install: $(BUILD)/state/r-stage2 Rprofile
 	mkdir -p $(R_SOURCE)/build/doc
 	cd $(R_SOURCE)/build/doc && \
 	  touch NEWS NEWS.pdf NEWS.rds NEWS.2.rds NEWS.3.rds
@@ -174,7 +178,7 @@ install: $(BUILD)/state/r-stage2
 
 
 .PHONY: rebuild-core
-rebuild-core:
+rebuild-core: $(BUILD)/state/r-stage2 Rprofile
 	rm -f $(BUILD)/state/r-stage2
 	cd $(STAGE2_BUILD)/src/unix && \
 	  $(MAKE_WASM_BUILD)
