@@ -165,6 +165,7 @@ $(BUILD)/state/r-stage2: $(BUILD)/state/r-stage1 $(BUILD)/state/r-stage2-configu
 
 .PHONY: Rprofile
 Rprofile: $(BUILD)/state/r-stage2
+	mkdir -p "$(R_WASM)/lib/R/etc/"
 	echo "options(expressions=400)" > "$(R_WASM)/lib/R/etc/Rprofile.site"
 
 .PHONY: install
@@ -178,10 +179,21 @@ install: $(BUILD)/state/r-stage2 Rprofile
 
 
 .PHONY: rebuild-core
-rebuild-core: $(BUILD)/state/r-stage2 Rprofile
+rebuild-core: $(BUILD)/state/r-stage2
 	rm -f $(BUILD)/state/r-stage2
 	cd $(STAGE2_BUILD)/src/unix && \
 	  $(MAKE_WASM_BUILD)
+	cd $(STAGE2_BUILD)/src/main && \
+	  $(MAKE_WASM_BUILD) R && \
+	  $(MAKE_WASM_INSTALL) install-wasm
+	cp -r "$(R_WASM)/dist/." $(DIST)
+
+.PHONY: rebuild-modules
+rebuild-modules: $(BUILD)/state/r-stage2
+	rm -f $(BUILD)/state/r-stage2
+	cd $(STAGE2_BUILD)/src/modules && \
+	  $(MAKE_WASM_BUILD) && \
+	  $(MAKE_WASM_BUILD) install
 	cd $(STAGE2_BUILD)/src/main && \
 	  $(MAKE_WASM_BUILD) R && \
 	  $(MAKE_WASM_INSTALL) install-wasm

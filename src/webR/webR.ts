@@ -257,6 +257,24 @@ export async function init(
   initialised = new Promise<void>((r) => Module.postRun.push(r));
   Module.locateFile = (path: string) => _config.WEBR_URL + path;
 
+  Module.downloadFileContent = (URL: string) => {
+    const request = new XMLHttpRequest();
+    request.open('GET', URL, false);
+    request.responseType = 'arraybuffer';
+    try {
+      request.send(null);
+      if (request.status >= 200 && request.status < 300) {
+        return { status: request.status, response: request.response as ArrayBuffer };
+      } else {
+        const responseText = new TextDecoder().decode(request.response as ArrayBuffer);
+        console.error(`Error fetching ${URL} - ${responseText}`);
+        return { status: request.status, response: responseText };
+      }
+    } catch {
+      return { status: -1, response: 'An error occured in XMLHttpRequest' };
+    }
+  };
+
   Module.print = (text: string) => {
     outputQueue.put({ type: 'stdout', text: text });
   };

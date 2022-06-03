@@ -1,0 +1,255 @@
+Index: R-4.1.3/src/modules/internet/Makefile.in
+===================================================================
+--- R-4.1.3.orig/src/modules/internet/Makefile.in
++++ R-4.1.3/src/modules/internet/Makefile.in
+@@ -11,7 +11,7 @@ R_HOME = $(top_builddir)
+ 
+ include $(top_builddir)/Makeconf
+ 
+-SOURCES = Rhttpd.c Rsock.c internet.c libcurl.c nanoftp.c nanohttp.c sock.c sockconn.c
++SOURCES = Rhttpd.c Rsock.c internet.c libcurl.c nanoftp.c nanohttp.c sock.c sockconn.c xhr.c
+ HEADERS = sock.h
+ DEPENDS = $(SOURCES:.c=.d)
+ OBJECTS = $(SOURCES:.c=.o)
+Index: R-4.1.3/src/library/utils/R/unix/download.file.R
+===================================================================
+--- R-4.1.3.orig/src/library/utils/R/unix/download.file.R
++++ R-4.1.3/src/library/utils/R/unix/download.file.R
+@@ -25,13 +25,17 @@ download.file <-
+     method <- if (missing(method))
+ 	getOption("download.file.method", default = "auto")
+     else
+-        match.arg(method, c("auto", "internal", "libcurl", "wget", "curl", "lynx"))
++        match.arg(method, c("auto", "internal", "libcurl", "wget", "curl", "lynx", "xhr"))
+ 
+     if(method == "auto") {
+         if(length(url) != 1L || typeof(url) != "character")
+             stop("'url' must be a length-one character vector");
+         ## As from 3.3.0 all Unix-alikes support libcurl.
+-	method <- if(startsWith(url, "file:")) "internal" else "libcurl"
++	method <- "libcurl"
++	if(grepl("emscripten", R.version$os))
++		method <- "xhr"
++	if(startsWith(url, "file:"))
++		method <- "internal"
+     }
+ 
+     nh <- names(headers)
+@@ -78,6 +82,18 @@ download.file <-
+ 				      " -o", shQuote(path.expand(destfile))))
+                if(status) stop("'curl' call had nonzero exit status")
+ 	   },
++	   "xhr" = {
++	       if(length(url) != 1L || typeof(url) != "character")
++		   stop("'url' must be a length-one character vector");
++	       if(length(destfile) != 1L || typeof(url) != "character")
++		   stop("'destfile' must be a length-one character vector");
++	       if(!grepl("emscripten", R.version$os))
++		   stop("xhe method is only supported in emscripten builds");
++	       headers <- if(length(headers)) paste0(nh, ": ", headers)
++	       status <- .Internal(xhrDownload(url, destfile, quiet, mode,
++						cacheOK, headers))
++	       if(!quiet) flush.console()
++	   },
+ 	   "lynx" =
+ 	       stop("method 'lynx' is defunct", domain = NA))
+ 
+Index: R-4.1.3/src/main/names.c
+===================================================================
+--- R-4.1.3.orig/src/main/names.c
++++ R-4.1.3/src/main/names.c
+@@ -998,7 +998,11 @@ FUNTAB R_FunTab[] =
+ {"eSoftVersion",do_eSoftVersion, 0,	11,	0,	{PP_FUNCALL, PREC_FN,	0}},
+ {"curlVersion", do_curlVersion, 0,	11,	0,	{PP_FUNCALL, PREC_FN,	0}},
+ {"curlGetHeaders",do_curlGetHeaders,0,	11,	5,	{PP_FUNCALL, PREC_FN,	0}},
+-{"curlDownload",do_curlDownload, 0,	11,	6,	{PP_FUNCALL, PREC_FN,	0}},
++{"curlDownload",do_curlDownload, 0, 11, 6,  {PP_FUNCALL, PREC_FN, 0}},
++
++#ifdef __EMSCRIPTEN__
++{"xhrDownload",do_xhrDownload, 0, 11, 6,  {PP_FUNCALL, PREC_FN, 0}},
++#endif
+ 
+ {NULL,		NULL,		0,	0,	0,	{PP_INVALID, PREC_FN,	0}},
+ };
+Index: R-4.1.3/src/modules/internet/internet.c
+===================================================================
+--- R-4.1.3.orig/src/modules/internet/internet.c
++++ R-4.1.3/src/modules/internet/internet.c
+@@ -44,6 +44,9 @@ static void  in_R_FTPClose(void *ctx);
+ SEXP in_do_curlVersion(SEXP call, SEXP op, SEXP args, SEXP rho);
+ SEXP in_do_curlGetHeaders(SEXP call, SEXP op, SEXP args, SEXP rho);
+ SEXP in_do_curlDownload(SEXP call, SEXP op, SEXP args, SEXP rho);
++#ifdef __EMSCRIPTEN__
++SEXP in_do_xhrDownload(SEXP call, SEXP op, SEXP args, SEXP rho);
++#endif
+ Rconnection
+ in_newCurlUrl(const char *description, const char * const mode, SEXP headers, int type);
+ 
+@@ -1154,5 +1157,9 @@ R_init_internet(DllInfo *info)
+     tmp->curlDownload = in_do_curlDownload;
+     tmp->newcurlurl =  in_newCurlUrl;
+ 
++#ifdef __EMSCRIPTEN__
++    tmp->xhrDownload = in_do_xhrDownload;
++#endif
++
+     R_setInternetRoutines(tmp);
+ }
+Index: R-4.1.3/src/modules/internet/xhr.c
+===================================================================
+--- /dev/null
++++ R-4.1.3/src/modules/internet/xhr.c
+@@ -0,0 +1,99 @@
++#ifdef HAVE_CONFIG_H
++# include <config.h>
++#endif
++
++#include <Defn.h>
++#include <Internal.h>
++#include <Fileio.h>
++#include <errno.h>
++
++#ifdef __EMSCRIPTEN__
++#include <emscripten.h>
++
++#define moduleTemplateBufferMax 2048
++
++SEXP attribute_hidden
++in_do_xhrDownload(SEXP call, SEXP op, SEXP args, SEXP rho)
++{
++    checkArity(op, args);
++
++    SEXP scmd, sfile, smode, sheaders;
++    const char *url, *file, *mode;
++    int quiet, cacheOK;
++
++    scmd = CAR(args); args = CDR(args);
++    if (!isString(scmd) || length(scmd) < 1)
++        error(_("invalid '%s' argument"), "url");
++    int nurls = length(scmd);
++    sfile = CAR(args); args = CDR(args);
++    if (!isString(sfile) || length(sfile) < 1)
++        error(_("invalid '%s' argument"), "destfile");
++    if (length(sfile) != length(scmd))
++        error(_("lengths of 'url' and 'destfile' must match"));
++    quiet = asLogical(CAR(args)); args = CDR(args);
++    if (quiet == NA_LOGICAL)
++        error(_("invalid '%s' argument"), "quiet");
++    smode =  CAR(args); args = CDR(args);
++    if (!isString(smode) || length(smode) != 1)
++        error(_("invalid '%s' argument"), "mode");
++    mode = CHAR(STRING_ELT(smode, 0));
++    cacheOK = asLogical(CAR(args)); args = CDR(args);
++    if (cacheOK == NA_LOGICAL)
++        error(_("invalid '%s' argument"), "cacheOK");
++    sheaders = CAR(args);
++    if(TYPEOF(sheaders) != NILSXP && !isString(sheaders))
++        error(_("invalid '%s' argument"), "headers");
++    if(TYPEOF(sheaders) != NILSXP) {
++        warning(_("downloading with headers is disabled on this system"));
++    }
++
++    int n_err = 0;
++    char* moduleDownload = malloc(moduleTemplateBufferMax);
++
++    R_Busy(1);
++    for(int i = 0; i < nurls; i++) {
++        url = CHAR(STRING_ELT(scmd, i));
++        if (!quiet) REprintf(_("trying URL '%s'\n"), url);
++        file = translateChar(STRING_ELT(sfile, i));
++		int ret = snprintf(
++			moduleDownload,
++			moduleTemplateBufferMax,
++			"(() => {"
++			"let resp = Module.downloadFileContent(`%s`);"
++			"if (resp.status >= 200 && resp.status < 300) {"
++			"  var stream = Module.FS.open(`%s`, 'w+');"
++			"  var data = new Uint8Array(resp.response);"
++			"  Module.FS.write(stream, data, 0, data.length, 0);"
++			"  Module.FS.close(stream);"
++			"}"
++			"return resp.status;"
++
++
++			"})();",
++			url,
++			R_ExpandFileName(file)
++		);
++		if (ret < 0 || ret >= moduleTemplateBufferMax) {
++			error("problem writing moduleDownload template in internet module");
++			continue;
++		}
++		int status = emscripten_run_script_int(moduleDownload);
++		if (!(status >= 200 && status < 300)) {
++            n_err += 1;
++            warning(_("URL %s: Download failed. See the Javascript console for further information"), url);
++        }
++    }
++    R_Busy(0);
++
++    if(nurls > 1) {
++        if (n_err == nurls) error(_("cannot download any files"));
++        else if (n_err) warning(_("some files were not downloaded"));
++    } else if(n_err) {
++        error(_("download from '%s' failed"), CHAR(STRING_ELT(scmd, 0)));
++    }
++
++    free(moduleDownload);
++    return ScalarInteger(0);
++}
++
++#endif
+Index: R-4.1.3/src/include/Internal.h
+===================================================================
+--- R-4.1.3.orig/src/include/Internal.h
++++ R-4.1.3/src/include/Internal.h
+@@ -116,6 +116,9 @@ SEXP do_cum(SEXP, SEXP, SEXP, SEXP);
+ SEXP do_curlDownload(SEXP, SEXP, SEXP, SEXP);
+ SEXP do_curlGetHeaders(SEXP, SEXP, SEXP, SEXP);
+ SEXP do_curlVersion(SEXP, SEXP, SEXP, SEXP);
++#ifdef __EMSCRIPTEN__
++  SEXP do_xhrDownload(SEXP, SEXP, SEXP, SEXP);
++#endif
+ SEXP do_D2POSIXlt(SEXP, SEXP, SEXP, SEXP);
+ SEXP do_date(SEXP, SEXP, SEXP, SEXP);
+ SEXP do_debug(SEXP, SEXP, SEXP, SEXP);
+Index: R-4.1.3/src/include/Rmodules/Rinternet.h
+===================================================================
+--- R-4.1.3.orig/src/include/Rmodules/Rinternet.h
++++ R-4.1.3/src/include/Rmodules/Rinternet.h
+@@ -85,6 +85,10 @@ typedef struct {
+     R_CurlRoutine curlGetHeaders;
+     R_CurlRoutine curlDownload;
+     R_NewUrlRoutine   newcurlurl;
++
++#ifdef __EMSCRIPTEN__
++    R_CurlRoutine xhrDownload;
++#endif
+ } R_InternetRoutines;
+ 
+ R_InternetRoutines *R_setInternetRoutines(R_InternetRoutines *routines);
+Index: R-4.1.3/src/main/internet.c
+===================================================================
+--- R-4.1.3.orig/src/main/internet.c
++++ R-4.1.3/src/main/internet.c
+@@ -357,6 +357,20 @@ SEXP attribute_hidden do_curlDownload(SE
+     }
+ }
+ 
++#ifdef __EMSCRIPTEN__
++SEXP attribute_hidden do_xhrDownload(SEXP call, SEXP op, SEXP args, SEXP rho)
++{
++    checkArity(op, args);
++    if(!initialized) internet_Init();
++    if(initialized > 0)
++    return (*ptr->xhrDownload)(call, op, args, rho);
++    else {
++    error(_("internet routines cannot be loaded"));
++    return R_NilValue;
++    }
++}
++#endif
++
+ Rconnection attribute_hidden
+ R_newCurlUrl(const char *description, const char * const mode, SEXP headers, int type)
+ {
