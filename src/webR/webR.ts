@@ -271,7 +271,7 @@ export async function init(
         return { status: request.status, response: responseText };
       }
     } catch {
-      return { status: -1, response: 'An error occured in XMLHttpRequest' };
+      return { status: 400, response: 'An error occured in XMLHttpRequest' };
     }
   };
 
