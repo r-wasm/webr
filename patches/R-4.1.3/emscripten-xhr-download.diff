@@ -45,7 +45,7 @@ Index: R-4.1.3/src/library/utils/R/unix/download.file.R
 +	       if(length(destfile) != 1L || typeof(url) != "character")
 +		   stop("'destfile' must be a length-one character vector");
 +	       if(!grepl("emscripten", R.version$os))
-+		   stop("xhe method is only supported in emscripten builds");
++		   stop("xhr method is only supported in emscripten builds");
 +	       headers <- if(length(headers)) paste0(nh, ": ", headers)
 +	       status <- .Internal(xhrDownload(url, destfile, quiet, mode,
 +						cacheOK, headers))
@@ -58,19 +58,17 @@ Index: R-4.1.3/src/main/names.c
 ===================================================================
 --- R-4.1.3.orig/src/main/names.c
 +++ R-4.1.3/src/main/names.c
-@@ -998,7 +998,11 @@ FUNTAB R_FunTab[] =
- {"eSoftVersion",do_eSoftVersion, 0,	11,	0,	{PP_FUNCALL, PREC_FN,	0}},
- {"curlVersion", do_curlVersion, 0,	11,	0,	{PP_FUNCALL, PREC_FN,	0}},
+@@ -1000,6 +1000,10 @@ FUNTAB R_FunTab[] =
  {"curlGetHeaders",do_curlGetHeaders,0,	11,	5,	{PP_FUNCALL, PREC_FN,	0}},
--{"curlDownload",do_curlDownload, 0,	11,	6,	{PP_FUNCALL, PREC_FN,	0}},
-+{"curlDownload",do_curlDownload, 0, 11, 6,  {PP_FUNCALL, PREC_FN, 0}},
-+
+ {"curlDownload",do_curlDownload, 0,	11,	6,	{PP_FUNCALL, PREC_FN,	0}},
+ 
 +#ifdef __EMSCRIPTEN__
 +{"xhrDownload",do_xhrDownload, 0, 11, 6,  {PP_FUNCALL, PREC_FN, 0}},
 +#endif
- 
++
  {NULL,		NULL,		0,	0,	0,	{PP_INVALID, PREC_FN,	0}},
  };
+ 
 Index: R-4.1.3/src/modules/internet/internet.c
 ===================================================================
 --- R-4.1.3.orig/src/modules/internet/internet.c
