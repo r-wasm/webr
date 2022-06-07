@@ -125,8 +125,6 @@ const preReqPackages: { [key: string]: string[] } = {
 };
 
 const defaultEnv = {
-  R_NSIZE: '3000000',
-  R_VSIZE: '64M',
   R_HOME: '/usr/lib/R',
   R_ENABLE_JIT: '0',
 };
