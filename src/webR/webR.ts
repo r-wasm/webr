@@ -10,6 +10,7 @@ interface Module extends EmscriptenModule {
   noAudioDecoding: boolean;
   setPrompt: (prompt: string) => void;
   canvasExec: (op: string) => void;
+  downloadFileContent: (URL: string, headers: Array<string>) => XHRResponse;
   _runRCode: (code: number, length: number) => Promise<string>;
   _readInput: (code: number, length: number) => Promise<void>;
   allocate(slab: number[] | ArrayBufferView | number, allocator: number): number;
@@ -39,6 +40,11 @@ type WebRConfig = {
 type WebROutput = {
   type: string;
   text: string;
+};
+
+type XHRResponse = {
+  status: number;
+  response: string | ArrayBuffer;
 };
 
 const builtinPackages: string[] = [
@@ -167,6 +173,36 @@ function copyFSNode(obj: FSNode): FSNode {
   return retObj;
 }
 
+function downloadFileContent(URL: string, headers: Array<string> = []): XHRResponse {
+  const request = new XMLHttpRequest();
+  request.open('GET', URL, false);
+  request.responseType = 'arraybuffer';
+
+  try {
+    headers.forEach((header) => {
+      const splitHeader = header.split(': ');
+      request.setRequestHeader(splitHeader[0], splitHeader[1]);
+    });
+  } catch {
+    const responseText = 'An error occured setting headers in XMLHttpRequest';
+    console.error(responseText);
+    return { status: 400, response: responseText };
+  }
+
+  try {
+    request.send(null);
+    if (request.status >= 200 && request.status < 300) {
+      return { status: request.status, response: request.response as ArrayBuffer };
+    } else {
+      const responseText = new TextDecoder().decode(request.response as ArrayBuffer);
+      console.error(`Error fetching ${URL} - ${responseText}`);
+      return { status: request.status, response: responseText };
+    }
+  } catch {
+    return { status: 400, response: 'An error occured in XMLHttpRequest' };
+  }
+}
+
 export async function runRCode(code: string): Promise<string> {
   await initialised;
   return await Module._runRCode(Module.allocate(Module.intArrayFromString(code), 0), code.length);
@@ -257,23 +293,7 @@ export async function init(
   initialised = new Promise<void>((r) => Module.postRun.push(r));
   Module.locateFile = (path: string) => _config.WEBR_URL + path;
 
-  Module.downloadFileContent = (URL: string) => {
-    const request = new XMLHttpRequest();
-    request.open('GET', URL, false);
-    request.responseType = 'arraybuffer';
-    try {
-      request.send(null);
-      if (request.status >= 200 && request.status < 300) {
-        return { status: request.status, response: request.response as ArrayBuffer };
-      } else {
-        const responseText = new TextDecoder().decode(request.response as ArrayBuffer);
-        console.error(`Error fetching ${URL} - ${responseText}`);
-        return { status: request.status, response: responseText };
-      }
-    } catch {
-      return { status: 400, response: 'An error occured in XMLHttpRequest' };
-    }
-  };
+  Module.downloadFileContent = downloadFileContent;
 
   Module.print = (text: string) => {
     outputQueue.put({ type: 'stdout', text: text });

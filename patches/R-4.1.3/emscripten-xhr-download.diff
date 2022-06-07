@@ -100,7 +100,7 @@ Index: R-4.1.3/src/modules/internet/xhr.c
 ===================================================================
 --- /dev/null
 +++ R-4.1.3/src/modules/internet/xhr.c
-@@ -0,0 +1,302 @@
+@@ -0,0 +1,363 @@
 +/*
 + *  R : A Computer Language for Statistical Data Analysis
 + *  Copyright (C) 2015-2020 The R Core Team
@@ -136,21 +136,21 @@ Index: R-4.1.3/src/modules/internet/xhr.c
 +
 +#define R_MIN(a, b) ((a) < (b) ? (a) : (b))
 +
-+#define moduleTemplateBufferMax 2048
++#define module_template_buffer_max 2048
 +
-+typedef struct xhrConn {
-+    char *buf, *current;
++typedef struct xhrconn {
++    char *buf, *current, *headers;
 +    size_t bufSize;
 +    size_t filled;
 +    unsigned int status;
 +    unsigned int success;
-+} *RxhrConn;
++} *Rxhrconn;
 +
-+typedef struct xhrResp {
++typedef struct xhrresp {
 +    unsigned int status;
 +    unsigned int length;
 +    uint8_t data[];
-+} *RxhrResp;
++} *Rxhrresp;
 +
 +static Rboolean xhr_open(Rconnection con)
 +{
@@ -162,11 +162,11 @@ Index: R-4.1.3/src/modules/internet/xhr.c
 +        return FALSE;
 +    }
 +
-+    RxhrConn ctxt = (RxhrConn)(con->private);
++    Rxhrconn ctxt = (Rxhrconn)(con->private);
 +    ctxt->success = 0;
 +
 +    R_Busy(1);
-+    char* moduleDownload = malloc(moduleTemplateBufferMax);
++    char* module_download = malloc(module_template_buffer_max);
 +
 +    /*
 +        Download the content at the requested URL using a synchronous
@@ -178,10 +178,10 @@ Index: R-4.1.3/src/modules/internet/xhr.c
 +        pointer to the newly allocated memory.
 +    */
 +    int ret = snprintf(
-+        moduleDownload,
-+        moduleTemplateBufferMax,
++        module_download,
++        module_template_buffer_max,
 +        "(() => {"
-+        "let resp = Module.downloadFileContent(`%s`);"                  // Get URL content with XMLHttpRequest
++        "let resp = Module.downloadFileContent(`%s`, [ %s ]);"          // Get URL content with XMLHttpRequest
 +        "if (resp.status >= 200 && resp.status < 300) {"
 +        "  var data = new Uint8Array(resp.response.byteLength + 8);"    // Create xhrResp struct as a Uint8Array
 +        "  var lengthArr = new ArrayBuffer(4);"
@@ -195,16 +195,17 @@ Index: R-4.1.3/src/modules/internet/xhr.c
 +        "}"
 +        "return null;"
 +        "})();",
-+        url
++        url,
++        ctxt->headers
 +    );
 +
-+    if (ret < 0 || ret >= moduleTemplateBufferMax) {
-+        error("problem writing moduleDownload template in internet module");
-+        free(moduleDownload);
++    if (ret < 0 || ret >= module_template_buffer_max) {
++        error("problem writing module_download template in internet module");
++        free(module_download);
 +        return FALSE;
 +    }
 +
-+    RxhrResp resp = (RxhrResp) emscripten_run_script_int(moduleDownload);
++    Rxhrresp resp = (Rxhrresp) emscripten_run_script_int(module_download);
 +    R_Busy(0);
 +
 +    ctxt->status = resp->status;
@@ -216,7 +217,7 @@ Index: R-4.1.3/src/modules/internet/xhr.c
 +    ctxt->current = ctxt->buf;
 +
 +    free(resp);
-+    free(moduleDownload);
++    free(module_download);
 +
 +    if (ctxt->status == 200){
 +        ctxt->success = 1;
@@ -229,7 +230,8 @@ Index: R-4.1.3/src/modules/internet/xhr.c
 +        con->save = -1000;
 +        set_iconv(con);
 +    } else {
-+        error(_("cannot open the connection to '%s'. See the Javascript console for further information"), url);
++        error(_("cannot open the connection to '%s'. "
++            "See the Javascript console for further information"), url);
 +    }
 +    return TRUE;
 +}
@@ -237,7 +239,7 @@ Index: R-4.1.3/src/modules/internet/xhr.c
 +static size_t xhr_read(void *ptr, size_t size, size_t nitems,
 +            Rconnection con)
 +{
-+    RxhrConn ctxt = (RxhrConn)(con->private);
++    Rxhrconn ctxt = (Rxhrconn)(con->private);
 +
 +    if(!ctxt->success){
 +        error(_("cannot read result of XHR fetch"));
@@ -263,10 +265,13 @@ Index: R-4.1.3/src/modules/internet/xhr.c
 +    if (NULL == con)
 +        return;
 +
-+    RxhrConn ctxt = (RxhrConn)(con->private);
++    Rxhrconn ctxt = (Rxhrconn)(con->private);
 +
 +    if (NULL == ctxt)
 +        return;
++
++    if (ctxt->headers)
++        free(ctxt->headers);
 +
 +    free(ctxt->buf);
 +    free(ctxt);
@@ -303,12 +308,30 @@ Index: R-4.1.3/src/modules/internet/xhr.c
 +    new->fgetc = &dummy_fgetc;
 +    new->read = &xhr_read;
 +
-+    new->private = (void *) malloc(sizeof(struct xhrConn));
++    new->private = (void *) malloc(sizeof(struct xhrconn));
 +    if (!new->private) {
 +        free(new->description); free(new->class); free(new);
 +        error(_("allocation of url connection failed"));
 +    }
-+    if (LENGTH(headers) > 0) warning(_("downloading with headers is disabled on this system"));
++    Rxhrconn ctxt = (Rxhrconn) new->private;
++
++    unsigned int headers_length = 3 * LENGTH(headers) + 1;
++    for (int i = 0; i < LENGTH(headers); i++) {
++        headers_length += strlen(CHAR(STRING_ELT(headers, i)));
++    }
++
++    ctxt->headers = (char*) malloc(headers_length);
++    if(!ctxt->headers) error(_("out of memory"));
++    ctxt->headers[0] = '\0';
++
++    for (int i = 0; i < LENGTH(headers); i++) {
++        strcat(ctxt->headers, "`");
++        strcat(ctxt->headers, CHAR(STRING_ELT(headers, i)));
++        strcat(ctxt->headers, "`");
++        if (i < (LENGTH(headers) - 1)) {
++            strcat(ctxt->headers, ",");
++        }
++    }
 +    return new;
 +}
 +
@@ -321,6 +344,7 @@ Index: R-4.1.3/src/modules/internet/xhr.c
 +    SEXP scmd, sfile, smode, sheaders;
 +    const char *url, *file, *mode;
 +    int quiet, cacheOK;
++    char *headers_joined = NULL;
 +
 +    scmd = CAR(args); args = CDR(args);
 +    if (!isString(scmd) || length(scmd) < 1)
@@ -344,12 +368,46 @@ Index: R-4.1.3/src/modules/internet/xhr.c
 +    sheaders = CAR(args);
 +    if(TYPEOF(sheaders) != NILSXP && !isString(sheaders))
 +        error(_("invalid '%s' argument"), "headers");
++
++    // initialise concatenated headers as an empty string
++    headers_joined = (char*) malloc(1);
++    if(!headers_joined) error(_("out of memory"));
++    headers_joined[0] = '\0';
++
++    // include headers from R arguments in the concatenated string
 +    if(TYPEOF(sheaders) != NILSXP) {
-+        warning(_("downloading with headers is disabled on this system"));
++        unsigned int headers_length = 3 * LENGTH(sheaders);
++        for (int i = 0; i < LENGTH(sheaders); i++) {
++            headers_length += strlen(CHAR(STRING_ELT(sheaders, i)));
++        }
++
++        headers_joined = (char*) realloc(headers_joined, headers_length);
++        if(!headers_joined) error(_("out of memory"));
++
++        for (int i = 0; i < LENGTH(sheaders); i++) {
++            strcat(headers_joined, "`");
++            strcat(headers_joined, CHAR(STRING_ELT(sheaders, i)));
++            strcat(headers_joined, "`");
++            if (i < (LENGTH(sheaders) - 1)) {
++                strcat(headers_joined, ",");
++            }
++        }
++    }
++
++    // include the no-cache header in the concatenated string, if required
++    if (!cacheOK) {
++        const char* no_cache = "'Pragma: no-cache'";
++        headers_joined = realloc(headers_joined,
++            strlen(headers_joined) + strlen(no_cache) + 1);
++        headers_joined[strlen(headers_joined)] = '\0';
++
++        if(LENGTH(sheaders) > 0)
++            strcat(headers_joined, ",");
++        strcat(headers_joined, no_cache);
 +    }
 +
 +    int n_err = 0;
-+    char* moduleDownload = malloc(moduleTemplateBufferMax);
++    char* module_download = malloc(module_template_buffer_max);
 +
 +    R_Busy(1);
 +    for(int i = 0; i < nurls; i++) {
@@ -365,10 +423,10 @@ Index: R-4.1.3/src/modules/internet/xhr.c
 +            Returns the HTTP status code.
 +        */
 +        int ret = snprintf(
-+            moduleDownload,
-+            moduleTemplateBufferMax,
++            module_download,
++            module_template_buffer_max,
 +            "(() => {"
-+            "let resp = Module.downloadFileContent(`%s`);"              // get URL content with XMLHttpRequest
++            "let resp = Module.downloadFileContent(`%s`,[ %s ]);"       // get URL content with XMLHttpRequest
 +            "if (resp.status >= 200 && resp.status < 300) {"
 +            "  var stream = Module.FS.open(`%s`, 'w+');"                // open file handle at given path
 +            "  var data = new Uint8Array(resp.response);"
@@ -378,16 +436,18 @@ Index: R-4.1.3/src/modules/internet/xhr.c
 +            "return resp.status;"                                       // return HTTP status code
 +            "})();",
 +            url,
++            headers_joined,
 +            R_ExpandFileName(file)
 +        );
-+        if (ret < 0 || ret >= moduleTemplateBufferMax) {
-+            error("problem writing moduleDownload template in internet module");
++        if (ret < 0 || ret >= module_template_buffer_max) {
++            error("problem writing module_download template in internet module");
 +            continue;
 +        }
-+        int status = emscripten_run_script_int(moduleDownload);
++        int status = emscripten_run_script_int(module_download);
 +        if (!(status >= 200 && status < 300)) {
 +            n_err += 1;
-+            warning(_("URL %s: Download failed. See the Javascript console for further information"), url);
++            warning(_("URL %s: Download failed. "
++                "See the Javascript console for further information"), url);
 +        }
 +    }
 +    R_Busy(0);
@@ -399,7 +459,8 @@ Index: R-4.1.3/src/modules/internet/xhr.c
 +        error(_("download from '%s' failed"), CHAR(STRING_ELT(scmd, 0)));
 +    }
 +
-+    free(moduleDownload);
++    free(module_download);
++    free(headers_joined);
 +    return ScalarInteger(0);
 +}
 +#endif
