@@ -28,17 +28,22 @@ function build({ input, output, minify }) {
 [
   {
     input: "webR/worker.ts",
-    output: "../dist/webR.js",
+    output: "webR.js",
     minify: false,
   },
   {
     input: "repl/repl.ts",
-    output: "../dist/repl.js",
+    output: "repl.js",
     minify: true,
   },
   {
     input: "console/console.ts",
-    output: "../dist/console.js",
+    output: "console.js",
+    minify: true,
+  },
+  {
+    input: "node/node.ts",
+    output: "webR_node.js",
     minify: true,
   },
 ].map(build);
