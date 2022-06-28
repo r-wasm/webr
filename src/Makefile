@@ -1,6 +1,8 @@
 WEBR_ROOT = $(abspath ..)
 DIST = $(WEBR_ROOT)/dist
 
+ROOT = $(abspath .)
+
 HTML_TEMPLATES = console.html repl.html
 ENTRY_POINTS = console/console.ts repl/repl.ts webR/webR.ts
 HTML_INDEX = repl.html
@@ -32,6 +34,10 @@ check:
 node_modules: package.json
 	npm ci
 	touch $@
+
+.PHONY: serve
+serve:
+	cd $(DIST) && $(ROOT)/serve.py
 
 clean:
 	rm -f webR/config.ts
