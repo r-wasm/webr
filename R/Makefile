@@ -34,7 +34,8 @@ WASM_LIBS = $(PCRE_WASM_LIB) $(XZ_WASM_LIB) $(FORTRAN_WASM_LIB)
 # Configure your local environment in this file
 -include ~/.webr-config.mk
 
-WASM_OPT := -Oz
+WASM_OPT ?= -Oz
+WASM_OPT_LDADD ?= $(WASM_OPT)
 
 WASM_CFLAGS := $(WASM_CFLAGS)
 WASM_CFLAGS += -fPIC -fno-exceptions -fno-rtti $(WASM_OPT)
@@ -113,9 +114,9 @@ MAIN_LDFLAGS += -s ERROR_ON_UNDEFINED_SYMBOLS=0
 MAIN_LDFLAGS += -s EXPORTED_RUNTIME_METHODS=['cwrap','allocate','intArrayFromString']
 MAIN_LDFLAGS += --extern-pre-js $(WEBR_ROOT)/src/webR/pre.js
 MAIN_LDFLAGS += $(FORTRAN_WASM_LDADD)
-MAIN_LDFLAGS += $(WASM_OPT)
+MAIN_LDFLAGS += $(WASM_OPT_LDADD)
 
-SHLIB_LDFLAGS = -s SIDE_MODULE=1 -s WASM_BIGINT $(WASM_OPT)
+SHLIB_LDFLAGS = -s SIDE_MODULE=1 -s WASM_BIGINT $(WASM_OPT_LDADD)
 
 # Stage 2: Reconfigure and build for wasm32-unknown-emscripten target
 $(BUILD)/state/r-stage2-configured: $(BUILD)/state/r-patched $(WASM_LIBS)
