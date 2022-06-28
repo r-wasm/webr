@@ -1,6 +1,6 @@
 import { initFSTree, FSTreeInterface, JSTreeNode, FSNode } from './fstree';
 import { WebRBackend } from '../webR/webR';
-import { wrap } from 'comlink';
+import { wrap } from 'synclink';
 
 import $ from 'jquery';
 import 'jquery.terminal/css/jquery.terminal.css';

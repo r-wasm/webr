@@ -1,4 +1,4 @@
-import { wrap } from 'comlink';
+import { wrap } from 'synclink';
 import { WebRBackend } from '../webR/webR';
 
 (async () => {

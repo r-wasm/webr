@@ -10,7 +10,7 @@ import {
   WebRBackend,
   getFSNode,
 } from './webR';
-import { expose } from 'comlink';
+import { expose } from 'synclink';
 
 const exports: WebRBackend = {
   runRCode,
