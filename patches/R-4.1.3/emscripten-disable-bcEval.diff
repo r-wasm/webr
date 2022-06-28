@@ -1,0 +1,16 @@
+Index: R-4.1.3/src/main/eval.c
+===================================================================
+--- R-4.1.3.orig/src/main/eval.c
++++ R-4.1.3/src/main/eval.c
+@@ -6492,6 +6492,11 @@ static SEXP bcEval(SEXP body, SEXP rho, 
+   codebase = pc = BCCODE(body);
+   constants = BCCONSTS(body);
+ 
++#ifdef __EMSCRIPTEN__
++  /* Disable bytecode at all times in emscripten */
++  return eval(bytecodeExpr(body), rho);
++#endif
++
+   /* allow bytecode to be disabled for testing */
+   if (R_disable_bytecode)
+       return eval(bytecodeExpr(body), rho);

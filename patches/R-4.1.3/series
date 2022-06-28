@@ -12,3 +12,5 @@ dynload-remove-extra-path-separator.diff
 jumpctxt-mask.diff
 find-default-packages.diff
 tre-fix-rf_error-args.diff
+emscripten-disable-bcEval.diff
+emscripten-xhr-download.diff

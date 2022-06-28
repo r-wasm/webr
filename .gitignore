@@ -12,3 +12,4 @@ R/build
 src/webR/config.[jt]s
 src/node_modules
 **/.DS_Store
+.vscode

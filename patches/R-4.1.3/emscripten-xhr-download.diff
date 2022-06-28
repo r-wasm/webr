@@ -1,0 +1,591 @@
+Index: R-4.1.3/src/modules/internet/Makefile.in
+===================================================================
+--- R-4.1.3.orig/src/modules/internet/Makefile.in
++++ R-4.1.3/src/modules/internet/Makefile.in
+@@ -11,7 +11,7 @@ R_HOME = $(top_builddir)
+ 
+ include $(top_builddir)/Makeconf
+ 
+-SOURCES = Rhttpd.c Rsock.c internet.c libcurl.c nanoftp.c nanohttp.c sock.c sockconn.c
++SOURCES = Rhttpd.c Rsock.c internet.c libcurl.c nanoftp.c nanohttp.c sock.c sockconn.c xhr.c
+ HEADERS = sock.h
+ DEPENDS = $(SOURCES:.c=.d)
+ OBJECTS = $(SOURCES:.c=.o)
+Index: R-4.1.3/src/library/utils/R/unix/download.file.R
+===================================================================
+--- R-4.1.3.orig/src/library/utils/R/unix/download.file.R
++++ R-4.1.3/src/library/utils/R/unix/download.file.R
+@@ -25,13 +25,17 @@ download.file <-
+     method <- if (missing(method))
+ 	getOption("download.file.method", default = "auto")
+     else
+-        match.arg(method, c("auto", "internal", "libcurl", "wget", "curl", "lynx"))
++        match.arg(method, c("auto", "internal", "libcurl", "wget", "curl", "lynx", "xhr"))
+ 
+     if(method == "auto") {
+         if(length(url) != 1L || typeof(url) != "character")
+             stop("'url' must be a length-one character vector");
+         ## As from 3.3.0 all Unix-alikes support libcurl.
+-	method <- if(startsWith(url, "file:")) "internal" else "libcurl"
++	method <- "libcurl"
++	if(grepl("emscripten", R.version$os))
++		method <- "xhr"
++	if(startsWith(url, "file:"))
++		method <- "internal"
+     }
+ 
+     nh <- names(headers)
+@@ -78,6 +82,18 @@ download.file <-
+ 				      " -o", shQuote(path.expand(destfile))))
+                if(status) stop("'curl' call had nonzero exit status")
+ 	   },
++	   "xhr" = {
++	       if(length(url) != 1L || typeof(url) != "character")
++		   stop("'url' must be a length-one character vector");
++	       if(length(destfile) != 1L || typeof(url) != "character")
++		   stop("'destfile' must be a length-one character vector");
++	       if(!grepl("emscripten", R.version$os))
++		   stop("xhr method is only supported in emscripten builds");
++	       headers <- if(length(headers)) paste0(nh, ": ", headers)
++	       status <- .Internal(xhrDownload(url, destfile, quiet, mode,
++						cacheOK, headers))
++	       if(!quiet) flush.console()
++	   },
+ 	   "lynx" =
+ 	       stop("method 'lynx' is defunct", domain = NA))
+ 
+Index: R-4.1.3/src/main/names.c
+===================================================================
+--- R-4.1.3.orig/src/main/names.c
++++ R-4.1.3/src/main/names.c
+@@ -1000,6 +1000,10 @@ FUNTAB R_FunTab[] =
+ {"curlGetHeaders",do_curlGetHeaders,0,	11,	5,	{PP_FUNCALL, PREC_FN,	0}},
+ {"curlDownload",do_curlDownload, 0,	11,	6,	{PP_FUNCALL, PREC_FN,	0}},
+ 
++#ifdef __EMSCRIPTEN__
++{"xhrDownload",do_xhrDownload, 0, 11, 6,  {PP_FUNCALL, PREC_FN, 0}},
++#endif
++
+ {NULL,		NULL,		0,	0,	0,	{PP_INVALID, PREC_FN,	0}},
+ };
+ 
+Index: R-4.1.3/src/modules/internet/internet.c
+===================================================================
+--- R-4.1.3.orig/src/modules/internet/internet.c
++++ R-4.1.3/src/modules/internet/internet.c
+@@ -46,6 +46,11 @@ SEXP in_do_curlGetHeaders(SEXP call, SEX
+ SEXP in_do_curlDownload(SEXP call, SEXP op, SEXP args, SEXP rho);
+ Rconnection
+ in_newCurlUrl(const char *description, const char * const mode, SEXP headers, int type);
++#ifdef __EMSCRIPTEN__
++SEXP in_do_xhrDownload(SEXP call, SEXP op, SEXP args, SEXP rho);
++Rconnection
++in_newXhrUrl(const char *description, const char * const mode, SEXP headers, int type);
++#endif
+ 
+ #ifdef Win32
+ static void *in_R_HTTPOpen2(const char *url, const char *agent, const char *headers, int cacheOK);
+@@ -1154,5 +1159,10 @@ R_init_internet(DllInfo *info)
+     tmp->curlDownload = in_do_curlDownload;
+     tmp->newcurlurl =  in_newCurlUrl;
+ 
++#ifdef __EMSCRIPTEN__
++    tmp->xhrDownload = in_do_xhrDownload;
++    tmp->newxhrurl =  in_newXhrUrl;
++#endif
++
+     R_setInternetRoutines(tmp);
+ }
+Index: R-4.1.3/src/modules/internet/xhr.c
+===================================================================
+--- /dev/null
++++ R-4.1.3/src/modules/internet/xhr.c
+@@ -0,0 +1,363 @@
++/*
++ *  R : A Computer Language for Statistical Data Analysis
++ *  Copyright (C) 2015-2020 The R Core Team
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2 of the License, or
++ *  (at your option) any later version.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with this program; if not, a copy is available at
++ *  https://www.R-project.org/Licenses/
++ */
++
++#ifdef HAVE_CONFIG_H
++# include <config.h>
++#endif
++
++#include <Defn.h>
++#include <Internal.h>
++#include <Fileio.h>
++#include <errno.h>
++
++#include <Rconnections.h>
++
++#ifdef __EMSCRIPTEN__
++#include <emscripten.h>
++
++#define R_MIN(a, b) ((a) < (b) ? (a) : (b))
++
++#define module_template_buffer_max 2048
++
++typedef struct xhrconn {
++    char *buf, *current, *headers;
++    size_t bufSize;
++    size_t filled;
++    unsigned int status;
++    unsigned int success;
++} *Rxhrconn;
++
++typedef struct xhrresp {
++    unsigned int status;
++    unsigned int length;
++    uint8_t data[];
++} *Rxhrresp;
++
++static Rboolean xhr_open(Rconnection con)
++{
++    char *url = con->description;
++    int mlen;
++
++    if (con->mode[0] != 'r') {
++        REprintf("can only open URLs for reading");
++        return FALSE;
++    }
++
++    Rxhrconn ctxt = (Rxhrconn)(con->private);
++    ctxt->success = 0;
++
++    R_Busy(1);
++    char* module_download = malloc(module_template_buffer_max);
++
++    /*
++        Download the content at the requested URL using a synchronous
++        XMLHttpRequest. If successful build a xhrResp struct with Javascript,
++        containing the HTTP status code, the length of the response and the
++        response data.
++
++        Finally, copy this struct into the Emscripten heap and return a
++        pointer to the newly allocated memory.
++    */
++    int ret = snprintf(
++        module_download,
++        module_template_buffer_max,
++        "(() => {"
++        "let resp = Module.downloadFileContent(`%s`, [ %s ]);"          // Get URL content with XMLHttpRequest
++        "if (resp.status >= 200 && resp.status < 300) {"
++        "  var data = new Uint8Array(resp.response.byteLength + 8);"    // Create xhrResp struct as a Uint8Array
++        "  var lengthArr = new ArrayBuffer(4);"
++        "  var lengthArrView = new DataView(lengthArr);"
++        "  lengthArrView.setUint32(0, resp.status, true);"
++        "  data.set(new Uint8Array(lengthArr));"                        // populate HTTP status code
++        "  lengthArrView.setUint32(0, resp.response.byteLength, true);"
++        "  data.set(new Uint8Array(lengthArr), 4);"                     // populate length of HTTP response
++        "  data.set(new Uint8Array(resp.response), 8);"                 // populate file content data
++        "  return allocate(data, 0);"                                   // Return pointer to xhrResp struct
++        "}"
++        "return null;"
++        "})();",
++        url,
++        ctxt->headers
++    );
++
++    if (ret < 0 || ret >= module_template_buffer_max) {
++        error("problem writing module_download template in internet module");
++        free(module_download);
++        return FALSE;
++    }
++
++    Rxhrresp resp = (Rxhrresp) emscripten_run_script_int(module_download);
++    R_Busy(0);
++
++    ctxt->status = resp->status;
++    ctxt->filled = resp->length;
++    ctxt->bufSize = resp->length;
++
++    ctxt->buf = (char*) malloc(resp->length);
++    memcpy(ctxt->buf, &(resp->data), resp->length);
++    ctxt->current = ctxt->buf;
++
++    free(resp);
++    free(module_download);
++
++    if (ctxt->status == 200){
++        ctxt->success = 1;
++        con->isopen = TRUE;
++        con->canwrite = (con->mode[0] == 'w' || con->mode[0] == 'a');
++        con->canread = !con->canwrite;
++        mlen = (int) strlen(con->mode);
++        if (mlen >= 2 && con->mode[mlen - 1] == 'b') con->text = FALSE;
++        else con->text = TRUE;
++        con->save = -1000;
++        set_iconv(con);
++    } else {
++        error(_("cannot open the connection to '%s'. "
++            "See the Javascript console for further information"), url);
++    }
++    return TRUE;
++}
++
++static size_t xhr_read(void *ptr, size_t size, size_t nitems,
++            Rconnection con)
++{
++    Rxhrconn ctxt = (Rxhrconn)(con->private);
++
++    if(!ctxt->success){
++        error(_("cannot read result of XHR fetch"));
++    }
++
++    size_t nbytes = size*nitems;
++    size_t total = R_MIN(ctxt->filled, nbytes);
++    memcpy(ptr, ctxt->current, total);
++    ctxt->current += total;
++    ctxt->filled -= total;
++    return total/size;
++}
++
++static int xhr_fgetc_internal(Rconnection con)
++{
++    unsigned char c;
++    size_t n = xhr_read(&c, 1, 1, con);
++    return (n == 1) ? c : R_EOF;
++}
++
++static void xhr_destroy(Rconnection con)
++{
++    if (NULL == con)
++        return;
++
++    Rxhrconn ctxt = (Rxhrconn)(con->private);
++
++    if (NULL == ctxt)
++        return;
++
++    if (ctxt->headers)
++        free(ctxt->headers);
++
++    free(ctxt->buf);
++    free(ctxt);
++}
++
++static void xhr_close(Rconnection con)
++{
++    con->isopen = FALSE;
++}
++
++
++Rconnection
++in_newXhrUrl(const char *description, const char * const mode, SEXP headers, int type)
++{
++    Rconnection new = (Rconnection) malloc(sizeof(struct Rconn));
++    if (!new) error(_("allocation of url connection failed"));
++    new->class = (char *) malloc(strlen("url-xhr") + 1);
++    if (!new->class) {
++        free(new);
++        error(_("allocation of url connection failed"));
++    }
++    strcpy(new->class, "url-xhr");
++    new->description = (char *) malloc(strlen(description) + 1);
++    if (!new->description) {
++        free(new->class); free(new);
++        error(_("allocation of url connection failed"));
++    }
++    init_con(new, description, CE_NATIVE, mode);
++    new->canwrite = FALSE;
++    new->open = &xhr_open;
++    new->close = &xhr_close;
++    new->destroy = &xhr_destroy;
++    new->fgetc_internal = &xhr_fgetc_internal;
++    new->fgetc = &dummy_fgetc;
++    new->read = &xhr_read;
++
++    new->private = (void *) malloc(sizeof(struct xhrconn));
++    if (!new->private) {
++        free(new->description); free(new->class); free(new);
++        error(_("allocation of url connection failed"));
++    }
++    Rxhrconn ctxt = (Rxhrconn) new->private;
++
++    unsigned int headers_length = 3 * LENGTH(headers) + 1;
++    for (int i = 0; i < LENGTH(headers); i++) {
++        headers_length += strlen(CHAR(STRING_ELT(headers, i)));
++    }
++
++    ctxt->headers = (char*) malloc(headers_length);
++    if(!ctxt->headers) error(_("out of memory"));
++    ctxt->headers[0] = '\0';
++
++    for (int i = 0; i < LENGTH(headers); i++) {
++        strcat(ctxt->headers, "`");
++        strcat(ctxt->headers, CHAR(STRING_ELT(headers, i)));
++        strcat(ctxt->headers, "`");
++        if (i < (LENGTH(headers) - 1)) {
++            strcat(ctxt->headers, ",");
++        }
++    }
++    return new;
++}
++
++
++SEXP attribute_hidden
++in_do_xhrDownload(SEXP call, SEXP op, SEXP args, SEXP rho)
++{
++    checkArity(op, args);
++
++    SEXP scmd, sfile, smode, sheaders;
++    const char *url, *file, *mode;
++    int quiet, cacheOK;
++    char *headers_joined = NULL;
++
++    scmd = CAR(args); args = CDR(args);
++    if (!isString(scmd) || length(scmd) < 1)
++        error(_("invalid '%s' argument"), "url");
++    int nurls = length(scmd);
++    sfile = CAR(args); args = CDR(args);
++    if (!isString(sfile) || length(sfile) < 1)
++        error(_("invalid '%s' argument"), "destfile");
++    if (length(sfile) != length(scmd))
++        error(_("lengths of 'url' and 'destfile' must match"));
++    quiet = asLogical(CAR(args)); args = CDR(args);
++    if (quiet == NA_LOGICAL)
++        error(_("invalid '%s' argument"), "quiet");
++    smode =  CAR(args); args = CDR(args);
++    if (!isString(smode) || length(smode) != 1)
++        error(_("invalid '%s' argument"), "mode");
++    mode = CHAR(STRING_ELT(smode, 0));
++    cacheOK = asLogical(CAR(args)); args = CDR(args);
++    if (cacheOK == NA_LOGICAL)
++        error(_("invalid '%s' argument"), "cacheOK");
++    sheaders = CAR(args);
++    if(TYPEOF(sheaders) != NILSXP && !isString(sheaders))
++        error(_("invalid '%s' argument"), "headers");
++
++    // initialise concatenated headers as an empty string
++    headers_joined = (char*) malloc(1);
++    if(!headers_joined) error(_("out of memory"));
++    headers_joined[0] = '\0';
++
++    // include headers from R arguments in the concatenated string
++    if(TYPEOF(sheaders) != NILSXP) {
++        unsigned int headers_length = 3 * LENGTH(sheaders);
++        for (int i = 0; i < LENGTH(sheaders); i++) {
++            headers_length += strlen(CHAR(STRING_ELT(sheaders, i)));
++        }
++
++        headers_joined = (char*) realloc(headers_joined, headers_length);
++        if(!headers_joined) error(_("out of memory"));
++
++        for (int i = 0; i < LENGTH(sheaders); i++) {
++            strcat(headers_joined, "`");
++            strcat(headers_joined, CHAR(STRING_ELT(sheaders, i)));
++            strcat(headers_joined, "`");
++            if (i < (LENGTH(sheaders) - 1)) {
++                strcat(headers_joined, ",");
++            }
++        }
++    }
++
++    // include the no-cache header in the concatenated string, if required
++    if (!cacheOK) {
++        const char* no_cache = "'Pragma: no-cache'";
++        headers_joined = realloc(headers_joined,
++            strlen(headers_joined) + strlen(no_cache) + 1);
++        headers_joined[strlen(headers_joined)] = '\0';
++
++        if(LENGTH(sheaders) > 0)
++            strcat(headers_joined, ",");
++        strcat(headers_joined, no_cache);
++    }
++
++    int n_err = 0;
++    char* module_download = malloc(module_template_buffer_max);
++
++    R_Busy(1);
++    for(int i = 0; i < nurls; i++) {
++        url = CHAR(STRING_ELT(scmd, i));
++        if (!quiet) REprintf(_("trying URL '%s'\n"), url);
++        file = translateChar(STRING_ELT(sfile, i));
++
++        /*
++            Download the content at the requested URL using a synchronous
++            XMLHttpRequest. If successful write the content to the virtual
++            filesystem at the given path.
++
++            Returns the HTTP status code.
++        */
++        int ret = snprintf(
++            module_download,
++            module_template_buffer_max,
++            "(() => {"
++            "let resp = Module.downloadFileContent(`%s`,[ %s ]);"       // get URL content with XMLHttpRequest
++            "if (resp.status >= 200 && resp.status < 300) {"
++            "  var stream = Module.FS.open(`%s`, 'w+');"                // open file handle at given path
++            "  var data = new Uint8Array(resp.response);"
++            "  Module.FS.write(stream, data, 0, data.length, 0);"       // write the downloaded data to file
++            "  Module.FS.close(stream);"
++            "}"
++            "return resp.status;"                                       // return HTTP status code
++            "})();",
++            url,
++            headers_joined,
++            R_ExpandFileName(file)
++        );
++        if (ret < 0 || ret >= module_template_buffer_max) {
++            error("problem writing module_download template in internet module");
++            continue;
++        }
++        int status = emscripten_run_script_int(module_download);
++        if (!(status >= 200 && status < 300)) {
++            n_err += 1;
++            warning(_("URL %s: Download failed. "
++                "See the Javascript console for further information"), url);
++        }
++    }
++    R_Busy(0);
++
++    if(nurls > 1) {
++        if (n_err == nurls) error(_("cannot download any files"));
++        else if (n_err) warning(_("some files were not downloaded"));
++    } else if(n_err) {
++        error(_("download from '%s' failed"), CHAR(STRING_ELT(scmd, 0)));
++    }
++
++    free(module_download);
++    free(headers_joined);
++    return ScalarInteger(0);
++}
++#endif
+Index: R-4.1.3/src/include/Internal.h
+===================================================================
+--- R-4.1.3.orig/src/include/Internal.h
++++ R-4.1.3/src/include/Internal.h
+@@ -116,6 +116,9 @@ SEXP do_cum(SEXP, SEXP, SEXP, SEXP);
+ SEXP do_curlDownload(SEXP, SEXP, SEXP, SEXP);
+ SEXP do_curlGetHeaders(SEXP, SEXP, SEXP, SEXP);
+ SEXP do_curlVersion(SEXP, SEXP, SEXP, SEXP);
++#ifdef __EMSCRIPTEN__
++  SEXP do_xhrDownload(SEXP, SEXP, SEXP, SEXP);
++#endif
+ SEXP do_D2POSIXlt(SEXP, SEXP, SEXP, SEXP);
+ SEXP do_date(SEXP, SEXP, SEXP, SEXP);
+ SEXP do_debug(SEXP, SEXP, SEXP, SEXP);
+Index: R-4.1.3/src/include/Rmodules/Rinternet.h
+===================================================================
+--- R-4.1.3.orig/src/include/Rmodules/Rinternet.h
++++ R-4.1.3/src/include/Rmodules/Rinternet.h
+@@ -85,6 +85,11 @@ typedef struct {
+     R_CurlRoutine curlGetHeaders;
+     R_CurlRoutine curlDownload;
+     R_NewUrlRoutine   newcurlurl;
++
++#ifdef __EMSCRIPTEN__
++    R_CurlRoutine xhrDownload;
++    R_NewUrlRoutine newxhrurl;
++#endif
+ } R_InternetRoutines;
+ 
+ R_InternetRoutines *R_setInternetRoutines(R_InternetRoutines *routines);
+Index: R-4.1.3/src/main/internet.c
+===================================================================
+--- R-4.1.3.orig/src/main/internet.c
++++ R-4.1.3/src/main/internet.c
+@@ -370,3 +370,28 @@ R_newCurlUrl(const char *description, co
+     return (Rconnection)0; /* -Wall in gcc, but Solaris compiler complains */
+ }
+ 
++#ifdef __EMSCRIPTEN__
++SEXP attribute_hidden do_xhrDownload(SEXP call, SEXP op, SEXP args, SEXP rho)
++{
++    checkArity(op, args);
++    if(!initialized) internet_Init();
++    if(initialized > 0)
++        return (*ptr->xhrDownload)(call, op, args, rho);
++    else {
++        error(_("internet routines cannot be loaded"));
++        return R_NilValue;
++    }
++}
++
++Rconnection attribute_hidden
++R_newXhrUrl(const char *description, const char * const mode, SEXP headers, int type)
++{
++    if(!initialized) internet_Init();
++    if(initialized > 0)
++        return (*ptr->newxhrurl)(description, mode, headers, type);
++    else {
++        error(_("internet routines cannot be loaded"));
++    }
++    return (Rconnection)0;
++}
++#endif
+Index: R-4.1.3/src/main/connections.c
+===================================================================
+--- R-4.1.3.orig/src/main/connections.c
++++ R-4.1.3/src/main/connections.c
+@@ -5348,6 +5348,10 @@ SEXP attribute_hidden do_sumconnection(S
+ // in internet module: 'type' is unused
+ extern Rconnection
+ R_newCurlUrl(const char *description, const char * const mode, SEXP headers, int type);
++#ifdef __EMSCRIPTEN__
++extern Rconnection
++R_newXhrUrl(const char *description, const char * const mode, SEXP headers, int type);
++#endif
+ 
+ 
+ /* op = 0: .Internal( url(description, open, blocking, encoding, method, headers))
+@@ -5360,7 +5364,7 @@ SEXP attribute_hidden do_url(SEXP call, 
+     char *class2 = "url";
+     const char *url, *open;
+     int ncon, block, raw = 0, defmeth,
+-	meth = 0, // 0: "default" | "internal" | "wininet", 1: "libcurl"
++	meth = 0, // 0: "default" | "internal" | "wininet", 1: "libcurl", 2: "xhr"
+ 	winmeth;  // 0: "internal", 1: "wininet" (Windows only)
+     cetype_t ienc = CE_NATIVE;
+     Rconnection con = NULL;
+@@ -5424,10 +5428,17 @@ SEXP attribute_hidden do_url(SEXP call, 
+     // --------- method
+     const char *cmeth = CHAR(asChar(CAD4R(args)));
+     meth = streql(cmeth, "libcurl"); // 1 if "libcurl", else 0
++#ifdef __EMSCRIPTEN__
++    if (streql(cmeth, "xhr")) meth = 2; // 2 if "xhr"
++#endif
+     defmeth = streql(cmeth, "default");
+ #ifndef Win32
++#ifdef __EMSCRIPTEN__
++    if(defmeth) meth = 2;
++#else
+     if(defmeth) meth = 1;
+ #endif
++#endif
+     if (streql(cmeth, "wininet")) {
+ #ifdef Win32
+ 	winmeth = 1;  // it already was as this is the default
+@@ -5494,12 +5505,19 @@ SEXP attribute_hidden do_url(SEXP call, 
+ 	con = newfile(url + nh, ienc, strlen(open) ? open : "r", raw);
+ 	class2 = "file";
+     } else if (inet) {
++#ifdef __EMSCRIPTEN__
++	if(meth == 1) {
++	    error("url(method = \"libcurl\") is not supported on this platform");
++	} else if(meth == 2) {
++		con = R_newXhrUrl(url, strlen(open) ? open : "r", headers, 0);
++#else
+ 	if(meth) {
+ # ifdef HAVE_LIBCURL
+ 	    con = R_newCurlUrl(url, strlen(open) ? open : "r", headers, 0);
+ # else
+ 	    error("url(method = \"libcurl\") is not supported on this platform");
+ # endif
++# endif
+ 	} else {
+ 	    con = R_newurl(url, strlen(open) ? open : "r", headers_flat, winmeth);
+ 	    ((Rurlconn)con->private)->type = type;
