@@ -31,11 +31,14 @@ docker-container-%:
 	docker run -dit --name $* --mount type=bind,source=$(PWD),target=/app webr-build bash
 
 .PHONY: clean
-clean:
-	rm -rf host wasm
-	cd R && $(MAKE) clean
+clean: clean-webr
 	cd tools/dragonegg && $(MAKE) clean
 	cd tools/flang && $(MAKE) clean
+
+.PHONY: clean-webr
+clean-webr:
+	rm -rf host wasm
+	cd R && $(MAKE) clean
 
 .PHONY: distclean
 distclean: clean
