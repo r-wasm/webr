@@ -138,7 +138,7 @@ const defaultOptions = {
 };
 
 const Module = {} as Module;
-const outputQueue = new AsyncQueue();
+const outputQueue = new AsyncQueue<WebROutput>();
 const loadedPackages: string[] = [];
 let _config: WebRConfig;
 let initialised: Promise<void>;
