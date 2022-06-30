@@ -1,6 +1,5 @@
 import { initFSTree, FSTreeInterface, JSTreeNode, FSNode } from './fstree';
-import { WebRBackend } from '../webR/webR';
-import { wrap } from 'synclink';
+import { WebR } from '../webR/main';
 
 import $ from 'jquery';
 import 'jquery.terminal/css/jquery.terminal.css';
@@ -73,8 +72,7 @@ function FSTreeData(
   }
 }
 
-const worker = new Worker('./webR.js');
-const webR = wrap(worker) as WebRBackend;
+const webR = new WebR();
 
 (async () => {
   await webR.init({
