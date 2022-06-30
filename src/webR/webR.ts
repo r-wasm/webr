@@ -263,14 +263,16 @@ export async function putFileData(name: string, data: Uint8Array): Promise<void>
   Module.FS.createDataFile('/', name, data, true, true, true);
 }
 
+export interface WebROptions {
+  RArgs?: string[];
+  REnv?: { [key: string]: string };
+  WEBR_URL?: string;
+  PKG_URL?: string;
+  homedir?: string;
+}
+
 export async function init(
-  options: {
-    RArgs?: string[];
-    REnv?: { [key: string]: string };
-    WEBR_URL?: string;
-    PKG_URL?: string;
-    homedir?: string;
-  } = {}
+  options: WebROptions = {}
 ): Promise<void> {
   _config = Object.assign(defaultOptions, options);
 
