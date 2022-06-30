@@ -1,6 +1,10 @@
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { AsyncQueue } from './queue';
 import { loadScript } from './compat';
+import { SynclinkTask } from '../node_modules/synclink/dist/esm/task';
+
+// FIXME: Why doesn't this work?
+// import { SynclinkTask } from 'synclink/task';
 
 interface Module extends EmscriptenModule {
   FS: any;
@@ -12,14 +16,13 @@ interface Module extends EmscriptenModule {
   canvasExec: (op: string) => void;
   downloadFileContent: (URL: string, headers: Array<string>) => XHRResponse;
   _runRCode: (code: number, length: number) => Promise<string>;
-  _readInput: (code: number, length: number) => Promise<void>;
   allocate(slab: number[] | ArrayBufferView | number, allocator: number): number;
   intArrayFromString(stringy: string, dontAddNull?: boolean, length?: number): number[];
+  syncReadConsole(): number;
 }
 
 export interface WebRBackend {
   runRCode: typeof runRCode;
-  readInput: typeof readInput;
   readOutput: typeof readOutput;
   putFileData: typeof putFileData;
   getFileData: typeof getFileData;
@@ -210,11 +213,6 @@ export async function readOutput(): Promise<WebROutput> {
   return (await outputQueue.get()) as WebROutput;
 }
 
-export async function readInput(code: string): Promise<void> {
-  await initialised;
-  await Module._readInput(Module.allocate(Module.intArrayFromString(code), 0), code.length);
-}
-
 export async function getFileData(name: string): Promise<Uint8Array> {
   await initialised;
   const FS = Module.FS;
@@ -272,7 +270,8 @@ export interface WebROptions {
 }
 
 export async function init(
-  options: WebROptions = {}
+    options: WebROptions = {},
+    getConsoleInput: () => SynclinkTask
 ): Promise<void> {
   _config = Object.assign(defaultOptions, options);
 
@@ -311,6 +310,12 @@ export async function init(
     outputQueue.put({ type: 'canvasExec', text: op });
   };
 
+  // C code must call `free()` on the result
+  Module['syncReadConsole'] = () => {
+    let jsString= getConsoleInput().syncify();
+    return allocUTF8(jsString);
+  };
+
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   (globalThis as any).Module = Module;
 
@@ -318,4 +323,11 @@ export async function init(
   await loadScript(scriptSrc);
 
   await initialised;
+}
+
+function allocUTF8(x: string) {
+  let nBytes = lengthBytesUTF8(x) + 1;
+  let out = Module._malloc(nBytes);
+  stringToUTF8(x, out, nBytes);
+  return out;
 }
