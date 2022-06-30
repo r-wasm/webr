@@ -19,7 +19,11 @@ interface Module extends EmscriptenModule {
   _runRCode: (code: number, length: number) => Promise<string>;
   allocate(slab: number[] | ArrayBufferView | number, allocator: number): number;
   intArrayFromString(stringy: string, dontAddNull?: boolean, length?: number): number[];
-  syncReadConsole(): number;
+  // TODO: Namespace all webR properties
+  webR: {
+    syncReadConsole: () => number;
+    resolveInit: () => void;
+  };
 }
 
 export interface WebRBackend {
@@ -28,8 +32,11 @@ export interface WebRBackend {
   getFileData: typeof getFileData;
   loadPackages: typeof loadPackages;
   isLoaded: typeof isLoaded;
-  init: typeof init;
   getFSNode: typeof getFSNode;
+}
+
+export interface WebRBackendPrivate extends WebRBackend {
+  init: typeof init;
 }
 
 type WebRConfig = {
@@ -144,7 +151,6 @@ const Module = {} as Module;
 const outputQueue = new AsyncQueue<WebROutput>();
 const loadedPackages: string[] = [];
 let _config: WebRConfig;
-let initialised: Promise<void>;
 
 type FSNode = {
   id: number;
@@ -155,7 +161,6 @@ type FSNode = {
 };
 
 export async function getFSNode(path: string): Promise<FSNode> {
-  await initialised;
   const node = Module.FS.lookupPath(path).node;
   return copyFSNode(node);
 }
@@ -205,12 +210,10 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
 }
 
 export async function runRCode(code: string): Promise<string> {
-  await initialised;
   return await Module._runRCode(Module.allocate(Module.intArrayFromString(code), 0), code.length);
 }
 
 export async function getFileData(name: string): Promise<Uint8Array> {
-  await initialised;
   const FS = Module.FS;
   const size = FS.stat(name).size;
   const stream = FS.open(name, 'r');
@@ -221,7 +224,6 @@ export async function getFileData(name: string): Promise<Uint8Array> {
 }
 
 export async function loadPackages(packages: string[]): Promise<void> {
-  await initialised;
   for (const pkg of packages) {
     if (await isLoaded(pkg)) {
       continue;
@@ -248,12 +250,10 @@ export async function loadPackages(packages: string[]): Promise<void> {
 }
 
 export async function isLoaded(pkg: string): Promise<boolean> {
-  await initialised;
   return loadedPackages.includes(pkg) || builtinPackages.includes(pkg);
 }
 
 export async function putFileData(name: string, data: Uint8Array): Promise<void> {
-  await initialised;
   Module.FS.createDataFile('/', name, data, true, true, true);
 }
 
@@ -265,14 +265,11 @@ export interface WebROptions {
   homedir?: string;
 }
 
-export async function init(
-    options: WebROptions = {},
-    webRProxy: () => Synclink.Remote<WebRBackendQueue>
-): Promise<void> {
+export async function init(options: WebROptions = {},
+                           webRProxy: () => Synclink.Remote<WebRBackendQueue>) {
   _config = Object.assign(defaultOptions, options);
 
   Module.preRun = [];
-  Module.postRun = [];
   Module.arguments = _config.RArgs;
   Module.noExitRuntime = true;
   Module.noImageDecoding = true;
@@ -285,12 +282,22 @@ export async function init(
     Module.ENV = Object.assign(Module.ENV, _config.REnv);
   });
 
+  Module.webR = {
+    resolveInit: () => {
+      webR.resolveInit().syncify();
+    },
+
+    // C code must call `free()` on the result
+    syncReadConsole: () => {
+      let jsString= webR.getConsoleInput().syncify();
+      return allocUTF8(jsString);
+    }
+  }
+
   // FIXME: Can we do better here?
   let webR: any = webRProxy;
 
-  initialised = new Promise<void>((r) => Module.postRun.push(r));
   Module.locateFile = (path: string) => _config.WEBR_URL + path;
-
   Module.downloadFileContent = downloadFileContent;
 
   Module.print = (text: string) => {
@@ -306,19 +313,14 @@ export async function init(
     webR.pushOutput({ type: 'canvasExec', text: op }).syncify();
   };
 
-  // C code must call `free()` on the result
-  Module.syncReadConsole = () => {
-    let jsString= webR.getConsoleInput().syncify();
-    return allocUTF8(jsString);
-  };
-
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   (globalThis as any).Module = Module;
 
-  const scriptSrc = `${_config.WEBR_URL}R.bin.js`;
-  await loadScript(scriptSrc);
-
-  await initialised;
+  // At the next tick, launch the REPL. This never returns.
+  setTimeout(() => {
+    const scriptSrc = `${_config.WEBR_URL}R.bin.js`;
+    loadScript(scriptSrc);
+  });
 }
 
 function allocUTF8(x: string) {
