@@ -1,7 +1,8 @@
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { AsyncQueue } from './queue';
 import { loadScript } from './compat';
-import { SynclinkTask } from '../node_modules/synclink/dist/esm/task';
+import * as Synclink from 'synclink';
+import { WebRBackendQueue } from './main';
 
 // FIXME: Why doesn't this work?
 // import { SynclinkTask } from 'synclink/task';
@@ -271,7 +272,7 @@ export interface WebROptions {
 
 export async function init(
     options: WebROptions = {},
-    getConsoleInput: () => SynclinkTask
+    webRProxy: () => Synclink.Remote<WebRBackendQueue>
 ): Promise<void> {
   _config = Object.assign(defaultOptions, options);
 
@@ -310,9 +311,12 @@ export async function init(
     outputQueue.put({ type: 'canvasExec', text: op });
   };
 
+  // FIXME: Can we do better here?
+  let webR: any = webRProxy;
+
   // C code must call `free()` on the result
   Module['syncReadConsole'] = () => {
-    let jsString= getConsoleInput().syncify();
+    let jsString= webR.getConsoleInput().syncify();
     return allocUTF8(jsString);
   };
 

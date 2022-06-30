@@ -6,6 +6,9 @@ type WebRInput = {
   type: string;
   data: any;
 };
+export interface WebRBackendQueue {
+  getConsoleInput(): Promise<string>;
+}
 
 export class WebR implements WebRBackend {
   #worker;
@@ -14,17 +17,28 @@ export class WebR implements WebRBackend {
   #busy = false;
   #inputQueue = new AsyncQueue<WebRInput>();
 
+  // This nested class is meant to be proxied and sent to the backend
+  // worker. It is nested so it has access to private properties of `WebR`.
+  #glue = new class WebRGlue implements WebRBackendQueue {
+    #super;
+    constructor(webR: WebR) { this.#super = webR; }
+
+    async getConsoleInput() {
+      let input = await this.#super.#inputQueue.get();
+      return input.data;
+    }
+  }(this)
+
   constructor() {
     this.#worker = new Worker('./webR.js');
     this.#backend = Synclink.wrap(this.#worker) as WebRBackend;
   }
 
   async init(options: WebROptions = {}) {
-    let getConsoleInputCallback: any = Synclink.proxy(async () => {
-      let input = await this.#inputQueue.get();
-      return input.data;
-    })
-    return this.#backend.init(options, getConsoleInputCallback);
+    // The second argument passes a Synclink-proxied version of
+    // `this`. The worker can call the methods of this proxy
+    // synchronously or asynchronously.
+    return this.#backend.init(options, Synclink.proxy(this.#glue) as any);
   }
 
   isBusy() {
