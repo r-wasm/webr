@@ -1,6 +1,5 @@
 import {
   runRCode,
-  readOutput,
   putFileData,
   getFileData,
   loadPackages,
@@ -13,7 +12,6 @@ import { expose } from 'synclink';
 
 const exports: WebRBackend = {
   runRCode,
-  readOutput,
   putFileData,
   getFileData,
   loadPackages,

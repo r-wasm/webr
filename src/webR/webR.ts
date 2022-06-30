@@ -24,7 +24,6 @@ interface Module extends EmscriptenModule {
 
 export interface WebRBackend {
   runRCode: typeof runRCode;
-  readOutput: typeof readOutput;
   putFileData: typeof putFileData;
   getFileData: typeof getFileData;
   loadPackages: typeof loadPackages;
@@ -210,10 +209,6 @@ export async function runRCode(code: string): Promise<string> {
   return await Module._runRCode(Module.allocate(Module.intArrayFromString(code), 0), code.length);
 }
 
-export async function readOutput(): Promise<WebROutput> {
-  return (await outputQueue.get()) as WebROutput;
-}
-
 export async function getFileData(name: string): Promise<Uint8Array> {
   await initialised;
   const FS = Module.FS;
@@ -290,32 +285,29 @@ export async function init(
     Module.ENV = Object.assign(Module.ENV, _config.REnv);
   });
 
+  // FIXME: Can we do better here?
+  let webR: any = webRProxy;
+
   initialised = new Promise<void>((r) => Module.postRun.push(r));
   Module.locateFile = (path: string) => _config.WEBR_URL + path;
 
   Module.downloadFileContent = downloadFileContent;
 
   Module.print = (text: string) => {
-    outputQueue.put({ type: 'stdout', text: text });
+    webR.pushOutput({ type: 'stdout', text: text }).syncify();
   };
-
-  Module.printErr = (text: string) => {
-    outputQueue.put({ type: 'stderr', text: text });
+  Module.printErr = async (text: string) => {
+    webR.pushOutput({ type: 'stderr', text: text }).syncify();
   };
-
   Module.setPrompt = (prompt: string) => {
-    outputQueue.put({ type: 'prompt', text: prompt });
+    webR.pushOutput({ type: 'prompt', text: prompt }).syncify();
   };
-
   Module.canvasExec = (op: string) => {
-    outputQueue.put({ type: 'canvasExec', text: op });
+    webR.pushOutput({ type: 'canvasExec', text: op }).syncify();
   };
-
-  // FIXME: Can we do better here?
-  let webR: any = webRProxy;
 
   // C code must call `free()` on the result
-  Module['syncReadConsole'] = () => {
+  Module.syncReadConsole = () => {
     let jsString= webR.getConsoleInput().syncify();
     return allocUTF8(jsString);
   };

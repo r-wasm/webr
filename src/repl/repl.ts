@@ -79,7 +79,7 @@ function FSTreeData(
 const webR = new WebR();
 
 (async () => {
-  await webR.init({
+  webR.init({
     RArgs: [],
     REnv: {
       R_HOME: '/usr/lib/R',
