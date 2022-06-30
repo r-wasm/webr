@@ -8,7 +8,6 @@ OUTPUTS = $(patsubst %.R,%.Rout,$(INPUTS))
 
 .PHONY: test-all
 test-all: clean $(OUTPUTS)
-	@cd packages && $(MAKE) test-pkgs
 
 %.Rout: %.R
 	@printf "Testing $<..." && \
