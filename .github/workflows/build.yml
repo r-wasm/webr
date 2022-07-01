@@ -24,19 +24,3 @@ jobs:
         run: >
           docker exec build bash -c
           "source /webr-tools/emsdk/emsdk_env.sh && cd /app && make check"
-  build_flang:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Configure webR for flang
-        run: ./configure
-      - name: Create webR docker container
-        run: make docker-container-build
-      - name: Build webR with flang
-        run: >
-          docker exec build bash -c
-          "source /webr-tools/emsdk/emsdk_env.sh && cd /app && make webr"
-      - name: Run webR tests
-        run: >
-          docker exec build bash -c
-          "source /webr-tools/emsdk/emsdk_env.sh && cd /app && make check"
