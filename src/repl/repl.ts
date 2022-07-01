@@ -36,7 +36,7 @@ const term = $('#term').terminal(
       //   );
       // }
 
-      webR.putConsoleInput(command + '\n');
+      webR.writeConsole(command + '\n');
     })();
   },
   {
@@ -168,30 +168,31 @@ const webR = new WebR();
     });
 
   for (;;) {
-    const output = await webR.readOutput();
+    const output = await webR.read();
+
     switch (output.type) {
       case 'stdout':
-        term.echo(output.text, { exec: false });
+        term.echo(output.data, { exec: false });
         break;
       case 'stderr':
-        term.error(output.text);
+        term.error(output.data);
         break;
       case 'prompt':
-        term.set_prompt(output.text);
+        term.set_prompt(output.data);
         FSTree.refresh();
         term.resume();
         break;
       case 'packageLoading':
-        console.log(`Loading package: ${output.text}`);
+        console.log(`Loading package: ${output.data}`);
         FSTree.refresh();
         break;
       case 'canvasExec':
         // eslint-disable-next-line @typescript-eslint/no-implied-eval
-        Function(`document.getElementById('plot-canvas').getContext('2d').${output.text}`)();
+        Function(`document.getElementById('plot-canvas').getContext('2d').${output.data}`)();
         break;
       default:
         console.error(`Unimplemented output type: ${output.type}`);
-        console.error(output.text);
+        console.error(output.data);
     }
   }
 })();

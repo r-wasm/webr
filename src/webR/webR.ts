@@ -1,11 +1,7 @@
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { AsyncQueue } from './queue';
 import { loadScript } from './compat';
-import * as Synclink from 'synclink';
-import { WebRBackendQueue } from './main';
-
-// FIXME: Why doesn't this work?
-// import { SynclinkTask } from 'synclink/task';
+import { Message, ChannelWorker, ChannelWorkerIface } from './channel';
 
 interface Module extends EmscriptenModule {
   FS: any;
@@ -20,8 +16,8 @@ interface Module extends EmscriptenModule {
   allocate(slab: number[] | ArrayBufferView | number, allocator: number): number;
   intArrayFromString(stringy: string, dontAddNull?: boolean, length?: number): number[];
   // TODO: Namespace all webR properties
-  webR: {
-    syncReadConsole: () => number;
+  webr: {
+    readConsole: () => number;
     resolveInit: () => void;
   };
 }
@@ -45,11 +41,6 @@ type WebRConfig = {
   WEBR_URL: string;
   PKG_URL: string;
   homedir: string;
-};
-
-type WebROutput = {
-  type: string;
-  text: string;
 };
 
 type XHRResponse = {
@@ -148,9 +139,23 @@ const defaultOptions = {
 };
 
 const Module = {} as Module;
-const outputQueue = new AsyncQueue<WebROutput>();
+const outputQueue = new AsyncQueue<Message>();
 const loadedPackages: string[] = [];
 let _config: WebRConfig;
+
+function inputOrDispatch(chan: ChannelWorker): string {
+  while (true) {
+    // This blocks the thread until a response
+    let msg: Message = chan.read();
+
+    switch (msg.type) {
+      case 'stdin':
+        return msg.data;
+      default:
+        throw('Unknown event `' + msg.type + '`');
+    }
+  }
+}
 
 type FSNode = {
   id: number;
@@ -228,7 +233,7 @@ export async function loadPackages(packages: string[]): Promise<void> {
     if (await isLoaded(pkg)) {
       continue;
     }
-    outputQueue.put({ type: 'packageLoading', text: pkg });
+    outputQueue.put({ type: 'packageLoading', data: pkg });
 
     const deps = preReqPackages[pkg];
     if (deps) {
@@ -266,7 +271,7 @@ export interface WebROptions {
 }
 
 export async function init(options: WebROptions = {},
-                           webRProxy: () => Synclink.Remote<WebRBackendQueue>) {
+                           chanProxy: ChannelWorkerIface) {
   _config = Object.assign(defaultOptions, options);
 
   Module.preRun = [];
@@ -282,35 +287,34 @@ export async function init(options: WebROptions = {},
     Module.ENV = Object.assign(Module.ENV, _config.REnv);
   });
 
-  Module.webR = {
+  let chan = new ChannelWorker(chanProxy);
+
+  Module.webr = {
     resolveInit: () => {
-      webR.resolveInit().syncify();
+      chan.resolve();
     },
 
     // C code must call `free()` on the result
-    syncReadConsole: () => {
-      let jsString= webR.getConsoleInput().syncify();
-      return allocUTF8(jsString);
+    readConsole: () => {
+      let input = inputOrDispatch(chan);
+      return allocUTF8(input);
     }
   }
-
-  // FIXME: Can we do better here?
-  let webR: any = webRProxy;
 
   Module.locateFile = (path: string) => _config.WEBR_URL + path;
   Module.downloadFileContent = downloadFileContent;
 
   Module.print = (text: string) => {
-    webR.pushOutput({ type: 'stdout', text: text }).syncify();
+    chan.write({ type: 'stdout', data: text });
   };
   Module.printErr = async (text: string) => {
-    webR.pushOutput({ type: 'stderr', text: text }).syncify();
+    chan.write({ type: 'stderr', data: text });
   };
   Module.setPrompt = (prompt: string) => {
-    webR.pushOutput({ type: 'prompt', text: prompt }).syncify();
+    chan.write({ type: 'prompt', data: prompt });
   };
   Module.canvasExec = (op: string) => {
-    webR.pushOutput({ type: 'canvasExec', text: op }).syncify();
+    chan.write({ type: 'canvasExec', data: op });
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
