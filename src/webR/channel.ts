@@ -1,5 +1,5 @@
 import { AsyncQueue } from './queue';
-import { promiseHandles } from './utils';
+import { promiseHandles, newUUID, UUID, ResolveFn } from './utils';
 import * as Synclink from 'synclink';
 
 // FIXME: Why doesn't this work?
@@ -7,10 +7,46 @@ import * as Synclink from 'synclink';
 import { SynclinkTask } from '../node_modules/synclink/dist/esm/task';
 
 
-export type Message = {
+export interface Message {
   type: string;
   data?: any;
 };
+
+export interface Request {
+  type: 'request';
+  data: {
+    uuid: UUID;
+    msg: Message;
+  }
+};
+
+export interface Response {
+  type: 'response';
+  data: {
+    uuid: UUID;
+    resp: any;
+  }
+};
+
+export function newRequest(msg: Message): Request {
+  return {
+    type: 'request',
+    data: {
+      uuid: newUUID(),
+      msg: msg
+    }
+  }
+}
+
+export function newResponse(uuid: UUID, resp: any): Response {
+  return {
+    type: 'response',
+    data: {
+      uuid: uuid,
+      resp: resp
+    }
+  }
+}
 
 
 // The channel structure is asymetric:
@@ -37,15 +73,49 @@ export class ChannelMain {
   initialised: Promise<unknown>;
   resolve: (_?: unknown) => void;
 
+  #parked = new Map<string, ResolveFn>();
+
   constructor() {
     ({ resolve: this.resolve, promise: this.initialised } = promiseHandles());
   }
 
   async recv() {
-    return await this.outputQueue.get()
+    while (true) {
+      let msg = await this.outputQueue.get();
+
+      if (msg.type === 'response') {
+        this.#resolveResponse(msg as Response);
+        continue;
+      }
+
+      return msg;
+    }
   }
+
   send(msg: Message) {
     this.inputQueue.put(msg);
+  }
+
+  async request(msg: Message) {
+    let req = newRequest(msg);
+
+    let { resolve: resolve, promise: prom } = promiseHandles();
+    this.#parked.set(req.data.uuid, resolve);
+
+    this.send(req);
+    return prom;
+  }
+
+  #resolveResponse(msg: Response) {
+    let uuid = msg.data.uuid;
+    let resolve = this.#parked.get(uuid);
+
+    if (resolve) {
+      this.#parked.delete(uuid)
+      resolve(msg.data.resp);
+    } else {
+      console.warn("Can't find request.");
+    }
   }
 }
 

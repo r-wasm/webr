@@ -1,7 +1,11 @@
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { AsyncQueue } from './queue';
 import { loadScript } from './compat';
-import { Message, ChannelWorker, ChannelWorkerIface } from './channel';
+import { Message,
+         Request,
+         newResponse,
+         ChannelWorker,
+         ChannelWorkerIface } from './channel';
 
 interface Module extends EmscriptenModule {
   FS: any;
@@ -151,6 +155,22 @@ function inputOrDispatch(chan: ChannelWorker): string {
     switch (msg.type) {
       case 'stdin':
         return msg.data;
+
+      case 'request':
+        let req = msg as unknown as Request;
+        let reqMsg = req.data.msg;
+
+        let resp;
+        switch (reqMsg.type) {
+          case 'TODO':
+            resp = null;
+            break;
+          default:
+            throw('Unknown event `' + reqMsg.type + '`');
+        }
+        chan.write(newResponse(req.data.uuid, resp));
+        continue;
+
       default:
         throw('Unknown event `' + msg.type + '`');
     }
