@@ -35,6 +35,4 @@ export class WebR implements WebRBackend {
   async putFileData(name: string, data: Uint8Array) { return this.#workerProxy.putFileData(name, data) }
   async getFileData(name: string) { return this.#workerProxy.getFileData(name) }
   async getFSNode(path: string) { return this.#workerProxy.getFSNode(path) }
-  async loadPackages(packages: string[]) { return this.#workerProxy.loadPackages(packages) }
-  async isLoaded(pkg: string) { return this.#workerProxy.isLoaded(pkg) }
 }

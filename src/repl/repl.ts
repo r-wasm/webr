@@ -18,26 +18,7 @@ let FSTree: FSTreeInterface;
 const term = $('#term').terminal(
   (command) => {
     term.pause();
-    (async () => {
-      // FIXME: Can no longer call into the backend without going
-      // through the input queue
-
-      // const reg = /(library|require)\(['"]?(.*?)['"]?\)/g;
-      // let res;
-      // const packages = [];
-      // while ((res = reg.exec(command)) !== null) {
-      //   packages.push(res[2]);
-      // }
-      // try {
-      //   await webR.loadPackages(packages);
-      // } catch (e) {
-      //   console.log(
-      //     'An error occured loading one or more packages. Perhaps they do not exist in webR-ports?'
-      //   );
-      // }
-
-      webR.writeConsole(command + '\n');
-    })();
+    webR.writeConsole(command + '\n');
   },
   {
     prompt: '',

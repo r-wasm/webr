@@ -1,5 +1,4 @@
 import { BASE_URL, PKG_BASE_URL } from './config';
-import { AsyncQueue } from './queue';
 import { loadScript } from './compat';
 import { Message,
          Request,
@@ -30,8 +29,6 @@ export interface WebRBackend {
   runRCode: typeof runRCode;
   putFileData: typeof putFileData;
   getFileData: typeof getFileData;
-  loadPackages: typeof loadPackages;
-  isLoaded: typeof isLoaded;
   getFSNode: typeof getFSNode;
 }
 
@@ -52,83 +49,6 @@ type XHRResponse = {
   response: string | ArrayBuffer;
 };
 
-const builtinPackages: string[] = [
-  'base',
-  'compiler',
-  'datasets',
-  'grDevices',
-  'graphics',
-  'grid',
-  'methods',
-  'parallel',
-  'splines',
-  'stats',
-  'stats4',
-  'tcltk',
-  'tools',
-  'translations',
-  'utils',
-];
-
-const preReqPackages: { [key: string]: string[] } = {
-  dplyr: [
-    'generics',
-    'glue',
-    'lifecycle',
-    'magrittr',
-    'pillar',
-    'R6',
-    'rlang',
-    'tibble',
-    'tidyselect',
-    'vctrs',
-  ],
-  ellipsis: ['rlang'],
-  ggplot2: [
-    'digest',
-    'glue',
-    'gtable',
-    'isoband',
-    'MASS',
-    'mgcv',
-    'rlang',
-    'scales',
-    'tibble',
-    'withr',
-  ],
-  lifecycle: ['rlang', 'glue'],
-  lubridate: ['generics'],
-  mario: ['base64enc', 'crayon', 'ggplot2', 'jsonlite', 'pryr', 'readr', 'dplyr'],
-  Matrix: ['lattice'],
-  mgcv: ['nlme', 'Matrix'],
-  munsell: ['colorspace'],
-  nlme: ['lattice'],
-  pillar: ['cli', 'crayon', 'ellipsis', 'fansi', 'glue', 'lifecycle', 'rlang', 'utf8', 'vctrs'],
-  pryr: ['codetools', 'Rcpp', 'stringr'],
-  purrr: ['magrittr', 'rlang'],
-  readr: ['cli', 'clipr', 'crayon', 'hms', 'lifecycle', 'R6', 'rlang', 'tibble', 'vroom'],
-  stringr: ['glue', 'magrittr', 'stringi'],
-  tibble: ['ellipsis', 'fansi', 'lifecycle', 'magrittr', 'pillar', 'pkgconfig', 'rlang', 'vctrs'],
-  tidyr: ['dplyr', 'rlang', 'vctrs'],
-  tidyselect: ['ellipsis', 'glue', 'purrr', 'rlang', 'vctrs'],
-  scales: ['farver', 'labeling', 'lifecycle', 'munsell', 'R6', 'RColorBrewer', 'viridisLite'],
-  vctrs: ['ellipsis', 'glue', 'rlang'],
-  vroom: [
-    'bit64',
-    'crayon',
-    'cli',
-    'glue',
-    'hms',
-    'lifecycle',
-    'rlang',
-    'tibble',
-    'tzdb',
-    'vctrs',
-    'tidyselect',
-    'withr',
-  ],
-};
-
 const defaultEnv = {
   R_HOME: '/usr/lib/R',
   R_ENABLE_JIT: '0',
@@ -143,8 +63,6 @@ const defaultOptions = {
 };
 
 const Module = {} as Module;
-const outputQueue = new AsyncQueue<Message>();
-const loadedPackages: string[] = [];
 let _config: WebRConfig;
 
 function inputOrDispatch(chan: ChannelWorker): string {
@@ -246,36 +164,6 @@ export async function getFileData(name: string): Promise<Uint8Array> {
   FS.read(stream, buf, 0, size, 0);
   FS.close(stream);
   return buf;
-}
-
-export async function loadPackages(packages: string[]): Promise<void> {
-  for (const pkg of packages) {
-    if (await isLoaded(pkg)) {
-      continue;
-    }
-    outputQueue.put({ type: 'packageLoading', data: pkg });
-
-    const deps = preReqPackages[pkg];
-    if (deps) {
-      await loadPackages(deps);
-    }
-
-    loadedPackages.push(pkg);
-
-    Module['locateFile'] = (path: string) => _config.PKG_URL + pkg + '/' + path;
-    const src = _config.PKG_URL + pkg + '/' + pkg + '.js';
-    await loadScript(src);
-
-    await new Promise<void>((resolve) => {
-      Module.monitorRunDependencies = (n) => {
-        if (n === 0) resolve();
-      };
-    });
-  }
-}
-
-export async function isLoaded(pkg: string): Promise<boolean> {
-  return loadedPackages.includes(pkg) || builtinPackages.includes(pkg);
 }
 
 export async function putFileData(name: string, data: Uint8Array): Promise<void> {

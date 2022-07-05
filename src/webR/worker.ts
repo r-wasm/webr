@@ -2,20 +2,16 @@ import {
   runRCode,
   putFileData,
   getFileData,
-  loadPackages,
-  isLoaded,
   init,
-  WebRBackend,
+  WebRBackendPrivate,
   getFSNode,
 } from './webR';
 import { expose } from 'synclink';
 
-const exports: WebRBackend = {
+const exports: WebRBackendPrivate = {
   runRCode,
   putFileData,
   getFileData,
-  loadPackages,
-  isLoaded,
   init,
   getFSNode,
 };
