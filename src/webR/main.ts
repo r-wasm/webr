@@ -20,11 +20,11 @@ export class WebR implements WebRBackend {
   }
 
   async read(): Promise<Message> {
-    return await this.#chan.recv();
+    return await this.#chan.read();
   }
 
   write(msg: Message) {
-    this.#chan.send(msg);
+    this.#chan.write(msg);
   }
   writeConsole(input: string) {
     this.write({ type: 'stdin', data: input });

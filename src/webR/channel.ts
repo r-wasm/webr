@@ -79,7 +79,7 @@ export class ChannelMain {
     ({ resolve: this.resolve, promise: this.initialised } = promiseHandles());
   }
 
-  async recv() {
+  async read() {
     while (true) {
       let msg = await this.outputQueue.get();
 
@@ -92,7 +92,7 @@ export class ChannelMain {
     }
   }
 
-  send(msg: Message) {
+  write(msg: Message) {
     this.inputQueue.put(msg);
   }
 
@@ -102,7 +102,7 @@ export class ChannelMain {
     let { resolve: resolve, promise: prom } = promiseHandles();
     this.#parked.set(req.data.uuid, resolve);
 
-    this.send(req);
+    this.write(req);
     return prom;
   }
 
