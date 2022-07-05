@@ -9,6 +9,8 @@ OUTPUTS = $(patsubst %.R,%.Rout,$(INPUTS))
 .PHONY: test-all
 test-all: clean $(OUTPUTS)
 
+# Run test script in webR with node
+# Ignore some output we're not interested in, then compare the output
 %.Rout: %.R
 	@printf "Testing $<..." && \
 	cd $(DIST) && \
