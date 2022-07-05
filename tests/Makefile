@@ -21,7 +21,7 @@ test-all: clean $(OUTPUTS)
 	else \
 		echo "FAILED: '$<' output does not match reference" && \
 		rm -f $@ && \
-		exit; \
+		exit 1; \
 	fi
 
 .PHONY: clean
