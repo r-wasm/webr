@@ -27,9 +27,6 @@ interface Module extends EmscriptenModule {
 
 export interface WebRBackend {
   runRCode: typeof runRCode;
-  putFileData: typeof putFileData;
-  getFileData: typeof getFileData;
-  getFSNode: typeof getFSNode;
 }
 
 export interface WebRBackendPrivate extends WebRBackend {
@@ -78,16 +75,20 @@ function inputOrDispatch(chan: ChannelWorker): string {
         let req = msg as unknown as Request;
         let reqMsg = req.data.msg;
 
-        let resp;
+        let write = (resp: any) => chan.write(newResponse(req.data.uuid, resp));
         switch (reqMsg.type) {
-          case 'TODO':
-            resp = null;
-            break;
+          case 'putFileData':
+            write(putFileData(reqMsg.data.name, reqMsg.data.data))
+            continue;
+          case 'getFileData':
+            write(getFileData(reqMsg.data.name));
+            continue;
+          case 'getFSNode':
+            write(getFSNode(reqMsg.data.path));
+            continue;
           default:
             throw('Unknown event `' + reqMsg.type + '`');
         }
-        chan.write(newResponse(req.data.uuid, resp));
-        continue;
 
       default:
         throw('Unknown event `' + msg.type + '`');
@@ -95,7 +96,7 @@ function inputOrDispatch(chan: ChannelWorker): string {
   }
 }
 
-type FSNode = {
+export type FSNode = {
   id: number;
   name: string;
   mode: number;
@@ -103,7 +104,7 @@ type FSNode = {
   contents: { [key: string]: FSNode };
 };
 
-export async function getFSNode(path: string): Promise<FSNode> {
+function getFSNode(path: string): FSNode {
   const node = Module.FS.lookupPath(path).node;
   return copyFSNode(node);
 }
@@ -156,7 +157,7 @@ export async function runRCode(code: string): Promise<string> {
   return await Module._runRCode(Module.allocate(Module.intArrayFromString(code), 0), code.length);
 }
 
-export async function getFileData(name: string): Promise<Uint8Array> {
+function getFileData(name: string): Uint8Array {
   const FS = Module.FS;
   const size = FS.stat(name).size;
   const stream = FS.open(name, 'r');
@@ -166,7 +167,7 @@ export async function getFileData(name: string): Promise<Uint8Array> {
   return buf;
 }
 
-export async function putFileData(name: string, data: Uint8Array): Promise<void> {
+function putFileData(name: string, data: Uint8Array) {
   Module.FS.createDataFile('/', name, data, true, true, true);
 }
 

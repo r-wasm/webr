@@ -1,5 +1,8 @@
 import * as Synclink from 'synclink';
-import { WebRBackend, WebRBackendPrivate, WebROptions } from './webR';
+import { WebRBackend,
+         WebRBackendPrivate,
+         WebROptions,
+         FSNode } from './webR';
 import { Message, ChannelMain, chanWorkerHandle } from './channel';
 
 
@@ -30,9 +33,16 @@ export class WebR implements WebRBackend {
     this.write({ type: 'stdin', data: input });
   };
 
+  async putFileData(name: string, data: Uint8Array) {
+    return await this.#chan.request({ type: "putFileData", data: { name: name, data: data }});
+  }
+  async getFileData(name: string): Promise<Uint8Array> {
+    return await this.#chan.request({ type: "getFileData", data: { name: name }});
+  }
+  async getFSNode(path: string): Promise<FSNode> {
+    return await this.#chan.request({ type: "getFSNode", data: { path: path }});
+  }
+
   // Backend delegation
   async runRCode(code: string) { return this.#workerProxy.runRCode(code) };
-  async putFileData(name: string, data: Uint8Array) { return this.#workerProxy.putFileData(name, data) }
-  async getFileData(name: string) { return this.#workerProxy.getFileData(name) }
-  async getFSNode(path: string) { return this.#workerProxy.getFSNode(path) }
 }

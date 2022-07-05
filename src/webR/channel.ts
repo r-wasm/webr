@@ -96,7 +96,7 @@ export class ChannelMain {
     this.inputQueue.put(msg);
   }
 
-  async request(msg: Message) {
+  async request(msg: Message): Promise<any> {
     let req = newRequest(msg);
 
     let { resolve: resolve, promise: prom } = promiseHandles();
