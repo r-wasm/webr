@@ -37,11 +37,6 @@ function build({ input, output, minify }) {
     minify: true,
   },
   {
-    input: "console/console.ts",
-    output: "console.js",
-    minify: true,
-  },
-  {
     input: "node/node.ts",
     output: "webR_node.js",
     minify: true,

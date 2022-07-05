@@ -3,7 +3,7 @@ DIST = $(WEBR_ROOT)/dist
 
 ROOT = $(abspath .)
 
-HTML_TEMPLATES = console.html repl.html
+HTML_TEMPLATES = repl.html
 HTML_INDEX = repl.html
 
 TS_SOURCES = $(shell ls **/*.ts)
