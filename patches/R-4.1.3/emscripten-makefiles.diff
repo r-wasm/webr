@@ -19,10 +19,21 @@ Index: R-4.1.3/src/main/Makefile.in
 ===================================================================
 --- R-4.1.3.orig/src/main/Makefile.in
 +++ R-4.1.3/src/main/Makefile.in
-@@ -147,6 +147,24 @@ R: Makedeps
+@@ -147,6 +147,34 @@ R: Makedeps
  $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
  	$(MAIN_LINK) -o $@ $(R_bin_OBJECTS) $(R_bin_LDADD)
  
++MAIN_WEBR_LDADD  = --use-preload-plugins
++MAIN_WEBR_LDADD += --preload-file "$(prefix)/tmp/lib@/usr/lib"
++
++ifdef WEBR_REPO
++MAIN_WEBR_LDADD += --preload-file "$(WEBR_REPO)@/repo"
++endif
++
++ifdef WEBR_LIB
++MAIN_WEBR_LDADD += --preload-file "${WEBR_LIB}@/usr/lib/R/library"
++endif
++
 +$(R_binary).js: $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
 +	@rm -rf "$(prefix)/tmp" && mkdir -p "$(prefix)/tmp"
 +	@cp -a "$(prefix)/lib" "$(prefix)/tmp/"
@@ -30,8 +41,7 @@ Index: R-4.1.3/src/main/Makefile.in
 +	@rm -r "$(prefix)/tmp/lib/R/bin"
 +	@rm -r "$(prefix)/tmp/lib/R/include"
 +	@rm -r "$(prefix)/tmp/lib/R/doc"
-+	$(MAIN_LINK) --use-preload-plugins \
-+	--preload-file "$(prefix)/tmp/lib@/usr/lib" \
++	$(MAIN_LINK) $(MAIN_WEBR_LDADD) \
 +	-o $(prefix)/dist/$(R_binary).js \
 +	$(R_bin_OBJECTS) -lRlapack $(FORTRAN_WASM_LDADD) $(R_bin_LDADD)
 +
