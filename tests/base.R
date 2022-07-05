@@ -10,7 +10,7 @@ pi:6 # real
 f1 <- gl(2, 3); f1
 f2 <- gl(3, 2); f2
 f1:f2 # a factor, the "cross"  f1 x f2
-x <- stats::rnorm(20)
+x <- c(-0.3939479, -0.4618576, -1.7024944, 1.1503015, 0.6392851)
 x < 1
 x[x > 0]
 x1 <- 0.5 - 0.3
@@ -19,12 +19,12 @@ x1 == x2                   # FALSE on most machines
 isTRUE(all.equal(x1, x2))  # TRUE everywhere
 for(i in 1:5) print(1:i)
 for(n in c(2,5,10,20,50)) {
-   x <- stats::rnorm(n)
+   x <- c(-0.3939479, -0.4618576, -1.7024944, 1.1503015, 0.6392851)
    cat(n, ": ", sum(x^2), "\n", sep = "")
 }
-f <- factor(sample(letters[1:5], 10, replace = TRUE))
+f <- factor(c("d","c","d","c","b","d","c","a","c","a"))
 for(i in unique(f)) print(i)
-y <- 1 + (x <- stats::rpois(50, lambda = 1.5) / 4 - 1)
+y <- 1 + (x <- c(2,2,0,0,2,0,2,1,0,1,3,1,0,5,3,1,3,2,1,3) / 4 - 1)
 x[(x > 0) & (x < 1)]    # all x values between 0 and 1
 if (any(x == 0) || any(y == 0)) "zero encountered"
 x <- c(NA, FALSE, TRUE)
