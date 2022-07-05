@@ -5,6 +5,7 @@ import { Message,
          newResponse,
          ChannelWorker,
          ChannelWorkerIface } from './channel';
+import * as Synclink from 'synclink';
 
 interface Module extends EmscriptenModule {
   FS: any;
@@ -75,13 +76,15 @@ function inputOrDispatch(chan: ChannelWorker): string {
         let req = msg as unknown as Request;
         let reqMsg = req.data.msg;
 
-        let write = (resp: any) => chan.write(newResponse(req.data.uuid, resp));
+        let write = (resp: any, transferables?: [Transferable]) =>
+          chan.write(newResponse(req.data.uuid, resp, transferables));
         switch (reqMsg.type) {
           case 'putFileData':
             write(putFileData(reqMsg.data.name, reqMsg.data.data))
             continue;
           case 'getFileData':
-            write(getFileData(reqMsg.data.name));
+            let out = getFileData(reqMsg.data.name);
+            write(out, [out.buffer]);
             continue;
           case 'getFSNode':
             write(getFSNode(reqMsg.data.path));

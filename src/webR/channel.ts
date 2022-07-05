@@ -24,28 +24,47 @@ export interface Response {
   type: 'response';
   data: {
     uuid: UUID;
-    resp: any;
+    resp: any
   }
 };
 
-export function newRequest(msg: Message): Request {
-  return {
-    type: 'request',
-    data: {
-      uuid: newUUID(),
-      msg: msg
-    }
-  }
+export function newRequest(msg: Message,
+                           transferables?: [Transferable]): Request {
+  return newRequestResponseMessage(
+    {
+      type: 'request',
+      data: {
+        uuid: newUUID(),
+        msg: msg
+      }
+    },
+    transferables
+  )
 }
 
-export function newResponse(uuid: UUID, resp: any): Response {
-  return {
-    type: 'response',
-    data: {
-      uuid: uuid,
-      resp: resp
-    }
+export function newResponse(uuid: UUID,
+                            resp: any,
+                            transferables?: [Transferable]) : Response {
+  return newRequestResponseMessage(
+    {
+      type: 'response',
+      data: {
+        uuid,
+        resp
+      }
+    },
+    transferables
+  )
+}
+
+function newRequestResponseMessage<T>(msg: T,
+                                      transferables?: [Transferable]) : T {
+  // Signal to Synclink that the data contains objects we wish to
+  // transfer, as in `postMessage()`
+  if (transferables) {
+    Synclink.transfer(msg, transferables);
   }
+  return msg;
 }
 
 
@@ -96,8 +115,9 @@ export class ChannelMain {
     this.inputQueue.put(msg);
   }
 
-  async request(msg: Message): Promise<any> {
-    let req = newRequest(msg);
+  async request(msg: Message,
+                transferables?: [Transferable]): Promise<any> {
+    let req = newRequest(msg, transferables);
 
     let { resolve: resolve, promise: prom } = promiseHandles();
     this.#parked.set(req.data.uuid, resolve);
