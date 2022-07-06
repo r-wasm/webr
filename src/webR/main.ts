@@ -35,7 +35,7 @@ export class WebR implements WebRBackend {
 
   async putFileData(name: string, data: Uint8Array) {
     let msg = { type: "putFileData", data: { name: name, data: data }};
-    return await this.#chan.request(msg, [data]);
+    return await this.#chan.request(msg);
   }
   async getFileData(name: string): Promise<Uint8Array> {
     return await this.#chan.request({ type: "getFileData", data: { name: name }});

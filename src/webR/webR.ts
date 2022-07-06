@@ -80,7 +80,9 @@ function inputOrDispatch(chan: ChannelWorker): string {
           chan.write(newResponse(req.data.uuid, resp, transferables));
         switch (reqMsg.type) {
           case 'putFileData':
-            write(putFileData(reqMsg.data.name, reqMsg.data.data))
+            // FIXME: Why is the transferred array wrapped in an Object?
+            let data = Uint8Array.from(Object.values(reqMsg.data.data));
+            write(putFileData(reqMsg.data.name, data))
             continue;
           case 'getFileData':
             let out = getFileData(reqMsg.data.name);
