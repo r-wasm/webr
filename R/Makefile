@@ -33,6 +33,8 @@ WASM_LIBS = $(PCRE_WASM_LIB) $(XZ_WASM_LIB) $(FORTRAN_WASM_LIB)
 
 # Configure your local environment in this file
 -include ~/.webr-config.mk
+export WEBR_REPO
+export WEBR_LIB
 
 WASM_OPT ?= -Oz
 WASM_OPT_LDADD ?= $(WASM_OPT)
@@ -144,6 +146,9 @@ $(BUILD)/state/r-stage2-configured: $(BUILD)/state/r-patched $(WASM_LIBS)
 	      --enable-byte-compiled-packages=no \
 	      --enable-static=yes \
 	      --host=wasm32-unknown-emscripten
+# Disable umask which doesn't work well within Emscripten. Fixes
+# permission issues when extracting tarballs.
+	sed -i "" "/#define HAVE_UMASK/d" $(R_SOURCE)/build/src/include/config.h
 	touch $@
 
 STAGE2_BUILD = $(R_SOURCE)/build
