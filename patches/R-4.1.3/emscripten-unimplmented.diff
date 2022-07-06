@@ -1,45 +1,12 @@
-Index: R-4.1.3/src/main/Rstrptime.h
-===================================================================
---- R-4.1.3.orig/src/main/Rstrptime.h
-+++ R-4.1.3/src/main/Rstrptime.h
-@@ -37,6 +37,10 @@
- # define HAVE_LOCALE_H 1
- #endif
- 
-+#ifdef __EMSCRIPTEN__
-+#undef HAVE_WCSFTIME // currently unimplemented in emscripten
-+#endif
-+
- static int locale_strings_set = 0;
- static int locale_w_strings_set = 0;
- static void get_locale_strings(void);
-Index: R-4.1.3/src/main/main.c
-===================================================================
---- R-4.1.3.orig/src/main/main.c
-+++ R-4.1.3/src/main/main.c
-@@ -50,6 +50,12 @@ void attribute_hidden nl_Rdummy(void)
- }
- #endif
- 
-+#ifdef __EMSCRIPTEN__
-+/* Don't attempt to setup an alternative signal stack
-+ * when running under emscripten.
-+*/
-+#undef HAVE_SIGALTSTACK
-+#endif
- 
- /* The 'real' main() program is in Rmain.c on Unix-alikes, and
-    src/gnuwin/front-ends/graphappmain.c on Windows, unless of course
 Index: R-4.1.3/src/unix/sys-unix.c
 ===================================================================
 --- R-4.1.3.orig/src/unix/sys-unix.c
 +++ R-4.1.3/src/unix/sys-unix.c
-@@ -60,6 +60,20 @@
+@@ -60,6 +60,19 @@
  
  #include <errno.h>
  
 +#ifdef __EMSCRIPTEN__
-+#undef HAVE_GETRUSAGE // currently unsupported in emscripten
 +/*
 + * The sigsuspend function is currently unsupported in emscripten.
 + * Instead we immediately return -1 and set errno, as if the
@@ -55,18 +22,3 @@ Index: R-4.1.3/src/unix/sys-unix.c
  /*
   *  4) INITIALIZATION AND TERMINATION ACTIONS
   */
-Index: R-4.1.3/src/unix/system.c
-===================================================================
---- R-4.1.3.orig/src/unix/system.c
-+++ R-4.1.3/src/unix/system.c
-@@ -56,6 +56,10 @@
- #include <Rinterface.h>
- #undef __SYSTEM__
- 
-+#ifdef __EMSCRIPTEN__
-+#undef HAVE_GETRLIMIT // currently unsupported in emscripten
-+#endif
-+
- #include "Runix.h"
- 
- attribute_hidden FILE *ifp = NULL; /* used in sys-std.c */

@@ -149,6 +149,11 @@ $(BUILD)/state/r-stage2-configured: $(BUILD)/state/r-patched $(WASM_LIBS)
 # Disable umask which doesn't work well within Emscripten. Fixes
 # permission issues when extracting tarballs.
 	sed -i "" "/#define HAVE_UMASK/d" $(R_SOURCE)/build/src/include/config.h
+# Disable some unsupported features when running under Emscripten
+	sed -i "" "/#define HAVE_WCSFTIME/d" $(R_SOURCE)/build/src/include/config.h
+	sed -i "" "/#define HAVE_SIGALTSTACK/d" $(R_SOURCE)/build/src/include/config.h
+	sed -i "" "/#define HAVE_GETRUSAGE/d" $(R_SOURCE)/build/src/include/config.h
+	sed -i "" "/#define HAVE_GETRLIMIT/d" $(R_SOURCE)/build/src/include/config.h
 	touch $@
 
 STAGE2_BUILD = $(R_SOURCE)/build
