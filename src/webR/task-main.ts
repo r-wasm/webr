@@ -3,8 +3,7 @@
 import { Endpoint,
          SZ_BUF_FITS_IDX,
          SZ_BUF_SIZE_IDX,
-         generateUUID,
-         WireValue } from './task-common'
+         generateUUID } from './task-common'
 import { sleep } from './utils'
 
 let encoder = new TextEncoder();
@@ -18,19 +17,17 @@ let encoder = new TextEncoder();
  *        blocked, so we can't send messages back.
  * @param msg The message that was recieved. We will use it to read out the
  *        buffers to write the answer into. NOTE: requester owns buffers.
- * @param returnValue The value we want to send back to the requester. We have
+ * @param value The value we want to send back to the requester. We have
  *        to encode it into data_buffer.
  */
-export async function syncResponse(
-  endpoint: Endpoint,
-  msg: any,
-  returnValue: WireValue
-) {
+export async function syncResponse(endpoint: Endpoint,
+                                   msg: any,
+                                   value: any) {
   try {
     let { size_buffer, data_buffer, signal_buffer, taskId } = msg;
     // console.warn(msg);
 
-    let bytes = encoder.encode(JSON.stringify(returnValue));
+    let bytes = encoder.encode(JSON.stringify(value));
     let fits = bytes.length <= data_buffer.length;
 
     Atomics.store(size_buffer, SZ_BUF_SIZE_IDX, bytes.length);
@@ -60,9 +57,7 @@ export async function syncResponse(
   }
 }
 
-function requestResponseMessage(
-  ep: Endpoint
-): [string, Promise<WireValue>] {
+function requestResponseMessage(ep: Endpoint): [string, Promise<any>] {
   const id = generateUUID();
   return [
     id,

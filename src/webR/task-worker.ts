@@ -1,7 +1,6 @@
 // Original code from Synclink and Comlink. Released under Apache 2.0.
 
 import { Endpoint,
-         fromWireValue,
          SZ_BUF_DOESNT_FIT,
          SZ_BUF_FITS_IDX,
          SZ_BUF_SIZE_IDX,
@@ -51,17 +50,15 @@ export class SyncTask {
     if (!this.#scheduled) {
       throw new Error("Task not synchronously scheduled");
     }
+
     let { done, value } = this._sync_gen!.next();
     if (!done) {
       return false;
     }
-    try {
-      this.#resolved = true;
-      this.#result = fromWireValue(this.endpoint, value);
-    } catch (e) {
-      console.warn("synclink exception:", e);
-      this.#exception = e;
-    }
+
+    this.#resolved = true;
+    this.#result = value;
+
     return true;
   }
 

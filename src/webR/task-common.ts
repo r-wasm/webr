@@ -23,33 +23,11 @@ export interface EventSource {
   ): void;
 }
 
-export const enum WireValueType {
-  RAW = "RAW",
-  PROXY = "PROXY",
-  THROW = "THROW",
-  HANDLER = "HANDLER",
-  ID = "ID",
-}
-
-export interface WireValue {
-  id?: string;
-  type: WireValueType.RAW;
-  value: {};
-}
-
-export function toWireValue(_ep: Endpoint,
-                            value: any): [WireValue, Transferable[]] {
+export function toWireValue(value: any): [any, Transferable[]] {
   return [
-    {
-      type: WireValueType.RAW,
-      value,
-    },
+    value,
     transferCache.get(value) || [],
   ]
-}
-
-export function fromWireValue(_ep: Endpoint, value: WireValue): any {
-  return value.value;
 }
 
 const transferCache = new WeakMap<any, Transferable[]>();
