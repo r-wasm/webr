@@ -4,6 +4,7 @@ import { ChannelWorker } from './chan/channel';
 import { Message,
          Request,
          newResponse } from './chan/message';
+import { convertSEXP } from './sexp';
 import { FSNode,
          WebROptions } from './webr-main'
 
@@ -31,7 +32,7 @@ interface Module extends EmscriptenModule {
   setPrompt: (prompt: string) => void;
   canvasExec: (op: string) => void;
   downloadFileContent: (URL: string, headers: Array<string>) => XHRResponse;
-  _runRCode: (code: number, length: number) => Promise<string>;
+  _evalRCode: (code: number, errPtr: number) => number;
   // TODO: Namespace all webR properties
   webr: {
     readConsole: () => number;
@@ -95,6 +96,18 @@ function inputOrDispatch(chan: ChannelWorker): string {
             continue;
           case 'getFSNode':
             write(getFSNode(reqMsg.data.path));
+            continue;
+          case 'evalRCode':
+            const str = allocateUTF8(reqMsg.data.code);
+            const err = allocate(1, 'i32' ,0);
+            const resultptr = Module._evalRCode(str, err);
+            const errValue = getValue(err, 'i32');
+            if (errValue) {
+              throw Error(`An error occured evaluating R code (${errValue})`);
+            }
+            Module._free(str);
+            Module._free(err);
+            write(convertSEXP(resultptr));
             continue;
           default:
             throw('Unknown event `' + reqMsg.type + '`');

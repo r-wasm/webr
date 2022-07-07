@@ -66,6 +66,7 @@ const webR = new WebR({
     COLORTERM: 'truecolor',
   },
 });
+(globalThis as any).webR = webR;
 
 (async () => {
   await webR.init();

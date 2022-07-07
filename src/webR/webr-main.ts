@@ -1,5 +1,6 @@
 import { ChannelMain } from './chan/channel';
 import { Message} from './chan/message';
+import { RProxy } from './sexp';
 
 export type FSNode = {
   id: number;
@@ -48,6 +49,9 @@ export class WebR {
   }
   async getFSNode(path: string): Promise<FSNode> {
     return await this.#chan.request({ type: "getFSNode", data: { path: path }});
+  }
+  async evalRCode(code: string): Promise<RProxy> {
+    return await this.#chan.request({ type: "evalRCode", data: { code: code }});
   }
 
   // Backend delegation
