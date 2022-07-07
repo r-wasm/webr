@@ -24,7 +24,6 @@ self.onmessage = function(ev: MessageEvent) {
 
 
 interface Module extends EmscriptenModule {
-  FS: any;
   ENV: { [key: string]: string };
   monitorRunDependencies: (n: number) => void;
   noImageDecoding: boolean;
@@ -33,8 +32,6 @@ interface Module extends EmscriptenModule {
   canvasExec: (op: string) => void;
   downloadFileContent: (URL: string, headers: Array<string>) => XHRResponse;
   _runRCode: (code: number, length: number) => Promise<string>;
-  allocate(slab: number[] | ArrayBufferView | number, allocator: number): number;
-  intArrayFromString(stringy: string, dontAddNull?: boolean, length?: number): number[];
   // TODO: Namespace all webR properties
   webr: {
     readConsole: () => number;
@@ -110,8 +107,8 @@ function inputOrDispatch(chan: ChannelWorker): string {
 }
 
 function getFSNode(path: string): FSNode {
-  const node = Module.FS.lookupPath(path).node;
-  return copyFSNode(node);
+  const node = FS.lookupPath(path, {}).node;
+  return copyFSNode(node as FSNode);
 }
 
 function copyFSNode(obj: FSNode): FSNode {
@@ -159,8 +156,7 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
 }
 
 function getFileData(name: string): Uint8Array {
-  const FS = Module.FS;
-  const size = FS.stat(name).size;
+  const size = FS.stat(name).size as number;
   const stream = FS.open(name, 'r');
   const buf = new Uint8Array(size);
   FS.read(stream, buf, 0, size, 0);
@@ -169,7 +165,7 @@ function getFileData(name: string): Uint8Array {
 }
 
 function putFileData(name: string, data: Uint8Array) {
-  Module.FS.createDataFile('/', name, data, true, true, true);
+  FS.createDataFile('/', name, data, true, true, true);
 }
 
 function init(options: WebROptions = {}) {
@@ -182,9 +178,11 @@ function init(options: WebROptions = {}) {
   Module.noAudioDecoding = true;
 
   Module.preRun.push(() => {
-    Module.FS.mkdirTree(_config.homedir);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: next-line
+    FS.mkdirTree(_config.homedir);
+    FS.chdir(_config.homedir);
     Module.ENV.HOME = _config.homedir;
-    Module.FS.chdir(_config.homedir);
     Module.ENV = Object.assign(Module.ENV, _config.REnv);
   });
 
@@ -198,7 +196,7 @@ function init(options: WebROptions = {}) {
     // C code must call `free()` on the result
     readConsole: () => {
       let input = inputOrDispatch(chan);
-      return allocUTF8(input);
+      return allocateUTF8(input);
     }
   }
 
@@ -226,11 +224,4 @@ function init(options: WebROptions = {}) {
     const scriptSrc = `${_config.WEBR_URL}R.bin.js`;
     loadScript(scriptSrc);
   });
-}
-
-function allocUTF8(x: string) {
-  let nBytes = lengthBytesUTF8(x) + 1;
-  let out = Module._malloc(nBytes);
-  stringToUTF8(x, out, nBytes);
-  return out;
 }
