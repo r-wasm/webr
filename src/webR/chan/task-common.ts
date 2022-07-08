@@ -37,9 +37,11 @@ export function transfer<T>(obj: T, transfers: Transferable[]): T {
 }
 
 
+export type UUID = string;
+
 export let UUID_LENGTH = 63;
 
-export function generateUUID(): string {
+export function generateUUID(): UUID {
   let result = Array.from({ length: 4 }, randomSegment).join("-");
   if (result.length !== UUID_LENGTH) {
     throw new Error("comlink internal error: UUID has the wrong length");

@@ -1,5 +1,6 @@
-import { newUUID, UUID } from '../utils';
-import { transfer } from './task-common'
+import { generateUUID,
+         transfer,
+         UUID } from './task-common'
 
 export interface Message {
   type: string;
@@ -29,7 +30,7 @@ export function newRequest(msg: Message,
     {
       type: 'request',
       data: {
-        uuid: newUUID(),
+        uuid: generateUUID(),
         msg: msg
       }
     },
