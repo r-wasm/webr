@@ -4,7 +4,9 @@ import { Endpoint,
          SZ_BUF_FITS_IDX,
          SZ_BUF_SIZE_IDX,
          generateUUID } from './task-common'
+
 import { sleep } from './utils'
+import { SyncRequestData } from './message'
 
 let encoder = new TextEncoder();
 
@@ -15,43 +17,43 @@ let encoder = new TextEncoder();
  *
  * @param endpoint A message port to receive messages from. Other thread is
  *        blocked, so we can't send messages back.
- * @param msg The message that was recieved. We will use it to read out the
+ * @param data The message that was recieved. We will use it to read out the
  *        buffers to write the answer into. NOTE: requester owns buffers.
- * @param value The value we want to send back to the requester. We have
+ * @param response The value we want to send back to the requester. We have
  *        to encode it into data_buffer.
  */
 export async function syncResponse(endpoint: Endpoint,
-                                   msg: any,
-                                   value: any) {
+                                   data: SyncRequestData,
+                                   response: any) {
   try {
-    let { size_buffer, data_buffer, signal_buffer, taskId } = msg;
+    let { taskId, sizeBuffer, dataBuffer, signalBuffer } = data;
     // console.warn(msg);
 
-    let bytes = encoder.encode(JSON.stringify(value));
-    let fits = bytes.length <= data_buffer.length;
+    let bytes = encoder.encode(JSON.stringify(response));
+    let fits = bytes.length <= dataBuffer.length;
 
-    Atomics.store(size_buffer, SZ_BUF_SIZE_IDX, bytes.length);
-    Atomics.store(size_buffer, SZ_BUF_FITS_IDX, +fits);
+    Atomics.store(sizeBuffer, SZ_BUF_SIZE_IDX, bytes.length);
+    Atomics.store(sizeBuffer, SZ_BUF_FITS_IDX, +fits);
     if (!fits) {
       // console.log("      need larger buffer", taskId)
       // Request larger buffer
       let [uuid, data_promise] = requestResponseMessage(endpoint);
 
-      // Write UUID into data_buffer so syncRequest knows where to respond to.
-      data_buffer.set(encoder.encode(uuid));
-      await signalRequester(signal_buffer, taskId);
+      // Write UUID into dataBuffer so syncRequest knows where to respond to.
+      dataBuffer.set(encoder.encode(uuid));
+      await signalRequester(signalBuffer, taskId!);
 
-      // Wait for response with new bigger data_buffer
-      data_buffer = ((await data_promise) as any).data_buffer;
+      // Wait for response with new bigger dataBuffer
+      dataBuffer = ((await data_promise) as any).dataBuffer;
     }
 
-    // Encode result into data_buffer
-    data_buffer.set(bytes);
-    Atomics.store(size_buffer, SZ_BUF_FITS_IDX, +true);
+    // Encode result into dataBuffer
+    dataBuffer.set(bytes);
+    Atomics.store(sizeBuffer, SZ_BUF_FITS_IDX, +true);
 
     // @ts-ignore
     // console.log("       signaling completion", taskId)
-    await signalRequester(signal_buffer, taskId);
+    await signalRequester(signalBuffer, taskId);
   } catch (e) {
     console.warn(e);
   }
@@ -76,10 +78,10 @@ function requestResponseMessage(ep: Endpoint): [string, Promise<any>] {
   ];
 }
 
-async function signalRequester(signal_buffer: Uint32Array, taskId: number) {
+async function signalRequester(signalBuffer: Int32Array, taskId: number) {
   let index = (taskId >> 1) % 32;
   let sleepTime = 1;
-  while (Atomics.compareExchange(signal_buffer, index + 1, 0, taskId) !== 0) {
+  while (Atomics.compareExchange(signalBuffer, index + 1, 0, taskId) !== 0) {
     // No Atomics.asyncWait except on Chrome =(
     await sleep(sleepTime);
     if (sleepTime < 32) {
@@ -87,7 +89,7 @@ async function signalRequester(signal_buffer: Uint32Array, taskId: number) {
       sleepTime *= 2;
     }
   }
-  Atomics.or(signal_buffer, 0, 1 << index);
+  Atomics.or(signalBuffer, 0, 1 << index);
   // @ts-ignore
-  Atomics.notify(signal_buffer, 0);
+  Atomics.notify(signalBuffer, 0);
 }

@@ -6,6 +6,8 @@ import { Endpoint,
          SZ_BUF_SIZE_IDX,
          UUID_LENGTH } from './task-common'
 
+import { newSyncRequest } from './message'
+
 let decoder = new TextDecoder("utf-8");
 
 
@@ -22,8 +24,8 @@ export class SyncTask {
   // sync only
   taskId?: number;
   _sync_gen?: Generator<void, any, void>;
-  size_buffer?: Int32Array;
-  signal_buffer?: Int32Array;
+  sizeBuffer?: Int32Array;
+  signalBuffer?: Int32Array;
 
   constructor(endpoint: Endpoint,
               msg: any,
@@ -65,38 +67,42 @@ export class SyncTask {
   *do_sync() {
     // just use syncRequest.
     let { endpoint, msg, transfers } = this;
-    let size_buffer = new Int32Array(new SharedArrayBuffer(8));
-    let signal_buffer = this.signal_buffer!;
+    let sizeBuffer = new Int32Array(new SharedArrayBuffer(8));
+    let signalBuffer = this.signalBuffer!;
     let taskId = this.taskId;
+
     // Ensure status is cleared. We will notify
-    let data_buffer = acquireDataBuffer(UUID_LENGTH);
+    let dataBuffer = acquireDataBuffer(UUID_LENGTH);
     // console.log("===requesting", taskId);
+
+    let syncMsg = newSyncRequest(msg, {
+      sizeBuffer,
+      dataBuffer,
+      signalBuffer,
+      taskId
+    });
+
     endpoint.postMessage(
-      {
-        msg,
-        size_buffer,
-        data_buffer,
-        signal_buffer,
-        taskId,
-        syncify: true,
-      },
+      syncMsg,
       transfers
     );
     yield;
-    if (Atomics.load(size_buffer, SZ_BUF_FITS_IDX) === SZ_BUF_DOESNT_FIT) {
-      // There wasn't enough space, make a bigger data_buffer.
-      // First read uuid for response out of current data_buffer
-      const id = decoder.decode(data_buffer.slice(0, UUID_LENGTH));
-      releaseDataBuffer(data_buffer);
-      const size = Atomics.load(size_buffer, SZ_BUF_SIZE_IDX);
-      data_buffer = acquireDataBuffer(size);
+
+    if (Atomics.load(sizeBuffer, SZ_BUF_FITS_IDX) === SZ_BUF_DOESNT_FIT) {
+      // There wasn't enough space, make a bigger dataBuffer.
+      // First read uuid for response out of current dataBuffer
+      const id = decoder.decode(dataBuffer.slice(0, UUID_LENGTH));
+      releaseDataBuffer(dataBuffer);
+      const size = Atomics.load(sizeBuffer, SZ_BUF_SIZE_IDX);
+      dataBuffer = acquireDataBuffer(size);
       // console.log("===bigger data buffer", taskId);
-      endpoint.postMessage({ id, data_buffer });
+      endpoint.postMessage({ id, dataBuffer });
       yield;
     }
-    const size = Atomics.load(size_buffer, SZ_BUF_SIZE_IDX);
+
+    const size = Atomics.load(sizeBuffer, SZ_BUF_SIZE_IDX);
     // console.log("===completing", taskId);
-    return JSON.parse(decoder.decode(data_buffer.slice(0, size)));
+    return JSON.parse(decoder.decode(dataBuffer.slice(0, size)));
   }
 
   get result() {
@@ -119,26 +125,26 @@ export class SyncTask {
 
 class _Syncifier {
   nextTaskId: Int32Array;
-  signal_buffer: Int32Array;
+  signalBuffer: Int32Array;
   tasks: Map<number, SyncTask>;
 
   constructor() {
     this.nextTaskId = new Int32Array([1]);
-    this.signal_buffer = new Int32Array(new SharedArrayBuffer(32 * 4 + 4));
+    this.signalBuffer = new Int32Array(new SharedArrayBuffer(32 * 4 + 4));
     this.tasks = new Map();
   }
 
   scheduleTask(task: SyncTask) {
     task.taskId = this.nextTaskId[0];
     this.nextTaskId[0] += 2;
-    task.signal_buffer = this.signal_buffer;
+    task.signalBuffer = this.signalBuffer;
     this.tasks.set(task.taskId, task);
   }
 
   waitOnSignalBuffer() {
     let timeout = 50;
     while (true) {
-      let status = Atomics.wait(this.signal_buffer, 0, 0, timeout);
+      let status = Atomics.wait(this.signalBuffer, 0, 0, timeout);
       switch (status) {
         case "ok":
         case "not-equal":
@@ -155,12 +161,12 @@ class _Syncifier {
   }
 
   *tasksIdsToWakeup() {
-    let flag = Atomics.load(this.signal_buffer, 0);
+    let flag = Atomics.load(this.signalBuffer, 0);
     for (let i = 0; i < 32; i++) {
       let bit = 1 << i;
       if (flag & bit) {
-        Atomics.and(this.signal_buffer, 0, ~bit);
-        let wokenTask = Atomics.exchange(this.signal_buffer, i + 1, 0);
+        Atomics.and(this.signalBuffer, 0, ~bit);
+        let wokenTask = Atomics.exchange(this.signalBuffer, i + 1, 0);
         yield wokenTask;
       }
     }
