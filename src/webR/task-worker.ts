@@ -23,7 +23,7 @@ export class SyncTask {
 
   // sync only
   taskId?: number;
-  _sync_gen?: Generator<void, any, void>;
+  #syncGen?: Generator<void, any, void>;
   sizeBuffer?: Int32Array;
   signalBuffer?: Int32Array;
 
@@ -36,15 +36,15 @@ export class SyncTask {
     this.#resolved = false;
   }
 
-  schedule_sync() {
+  scheduleSync() {
     if (this.#scheduled) {
       return;
     }
     this.#scheduled = true;
 
     Syncifier.scheduleTask(this);
-    this._sync_gen = this.do_sync();
-    this._sync_gen.next();
+    this.#syncGen = this.doSync();
+    this.#syncGen.next();
     return this;
   }
 
@@ -53,7 +53,7 @@ export class SyncTask {
       throw new Error("Task not synchronously scheduled");
     }
 
-    let { done, value } = this._sync_gen!.next();
+    let { done, value } = this.#syncGen!.next();
     if (!done) {
       return false;
     }
@@ -64,7 +64,7 @@ export class SyncTask {
     return true;
   }
 
-  *do_sync() {
+  *doSync() {
     // just use syncRequest.
     let { endpoint, msg, transfers } = this;
     let sizeBuffer = new Int32Array(new SharedArrayBuffer(8));
@@ -117,7 +117,7 @@ export class SyncTask {
   }
 
   syncify(): any {
-    this.schedule_sync();
+    this.scheduleSync();
     Syncifier.syncifyTask(this);
     return this.result;
   }
@@ -150,7 +150,7 @@ class _Syncifier {
         case "not-equal":
           return;
         case "timed-out":
-          if (interrupt_buffer[0] !== 0) {
+          if (interruptBuffer[0] !== 0) {
             handleInterrupt();
           }
           break;
@@ -226,10 +226,10 @@ function releaseDataBuffer(buffer: Uint8Array) {
 }
 
 
-export let interrupt_buffer = new Int32Array(new SharedArrayBuffer(4));
+export let interruptBuffer = new Int32Array(new SharedArrayBuffer(4));
 
 let handleInterrupt = () => {
-  interrupt_buffer[0] = 0;
+  interruptBuffer[0] = 0;
   throw new Error("Interrupted!");
 };
 
