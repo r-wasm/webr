@@ -27,7 +27,7 @@ function build({ input, output, minify }) {
 
 [
   {
-    input: "webR/worker.ts",
+    input: "webR/webR.ts",
     output: "../dist/webR.js",
     minify: false,
   },

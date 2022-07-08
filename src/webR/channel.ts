@@ -5,6 +5,8 @@ import { Message,
          newRequest,
          Response,
          SyncRequest } from './message';
+import { Endpoint } from './task-common';
+import { syncResponse } from './task-main';
 
 // FIXME: Why doesn't this work?
 // import { SynclinkTask } from 'synclink/task';
@@ -26,18 +28,24 @@ import { SynclinkTask } from '../node_modules/synclink/dist/esm/task';
 // Main ----------------------------------------------------------------
 
 export class ChannelMain {
+  #ep: Endpoint;
+
   inputQueue = new AsyncQueue<Message>();
   outputQueue = new AsyncQueue<Message>();
 
-  // TODO: `connect()` method that takes a worker script and returns a
-  // promise that resolves upon initialisation. Once done, the channel
-  // owns the worker and all communication goes through here.
   initialised: Promise<unknown>;
   resolve: (_?: unknown) => void;
 
   #parked = new Map<string, ResolveFn>();
 
-  constructor() {
+  constructor(URL: string, data: any, ep: Endpoint = self as any) {
+    this.#ep = ep;
+    this.#handleEventsMain();
+
+    let worker = new Worker(URL);
+    let msg = { type: 'init', data: data } as Message;
+    worker.postMessage(msg);
+
     ({ resolve: this.resolve, promise: this.initialised } = promiseHandles());
   }
 
@@ -79,6 +87,49 @@ export class ChannelMain {
     } else {
       console.warn("Can't find request.");
     }
+  }
+
+  #handleEventsMain() {
+    let main = this;
+    const msgTypes = ['resolve', 'message', 'request', 'response', 'sync-request'];
+
+    this.#ep.addEventListener("message", async function callback(ev: MessageEvent) {
+      if (!ev || !ev.data || !ev.data.type || !msgTypes.includes(ev.data.type)) {
+        return;
+      }
+
+      switch (ev.data.type) {
+        case 'resolve':
+          main.resolve();
+          return;
+
+        case 'message':
+        case 'response':
+          main.outputQueue.put(ev.data);
+          return;
+
+        case 'sync-request':
+          let msg = ev.data as SyncRequest;
+          let payload = msg.data.msg;
+          let reqData = msg.data.reqData;
+
+          if (payload.type != 'read') {
+            throw `Unsupported request type '$(payload.type)'.`;
+          }
+
+          let response = await main.inputQueue.get();
+
+          // TODO: Pass a `replacer` function
+          syncResponse(main.#ep, reqData, response);
+          return;
+
+        case 'request':
+          throw `
+            Can't send messages of type 'request' from a worker.
+            Please Use 'sync-request' instead.
+          `
+      }
+    } as any);
   }
 }
 
@@ -128,53 +179,3 @@ export function chanWorkerHandle(main: ChannelMain) {
     }
   })
 }
-
-import { Endpoint } from './task-common';
-import { syncResponse } from './task-main';
-
-const msgTypes = ['resolve', 'message', 'request', 'response', 'sync-request'];
-
-function handleEventsMain(main: ChannelMain, ep: Endpoint = self as any) {
-  ep.addEventListener("message", async function callback(ev: MessageEvent) {
-    if (!ev || !ev.data || !ev.data.type || !msgTypes.includes(ev.data.type)) {
-      return;
-    }
-
-    switch (ev.data.type) {
-      case 'resolve':
-        main.resolve();
-        return;
-
-      case 'message':
-      case 'response':
-        main.outputQueue.put(ev.data);
-        return;
-
-      case 'sync-request':
-        let msg = ev.data as SyncRequest;
-        let payload = msg.data.msg;
-        let reqData = msg.data.reqData;
-
-        if (payload.type != 'read') {
-          throw `Unsupported request type '$(payload.type)'.`;
-        }
-
-        let response = await main.inputQueue.get();;
-
-        // TODO: Pass a `replacer` function
-        syncResponse(ep, reqData, response);
-        return;
-
-      case 'request':
-        throw `
-          Can't send messages of type 'request' from a worker.
-          Please Use 'sync-request' instead.
-        `
-    }
-  } as any);
-}
-
-// export function handleEventsWorker(ep: Endpoint = self as any) {
-//   ep.addEventListener("message", function callback(ev: MessageEvent) {
-//   } as any);
-// }

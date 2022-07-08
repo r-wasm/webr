@@ -6,6 +6,21 @@ import { Message,
          Request,
          newResponse } from './message';
 
+
+let initialised = false;
+
+self.onmessage = function(ev: MessageEvent) {
+  if (!ev || !ev.data || !ev.data.type || ev.data.type != 'init') {
+    return;
+  }
+  if (initialised) {
+    throw `Can't initialise worker multiple times.`;
+  }
+
+  init(ev.data);
+  initialised = true;
+}
+
 interface Module extends EmscriptenModule {
   FS: any;
   ENV: { [key: string]: string };
@@ -23,14 +38,6 @@ interface Module extends EmscriptenModule {
     readConsole: () => number;
     resolveInit: () => void;
   };
-}
-
-export interface WebRBackend {
-  runRCode: typeof runRCode;
-}
-
-export interface WebRBackendPrivate extends WebRBackend {
-  init: typeof init;
 }
 
 type WebRConfig = {
@@ -183,8 +190,7 @@ export interface WebROptions {
   homedir?: string;
 }
 
-export async function init(options: WebROptions = {},
-                           chanProxy: ChannelWorkerIface) {
+function init(options: WebROptions = {}) {
   _config = Object.assign(defaultOptions, options);
 
   Module.preRun = [];
@@ -200,7 +206,7 @@ export async function init(options: WebROptions = {},
     Module.ENV = Object.assign(Module.ENV, _config.REnv);
   });
 
-  let chan = new ChannelWorker(chanProxy);
+  let chan = new ChannelWorker();
 
   Module.webr = {
     resolveInit: () => {

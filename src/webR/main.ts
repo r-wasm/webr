@@ -1,26 +1,18 @@
-import * as Synclink from 'synclink';
-import { WebRBackend,
-         WebRBackendPrivate,
-         WebROptions,
+import { WebROptions,
          FSNode } from './webR';
-import { ChannelMain, chanWorkerHandle } from './channel';
+import { ChannelMain } from './channel';
 import { Message} from './message';
 
 
-export class WebR implements WebRBackend {
-  #worker;
-  #workerProxy;
+export class WebR {
+  #chan;
 
-  #chan = new ChannelMain();
-
-  constructor() {
-    this.#worker = new Worker('./webR.js');
-    this.#workerProxy = Synclink.wrap(this.#worker) as WebRBackendPrivate;
+  constructor(options: WebROptions = {}) {
+    this.#chan = new ChannelMain('./webR.js', options);
   }
 
-  async init(options: WebROptions = {}) {
-    await this.#workerProxy.init(options, chanWorkerHandle(this.#chan));
-    return this.#chan.initialised;
+  async init() {
+    return await this.#chan.initialised;
   }
 
   async read(): Promise<Message> {
@@ -46,5 +38,5 @@ export class WebR implements WebRBackend {
   }
 
   // Backend delegation
-  async runRCode(code: string) { return this.#workerProxy.runRCode(code) };
+  async runRCode(_code: string) { return 'TODO'; };
 }
