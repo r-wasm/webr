@@ -3,7 +3,8 @@ import { WebRBackend,
          WebRBackendPrivate,
          WebROptions,
          FSNode } from './webR';
-import { Message, ChannelMain, chanWorkerHandle } from './channel';
+import { ChannelMain, chanWorkerHandle } from './channel';
+import { Message} from './message';
 
 
 export class WebR implements WebRBackend {

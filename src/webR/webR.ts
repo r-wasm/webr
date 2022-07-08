@@ -1,11 +1,10 @@
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { loadScript } from './compat';
+import { ChannelWorker,
+         ChannelWorkerIface } from './channel';
 import { Message,
          Request,
-         newResponse,
-         ChannelWorker,
-         ChannelWorkerIface } from './channel';
-import * as Synclink from 'synclink';
+         newResponse } from './message';
 
 interface Module extends EmscriptenModule {
   FS: any;
