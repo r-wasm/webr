@@ -57,18 +57,18 @@ function FSTreeData(
   }
 }
 
-const webR = new WebR();
+const webR = new WebR({
+  RArgs: [],
+  REnv: {
+    R_HOME: '/usr/lib/R',
+    R_ENABLE_JIT: '0',
+    R_DEFAULT_DEVICE: 'canvas',
+    COLORTERM: 'truecolor',
+  },
+});
 
 (async () => {
-  await webR.init({
-    RArgs: [],
-    REnv: {
-      R_HOME: '/usr/lib/R',
-      R_ENABLE_JIT: '0',
-      R_DEFAULT_DEVICE: 'canvas',
-      COLORTERM: 'truecolor',
-    },
-  });
+  await webR.init();
 
   term.clear();
 

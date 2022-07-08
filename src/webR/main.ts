@@ -1,8 +1,21 @@
-import { WebROptions,
-         FSNode } from './webR';
 import { ChannelMain } from './channel';
 import { Message} from './message';
 
+export type FSNode = {
+  id: number;
+  name: string;
+  mode: number;
+  isFolder: boolean;
+  contents: { [key: string]: FSNode };
+};
+
+export interface WebROptions {
+  RArgs?: string[];
+  REnv?: { [key: string]: string };
+  WEBR_URL?: string;
+  PKG_URL?: string;
+  homedir?: string;
+}
 
 export class WebR {
   #chan;

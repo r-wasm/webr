@@ -1,10 +1,11 @@
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { loadScript } from './compat';
-import { ChannelWorker,
-         ChannelWorkerIface } from './channel';
+import { ChannelWorker } from './channel';
 import { Message,
          Request,
          newResponse } from './message';
+import { FSNode,
+         WebROptions } from './main'
 
 
 let initialised = false;
@@ -20,6 +21,7 @@ self.onmessage = function(ev: MessageEvent) {
   init(ev.data);
   initialised = true;
 }
+
 
 interface Module extends EmscriptenModule {
   FS: any;
@@ -86,7 +88,7 @@ function inputOrDispatch(chan: ChannelWorker): string {
           chan.write(newResponse(req.data.uuid, resp, transferables));
         switch (reqMsg.type) {
           case 'putFileData':
-            // FIXME: Why is the transferred array wrapped in an Object?
+            // FIXME: Use a replacer + reviver to transfer Uint8Array
             let data = Uint8Array.from(Object.values(reqMsg.data.data));
             write(putFileData(reqMsg.data.name, data))
             continue;
@@ -106,14 +108,6 @@ function inputOrDispatch(chan: ChannelWorker): string {
     }
   }
 }
-
-export type FSNode = {
-  id: number;
-  name: string;
-  mode: number;
-  isFolder: boolean;
-  contents: { [key: string]: FSNode };
-};
 
 function getFSNode(path: string): FSNode {
   const node = Module.FS.lookupPath(path).node;
@@ -164,10 +158,6 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
   }
 }
 
-export async function runRCode(code: string): Promise<string> {
-  return await Module._runRCode(Module.allocate(Module.intArrayFromString(code), 0), code.length);
-}
-
 function getFileData(name: string): Uint8Array {
   const FS = Module.FS;
   const size = FS.stat(name).size;
@@ -180,14 +170,6 @@ function getFileData(name: string): Uint8Array {
 
 function putFileData(name: string, data: Uint8Array) {
   Module.FS.createDataFile('/', name, data, true, true, true);
-}
-
-export interface WebROptions {
-  RArgs?: string[];
-  REnv?: { [key: string]: string };
-  WEBR_URL?: string;
-  PKG_URL?: string;
-  homedir?: string;
 }
 
 function init(options: WebROptions = {}) {

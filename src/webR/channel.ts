@@ -1,6 +1,5 @@
 import { AsyncQueue } from './queue';
 import { promiseHandles, ResolveFn } from './utils';
-import * as Synclink from 'synclink';
 import { Message,
          newRequest,
          Response,
@@ -8,28 +7,31 @@ import { Message,
 import { Endpoint } from './task-common';
 import { syncResponse } from './task-main';
 
-// FIXME: Why doesn't this work?
-// import { SynclinkTask } from 'synclink/task';
-import { SynclinkTask } from '../node_modules/synclink/dist/esm/task';
-
 
 // The channel structure is asymetric:
 //
-// - The main thread "writes" to the input queue and "reads"
-//   asynchronously from the output queue (typically in an async
-//   infloop).
+// - The main thread maintains the input and output queues. All
+//   messages sent from main are stored in the input queue. The input
+//   queue is pull-based, it's the worker that initiates a transfer
+//   via a sync-request.
 //
-// - The worker synchronously "recvs" from the input queue and "sends"
-//   to the output queue. Receiving a message blocks until an input is
-//   available. Sending a message returns at the next tick of the main thread's
-//   event loop.
+//   The output queue is filled at the initiative of the worker. The
+//   main thread asynchronously reads from this queue, typically in an
+//   async infloop.
+//
+// - The worker synchronously reads from the input queue. Reading a
+//   message blocks until an input is available. Writing a message to
+//   the output queue is equivalent to calling `postMessage()` and
+//   returns immediately.
+//
+//   Note that the messages sent from main to worker need to be
+//   serialised. There is no structured cloning involved, and
+//   ArrayBuffers can't be transferred, only copied.
 
 
 // Main ----------------------------------------------------------------
 
 export class ChannelMain {
-  #ep: Endpoint;
-
   inputQueue = new AsyncQueue<Message>();
   outputQueue = new AsyncQueue<Message>();
 
@@ -38,11 +40,11 @@ export class ChannelMain {
 
   #parked = new Map<string, ResolveFn>();
 
-  constructor(URL: string, data: any, ep: Endpoint = self as any) {
-    this.#ep = ep;
-    this.#handleEventsMain();
+  constructor(url: string, data: any) {
+    let worker = new Worker(url);
 
-    let worker = new Worker(URL);
+    this.#handleEventsFromWorker(worker);
+
     let msg = { type: 'init', data: data } as Message;
     worker.postMessage(msg);
 
@@ -89,12 +91,11 @@ export class ChannelMain {
     }
   }
 
-  #handleEventsMain() {
+  #handleEventsFromWorker(worker: Worker) {
     let main = this;
-    const msgTypes = ['resolve', 'message', 'request', 'response', 'sync-request'];
 
-    this.#ep.addEventListener("message", async function callback(ev: MessageEvent) {
-      if (!ev || !ev.data || !ev.data.type || !msgTypes.includes(ev.data.type)) {
+    worker.onmessage = async function callback(ev: MessageEvent) {
+      if (!ev || !ev.data || !ev.data.type) {
         return;
       }
 
@@ -103,8 +104,7 @@ export class ChannelMain {
           main.resolve();
           return;
 
-        case 'message':
-        case 'response':
+        default:
           main.outputQueue.put(ev.data);
           return;
 
@@ -120,7 +120,7 @@ export class ChannelMain {
           let response = await main.inputQueue.get();
 
           // TODO: Pass a `replacer` function
-          syncResponse(main.#ep, reqData, response);
+          await syncResponse(worker, reqData, response);
           return;
 
         case 'request':
@@ -129,53 +129,29 @@ export class ChannelMain {
             Please Use 'sync-request' instead.
           `
       }
-    } as any);
+    } as any;
   }
 }
 
 
 // Worker --------------------------------------------------------------
 
-export interface ChannelWorkerIface {
-  resolve(): void;
-  read(): Promise<Message>;
-  write(msg: Message): void;
-}
-
-export type ChannelWorkerProxy = Synclink.Remote<ChannelWorkerIface>;
+import { SyncTask } from './task-worker'
 
 export class ChannelWorker {
-  proxy: ChannelWorkerIface;
-
-  constructor(proxy: ChannelWorkerIface) {
-    this.proxy = proxy;
-  }
+  #ep: Endpoint = self as any;
 
   resolve() {
-    (this.proxy.resolve() as unknown as SynclinkTask).syncify();
+    this.write({ type: 'resolve' });
   };
+
+  write(msg: Message, transfer?: [Transferable]) {
+    this.#ep.postMessage(msg, transfer);
+  }
 
   read(): Message {
-    return (this.proxy.read() as unknown as SynclinkTask).syncify();
+    let msg = { type: 'read' } as Message;
+    let task = new SyncTask(this.#ep, msg);
+    return task.syncify();
   };
-
-  write(msg: Message) {
-    (this.proxy.write(msg) as unknown as SynclinkTask).syncify();
-  };
-}
-
-// Pass this to the worker via Synclink. This is eventually
-// transformed by Synclink to a `Synclink.Remote<ChannelWorkerIface>`.
-export function chanWorkerHandle(main: ChannelMain) {
-  return Synclink.proxy({
-    resolve() {
-      main.resolve();
-    },
-    async read() {
-      return await main.inputQueue.get();
-    },
-    write(msg: Message) {
-      main.outputQueue.put(msg);
-    }
-  })
 }
