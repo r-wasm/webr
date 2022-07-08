@@ -5,7 +5,7 @@ import { Message,
          Request,
          newResponse } from './chan/message';
 import { FSNode,
-         WebROptions } from './main'
+         WebROptions } from './webr-main'
 
 
 let initialised = false;

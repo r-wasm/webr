@@ -21,7 +21,7 @@ export class WebR {
   #chan;
 
   constructor(options: WebROptions = {}) {
-    this.#chan = new ChannelMain('./webR.js', options);
+    this.#chan = new ChannelMain('./webr-worker.js', options);
   }
 
   async init() {
