@@ -185,3 +185,54 @@ export function chanWorkerHandle(main: ChannelMain) {
     }
   })
 }
+
+import { Endpoint } from './task-common';
+import { syncResponse } from './task-main';
+import { SyncRequest } from './message';
+
+const msgTypes = ['resolve', 'message', 'request', 'response', 'sync-request'];
+
+function handleEventsMain(main: ChannelMain, ep: Endpoint = self as any) {
+  ep.addEventListener("message", async function callback(ev: MessageEvent) {
+    if (!ev || !ev.data || !ev.data.type || !msgTypes.includes(ev.data.type)) {
+      return;
+    }
+
+    switch (ev.data.type) {
+      case 'resolve':
+        main.resolve();
+        return;
+
+      case 'message':
+      case 'response':
+        main.outputQueue.put(ev.data);
+        return;
+
+      case 'sync-request':
+        let msg = ev.data as SyncRequest;
+        let payload = msg.data.msg;
+        let reqData = msg.data.reqData;
+
+        if (payload.type != 'read') {
+          throw `Unsupported request type '$(payload.type)'.`;
+        }
+
+        let response = await main.inputQueue.get();;
+
+        // TODO: Pass a `replacer` function
+        syncResponse(ep, reqData, response);
+        return;
+
+      case 'request':
+        throw `
+          Can't send messages of type 'request' from a worker.
+          Please Use 'sync-request' instead.
+        `
+    }
+  } as any);
+}
+
+// export function handleEventsWorker(ep: Endpoint = self as any) {
+//   ep.addEventListener("message", function callback(ev: MessageEvent) {
+//   } as any);
+// }
