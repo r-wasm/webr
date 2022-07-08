@@ -1,19 +1,14 @@
-import { wrap } from 'synclink';
-import { WebRBackend } from '../webR/webR';
+import { WebR } from '../webR/webr-main';
 
 (async () => {
-  const worker = new Worker('./webR.js');
-  const webR = wrap(worker) as WebRBackend;
-  await webR.init({
-    RArgs: [],
-  });
+  const webR = new WebR();
 
   for (;;) {
-    const output = await webR.readOutput();
+    const output = await webR.read();
     if (output.type === 'stdout') {
-      console.log(output.text);
+      console.log(output.data);
     } else if (output.type === 'stderr') {
-      console.error(output.text);
+      console.error(output.data);
     }
   }
 })();
