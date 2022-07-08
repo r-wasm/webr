@@ -1,5 +1,5 @@
-import { ChannelMain } from './channel';
-import { Message} from './message';
+import { ChannelMain } from './chan/channel';
+import { Message} from './chan/message';
 
 export type FSNode = {
   id: number;

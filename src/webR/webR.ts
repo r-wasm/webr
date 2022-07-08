@@ -1,9 +1,9 @@
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { loadScript } from './compat';
-import { ChannelWorker } from './channel';
+import { ChannelWorker } from './chan/channel';
 import { Message,
          Request,
-         newResponse } from './message';
+         newResponse } from './chan/message';
 import { FSNode,
          WebROptions } from './main'
 

@@ -1,5 +1,5 @@
 import { AsyncQueue } from './queue';
-import { promiseHandles, ResolveFn } from './utils';
+import { promiseHandles, ResolveFn } from '../utils';
 import { Message,
          newRequest,
          Response,

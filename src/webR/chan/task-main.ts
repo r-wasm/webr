@@ -5,7 +5,7 @@ import { Endpoint,
          SZ_BUF_SIZE_IDX,
          generateUUID } from './task-common'
 
-import { sleep } from './utils'
+import { sleep } from '../utils'
 import { SyncRequestData } from './message'
 
 let encoder = new TextEncoder();

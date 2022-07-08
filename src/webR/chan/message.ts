@@ -1,4 +1,4 @@
-import { newUUID, UUID } from './utils';
+import { newUUID, UUID } from '../utils';
 import { transfer } from './task-common'
 
 export interface Message {
