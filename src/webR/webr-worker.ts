@@ -2,8 +2,8 @@ import { BASE_URL, PKG_BASE_URL } from './config';
 import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
-import { convertSEXP } from './sexp';
-import { FSNode, WebROptions, Module, XHRResponse } from './utils';
+import { ImplicitTypes, RProxy, wrapRSexp } from './sexp';
+import { FSNode, WebROptions, Module, XHRResponse, RSexpPtr, Rptr, RProxyResponse } from './utils';
 
 let initialised = false;
 
@@ -66,16 +66,11 @@ function inputOrDispatch(chan: ChannelWorker): string {
             write(getFSNode(reqMsg.data.path as string));
             continue;
           case 'evalRCode': {
-            const str = allocateUTF8(reqMsg.data.code as string);
-            const err = allocate(1, 'i32', 0);
-            const resultptr = Module._evalRCode(str, err);
-            const errValue = getValue(err, 'i32');
-            if (errValue) {
-              throw Error(`An error occured evaluating R code (${errValue})`);
-            }
-            Module._free(str);
-            Module._free(err);
-            write(convertSEXP(resultptr));
+            write(evalRCode(reqMsg.data.code as string));
+            continue;
+          }
+          case 'proxyProp': {
+            write(proxyProp(reqMsg.data.ptr as Rptr, reqMsg.data.prop as keyof RProxy));
             continue;
           }
           default:
@@ -87,6 +82,43 @@ function inputOrDispatch(chan: ChannelWorker): string {
         throw new Error('Unknown event `' + msg.type + '`');
     }
   }
+}
+
+function proxyProp(ptr: Rptr, prop: keyof RProxy): RProxyResponse {
+  const rSexpPtr: RSexpPtr = { ptr: ptr };
+  const rSexp = wrapRSexp(rSexpPtr.ptr);
+  let r = rSexp[prop] as RProxy | ImplicitTypes;
+  if (!r) {
+    return { obj: undefined, converted: true };
+  } else if (typeof r === 'function') {
+    // TODO: Deal with function objects
+    return { obj: 'Function', converted: true };
+  } else if (typeof r !== 'object') {
+    return { obj: r, converted: true };
+  }
+  r = r as RProxy;
+  if (r.convertImplicitly) {
+    return { obj: r.toJs(), converted: r.convertImplicitly };
+  }
+  return { obj: r, converted: r.convertImplicitly };
+}
+
+function evalRCode(code: string): RProxyResponse {
+  const str = allocateUTF8(code);
+  const err = allocate(1, 'i32', 0);
+  const resultptr = Module._evalRCode(str, err);
+  const errValue = getValue(err, 'i32');
+  if (errValue) {
+    throw Error(`An error occured evaluating R code (${errValue})`);
+  }
+  Module._free(str);
+  Module._free(err);
+  const rSexp = wrapRSexp(resultptr);
+  const rSexpPtr: RSexpPtr = { ptr: resultptr };
+  if (rSexp.convertImplicitly) {
+    return { obj: rSexp.toJs(), converted: rSexp.convertImplicitly };
+  }
+  return { obj: rSexpPtr, converted: rSexp.convertImplicitly };
 }
 
 function getFSNode(path: string): FSNode {

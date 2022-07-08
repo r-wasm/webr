@@ -1,3 +1,5 @@
+import { ImplicitTypes } from './sexp';
+
 export type FSNode = {
   id: number;
   name: string;
@@ -15,6 +17,13 @@ export interface WebROptions {
 }
 
 export type Rptr = number;
+export type RSexpPtr = {
+  ptr: Rptr;
+};
+export type RProxyResponse = {
+  obj: RSexpPtr | ImplicitTypes;
+  converted: boolean;
+};
 
 export type XHRResponse = {
   status: number;
@@ -38,6 +47,12 @@ export interface Module extends EmscriptenModule {
   _COMPLEX: (ptr: Rptr) => Rptr;
   _R_CHAR: (ptr: Rptr) => Rptr;
   _RAW: (ptr: Rptr) => Rptr;
+  _LOGICAL: (ptr: Rptr) => Rptr;
+  _FRAME: (ptr: Rptr) => Rptr;
+  _ATTRIB: (ptr: Rptr) => Rptr;
+  _PRINTNAME: (ptr: Rptr) => Rptr;
+  _SYMVALUE: (ptr: Rptr) => Rptr;
+  _INTERNAL: (ptr: Rptr) => Rptr;
   _STRING_ELT: (ptr: Rptr, idx: number) => Rptr;
   // TODO: Namespace all webR properties
   webr: {

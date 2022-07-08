@@ -56,13 +56,16 @@ export class RProxy {
     this.ptr = ptr;
   }
   get [Symbol.toStringTag](): string {
-    return 'RProxy';
+    return `<RProxy: ${this.type}>`;
   }
   get type(): string {
     return SEXPTYPE[Module._TYPEOF(this.ptr)];
   }
   get convertImplicitly(): boolean {
     return false;
+  }
+  get attrs(): RProxy {
+    return wrapRSexp(Module._ATTRIB(this.ptr));
   }
   toJs(): ImplicitTypes {
     throw new TypeError('JS conversion for this R object is not supported.');
@@ -78,9 +81,44 @@ class RProxyNil extends RProxy {
   }
 }
 
+class RProxySymbol extends RProxy {
+  get printname(): RProxy {
+    return wrapRSexp(Module._PRINTNAME(this.ptr));
+  }
+  get symvalue(): RProxy {
+    return wrapRSexp(Module._SYMVALUE(this.ptr));
+  }
+  get internal(): RProxy {
+    return wrapRSexp(Module._INTERNAL(this.ptr));
+  }
+}
+
 class RProxyVector extends RProxy {
   get length(): number {
     return Module._LENGTH(this.ptr);
+  }
+}
+
+type logical = boolean | 'NA';
+class RProxyLogical extends RProxyVector {
+  toJs(): logical | Array<logical> {
+    const valAtIdx = (idx: number) => {
+      const val = getValue(Module._LOGICAL(this.ptr) + 4 * idx, 'i32');
+      if (val === 0) {
+        return false;
+      } else if (val === 1) {
+        return true;
+      }
+      return 'NA';
+    };
+    if (this.length === 1) {
+      return valAtIdx(0);
+    } else {
+      return Array.from({ length: this.length }, (_, idx) => valAtIdx(idx));
+    }
+  }
+  get convertImplicitly(): boolean {
+    return !!this.attrs;
   }
 }
 
@@ -97,7 +135,7 @@ class RProxyInt extends RProxyVector {
     }
   }
   get convertImplicitly(): boolean {
-    return true;
+    return !!this.attrs;
   }
 }
 
@@ -114,25 +152,33 @@ class RProxyReal extends RProxyVector {
     }
   }
   get convertImplicitly(): boolean {
-    return true;
+    return !!this.attrs;
   }
 }
 
 class RProxyComplex extends RProxyVector {
   toJs(): Complex | Array<Complex> {
-    if (this.length === 1) {
+    const valAtIdx = (idx: number) => {
       return {
-        re: getValue(Module._COMPLEX(this.ptr), 'double'),
-        im: getValue(Module._COMPLEX(this.ptr) + 8, 'double'),
+        re: getValue(Module._COMPLEX(this.ptr) + 8 * (idx * 2), 'double'),
+        im: getValue(Module._COMPLEX(this.ptr) + 8 * (idx * 2 + 1), 'double'),
       };
+    };
+    if (this.length === 1) {
+      return valAtIdx(0);
     } else {
-      return Array.from({ length: this.length }, (_, idx) => {
-        return {
-          re: getValue(Module._COMPLEX(this.ptr) + 8 * (idx * 2), 'double'),
-          im: getValue(Module._COMPLEX(this.ptr) + 8 * (idx * 2 + 1), 'double'),
-        };
-      });
+      return Array.from({ length: this.length }, (_, idx) => valAtIdx(idx));
     }
+  }
+  get convertImplicitly(): boolean {
+    return !!this.attrs;
+  }
+}
+
+class RProxyChar extends RProxy {
+  toJs(): string {
+    // eslint-disable-next-line new-cap
+    return UTF8ToString(Module._R_CHAR(this.ptr));
   }
   get convertImplicitly(): boolean {
     return true;
@@ -141,18 +187,18 @@ class RProxyComplex extends RProxyVector {
 
 class RProxyStr extends RProxyVector {
   toJs(): string | Array<string> {
-    if (this.length === 1) {
+    const valAtIdx = (idx: number) => {
       // eslint-disable-next-line new-cap
-      return UTF8ToString(Module._R_CHAR(Module._STRING_ELT(this.ptr, 0)));
+      return UTF8ToString(Module._R_CHAR(Module._STRING_ELT(this.ptr, idx)));
+    };
+    if (this.length === 1) {
+      return valAtIdx(0);
     } else {
-      return Array.from({ length: this.length }, (_, idx) => {
-        // eslint-disable-next-line new-cap
-        return UTF8ToString(Module._R_CHAR(Module._STRING_ELT(this.ptr, idx)));
-      });
+      return Array.from({ length: this.length }, (_, idx) => valAtIdx(idx));
     }
   }
   get convertImplicitly(): boolean {
-    return true;
+    return !!this.attrs;
   }
 }
 
@@ -169,14 +215,24 @@ class RProxyRaw extends RProxyVector {
   }
 }
 
+class RProxyEnv extends RProxy {
+  get frame(): RProxy {
+    return wrapRSexp(Module._FRAME(this.ptr));
+  }
+}
+
 function getRProxyClass(type: SEXPTYPE): typeof RProxy {
   const typeClasses: { [key: number]: typeof RProxy } = {
     [SEXPTYPE.NILSXP]: RProxyNil,
+    [SEXPTYPE.ENVSXP]: RProxyEnv,
+    [SEXPTYPE.LGLSXP]: RProxyLogical,
     [SEXPTYPE.INTSXP]: RProxyInt,
     [SEXPTYPE.REALSXP]: RProxyReal,
     [SEXPTYPE.CPLXSXP]: RProxyComplex,
     [SEXPTYPE.STRSXP]: RProxyStr,
     [SEXPTYPE.RAWSXP]: RProxyRaw,
+    [SEXPTYPE.SYMSXP]: RProxySymbol,
+    [SEXPTYPE.CHARSXP]: RProxyChar,
   };
   if (type in typeClasses) {
     return typeClasses[type];
@@ -184,21 +240,7 @@ function getRProxyClass(type: SEXPTYPE): typeof RProxy {
   throw new TypeError(`RProxy SEXP type ${SEXPTYPE[type]} has not yet been implemented.`);
 }
 
-const SEXPProxyHandlers = {
-  get(target: RProxy, prop: string): any {
-    if (prop in target) {
-      return Reflect.get(target, prop);
-    }
-  },
-};
-
-export function convertSEXP(ptr: number): ImplicitTypes | RProxy {
+export function wrapRSexp(ptr: number): RProxy {
   const type = Module._TYPEOF(ptr);
-  const proxyTarget: RProxy = new (getRProxyClass(type))(ptr);
-  const proxy = new Proxy(proxyTarget, SEXPProxyHandlers);
-  if (proxy.convertImplicitly) {
-    return proxy.toJs();
-  } else {
-    return proxy;
-  }
+  return new (getRProxyClass(type))(ptr);
 }
