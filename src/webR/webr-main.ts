@@ -1,7 +1,16 @@
 import { ChannelMain } from './chan/channel';
 import { Message } from './chan/message';
-import { FSNode, WebROptions, RSexpPtr, RProxyResponse } from './utils';
+import { FSNode, WebROptions, RProxyResponse, Rptr } from './utils';
 import { ImplicitTypes, RProxy } from './sexp';
+
+class RMainProxy extends Function {
+  ptr: Rptr;
+  constructor(ptr: Rptr, handler: ProxyHandler<any>) {
+    super();
+    this.ptr = ptr;
+    return new Proxy(this, handler) as RMainProxy;
+  }
+}
 
 export class WebR {
   #chan;
@@ -25,20 +34,36 @@ export class WebR {
     this.write({ type: 'stdin', data: input });
   }
 
-  proxyRSexp(rSexpPtr: RSexpPtr): RProxy {
+  proxyRSexp(rSexpPtr: Rptr): RMainProxy {
     const sexpHandlers = {
-      get: async (target: RSexpPtr, prop: string | symbol): Promise<RProxy | ImplicitTypes> => {
+      get: async (target: RMainProxy, prop: string | symbol): Promise<any> => {
         const r = (await this.#chan.request({
           type: 'proxyProp',
-          data: { ptr: rSexpPtr.ptr, prop: prop },
+          data: { ptr: target.ptr, prop: prop },
         })) as RProxyResponse;
         if (r.converted) {
-          return r.obj as ImplicitTypes;
+          return r.obj;
         }
-        return this.proxyRSexp(r.obj as RSexpPtr);
+        if (r.function) {
+          // TODO: Create a proxy object that calls the relevant function in the worker
+          return () => {
+            console.log('Function');
+          };
+        }
+        return this.proxyRSexp(r.obj as Rptr);
+      },
+      apply: async (target: RMainProxy, _: any, args: Array<any>) => {
+        const r = (await this.#chan.request({
+          type: 'proxyCall',
+          data: { ptr: target.ptr, args },
+        })) as RProxyResponse;
+        if (r.converted) {
+          return r.obj;
+        }
+        return this.proxyRSexp(r.obj as Rptr);
       },
     };
-    return new Proxy(rSexpPtr, sexpHandlers) as RProxy;
+    return new RMainProxy(rSexpPtr, sexpHandlers);
   }
 
   async putFileData(name: string, data: Uint8Array) {
@@ -51,7 +76,7 @@ export class WebR {
   async getFSNode(path: string): Promise<FSNode> {
     return (await this.#chan.request({ type: 'getFSNode', data: { path: path } })) as FSNode;
   }
-  async evalRCode(code: string): Promise<RProxy | ImplicitTypes> {
+  async evalRCode(code: string): Promise<RMainProxy | ImplicitTypes> {
     const r = (await this.#chan.request({
       type: 'evalRCode',
       data: { code: code },

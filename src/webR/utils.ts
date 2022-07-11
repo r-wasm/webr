@@ -17,12 +17,10 @@ export interface WebROptions {
 }
 
 export type Rptr = number;
-export type RSexpPtr = {
-  ptr: Rptr;
-};
 export type RProxyResponse = {
-  obj: RSexpPtr | ImplicitTypes;
+  obj: Rptr | ImplicitTypes;
   converted: boolean;
+  function?: boolean;
 };
 
 export type XHRResponse = {
@@ -53,6 +51,9 @@ export interface Module extends EmscriptenModule {
   _PRINTNAME: (ptr: Rptr) => Rptr;
   _SYMVALUE: (ptr: Rptr) => Rptr;
   _INTERNAL: (ptr: Rptr) => Rptr;
+  _CAR: (ptr: Rptr) => Rptr;
+  _CDR: (ptr: Rptr) => Rptr;
+  _TAG: (ptr: Rptr) => Rptr;
   _STRING_ELT: (ptr: Rptr, idx: number) => Rptr;
   // TODO: Namespace all webR properties
   webr: {

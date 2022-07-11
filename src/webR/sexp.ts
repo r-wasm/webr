@@ -67,8 +67,15 @@ export class RProxy {
   get attrs(): RProxy {
     return wrapRSexp(Module._ATTRIB(this.ptr));
   }
+  get isNil(): boolean {
+    return Module._TYPEOF(this.ptr) === SEXPTYPE.NILSXP;
+  }
   toJs(): ImplicitTypes {
     throw new TypeError('JS conversion for this R object is not supported.');
+  }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  call(_args: Array<any>): RProxy {
+    throw new Error('This R object cannot be called with arguments');
   }
 }
 
@@ -90,6 +97,32 @@ class RProxySymbol extends RProxy {
   }
   get internal(): RProxy {
     return wrapRSexp(Module._INTERNAL(this.ptr));
+  }
+}
+
+class RProxyPairlist extends RProxy {
+  get car(): RProxy {
+    return wrapRSexp(Module._CAR(this.ptr));
+  }
+  get cdr(): RProxy {
+    return wrapRSexp(Module._CDR(this.ptr));
+  }
+  get tag(): RProxy {
+    return wrapRSexp(Module._TAG(this.ptr));
+  }
+}
+
+class RProxyClosure extends RProxy {
+  call(args: Array<any>): RProxy {
+    // TODO: This needs to be tidied up and be made to work with other argument types
+    let call = Module._Rf_allocVector(SEXPTYPE.LANGSXP, args.length + 1);
+    let c = call;
+    Module._SETCAR(call, this.ptr);
+    for (let i = 0; i < args.length; i++) {
+      c = Module._CDR(c);
+      Module._SETCAR(c, Module._Rf_ScalarReal(args[i]));
+    }
+    return wrapRSexp(Module._Rf_eval(call, Module._CLOENV(this.ptr)));
   }
 }
 
@@ -118,7 +151,7 @@ class RProxyLogical extends RProxyVector {
     }
   }
   get convertImplicitly(): boolean {
-    return !!this.attrs;
+    return this.attrs.isNil;
   }
 }
 
@@ -135,7 +168,7 @@ class RProxyInt extends RProxyVector {
     }
   }
   get convertImplicitly(): boolean {
-    return !!this.attrs;
+    return this.attrs.isNil;
   }
 }
 
@@ -152,7 +185,7 @@ class RProxyReal extends RProxyVector {
     }
   }
   get convertImplicitly(): boolean {
-    return !!this.attrs;
+    return this.attrs.isNil;
   }
 }
 
@@ -171,7 +204,7 @@ class RProxyComplex extends RProxyVector {
     }
   }
   get convertImplicitly(): boolean {
-    return !!this.attrs;
+    return this.attrs.isNil;
   }
 }
 
@@ -198,7 +231,7 @@ class RProxyStr extends RProxyVector {
     }
   }
   get convertImplicitly(): boolean {
-    return !!this.attrs;
+    return this.attrs.isNil;
   }
 }
 
@@ -224,6 +257,8 @@ class RProxyEnv extends RProxy {
 function getRProxyClass(type: SEXPTYPE): typeof RProxy {
   const typeClasses: { [key: number]: typeof RProxy } = {
     [SEXPTYPE.NILSXP]: RProxyNil,
+    [SEXPTYPE.LISTSXP]: RProxyPairlist,
+    [SEXPTYPE.CLOSXP]: RProxyClosure,
     [SEXPTYPE.ENVSXP]: RProxyEnv,
     [SEXPTYPE.LGLSXP]: RProxyLogical,
     [SEXPTYPE.INTSXP]: RProxyInt,

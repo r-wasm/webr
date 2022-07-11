@@ -3,7 +3,7 @@ import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
 import { ImplicitTypes, RProxy, wrapRSexp } from './sexp';
-import { FSNode, WebROptions, Module, XHRResponse, RSexpPtr, Rptr, RProxyResponse } from './utils';
+import { FSNode, WebROptions, Module, XHRResponse, Rptr, RProxyResponse } from './utils';
 
 let initialised = false;
 
@@ -73,6 +73,10 @@ function inputOrDispatch(chan: ChannelWorker): string {
             write(proxyProp(reqMsg.data.ptr as Rptr, reqMsg.data.prop as keyof RProxy));
             continue;
           }
+          case 'proxyCall': {
+            write(proxyCall(reqMsg.data.ptr as Rptr, reqMsg.data.args as Array<any>));
+            continue;
+          }
           default:
             throw new Error('Unknown event `' + reqMsg.type + '`');
         }
@@ -84,23 +88,36 @@ function inputOrDispatch(chan: ChannelWorker): string {
   }
 }
 
-function proxyProp(ptr: Rptr, prop: keyof RProxy): RProxyResponse {
-  const rSexpPtr: RSexpPtr = { ptr: ptr };
-  const rSexp = wrapRSexp(rSexpPtr.ptr);
-  let r = rSexp[prop] as RProxy | ImplicitTypes;
+function proxyCall(ptr: Rptr, args: Array<any>): RProxyResponse {
+  const rSexp = wrapRSexp(ptr);
+  let r = rSexp.call(args) as RProxy | ImplicitTypes;
   if (!r) {
     return { obj: undefined, converted: true };
-  } else if (typeof r === 'function') {
-    // TODO: Deal with function objects
-    return { obj: 'Function', converted: true };
   } else if (typeof r !== 'object') {
     return { obj: r, converted: true };
   }
   r = r as RProxy;
   if (r.convertImplicitly) {
-    return { obj: r.toJs(), converted: r.convertImplicitly };
+    return { obj: r.toJs(), converted: true };
   }
-  return { obj: r, converted: r.convertImplicitly };
+  return { obj: ptr, converted: false };
+}
+
+function proxyProp(ptr: Rptr, prop: keyof RProxy): RProxyResponse {
+  const rSexp = wrapRSexp(ptr);
+  if (prop in rSexp) {
+    const r = rSexp[prop] as RProxy & ImplicitTypes;
+    if (typeof r === 'function') {
+      return { obj: ptr, converted: false, function: true };
+    } else if (typeof r !== 'object') {
+      return { obj: r, converted: true };
+    } else if (r.convertImplicitly) {
+      return { obj: r.toJs(), converted: true };
+    }
+    return { obj: ptr, converted: false };
+  }
+
+  return { obj: undefined, converted: true };
 }
 
 function evalRCode(code: string): RProxyResponse {
@@ -114,11 +131,10 @@ function evalRCode(code: string): RProxyResponse {
   Module._free(str);
   Module._free(err);
   const rSexp = wrapRSexp(resultptr);
-  const rSexpPtr: RSexpPtr = { ptr: resultptr };
   if (rSexp.convertImplicitly) {
     return { obj: rSexp.toJs(), converted: rSexp.convertImplicitly };
   }
-  return { obj: rSexpPtr, converted: rSexp.convertImplicitly };
+  return { obj: resultptr, converted: rSexp.convertImplicitly };
 }
 
 function getFSNode(path: string): FSNode {
