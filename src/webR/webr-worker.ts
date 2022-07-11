@@ -1,56 +1,22 @@
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
-import { Message,
-         Request,
-         newResponse } from './chan/message';
+import { Message, Request, newResponse } from './chan/message';
 import { convertSEXP } from './sexp';
-import { FSNode,
-         WebROptions } from './webr-main'
-
+import { FSNode, WebROptions, Module, XHRResponse } from './utils';
 
 let initialised = false;
 
-self.onmessage = function(ev: MessageEvent) {
-  if (!ev || !ev.data || !ev.data.type || ev.data.type != 'init') {
+self.onmessage = function (ev: MessageEvent) {
+  if (!ev || !ev.data || !ev.data.type || ev.data.type !== 'init') {
     return;
   }
   if (initialised) {
-    throw `Can't initialise worker multiple times.`;
+    throw new Error("Can't initialise worker multiple times.");
   }
 
-  init(ev.data);
+  init(ev.data as WebROptions);
   initialised = true;
-}
-
-
-interface Module extends EmscriptenModule {
-  ENV: { [key: string]: string };
-  monitorRunDependencies: (n: number) => void;
-  noImageDecoding: boolean;
-  noAudioDecoding: boolean;
-  setPrompt: (prompt: string) => void;
-  canvasExec: (op: string) => void;
-  downloadFileContent: (URL: string, headers: Array<string>) => XHRResponse;
-  _evalRCode: (code: number, errPtr: number) => number;
-  // TODO: Namespace all webR properties
-  webr: {
-    readConsole: () => number;
-    resolveInit: () => void;
-  };
-}
-
-type WebRConfig = {
-  RArgs: string[];
-  REnv: { [key: string]: string };
-  WEBR_URL: string;
-  PKG_URL: string;
-  homedir: string;
-};
-
-type XHRResponse = {
-  status: number;
-  response: string | ArrayBuffer;
 };
 
 const defaultEnv = {
@@ -67,39 +33,41 @@ const defaultOptions = {
 };
 
 const Module = {} as Module;
-let _config: WebRConfig;
+let _config: Required<WebROptions>;
 
 function inputOrDispatch(chan: ChannelWorker): string {
-  while (true) {
+  for (;;) {
     // This blocks the thread until a response
-    let msg: Message = chan.read();
+    const msg: Message = chan.read();
 
     switch (msg.type) {
       case 'stdin':
-        return msg.data;
+        return msg.data as string;
 
-      case 'request':
-        let req = msg as unknown as Request;
-        let reqMsg = req.data.msg;
+      case 'request': {
+        const req = msg as Request;
+        const reqMsg = req.data.msg;
 
-        let write = (resp: any, transferables?: [Transferable]) =>
+        const write = (resp: any, transferables?: [Transferable]) =>
           chan.write(newResponse(req.data.uuid, resp, transferables));
         switch (reqMsg.type) {
-          case 'putFileData':
+          case 'putFileData': {
             // FIXME: Use a replacer + reviver to transfer Uint8Array
-            let data = Uint8Array.from(Object.values(reqMsg.data.data));
-            write(putFileData(reqMsg.data.name, data))
+            const data = Uint8Array.from(Object.values(reqMsg.data.data as ArrayLike<number>));
+            write(putFileData(reqMsg.data.name as string, data));
             continue;
-          case 'getFileData':
-            let out = getFileData(reqMsg.data.name);
+          }
+          case 'getFileData': {
+            const out = getFileData(reqMsg.data.name as string);
             write(out, [out.buffer]);
             continue;
+          }
           case 'getFSNode':
-            write(getFSNode(reqMsg.data.path));
+            write(getFSNode(reqMsg.data.path as string));
             continue;
-          case 'evalRCode':
-            const str = allocateUTF8(reqMsg.data.code);
-            const err = allocate(1, 'i32' ,0);
+          case 'evalRCode': {
+            const str = allocateUTF8(reqMsg.data.code as string);
+            const err = allocate(1, 'i32', 0);
             const resultptr = Module._evalRCode(str, err);
             const errValue = getValue(err, 'i32');
             if (errValue) {
@@ -109,12 +77,14 @@ function inputOrDispatch(chan: ChannelWorker): string {
             Module._free(err);
             write(convertSEXP(resultptr));
             continue;
+          }
           default:
-            throw('Unknown event `' + reqMsg.type + '`');
+            throw new Error('Unknown event `' + reqMsg.type + '`');
         }
+      }
 
       default:
-        throw('Unknown event `' + msg.type + '`');
+        throw new Error('Unknown event `' + msg.type + '`');
     }
   }
 }
@@ -199,7 +169,7 @@ function init(options: WebROptions = {}) {
     Module.ENV = Object.assign(Module.ENV, _config.REnv);
   });
 
-  let chan = new ChannelWorker();
+  const chan = new ChannelWorker();
 
   Module.webr = {
     resolveInit: () => {
@@ -208,10 +178,10 @@ function init(options: WebROptions = {}) {
 
     // C code must call `free()` on the result
     readConsole: () => {
-      let input = inputOrDispatch(chan);
+      const input = inputOrDispatch(chan);
       return allocateUTF8(input);
-    }
-  }
+    },
+  };
 
   Module.locateFile = (path: string) => _config.WEBR_URL + path;
   Module.downloadFileContent = downloadFileContent;
@@ -219,7 +189,7 @@ function init(options: WebROptions = {}) {
   Module.print = (text: string) => {
     chan.write({ type: 'stdout', data: text });
   };
-  Module.printErr = async (text: string) => {
+  Module.printErr = (text: string) => {
     chan.write({ type: 'stderr', data: text });
   };
   Module.setPrompt = (prompt: string) => {
@@ -229,7 +199,6 @@ function init(options: WebROptions = {}) {
     chan.write({ type: 'canvasExec', data: op });
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   (globalThis as any).Module = Module;
 
   // At the next tick, launch the REPL. This never returns.
