@@ -3,7 +3,7 @@ import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
 import { ImplicitTypes, RProxy, wrapRSexp } from './sexp';
-import { FSNode, WebROptions, Module, XHRResponse, Rptr, RProxyResponse } from './utils';
+import { FSNode, WebROptions, Module, XHRResponse, Rptr, RProxyResponse, RCallInfo } from './utils';
 
 let initialised = false;
 
@@ -74,7 +74,7 @@ function inputOrDispatch(chan: ChannelWorker): string {
             continue;
           }
           case 'proxyCall': {
-            write(proxyCall(reqMsg.data.ptr as Rptr, reqMsg.data.args as Array<any>));
+            write(proxyCall(reqMsg.data.ptr as Rptr, reqMsg.data.callList as Array<RCallInfo>));
             continue;
           }
           default:
@@ -88,35 +88,58 @@ function inputOrDispatch(chan: ChannelWorker): string {
   }
 }
 
-function proxyCall(ptr: Rptr, args: Array<any>): RProxyResponse {
+function buildRProxyResponse(ptr: Rptr, res: RProxy | ImplicitTypes | Function): RProxyResponse {
+  if (typeof res === 'function') {
+    // Inform the main thread the result is a function
+    return { obj: ptr, converted: false, function: true };
+  } else if (typeof res !== 'object') {
+    // Return a primitive value
+    return { obj: res, converted: true };
+  } else if ('convertImplicitly' in res) {
+    // This is an RProxy object, convert it if required then return
+    return { obj: res.convertImplicitly ? res.toJs() : res.ptr, converted: res.convertImplicitly };
+  } else {
+    // Not a RProxy object, return it directly
+    return { obj: res, converted: true };
+  }
+}
+
+function proxyCall(ptr: Rptr, callList: Array<RCallInfo>): RProxyResponse {
   const rSexp = wrapRSexp(ptr);
-  let r = rSexp.call(args) as RProxy | ImplicitTypes;
-  if (!r) {
-    return { obj: undefined, converted: true };
-  } else if (typeof r !== 'object') {
-    return { obj: r, converted: true };
+  let r: RProxy | ImplicitTypes | Function = rSexp;
+  let callInfo = undefined;
+  while ((callInfo = callList.shift())) {
+    if (callInfo.name === '_call') {
+      if (typeof r === 'function') {
+        // Call the function directly
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        r = r(...callInfo.args);
+      } else if (typeof r === 'object' && '_call' in r) {
+        // This is an RProxy object, so run the _call method
+        r = r._call(callInfo.args);
+      }
+    } else if (typeof callInfo.name === 'string' && typeof r === 'object' && '_call' in r) {
+      /* The next requested method in the call list is a property of an
+         RProxy object, so grab the property and then execute it.
+      */
+      r = (
+        r[callInfo.name as keyof RProxy] as (...a: Array<any>) => RProxy | ImplicitTypes | Function
+      )(...callInfo.args);
+    } else {
+      throw new Error(
+        `An error occured executing the call list for RProxy object: ${rSexp.toString()}`
+      );
+    }
   }
-  r = r as RProxy;
-  if (r.convertImplicitly) {
-    return { obj: r.toJs(), converted: true };
-  }
-  return { obj: ptr, converted: false };
+  return buildRProxyResponse(ptr, r);
 }
 
 function proxyProp(ptr: Rptr, prop: keyof RProxy): RProxyResponse {
   const rSexp = wrapRSexp(ptr);
   if (prop in rSexp) {
-    const r = rSexp[prop] as RProxy & ImplicitTypes;
-    if (typeof r === 'function') {
-      return { obj: ptr, converted: false, function: true };
-    } else if (typeof r !== 'object') {
-      return { obj: r, converted: true };
-    } else if (r.convertImplicitly) {
-      return { obj: r.toJs(), converted: true };
-    }
-    return { obj: ptr, converted: false };
+    const r = rSexp[prop];
+    return buildRProxyResponse(ptr, r);
   }
-
   return { obj: undefined, converted: true };
 }
 

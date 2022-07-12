@@ -56,7 +56,7 @@ export class RProxy {
     this.ptr = ptr;
   }
   get [Symbol.toStringTag](): string {
-    return `<RProxy: ${this.type}>`;
+    return `RProxy:${this.type}`;
   }
   get type(): string {
     return SEXPTYPE[Module._TYPEOF(this.ptr)];
@@ -74,8 +74,8 @@ export class RProxy {
     throw new TypeError('JS conversion for this R object is not supported.');
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  call(_args: Array<any>): RProxy {
-    throw new Error('This R object cannot be called with arguments');
+  _call(_args: Array<any>): RProxy {
+    throw new Error('This R object cannot be called.');
   }
 }
 
@@ -113,7 +113,7 @@ class RProxyPairlist extends RProxy {
 }
 
 class RProxyClosure extends RProxy {
-  call(args: Array<any>): RProxy {
+  _call(args: Array<any>): RProxy {
     // TODO: This needs to be tidied up and be made to work with other argument types
     let call = Module._Rf_allocVector(SEXPTYPE.LANGSXP, args.length + 1);
     let c = call;
@@ -174,6 +174,9 @@ class RProxyInt extends RProxyVector {
 
 class RProxyReal extends RProxyVector {
   toJs(): number | ArrayBufferView {
+    return this.value;
+  }
+  get value(): number | ArrayBufferView {
     if (this.length === 1) {
       return getValue(Module._REAL(this.ptr), 'double');
     } else {

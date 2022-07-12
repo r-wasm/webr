@@ -22,6 +22,10 @@ export type RProxyResponse = {
   converted: boolean;
   function?: boolean;
 };
+export type RCallInfo = {
+  name: string | symbol;
+  args: Array<unknown>;
+};
 
 export type XHRResponse = {
   status: number;
