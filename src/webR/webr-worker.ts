@@ -88,14 +88,17 @@ function inputOrDispatch(chan: ChannelWorker): string {
   }
 }
 
+function isRProxy(proxy: any): proxy is RProxy {
+  return (
+    typeof proxy === 'object' && '_call' in proxy && 'convertImplicitly' in proxy && 'type' in proxy
+  );
+}
+
 function buildRProxyResponse(ptr: Rptr, res: RProxy | ImplicitTypes | Function): RProxyResponse {
   if (typeof res === 'function') {
     // Inform the main thread the result is a function
     return { obj: ptr, converted: false, function: true };
-  } else if (typeof res !== 'object') {
-    // Return a primitive value
-    return { obj: res, converted: true };
-  } else if ('convertImplicitly' in res) {
+  } else if (isRProxy(res)) {
     // This is an RProxy object, convert it if required then return
     return { obj: res.convertImplicitly ? res.toJs() : res.ptr, converted: res.convertImplicitly };
   } else {
@@ -114,11 +117,11 @@ function proxyCall(ptr: Rptr, callList: Array<RCallInfo>): RProxyResponse {
         // Call the function directly
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         r = r(...callInfo.args);
-      } else if (typeof r === 'object' && '_call' in r) {
+      } else if (isRProxy(r)) {
         // This is an RProxy object, so run the _call method
         r = r._call(callInfo.args);
       }
-    } else if (typeof callInfo.name === 'string' && typeof r === 'object' && '_call' in r) {
+    } else if (isRProxy(r)) {
       /* The next requested method in the call list is a property of an
          RProxy object, so grab the property and then execute it.
       */

@@ -1,4 +1,4 @@
-import type { Module } from './utils';
+import type { Module, Rptr } from './utils';
 
 declare let Module: Module;
 
@@ -48,7 +48,8 @@ export type ImplicitTypes =
   | ArrayBufferView
   | Array<ImplicitTypes>
   | Map<ImplicitTypes, ImplicitTypes>
-  | Set<ImplicitTypes>;
+  | Set<ImplicitTypes>
+  | { [key: string]: ImplicitTypes };
 
 export class RProxy {
   ptr: number;
@@ -56,10 +57,13 @@ export class RProxy {
     this.ptr = ptr;
   }
   get [Symbol.toStringTag](): string {
-    return `RProxy:${this.type}`;
+    return `RProxy:${this.typeName}`;
   }
-  get type(): string {
-    return SEXPTYPE[Module._TYPEOF(this.ptr)];
+  get type(): SEXPTYPE {
+    return Module._TYPEOF(this.ptr);
+  }
+  get typeName(): string {
+    return SEXPTYPE[this.type];
   }
   get convertImplicitly(): boolean {
     return false;
@@ -89,8 +93,15 @@ class RProxyNil extends RProxy {
 }
 
 class RProxySymbol extends RProxy {
-  get printname(): RProxy {
-    return wrapRSexp(Module._PRINTNAME(this.ptr));
+  toJs(): ImplicitTypes {
+    return {
+      printname: this.printname.toJs(),
+      // symvalue: this.symvalue.toJs()
+      internal: this.internal.toJs(),
+    };
+  }
+  get printname(): RProxyChar {
+    return wrapRSexp(Module._PRINTNAME(this.ptr)) as RProxyChar;
   }
   get symvalue(): RProxy {
     return wrapRSexp(Module._SYMVALUE(this.ptr));
@@ -101,6 +112,15 @@ class RProxySymbol extends RProxy {
 }
 
 class RProxyPairlist extends RProxy {
+  toJs(): { [key: string]: ImplicitTypes } {
+    const d: { [key: string]: ImplicitTypes } = {};
+    let v: RProxy = wrapRSexp(Module._CAR(this.ptr));
+    for (let next = this.ptr; Module._TYPEOF(next) !== SEXPTYPE.NILSXP; next = Module._CDR(next)) {
+      v = wrapRSexp(Module._CAR(next));
+      d[(wrapRSexp(Module._TAG(next)) as RProxySymbol).printname.toJs()] = v.toJs();
+    }
+    return d;
+  }
   get car(): RProxy {
     return wrapRSexp(Module._CAR(this.ptr));
   }
@@ -129,6 +149,18 @@ class RProxyClosure extends RProxy {
 class RProxyVector extends RProxy {
   get length(): number {
     return Module._LENGTH(this.ptr);
+  }
+  _valAtIdx(idx: number) {
+    return wrapRSexp(Module._VECTOR_ELT(this.ptr, idx));
+  }
+  toJs(): ImplicitTypes {
+    const list: { [keys: string | number]: ImplicitTypes } = {};
+    for (let idx = 0; idx < this.length; idx++) {
+      const attrs = (this.attrs as RProxyPairlist).toJs();
+      const listIdx = 'names' in attrs ? (attrs['names'] as Array<string>)[idx] : idx + 1;
+      list[listIdx] = this._valAtIdx(idx).toJs();
+    }
+    return list;
   }
 }
 
@@ -173,8 +205,18 @@ class RProxyInt extends RProxyVector {
 }
 
 class RProxyReal extends RProxyVector {
-  toJs(): number | ArrayBufferView {
-    return this.value;
+  toJs(): number | ArrayBufferView | { [keys: string | number]: ImplicitTypes } {
+    if (this.attrs.isNil) {
+      return this.value;
+    } else {
+      const list: { [keys: string | number]: ImplicitTypes } = {};
+      for (let idx = 0; idx < this.length; idx++) {
+        const attrs = (this.attrs as RProxyPairlist).toJs();
+        const listIdx = 'names' in attrs ? (attrs['names'] as Array<string>)[idx] : idx + 1;
+        list[listIdx] = getValue(Module._REAL(this.ptr) + 8 * idx, 'double');
+      }
+      return list;
+    }
   }
   get value(): number | ArrayBufferView {
     if (this.length === 1) {
@@ -261,6 +303,7 @@ function getRProxyClass(type: SEXPTYPE): typeof RProxy {
   const typeClasses: { [key: number]: typeof RProxy } = {
     [SEXPTYPE.NILSXP]: RProxyNil,
     [SEXPTYPE.LISTSXP]: RProxyPairlist,
+    [SEXPTYPE.VECSXP]: RProxyVector,
     [SEXPTYPE.CLOSXP]: RProxyClosure,
     [SEXPTYPE.ENVSXP]: RProxyEnv,
     [SEXPTYPE.LGLSXP]: RProxyLogical,

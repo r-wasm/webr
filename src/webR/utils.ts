@@ -59,6 +59,7 @@ export interface Module extends EmscriptenModule {
   _CDR: (ptr: Rptr) => Rptr;
   _TAG: (ptr: Rptr) => Rptr;
   _STRING_ELT: (ptr: Rptr, idx: number) => Rptr;
+  _VECTOR_ELT: (ptr: Rptr, idx: number) => Rptr;
   // TODO: Namespace all webR properties
   webr: {
     readConsole: () => number;
