@@ -1,65 +1,63 @@
 import { ChannelMain } from './chan/channel';
 import { Message } from './chan/message';
-import { FSNode, WebROptions, RProxyResponse, Rptr, RCallInfo } from './utils';
-import { ImplicitTypes, RProxy } from './sexp';
+import { FSNode, WebROptions } from './utils';
+import { RSexpObj, RawTypes, RSexp } from './sexp';
 
-class RProxyMain extends Function {
-  ptr: Rptr;
-  constructor(ptr: Rptr, handler: ProxyHandler<any>) {
-    super();
-    this.ptr = ptr;
-    return new Proxy(this, handler) as RProxyMain;
-  }
+type Promisify<T> = T extends Promise<unknown> ? T : Promise<T>;
+type RemoteProperty<T> = T extends Function | RSexp ? RProxy : Promisify<T>;
+type RProxy = { [P in keyof RSexp]: RemoteProperty<RSexp[P]> };
+
+function createRProxy(
+  chan: ChannelMain,
+  target: RSexpObj | Function,
+  path: (string | number | symbol)[] = []
+): RProxy {
+  const proxy = new Proxy(target, {
+    get: (target: RSexpObj & Function, prop: string | number | symbol) => {
+      if (prop === 'then') {
+        if (path.length === 0 && !target.raw) {
+          return { then: () => proxy };
+        }
+        const r = chan
+          .request({
+            type: 'getRSexp',
+            data: {
+              rObj: { obj: target.obj, raw: target.raw },
+              path: path.map((p) => p.toString()),
+              args: false,
+            },
+          })
+          .then((r: RSexpObj) => {
+            const callableTarget = function () {};
+            Object.assign(callableTarget, { ...r });
+            return r.raw ? r.obj : createRProxy(chan, callableTarget);
+          });
+        return r.then.bind(r);
+      }
+      return createRProxy(chan, target, [...path, prop]);
+    },
+    apply(target: RSexpObj & Function, _thisArg, args: RawTypes[]) {
+      return chan
+        .request({
+          type: 'getRSexp',
+          data: {
+            rObj: { obj: target.obj, raw: target.raw },
+            path: path.map((p) => p.toString()),
+            args: args,
+          },
+        })
+        .then((r: RSexpObj) => {
+          const callableTarget = function () {};
+          Object.assign(callableTarget, { ...r });
+          return r.raw ? r.obj : createRProxy(chan, callableTarget);
+        });
+    },
+  });
+  return proxy as unknown as RProxy;
 }
 
 export class WebR {
   #chan;
-
-  #createRProxyCall(
-    target: RProxyMain,
-    prop: string | symbol,
-    callList: Array<RCallInfo> = []
-  ): (...args: Array<unknown>) => Promise<any> {
-    return async (...args: Array<unknown>) => {
-      callList.push({ name: prop, args: args });
-      const r = (await this.#chan.request({
-        type: 'proxyCall',
-        data: {
-          ptr: target.ptr,
-          callList: callList,
-        },
-      })) as RProxyResponse;
-      if (r.converted) {
-        return r.obj;
-      }
-      if (r.function) {
-        return this.#createRProxyCall(target, '_call', callList);
-      }
-      return this.#createRProxyMain(r.obj as Rptr);
-    };
-  }
-
-  #createRProxyMain(rSexpPtr: Rptr): RProxyMain {
-    const sexpHandlers = {
-      get: async (target: RProxyMain, prop: keyof RProxy): Promise<any> => {
-        const r = (await this.#chan.request({
-          type: 'proxyProp',
-          data: { ptr: target.ptr, prop: prop },
-        })) as RProxyResponse;
-        if (r.converted) {
-          return r.obj;
-        }
-        if (r.function) {
-          return this.#createRProxyCall(target, prop);
-        }
-        return this.#createRProxyMain(r.obj as Rptr);
-      },
-      apply: (target: RProxyMain, _: any, args: Array<unknown>) => {
-        return this.#createRProxyCall(target, '_call')(...args);
-      },
-    };
-    return new RProxyMain(rSexpPtr, sexpHandlers);
-  }
 
   constructor(options: WebROptions = {}) {
     this.#chan = new ChannelMain('./webr-worker.js', options);
@@ -90,17 +88,9 @@ export class WebR {
   async getFSNode(path: string): Promise<FSNode> {
     return (await this.#chan.request({ type: 'getFSNode', data: { path: path } })) as FSNode;
   }
-  async evalRCode(code: string): Promise<RProxyMain | ImplicitTypes> {
-    const r = (await this.#chan.request({
-      type: 'evalRCode',
-      data: { code: code },
-    })) as RProxyResponse;
-    if (r.converted) {
-      return r.obj;
-    }
-    if (typeof r.obj === 'number') {
-      return this.#createRProxyMain(r.obj);
-    }
-    throw Error(`Unexpected response received from from evalRCode: ${typeof r.obj}`);
+  evalRCode(code: string): RProxy {
+    const callableTarget = function () {};
+    Object.assign(callableTarget, { obj: code, raw: true });
+    return createRProxy(this.#chan, callableTarget);
   }
 }

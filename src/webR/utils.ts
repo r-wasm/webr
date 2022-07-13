@@ -1,4 +1,4 @@
-import { ImplicitTypes } from './sexp';
+import { RPtr } from './sexp';
 
 export type FSNode = {
   id: number;
@@ -16,17 +16,6 @@ export interface WebROptions {
   homedir?: string;
 }
 
-export type Rptr = number;
-export type RProxyResponse = {
-  obj: Rptr | ImplicitTypes;
-  converted: boolean;
-  function?: boolean;
-};
-export type RCallInfo = {
-  name: string | symbol;
-  args: Array<unknown>;
-};
-
 export type XHRResponse = {
   status: number;
   response: string | ArrayBuffer;
@@ -42,24 +31,24 @@ export interface Module extends EmscriptenModule {
   downloadFileContent: (URL: string, headers: Array<string>) => XHRResponse;
   _evalRCode: (code: number, errPtr: number) => number;
   // Utility functions from Rinternals.h
-  _LENGTH: (ptr: Rptr) => Rptr;
-  _TYPEOF: (ptr: Rptr) => Rptr;
-  _INTEGER: (ptr: Rptr) => Rptr;
-  _REAL: (ptr: Rptr) => Rptr;
-  _COMPLEX: (ptr: Rptr) => Rptr;
-  _R_CHAR: (ptr: Rptr) => Rptr;
-  _RAW: (ptr: Rptr) => Rptr;
-  _LOGICAL: (ptr: Rptr) => Rptr;
-  _FRAME: (ptr: Rptr) => Rptr;
-  _ATTRIB: (ptr: Rptr) => Rptr;
-  _PRINTNAME: (ptr: Rptr) => Rptr;
-  _SYMVALUE: (ptr: Rptr) => Rptr;
-  _INTERNAL: (ptr: Rptr) => Rptr;
-  _CAR: (ptr: Rptr) => Rptr;
-  _CDR: (ptr: Rptr) => Rptr;
-  _TAG: (ptr: Rptr) => Rptr;
-  _STRING_ELT: (ptr: Rptr, idx: number) => Rptr;
-  _VECTOR_ELT: (ptr: Rptr, idx: number) => Rptr;
+  _LENGTH: (ptr: RPtr) => RPtr;
+  _TYPEOF: (ptr: RPtr) => RPtr;
+  _INTEGER: (ptr: RPtr) => RPtr;
+  _REAL: (ptr: RPtr) => RPtr;
+  _COMPLEX: (ptr: RPtr) => RPtr;
+  _R_CHAR: (ptr: RPtr) => RPtr;
+  _RAW: (ptr: RPtr) => RPtr;
+  _LOGICAL: (ptr: RPtr) => RPtr;
+  _FRAME: (ptr: RPtr) => RPtr;
+  _ATTRIB: (ptr: RPtr) => RPtr;
+  _PRINTNAME: (ptr: RPtr) => RPtr;
+  _SYMVALUE: (ptr: RPtr) => RPtr;
+  _INTERNAL: (ptr: RPtr) => RPtr;
+  _CAR: (ptr: RPtr) => RPtr;
+  _CDR: (ptr: RPtr) => RPtr;
+  _TAG: (ptr: RPtr) => RPtr;
+  _STRING_ELT: (ptr: RPtr, idx: number) => RPtr;
+  _VECTOR_ELT: (ptr: RPtr, idx: number) => RPtr;
   // TODO: Namespace all webR properties
   webr: {
     readConsole: () => number;

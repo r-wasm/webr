@@ -1,4 +1,4 @@
-import type { Module, Rptr } from './utils';
+import type { Module } from './utils';
 
 declare let Module: Module;
 
@@ -29,35 +29,49 @@ enum SEXPTYPE {
   S4SXP,
 }
 
+export type RPtr = number;
+
+type RSexpRaw = {
+  obj: RawTypes;
+  raw?: true;
+};
+type RSexpPtr = {
+  obj: RPtr;
+  raw?: false;
+};
+export type RSexpObj = RSexpRaw | RSexpPtr;
+
+export type RCallInfo = {
+  name: string | symbol;
+  args: Array<unknown>;
+};
+
 type Complex = {
   re: number;
   im: number;
 };
 
-export type ImplicitTypes =
+export type RawTypes =
   | number
   | string
   | boolean
   | undefined
-  | Date
-  | Number
-  | Boolean
-  | String
   | Complex
+  | Error
   | ArrayBuffer
   | ArrayBufferView
-  | Array<ImplicitTypes>
-  | Map<ImplicitTypes, ImplicitTypes>
-  | Set<ImplicitTypes>
-  | { [key: string]: ImplicitTypes };
+  | Array<RawTypes>
+  | Map<RawTypes, RawTypes>
+  | Set<RawTypes>
+  | { [key: string]: RawTypes };
 
-export class RProxy {
-  ptr: number;
+export class RSexp {
+  ptr: RPtr;
   constructor(ptr: number) {
     this.ptr = ptr;
   }
   get [Symbol.toStringTag](): string {
-    return `RProxy:${this.typeName}`;
+    return `RSexp:${this.typeName}`;
   }
   get type(): SEXPTYPE {
     return Module._TYPEOF(this.ptr);
@@ -68,23 +82,23 @@ export class RProxy {
   get convertImplicitly(): boolean {
     return false;
   }
-  get attrs(): RProxy {
+  get attrs(): RSexp {
     return wrapRSexp(Module._ATTRIB(this.ptr));
   }
   get isNil(): boolean {
     return Module._TYPEOF(this.ptr) === SEXPTYPE.NILSXP;
   }
-  toJs(): ImplicitTypes {
+  toJs(): RawTypes {
     throw new TypeError('JS conversion for this R object is not supported.');
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _call(_args: Array<any>): RProxy {
+  _call(_args: Array<any>): RSexp {
     throw new Error('This R object cannot be called.');
   }
 }
 
-class RProxyNil extends RProxy {
-  toJs(): ImplicitTypes {
+class RSexpNil extends RSexp {
+  toJs(): RawTypes {
     return undefined;
   }
   get convertImplicitly(): boolean {
@@ -92,48 +106,48 @@ class RProxyNil extends RProxy {
   }
 }
 
-class RProxySymbol extends RProxy {
-  toJs(): ImplicitTypes {
+class RSexpSymbol extends RSexp {
+  toJs(): RawTypes {
     return {
       printname: this.printname.toJs(),
       // symvalue: this.symvalue.toJs()
       internal: this.internal.toJs(),
     };
   }
-  get printname(): RProxyChar {
-    return wrapRSexp(Module._PRINTNAME(this.ptr)) as RProxyChar;
+  get printname(): RSexpChar {
+    return wrapRSexp(Module._PRINTNAME(this.ptr)) as RSexpChar;
   }
-  get symvalue(): RProxy {
+  get symvalue(): RSexp {
     return wrapRSexp(Module._SYMVALUE(this.ptr));
   }
-  get internal(): RProxy {
+  get internal(): RSexp {
     return wrapRSexp(Module._INTERNAL(this.ptr));
   }
 }
 
-class RProxyPairlist extends RProxy {
-  toJs(): { [key: string]: ImplicitTypes } {
-    const d: { [key: string]: ImplicitTypes } = {};
-    let v: RProxy = wrapRSexp(Module._CAR(this.ptr));
+class RSexpPairlist extends RSexp {
+  toJs(): { [key: string]: RawTypes } {
+    const d: { [key: string]: RawTypes } = {};
+    let v: RSexp = wrapRSexp(Module._CAR(this.ptr));
     for (let next = this.ptr; Module._TYPEOF(next) !== SEXPTYPE.NILSXP; next = Module._CDR(next)) {
       v = wrapRSexp(Module._CAR(next));
-      d[(wrapRSexp(Module._TAG(next)) as RProxySymbol).printname.toJs()] = v.toJs();
+      d[(wrapRSexp(Module._TAG(next)) as RSexpSymbol).printname.toJs()] = v.toJs();
     }
     return d;
   }
-  get car(): RProxy {
+  get car(): RSexp {
     return wrapRSexp(Module._CAR(this.ptr));
   }
-  get cdr(): RProxy {
+  get cdr(): RSexp {
     return wrapRSexp(Module._CDR(this.ptr));
   }
-  get tag(): RProxy {
+  get tag(): RSexp {
     return wrapRSexp(Module._TAG(this.ptr));
   }
 }
 
-class RProxyClosure extends RProxy {
-  _call(args: Array<any>): RProxy {
+class RSexpClosure extends RSexp {
+  _call(args: Array<any>): RSexp {
     // TODO: This needs to be tidied up and be made to work with other argument types
     let call = Module._Rf_allocVector(SEXPTYPE.LANGSXP, args.length + 1);
     let c = call;
@@ -146,17 +160,17 @@ class RProxyClosure extends RProxy {
   }
 }
 
-class RProxyVector extends RProxy {
+class RSexpVector extends RSexp {
   get length(): number {
     return Module._LENGTH(this.ptr);
   }
   _valAtIdx(idx: number) {
     return wrapRSexp(Module._VECTOR_ELT(this.ptr, idx));
   }
-  toJs(): ImplicitTypes {
-    const list: { [keys: string | number]: ImplicitTypes } = {};
+  toJs(): RawTypes {
+    const list: { [keys: string | number]: RawTypes } = {};
     for (let idx = 0; idx < this.length; idx++) {
-      const attrs = (this.attrs as RProxyPairlist).toJs();
+      const attrs = (this.attrs as RSexpPairlist).toJs();
       const listIdx = 'names' in attrs ? (attrs['names'] as Array<string>)[idx] : idx + 1;
       list[listIdx] = this._valAtIdx(idx).toJs();
     }
@@ -165,7 +179,7 @@ class RProxyVector extends RProxy {
 }
 
 type logical = boolean | 'NA';
-class RProxyLogical extends RProxyVector {
+class RSexpLogical extends RSexpVector {
   toJs(): logical | Array<logical> {
     const valAtIdx = (idx: number) => {
       const val = getValue(Module._LOGICAL(this.ptr) + 4 * idx, 'i32');
@@ -187,7 +201,7 @@ class RProxyLogical extends RProxyVector {
   }
 }
 
-class RProxyInt extends RProxyVector {
+class RSexpInt extends RSexpVector {
   toJs(): number | ArrayBufferView {
     if (this.length === 1) {
       return getValue(Module._INTEGER(this.ptr), 'i32');
@@ -204,14 +218,14 @@ class RProxyInt extends RProxyVector {
   }
 }
 
-class RProxyReal extends RProxyVector {
-  toJs(): number | ArrayBufferView | { [keys: string | number]: ImplicitTypes } {
+class RSexpReal extends RSexpVector {
+  toJs(): number | ArrayBufferView | { [keys: string | number]: RawTypes } {
     if (this.attrs.isNil) {
       return this.value;
     } else {
-      const list: { [keys: string | number]: ImplicitTypes } = {};
+      const list: { [keys: string | number]: RawTypes } = {};
       for (let idx = 0; idx < this.length; idx++) {
-        const attrs = (this.attrs as RProxyPairlist).toJs();
+        const attrs = (this.attrs as RSexpPairlist).toJs();
         const listIdx = 'names' in attrs ? (attrs['names'] as Array<string>)[idx] : idx + 1;
         list[listIdx] = getValue(Module._REAL(this.ptr) + 8 * idx, 'double');
       }
@@ -234,7 +248,7 @@ class RProxyReal extends RProxyVector {
   }
 }
 
-class RProxyComplex extends RProxyVector {
+class RSexpComplex extends RSexpVector {
   toJs(): Complex | Array<Complex> {
     const valAtIdx = (idx: number) => {
       return {
@@ -253,7 +267,7 @@ class RProxyComplex extends RProxyVector {
   }
 }
 
-class RProxyChar extends RProxy {
+class RSexpChar extends RSexp {
   toJs(): string {
     // eslint-disable-next-line new-cap
     return UTF8ToString(Module._R_CHAR(this.ptr));
@@ -263,7 +277,7 @@ class RProxyChar extends RProxy {
   }
 }
 
-class RProxyStr extends RProxyVector {
+class RSexpStr extends RSexpVector {
   toJs(): string | Array<string> {
     const valAtIdx = (idx: number) => {
       // eslint-disable-next-line new-cap
@@ -280,7 +294,7 @@ class RProxyStr extends RProxyVector {
   }
 }
 
-class RProxyRaw extends RProxyVector {
+class RSexpRawdata extends RSexpVector {
   toJs(): Uint8Array {
     const arrView = Module.HEAPU8.subarray(
       Module._RAW(this.ptr),
@@ -293,35 +307,35 @@ class RProxyRaw extends RProxyVector {
   }
 }
 
-class RProxyEnv extends RProxy {
-  get frame(): RProxy {
+class RSexpEnv extends RSexp {
+  get frame(): RSexp {
     return wrapRSexp(Module._FRAME(this.ptr));
   }
 }
 
-function getRProxyClass(type: SEXPTYPE): typeof RProxy {
-  const typeClasses: { [key: number]: typeof RProxy } = {
-    [SEXPTYPE.NILSXP]: RProxyNil,
-    [SEXPTYPE.LISTSXP]: RProxyPairlist,
-    [SEXPTYPE.VECSXP]: RProxyVector,
-    [SEXPTYPE.CLOSXP]: RProxyClosure,
-    [SEXPTYPE.ENVSXP]: RProxyEnv,
-    [SEXPTYPE.LGLSXP]: RProxyLogical,
-    [SEXPTYPE.INTSXP]: RProxyInt,
-    [SEXPTYPE.REALSXP]: RProxyReal,
-    [SEXPTYPE.CPLXSXP]: RProxyComplex,
-    [SEXPTYPE.STRSXP]: RProxyStr,
-    [SEXPTYPE.RAWSXP]: RProxyRaw,
-    [SEXPTYPE.SYMSXP]: RProxySymbol,
-    [SEXPTYPE.CHARSXP]: RProxyChar,
+function getRSexpClass(type: SEXPTYPE): typeof RSexp {
+  const typeClasses: { [key: number]: typeof RSexp } = {
+    [SEXPTYPE.NILSXP]: RSexpNil,
+    [SEXPTYPE.LISTSXP]: RSexpPairlist,
+    [SEXPTYPE.VECSXP]: RSexpVector,
+    [SEXPTYPE.CLOSXP]: RSexpClosure,
+    [SEXPTYPE.ENVSXP]: RSexpEnv,
+    [SEXPTYPE.LGLSXP]: RSexpLogical,
+    [SEXPTYPE.INTSXP]: RSexpInt,
+    [SEXPTYPE.REALSXP]: RSexpReal,
+    [SEXPTYPE.CPLXSXP]: RSexpComplex,
+    [SEXPTYPE.STRSXP]: RSexpStr,
+    [SEXPTYPE.RAWSXP]: RSexpRawdata,
+    [SEXPTYPE.SYMSXP]: RSexpSymbol,
+    [SEXPTYPE.CHARSXP]: RSexpChar,
   };
   if (type in typeClasses) {
     return typeClasses[type];
   }
-  throw new TypeError(`RProxy SEXP type ${SEXPTYPE[type]} has not yet been implemented.`);
+  throw new TypeError(`RSexp SEXP type ${SEXPTYPE[type]} has not yet been implemented.`);
 }
 
-export function wrapRSexp(ptr: number): RProxy {
+export function wrapRSexp(ptr: number): RSexp {
   const type = Module._TYPEOF(ptr);
-  return new (getRProxyClass(type))(ptr);
+  return new (getRSexpClass(type))(ptr);
 }

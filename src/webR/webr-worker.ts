@@ -2,8 +2,8 @@ import { BASE_URL, PKG_BASE_URL } from './config';
 import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
-import { ImplicitTypes, RProxy, wrapRSexp } from './sexp';
-import { FSNode, WebROptions, Module, XHRResponse, Rptr, RProxyResponse, RCallInfo } from './utils';
+import { RawTypes, RSexp, wrapRSexp, RSexpObj } from './sexp';
+import { FSNode, WebROptions, Module, XHRResponse } from './utils';
 
 let initialised = false;
 
@@ -65,16 +65,13 @@ function inputOrDispatch(chan: ChannelWorker): string {
           case 'getFSNode':
             write(getFSNode(reqMsg.data.path as string));
             continue;
-          case 'evalRCode': {
-            write(evalRCode(reqMsg.data.code as string));
-            continue;
-          }
-          case 'proxyProp': {
-            write(proxyProp(reqMsg.data.ptr as Rptr, reqMsg.data.prop as keyof RProxy));
-            continue;
-          }
-          case 'proxyCall': {
-            write(proxyCall(reqMsg.data.ptr as Rptr, reqMsg.data.callList as Array<RCallInfo>));
+          case 'getRSexp': {
+            const data = reqMsg.data as {
+              rObj: RSexpObj;
+              path: string[];
+              args: RawTypes[] | undefined;
+            };
+            write(getRSexp(data.rObj, data.path, data.args));
             continue;
           }
           default:
@@ -88,79 +85,80 @@ function inputOrDispatch(chan: ChannelWorker): string {
   }
 }
 
-function isRProxy(proxy: any): proxy is RProxy {
-  return (
-    typeof proxy === 'object' && '_call' in proxy && 'convertImplicitly' in proxy && 'type' in proxy
-  );
+function isRSexp(value: any): value is RSexp {
+  return typeof value === 'object' && 'convertImplicitly' in value && 'type' in value;
 }
 
-function buildRProxyResponse(ptr: Rptr, res: RProxy | ImplicitTypes | Function): RProxyResponse {
-  if (typeof res === 'function') {
-    // Inform the main thread the result is a function
-    return { obj: ptr, converted: false, function: true };
-  } else if (isRProxy(res)) {
-    // This is an RProxy object, convert it if required then return
-    return { obj: res.convertImplicitly ? res.toJs() : res.ptr, converted: res.convertImplicitly };
-  } else {
-    // Not a RProxy object, return it directly
-    return { obj: res, converted: true };
-  }
-}
-
-function proxyCall(ptr: Rptr, callList: Array<RCallInfo>): RProxyResponse {
-  const rSexp = wrapRSexp(ptr);
-  let r: RProxy | ImplicitTypes | Function = rSexp;
-  let callInfo = undefined;
-  while ((callInfo = callList.shift())) {
-    if (callInfo.name === '_call') {
-      if (typeof r === 'function') {
-        // Call the function directly
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        r = r(...callInfo.args);
-      } else if (isRProxy(r)) {
-        // This is an RProxy object, so run the _call method
-        r = r._call(callInfo.args);
-      }
-    } else if (isRProxy(r)) {
-      /* The next requested method in the call list is a property of an
-         RProxy object, so grab the property and then execute it.
-      */
-      r = (
-        r[callInfo.name as keyof RProxy] as (...a: Array<any>) => RProxy | ImplicitTypes | Function
-      )(...callInfo.args);
+/**
+ * Get a RSexp object, optionally evaluating and/or calling the object where required
+ * Returns a RSexpObj containing either a reference to the SEXP object in WASM memory
+ * or the object repressented in an equivalent JS form.
+ *
+ * @param {RSexpObj}  target - A reference to the R SEXP object, or raw R code
+ * @param {string[]} [path] - A list of properties to iteratively navigate
+ * @param {RawTypes[]} [args] - A list of arguments to call the resulting object with
+ * @return {RSexpObj} The resulting SEXP object, either as a reference or raw JS
+ */
+function getRSexp(target: RSexpObj, path: string[], args?: RawTypes[]): RSexpObj {
+  let ret: RSexpObj = { obj: undefined, raw: true };
+  let root: RSexp;
+  try {
+    // If the original target was a raw R code string, evaluate it first
+    if (target.raw === true && typeof target.obj === 'string') {
+      root = evalRCode(target.obj);
+    } else if (target.raw === false) {
+      root = wrapRSexp(target.obj);
     } else {
-      throw new Error(
-        `An error occured executing the call list for RProxy object: ${rSexp.toString()}`
-      );
+      throw new Error('Proxy target object must be RPtr or code string');
+    }
+
+    // Navigate the property array and grab the required RSexp objects
+    // @ts-expect-error ts(7053)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    let res = path.reduce((obj, prop) => obj[prop], root) as RawTypes | RSexp | Function;
+    // @ts-expect-error ts(7053)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    const parent = path.slice(0, -1).reduce((obj, prop) => obj[prop], root) as RawTypes | RSexp;
+
+    // If requested, call the resulting object with the provided arguments
+    if (typeof res === 'function' && args) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      res = res.apply(parent, args);
+    } else if (isRSexp(res) && args) {
+      res = res._call.call(parent, args);
+    }
+
+    // Return a reference to the result object back to the main thread,
+    // converting to JS implicitly where requested
+    if (isRSexp(res) && res.convertImplicitly) {
+      ret = { obj: res.toJs(), raw: true };
+    } else if (isRSexp(res)) {
+      ret = { obj: res.ptr, raw: false };
+    } else if (!(typeof res === 'function')) {
+      ret = { obj: res, raw: true };
+    } else {
+      throw Error('Returned property cannot be transferred to main thread');
+    }
+  } catch (e) {
+    // Report the worker error back to the main thread
+    if (e instanceof Error) {
+      ret = { obj: e, raw: true };
     }
   }
-  return buildRProxyResponse(ptr, r);
+  return ret;
 }
 
-function proxyProp(ptr: Rptr, prop: keyof RProxy): RProxyResponse {
-  const rSexp = wrapRSexp(ptr);
-  if (prop in rSexp) {
-    const r = rSexp[prop];
-    return buildRProxyResponse(ptr, r);
-  }
-  return { obj: undefined, converted: true };
-}
-
-function evalRCode(code: string): RProxyResponse {
+function evalRCode(code: string): RSexp {
   const str = allocateUTF8(code);
   const err = allocate(1, 'i32', 0);
-  const resultptr = Module._evalRCode(str, err);
+  const resultPtr = Module._evalRCode(str, err);
   const errValue = getValue(err, 'i32');
   if (errValue) {
     throw Error(`An error occured evaluating R code (${errValue})`);
   }
   Module._free(str);
   Module._free(err);
-  const rSexp = wrapRSexp(resultptr);
-  if (rSexp.convertImplicitly) {
-    return { obj: rSexp.toJs(), converted: rSexp.convertImplicitly };
-  }
-  return { obj: resultptr, converted: rSexp.convertImplicitly };
+  return wrapRSexp(resultPtr);
 }
 
 function getFSNode(path: string): FSNode {
