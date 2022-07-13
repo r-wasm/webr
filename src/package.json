@@ -4,7 +4,6 @@
   },
   "dependencies": {
     "@types/emscripten": "^1.39.6",
-    "comlink": "^4.3.1",
     "jquery": "^3.6.0",
     "jquery.terminal": "^2.33.3",
     "jstree": "^3.3.12"

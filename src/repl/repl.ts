@@ -1,6 +1,5 @@
 import { initFSTree, FSTreeInterface, JSTreeNode, FSNode } from './fstree';
-import { WebRBackend } from '../webR/webR';
-import { wrap } from 'comlink';
+import { WebR } from '../webR/webr-main';
 
 import $ from 'jquery';
 import 'jquery.terminal/css/jquery.terminal.css';
@@ -19,22 +18,7 @@ let FSTree: FSTreeInterface;
 const term = $('#term').terminal(
   (command) => {
     term.pause();
-    (async () => {
-      const reg = /(library|require)\(['"]?(.*?)['"]?\)/g;
-      let res;
-      const packages = [];
-      while ((res = reg.exec(command)) !== null) {
-        packages.push(res[2]);
-      }
-      try {
-        await webR.loadPackages(packages);
-      } catch (e) {
-        console.log(
-          'An error occured loading one or more packages. Perhaps they do not exist in webR-ports?'
-        );
-      }
-      await webR.readInput(command);
-    })();
+    webR.writeConsole(command + '\n');
   },
   {
     prompt: '',
@@ -73,19 +57,18 @@ function FSTreeData(
   }
 }
 
-const worker = new Worker('./webR.js');
-const webR = wrap(worker) as WebRBackend;
+const webR = new WebR({
+  RArgs: [],
+  REnv: {
+    R_HOME: '/usr/lib/R',
+    R_ENABLE_JIT: '0',
+    R_DEFAULT_DEVICE: 'canvas',
+    COLORTERM: 'truecolor',
+  },
+});
 
 (async () => {
-  await webR.init({
-    RArgs: [],
-    REnv: {
-      R_HOME: '/usr/lib/R',
-      R_ENABLE_JIT: '0',
-      R_DEFAULT_DEVICE: 'canvas',
-      COLORTERM: 'truecolor',
-    },
-  });
+  await webR.init();
 
   term.clear();
 
@@ -166,30 +149,31 @@ const webR = wrap(worker) as WebRBackend;
     });
 
   for (;;) {
-    const output = await webR.readOutput();
+    const output = await webR.read();
+
     switch (output.type) {
       case 'stdout':
-        term.echo(output.text, { exec: false });
+        term.echo(output.data, { exec: false });
         break;
       case 'stderr':
-        term.error(output.text);
+        term.error(output.data);
         break;
       case 'prompt':
-        term.set_prompt(output.text);
+        term.set_prompt(output.data);
         FSTree.refresh();
         term.resume();
         break;
       case 'packageLoading':
-        console.log(`Loading package: ${output.text}`);
+        console.log(`Loading package: ${output.data}`);
         FSTree.refresh();
         break;
       case 'canvasExec':
         // eslint-disable-next-line @typescript-eslint/no-implied-eval
-        Function(`document.getElementById('plot-canvas').getContext('2d').${output.text}`)();
+        Function(`document.getElementById('plot-canvas').getContext('2d').${output.data}`)();
         break;
       default:
         console.error(`Unimplemented output type: ${output.type}`);
-        console.error(output.text);
+        console.error(output.data);
     }
   }
 })();

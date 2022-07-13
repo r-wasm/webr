@@ -4,7 +4,7 @@ DIST = $(WEBR_ROOT)/dist
 ROOT = $(abspath .)
 
 HTML_TEMPLATES = console.html repl.html
-ENTRY_POINTS = console/console.ts repl/repl.ts webR/webR.ts
+ENTRY_POINTS = console/console.ts repl/repl.ts webR/webr-worker.ts
 HTML_INDEX = repl.html
 
 TS_SOURCES = $(shell ls **/*.ts)
