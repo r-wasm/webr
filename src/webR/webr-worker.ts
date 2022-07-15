@@ -2,8 +2,18 @@ import { BASE_URL, PKG_BASE_URL } from './config';
 import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
-import { RawTypes, RSexp, wrapRSexp, RSexpObj, RSexpPtr } from './sexp';
 import { FSNode, WebROptions, Module, XHRResponse } from './utils';
+import {
+  RawTypes,
+  RSexp,
+  wrapRSexp,
+  RTargetObj,
+  RTargetType,
+  RRawObj,
+  RSexpPtr,
+  createRSexp,
+  RSexpNil,
+} from './sexp';
 
 let initialised = false;
 
@@ -65,22 +75,22 @@ function inputOrDispatch(chan: ChannelWorker): string {
           case 'getFSNode':
             write(getFSNode(reqMsg.data.path as string));
             continue;
-          case 'getRSexp': {
+          case 'getRObj': {
             const data = reqMsg.data as {
-              target: RSexpObj;
+              target: RTargetObj;
               path: string[];
               args: RawTypes[] | undefined;
             };
-            // If the target is a raw R code string, evaluate it first
-            if (data.target.raw && typeof data.target.obj === 'string') {
-              write(getRSexp(evalRCode(data.target.obj), data.path, data.args));
-            } else if (!data.target.raw) {
-              write(getRSexp(data.target, data.path, data.args));
-            } else {
-              throw new Error(
-                'The target argument of getRSexp must be a raw R code string or a RSexpPtr object'
-              );
-            }
+            write(getRObj(wrapRTargetObj(data.target), data.path, data.args));
+            continue;
+          }
+          case 'setRObj': {
+            const data = reqMsg.data as {
+              target: RTargetObj;
+              path: string[];
+              value: RTargetObj;
+            };
+            write(setRObj(wrapRTargetObj(data.target), data.path, wrapRTargetObj(data.value)));
             continue;
           }
           default:
@@ -99,29 +109,36 @@ function isRSexp(value: any): value is RSexp {
 }
 
 /**
- * Given an RSexpPtr reference, create an RSexp object and return the result of walking
- * the given path of properties, optionally calling a function at the end of the path.
+ * Given a root RSexp object, return the result of walking the given path of
+ * properties, optionally calling a function at the end of the path.
  *
- * Returns a RSexpObj containing either a reference to the resulting SEXP object in WASM
- * memory, or the object represented in an equivalent raw JS form.
+ * Returns a RTargetObj containing either a reference to the resulting SEXP
+ * object in WASM memory, or the object represented in an equivalent raw
+ * JS form.
  *
- * @param {RSexpPtr}  target - A reference to the R SEXP object
- * @param {string[]} [path] - A list of properties to iteratively navigate
- * @param {RawTypes[]} [args] - A list of arguments to call the resulting object with
- * @return {RSexpObj} The resulting SEXP object, either as a reference or raw JS
+ * @param {RSexp}  root The root R RSexp object
+ * @param {string[]} [path] List of properties to iteratively navigate
+ * @param {RawTypes[]} [args] List of arguments to call with
+ * @return {RTargetObj} The resulting R object
  */
-function getRSexp(target: RSexpPtr, path: string[], args?: RawTypes[]): RSexpObj {
-  let ret: RSexpObj = { obj: undefined, raw: true };
-  try {
-    const root = wrapRSexp(target.obj);
+function getRObj(root: RSexp, path: string[], args?: RawTypes[]): RTargetObj {
+  const getProp = (obj: RSexp, prop: string) => {
+    if (!isNaN(Number(prop))) {
+      return obj.getIdx(Number(prop));
+    } else if (prop.startsWith('$')) {
+      prop = prop.slice(1);
+      return obj.getDollar(prop);
+    }
+    // @ts-expect-error ts(7053)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return obj[prop];
+  };
 
+  let ret: RSexpPtr | RRawObj = { obj: undefined, type: RTargetType.RAW };
+  try {
     // Navigate the property array and grab the requested RSexp objects
-    // @ts-expect-error ts(7053)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    let res = path.reduce((obj, prop) => obj[prop], root) as RawTypes | RSexp | Function;
-    // @ts-expect-error ts(7053)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    const parent = path.slice(0, -1).reduce((obj, prop) => obj[prop], root) as RawTypes | RSexp;
+    let res = path.reduce(getProp, root) as RawTypes | RSexp | Function;
+    const parent = path.slice(0, -1).reduce(getProp, root) as RawTypes | RSexp;
 
     // If requested, call the resulting object with the provided arguments
     if (typeof res === 'function' && args) {
@@ -131,25 +148,54 @@ function getRSexp(target: RSexpPtr, path: string[], args?: RawTypes[]): RSexpObj
       res = res._call.call(parent, args);
     }
 
-    // Return a RSexpObj reference, or otherwise a raw JS object where
+    // Return a RSexpPtr reference, or otherwise a raw JS object where
     // implicit conversion is enabled
     if (isRSexp(res) && res.convertImplicitly) {
-      ret = { obj: res.toJs(), raw: true };
+      ret = { obj: res.toJs(), type: RTargetType.RAW };
     } else if (isRSexp(res)) {
-      ret = { obj: res.ptr, raw: false };
+      ret = { obj: res.ptr, type: RTargetType.SEXPPTR };
     } else if (!(typeof res === 'function')) {
-      ret = { obj: res, raw: true };
+      ret = { obj: res, type: RTargetType.RAW };
     } else {
-      throw Error('Returned property cannot be transferred to main thread');
+      throw Error('Resulting object cannot be transferred to main thread');
     }
   } catch (e) {
-    // If there is an error walking the property tree or otherwise, report
-    // the error back in replace of the requested object
-    if (e instanceof Error) {
-      ret = { obj: e, raw: true };
-    }
+    console.error(e);
   }
   return ret;
+}
+
+/**
+ * Given a root RSexp object, walk the given path of properties and set
+ * the value of the result, if possible.
+ *
+ * @param {RSexp}  root The root R RSexp object
+ * @param {string[]} [path] List of properties to iteratively navigate
+ * @param {RSexp} [value] The R RSexp object to set the value to
+ */
+function setRObj(root: RSexp, path: string[], value: RSexp) {
+  const getProp = (obj: RSexp, prop: string) => {
+    if (!isNaN(Number(prop))) {
+      return obj.getIdx(Number(prop));
+    } else if (prop.startsWith('$')) {
+      prop = prop.slice(1);
+      return obj.getDollar(prop);
+    }
+    // @ts-expect-error ts(7053)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return obj[prop];
+  };
+
+  try {
+    const parent = path.slice(0, -1).reduce(getProp, root);
+    let prop = path[path.length - 1];
+    if (prop.startsWith('$')) {
+      prop = prop.slice(1);
+    }
+    parent._set(prop, value);
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 function evalRCode(code: string): RSexpPtr {
@@ -162,7 +208,23 @@ function evalRCode(code: string): RSexpPtr {
   }
   Module._free(str);
   Module._free(err);
-  return { obj: resultPtr, raw: false };
+  return { obj: resultPtr, type: RTargetType.SEXPPTR };
+}
+
+function wrapRTargetObj(target: RTargetObj): RSexp {
+  try {
+    if (target.type === RTargetType.SEXPPTR) {
+      return wrapRSexp(target.obj);
+    } else if (target.type === RTargetType.CODE) {
+      const res: RSexpPtr = evalRCode(target.obj);
+      return wrapRSexp(res.obj);
+    } else {
+      return createRSexp(target);
+    }
+  } catch (e) {
+    console.error(e);
+    return new RSexpNil(0);
+  }
 }
 
 function getFSNode(path: string): FSNode {

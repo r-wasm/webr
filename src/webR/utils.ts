@@ -31,6 +31,8 @@ export interface Module extends EmscriptenModule {
   downloadFileContent: (URL: string, headers: Array<string>) => XHRResponse;
   _evalRCode: (code: number, errPtr: number) => number;
   // Utility functions from Rinternals.h
+  _Rf_ScalarReal: (n: number) => RPtr;
+  _Rf_mkString: (ptr: number) => RPtr;
   _LENGTH: (ptr: RPtr) => RPtr;
   _TYPEOF: (ptr: RPtr) => RPtr;
   _INTEGER: (ptr: RPtr) => RPtr;

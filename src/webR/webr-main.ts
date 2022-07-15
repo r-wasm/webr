@@ -2,6 +2,7 @@ import { ChannelMain } from './chan/channel';
 import { Message } from './chan/message';
 import { FSNode, WebROptions } from './utils';
 import { createRProxy, RProxy } from './proxy';
+import { RTargetType, RCodeObj } from './sexp';
 
 export class WebR {
   #chan;
@@ -37,6 +38,7 @@ export class WebR {
   }
 
   evalRCode(code: string): RProxy {
-    return createRProxy(this.#chan, { obj: code, raw: true });
+    const RObj: RCodeObj = { obj: code, type: RTargetType.CODE };
+    return createRProxy(this.#chan, RObj);
   }
 }

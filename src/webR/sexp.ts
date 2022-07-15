@@ -2,7 +2,7 @@ import type { Module } from './utils';
 
 declare let Module: Module;
 
-enum SEXPTYPE {
+enum SexpType {
   NILSXP = 0,
   SYMSXP,
   LISTSXP,
@@ -31,20 +31,25 @@ enum SEXPTYPE {
 
 export type RPtr = number;
 
-export type RSexpRaw = {
+export enum RTargetType {
+  CODE = 'CODE',
+  RAW = 'RAW',
+  SEXPPTR = 'SEXPPTR',
+}
+
+export type RCodeObj = {
+  obj: string;
+  type: RTargetType.CODE;
+};
+export type RRawObj = {
   obj: RawTypes;
-  raw: true;
+  type: RTargetType.RAW;
 };
 export type RSexpPtr = {
   obj: RPtr;
-  raw: false;
+  type: RTargetType.SEXPPTR;
 };
-export type RSexpObj = RSexpRaw | RSexpPtr;
-
-export type RCallInfo = {
-  name: string | symbol;
-  args: Array<unknown>;
-};
+export type RTargetObj = RCodeObj | RRawObj | RSexpPtr;
 
 type Complex = {
   re: number;
@@ -65,19 +70,32 @@ export type RawTypes =
   | Set<RawTypes>
   | { [key: string]: RawTypes };
 
+export function createRSexp(target: RTargetObj): RSexp {
+  if (typeof target.obj === 'number') {
+    const ptr = Module._Rf_ScalarReal(target.obj);
+    return new RSexpReal(ptr);
+  } else if (typeof target.obj === 'string') {
+    const str = allocateUTF8(target.obj);
+    const ptr = Module._Rf_mkString(str);
+    Module._free(str);
+    return new RSexpStr(ptr);
+  }
+  return new RSexpNil(0);
+}
+
 export class RSexp {
   ptr: RPtr;
-  constructor(ptr: number) {
+  constructor(ptr: RPtr) {
     this.ptr = ptr;
   }
   get [Symbol.toStringTag](): string {
     return `RSexp:${this.typeName}`;
   }
-  get type(): SEXPTYPE {
+  get type(): SexpType {
     return Module._TYPEOF(this.ptr);
   }
   get typeName(): string {
-    return SEXPTYPE[this.type];
+    return SexpType[this.type];
   }
   get convertImplicitly(): boolean {
     return false;
@@ -86,18 +104,26 @@ export class RSexp {
     return wrapRSexp(Module._ATTRIB(this.ptr));
   }
   get isNil(): boolean {
-    return Module._TYPEOF(this.ptr) === SEXPTYPE.NILSXP;
+    return Module._TYPEOF(this.ptr) === SexpType.NILSXP;
+  }
+  getDollar(prop: string): RSexp | RawTypes {
+    throw new Error('The $ operator is not yet supported for this R object');
+  }
+  getIdx(idx: number): RSexp | RawTypes {
+    throw new Error('This R object cannot be indexed');
   }
   toJs(): RawTypes {
-    throw new TypeError('JS conversion for this R object is not supported.');
+    throw new Error('JS conversion for this R object is not yet supported');
   }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _set(prop: string, value: RSexp) {
+    throw new Error('Setting this R object is not yet supported');
+  }
   _call(_args: Array<any>): RSexp {
-    throw new Error('This R object cannot be called.');
+    throw new Error('This R object cannot be called');
   }
 }
 
-class RSexpNil extends RSexp {
+export class RSexpNil extends RSexp {
   toJs(): RawTypes {
     return undefined;
   }
@@ -129,7 +155,7 @@ class RSexpPairlist extends RSexp {
   toJs(): { [key: string]: RawTypes } {
     const d: { [key: string]: RawTypes } = {};
     let v: RSexp = wrapRSexp(Module._CAR(this.ptr));
-    for (let next = this.ptr; Module._TYPEOF(next) !== SEXPTYPE.NILSXP; next = Module._CDR(next)) {
+    for (let next = this.ptr; Module._TYPEOF(next) !== SexpType.NILSXP; next = Module._CDR(next)) {
       v = wrapRSexp(Module._CAR(next));
       d[(wrapRSexp(Module._TAG(next)) as RSexpSymbol).printname.toJs()] = v.toJs();
     }
@@ -147,14 +173,14 @@ class RSexpPairlist extends RSexp {
 }
 
 class RSexpClosure extends RSexp {
-  _call(args: Array<any>): RSexp {
+  _call(args: Array<RTargetObj>): RSexp {
     // TODO: This needs to be tidied up and be made to work with other argument types
-    let call = Module._Rf_allocVector(SEXPTYPE.LANGSXP, args.length + 1);
+    let call = Module._Rf_allocVector(SexpType.LANGSXP, args.length + 1);
     let c = call;
     Module._SETCAR(call, this.ptr);
     for (let i = 0; i < args.length; i++) {
       c = Module._CDR(c);
-      Module._SETCAR(c, Module._Rf_ScalarReal(args[i]));
+      Module._SETCAR(c, createRSexp(args[i]).ptr);
     }
     return wrapRSexp(Module._Rf_eval(call, Module._CLOENV(this.ptr)));
   }
@@ -164,7 +190,7 @@ class RSexpVector extends RSexp {
   get length(): number {
     return Module._LENGTH(this.ptr);
   }
-  _valAtIdx(idx: number) {
+  getIdx(idx: number): RSexp | RawTypes {
     return wrapRSexp(Module._VECTOR_ELT(this.ptr, idx));
   }
   toJs(): RawTypes {
@@ -172,7 +198,7 @@ class RSexpVector extends RSexp {
     for (let idx = 0; idx < this.length; idx++) {
       const attrs = (this.attrs as RSexpPairlist).toJs();
       const listIdx = 'names' in attrs ? (attrs['names'] as Array<string>)[idx] : idx + 1;
-      list[listIdx] = this._valAtIdx(idx).toJs();
+      list[listIdx] = wrapRSexp(Module._VECTOR_ELT(this.ptr, idx)).toJs();
     }
     return list;
   }
@@ -219,28 +245,61 @@ class RSexpInt extends RSexpVector {
 }
 
 class RSexpReal extends RSexpVector {
-  toJs(): number | ArrayBufferView | { [keys: string | number]: RawTypes } {
+  #getIdxValue(idx: number): number {
+    return this.#arrView[idx];
+  }
+  #getIdxName(idx: number): string | number {
+    const attrs = (this.attrs as RSexpPairlist).toJs();
+    return 'names' in attrs ? (attrs['names'] as Array<string>)[idx] : idx + 1;
+  }
+  get #arrView() {
+    return Module.HEAPF64.subarray(
+      Module._REAL(this.ptr) / 8,
+      Module._REAL(this.ptr) / 8 + this.length
+    );
+  }
+  toJs(): number | Float64Array | { [keys: string | number]: RawTypes } {
     if (this.attrs.isNil) {
       return this.value;
     } else {
       const list: { [keys: string | number]: RawTypes } = {};
       for (let idx = 0; idx < this.length; idx++) {
-        const attrs = (this.attrs as RSexpPairlist).toJs();
-        const listIdx = 'names' in attrs ? (attrs['names'] as Array<string>)[idx] : idx + 1;
-        list[listIdx] = getValue(Module._REAL(this.ptr) + 8 * idx, 'double');
+        list[this.#getIdxName(idx)] = this.#getIdxValue(idx);
       }
       return list;
     }
   }
-  get value(): number | ArrayBufferView {
-    if (this.length === 1) {
-      return getValue(Module._REAL(this.ptr), 'double');
+  getIdx(idx: number): RawTypes {
+    return this.attrs.isNil
+      ? this.#getIdxValue(idx)
+      : { [this.#getIdxName(idx)]: this.#getIdxValue(idx) };
+  }
+  getDollar(prop: string): RawTypes {
+    if (this.attrs.isNil) {
+      return undefined;
+    }
+    const attrs = this.attrs.toJs();
+    if (attrs && typeof attrs === 'object' && 'names' in attrs) {
+      const idx = (attrs.names as string[]).indexOf(prop);
+      return { [this.#getIdxName(idx)]: this.#getIdxValue(idx) };
+    }
+  }
+  _set(prop: string, value: RSexpReal) {
+    if (isNaN(Number(prop))) {
+      const attrs = this.attrs.toJs();
+      if (attrs && typeof attrs === 'object' && 'names' in attrs) {
+        const idx = (attrs.names as string[]).indexOf(prop);
+        this.#arrView[idx] = value.value as number;
+      }
     } else {
-      const arrView = Module.HEAPF64.subarray(
-        Module._REAL(this.ptr) / 8,
-        Module._REAL(this.ptr) / 8 + this.length
-      );
-      return arrView;
+      this.#arrView[Number(prop)] = value.value as number;
+    }
+  }
+  get value(): number | Float64Array {
+    if (this.length === 1) {
+      return this.#getIdxValue(0);
+    } else {
+      return this.#arrView;
     }
   }
   get convertImplicitly(): boolean {
@@ -313,29 +372,29 @@ class RSexpEnv extends RSexp {
   }
 }
 
-function getRSexpClass(type: SEXPTYPE): typeof RSexp {
+function getRSexpClass(type: SexpType): typeof RSexp {
   const typeClasses: { [key: number]: typeof RSexp } = {
-    [SEXPTYPE.NILSXP]: RSexpNil,
-    [SEXPTYPE.LISTSXP]: RSexpPairlist,
-    [SEXPTYPE.VECSXP]: RSexpVector,
-    [SEXPTYPE.CLOSXP]: RSexpClosure,
-    [SEXPTYPE.ENVSXP]: RSexpEnv,
-    [SEXPTYPE.LGLSXP]: RSexpLogical,
-    [SEXPTYPE.INTSXP]: RSexpInt,
-    [SEXPTYPE.REALSXP]: RSexpReal,
-    [SEXPTYPE.CPLXSXP]: RSexpComplex,
-    [SEXPTYPE.STRSXP]: RSexpStr,
-    [SEXPTYPE.RAWSXP]: RSexpRawdata,
-    [SEXPTYPE.SYMSXP]: RSexpSymbol,
-    [SEXPTYPE.CHARSXP]: RSexpChar,
+    [SexpType.NILSXP]: RSexpNil,
+    [SexpType.LISTSXP]: RSexpPairlist,
+    [SexpType.VECSXP]: RSexpVector,
+    [SexpType.CLOSXP]: RSexpClosure,
+    [SexpType.ENVSXP]: RSexpEnv,
+    [SexpType.LGLSXP]: RSexpLogical,
+    [SexpType.INTSXP]: RSexpInt,
+    [SexpType.REALSXP]: RSexpReal,
+    [SexpType.CPLXSXP]: RSexpComplex,
+    [SexpType.STRSXP]: RSexpStr,
+    [SexpType.RAWSXP]: RSexpRawdata,
+    [SexpType.SYMSXP]: RSexpSymbol,
+    [SexpType.CHARSXP]: RSexpChar,
   };
   if (type in typeClasses) {
     return typeClasses[type];
   }
-  throw new TypeError(`RSexp SEXP type ${SEXPTYPE[type]} has not yet been implemented.`);
+  throw new TypeError(`RSexp SEXP type ${SexpType[type]} has not yet been implemented.`);
 }
 
-export function wrapRSexp(ptr: number): RSexp {
+export function wrapRSexp(ptr: RPtr): RSexp {
   const type = Module._TYPEOF(ptr);
   return new (getRSexpClass(type))(ptr);
 }
