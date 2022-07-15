@@ -1,4 +1,4 @@
-import { RPtr } from './sexp';
+import { RPtr, SexpType } from './sexp';
 
 export type FSNode = {
   id: number;
@@ -33,6 +33,8 @@ export interface Module extends EmscriptenModule {
   // Utility functions from Rinternals.h
   _Rf_ScalarReal: (n: number) => RPtr;
   _Rf_mkString: (ptr: number) => RPtr;
+  _Rf_allocVector: (type: SexpType, n: number) => RPtr;
+  _Rf_eval: (call: RPtr, env: RPtr) => RPtr;
   _LENGTH: (ptr: RPtr) => RPtr;
   _TYPEOF: (ptr: RPtr) => RPtr;
   _INTEGER: (ptr: RPtr) => RPtr;
@@ -49,8 +51,10 @@ export interface Module extends EmscriptenModule {
   _CAR: (ptr: RPtr) => RPtr;
   _CDR: (ptr: RPtr) => RPtr;
   _TAG: (ptr: RPtr) => RPtr;
+  _CLOENV: (x: RPtr) => RPtr;
   _STRING_ELT: (ptr: RPtr, idx: number) => RPtr;
   _VECTOR_ELT: (ptr: RPtr, idx: number) => RPtr;
+  _SETCAR: (x: RPtr, y: RPtr) => void;
   // TODO: Namespace all webR properties
   webr: {
     readConsole: () => number;

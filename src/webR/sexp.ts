@@ -2,7 +2,7 @@ import type { Module } from './utils';
 
 declare let Module: Module;
 
-enum SexpType {
+export enum SexpType {
   NILSXP = 0,
   SYMSXP,
   LISTSXP,
@@ -175,7 +175,7 @@ class RSexpPairlist extends RSexp {
 class RSexpClosure extends RSexp {
   _call(args: Array<RTargetObj>): RSexp {
     // TODO: This needs to be tidied up and be made to work with other argument types
-    let call = Module._Rf_allocVector(SexpType.LANGSXP, args.length + 1);
+    const call = Module._Rf_allocVector(SexpType.LANGSXP, args.length + 1);
     let c = call;
     Module._SETCAR(call, this.ptr);
     for (let i = 0; i < args.length; i++) {
