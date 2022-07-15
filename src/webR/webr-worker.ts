@@ -2,7 +2,7 @@ import { BASE_URL, PKG_BASE_URL } from './config';
 import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
-import { RawTypes, RSexp, wrapRSexp, RSexpObj } from './sexp';
+import { RawTypes, RSexp, wrapRSexp, RSexpObj, RSexpPtr } from './sexp';
 import { FSNode, WebROptions, Module, XHRResponse } from './utils';
 
 let initialised = false;
@@ -67,11 +67,20 @@ function inputOrDispatch(chan: ChannelWorker): string {
             continue;
           case 'getRSexp': {
             const data = reqMsg.data as {
-              rObj: RSexpObj;
+              target: RSexpObj;
               path: string[];
               args: RawTypes[] | undefined;
             };
-            write(getRSexp(data.rObj, data.path, data.args));
+            // If the target is a raw R code string, evaluate it first
+            if (data.target.raw && typeof data.target.obj === 'string') {
+              write(getRSexp(evalRCode(data.target.obj), data.path, data.args));
+            } else if (!data.target.raw) {
+              write(getRSexp(data.target, data.path, data.args));
+            } else {
+              throw new Error(
+                'The target argument of getRSexp must be a raw R code string or a RSexpPtr object'
+              );
+            }
             continue;
           }
           default:
@@ -90,29 +99,23 @@ function isRSexp(value: any): value is RSexp {
 }
 
 /**
- * Get a RSexp object, optionally evaluating and/or calling the object where required
- * Returns a RSexpObj containing either a reference to the SEXP object in WASM memory
- * or the object repressented in an equivalent JS form.
+ * Given an RSexpPtr reference, create an RSexp object and return the result of walking
+ * the given path of properties, optionally calling a function at the end of the path.
  *
- * @param {RSexpObj}  target - A reference to the R SEXP object, or raw R code
+ * Returns a RSexpObj containing either a reference to the resulting SEXP object in WASM
+ * memory, or the object represented in an equivalent raw JS form.
+ *
+ * @param {RSexpPtr}  target - A reference to the R SEXP object
  * @param {string[]} [path] - A list of properties to iteratively navigate
  * @param {RawTypes[]} [args] - A list of arguments to call the resulting object with
  * @return {RSexpObj} The resulting SEXP object, either as a reference or raw JS
  */
-function getRSexp(target: RSexpObj, path: string[], args?: RawTypes[]): RSexpObj {
+function getRSexp(target: RSexpPtr, path: string[], args?: RawTypes[]): RSexpObj {
   let ret: RSexpObj = { obj: undefined, raw: true };
-  let root: RSexp;
   try {
-    // If the original target was a raw R code string, evaluate it first
-    if (target.raw === true && typeof target.obj === 'string') {
-      root = evalRCode(target.obj);
-    } else if (target.raw === false) {
-      root = wrapRSexp(target.obj);
-    } else {
-      throw new Error('Proxy target object must be RPtr or code string');
-    }
+    const root = wrapRSexp(target.obj);
 
-    // Navigate the property array and grab the required RSexp objects
+    // Navigate the property array and grab the requested RSexp objects
     // @ts-expect-error ts(7053)
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     let res = path.reduce((obj, prop) => obj[prop], root) as RawTypes | RSexp | Function;
@@ -128,8 +131,8 @@ function getRSexp(target: RSexpObj, path: string[], args?: RawTypes[]): RSexpObj
       res = res._call.call(parent, args);
     }
 
-    // Return a reference to the result object back to the main thread,
-    // converting to JS implicitly where requested
+    // Return a RSexpObj reference, or otherwise a raw JS object where
+    // implicit conversion is enabled
     if (isRSexp(res) && res.convertImplicitly) {
       ret = { obj: res.toJs(), raw: true };
     } else if (isRSexp(res)) {
@@ -140,7 +143,8 @@ function getRSexp(target: RSexpObj, path: string[], args?: RawTypes[]): RSexpObj
       throw Error('Returned property cannot be transferred to main thread');
     }
   } catch (e) {
-    // Report the worker error back to the main thread
+    // If there is an error walking the property tree or otherwise, report
+    // the error back in replace of the requested object
     if (e instanceof Error) {
       ret = { obj: e, raw: true };
     }
@@ -148,7 +152,7 @@ function getRSexp(target: RSexpObj, path: string[], args?: RawTypes[]): RSexpObj
   return ret;
 }
 
-function evalRCode(code: string): RSexp {
+function evalRCode(code: string): RSexpPtr {
   const str = allocateUTF8(code);
   const err = allocate(1, 'i32', 0);
   const resultPtr = Module._evalRCode(str, err);
@@ -158,7 +162,7 @@ function evalRCode(code: string): RSexp {
   }
   Module._free(str);
   Module._free(err);
-  return wrapRSexp(resultPtr);
+  return { obj: resultPtr, raw: false };
 }
 
 function getFSNode(path: string): FSNode {

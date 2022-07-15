@@ -31,13 +31,13 @@ enum SEXPTYPE {
 
 export type RPtr = number;
 
-type RSexpRaw = {
+export type RSexpRaw = {
   obj: RawTypes;
-  raw?: true;
+  raw: true;
 };
-type RSexpPtr = {
+export type RSexpPtr = {
   obj: RPtr;
-  raw?: false;
+  raw: false;
 };
 export type RSexpObj = RSexpRaw | RSexpPtr;
 
