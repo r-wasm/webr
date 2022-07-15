@@ -32,6 +32,7 @@ export interface Module extends EmscriptenModule {
   _evalRCode: (code: number, errPtr: number) => number;
   // Utility functions from Rinternals.h
   _Rf_ScalarReal: (n: number) => RPtr;
+  _Rf_ScalarLogical: (l: boolean) => RPtr;
   _Rf_mkString: (ptr: number) => RPtr;
   _Rf_allocVector: (type: SexpType, n: number) => RPtr;
   _Rf_eval: (call: RPtr, env: RPtr) => RPtr;

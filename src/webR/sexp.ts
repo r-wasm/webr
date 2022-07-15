@@ -79,6 +79,9 @@ export function createRSexp(target: RTargetObj): RSexp {
     const ptr = Module._Rf_mkString(str);
     Module._free(str);
     return new RSexpStr(ptr);
+  } else if (typeof target.obj === 'boolean') {
+    const ptr = Module._Rf_ScalarLogical(target.obj);
+    return new RSexpLogical(ptr);
   }
   return new RSexpNil(0);
 }
@@ -118,7 +121,7 @@ export class RSexp {
   _set(prop: string, value: RSexp) {
     throw new Error('Setting this R object is not yet supported');
   }
-  _call(_args: Array<any>): RSexp {
+  _call(_args: Array<RSexp>): RSexp {
     throw new Error('This R object cannot be called');
   }
 }
@@ -173,14 +176,14 @@ class RSexpPairlist extends RSexp {
 }
 
 class RSexpClosure extends RSexp {
-  _call(args: Array<RTargetObj>): RSexp {
+  _call(args: Array<RSexp>): RSexp {
     // TODO: This needs to be tidied up and be made to work with other argument types
     const call = Module._Rf_allocVector(SexpType.LANGSXP, args.length + 1);
     let c = call;
     Module._SETCAR(call, this.ptr);
     for (let i = 0; i < args.length; i++) {
       c = Module._CDR(c);
-      Module._SETCAR(c, createRSexp(args[i]).ptr);
+      Module._SETCAR(c, args[i].ptr);
     }
     return wrapRSexp(Module._Rf_eval(call, Module._CLOENV(this.ptr)));
   }

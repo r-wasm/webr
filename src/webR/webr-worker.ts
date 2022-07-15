@@ -79,7 +79,7 @@ function inputOrDispatch(chan: ChannelWorker): string {
             const data = reqMsg.data as {
               target: RTargetObj;
               path: string[];
-              args: RawTypes[] | undefined;
+              args: RTargetObj[];
             };
             write(getRObj(wrapRTargetObj(data.target), data.path, data.args));
             continue;
@@ -118,10 +118,10 @@ function isRSexp(value: any): value is RSexp {
  *
  * @param {RSexp}  root The root R RSexp object
  * @param {string[]} [path] List of properties to iteratively navigate
- * @param {RawTypes[]} [args] List of arguments to call with
+ * @param {RTargetObj[]} [args] List of arguments to call with
  * @return {RTargetObj} The resulting R object
  */
-function getRObj(root: RSexp, path: string[], args?: RawTypes[]): RTargetObj {
+function getRObj(root: RSexp, path: string[], args?: RTargetObj[]): RTargetObj {
   const getProp = (obj: RSexp, prop: string) => {
     if (!isNaN(Number(prop))) {
       return obj.getIdx(Number(prop));
@@ -145,7 +145,10 @@ function getRObj(root: RSexp, path: string[], args?: RawTypes[]): RTargetObj {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       res = res.apply(parent, args);
     } else if (isRSexp(res) && args) {
-      res = res._call.call(parent, args);
+      res = res._call.call(
+        parent,
+        Array.from({ length: args.length }, (_, idx) => wrapRTargetObj(args[idx]))
+      );
     }
 
     // Return a RSexpPtr reference, or otherwise a raw JS object where
