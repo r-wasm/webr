@@ -7,7 +7,7 @@ export type RProxy = { [P in keyof RSexp]: RemoteProperty<RSexp[P]> } & {
   [_target: string]: RTargetObj;
 };
 
-function isRProxy(value: any): value is RProxy {
+export function isRProxy(value: any): value is RProxy {
   // An RProxy acts like a function, but with RTargetObj properties
   return typeof value === 'function' && 'type' in value && 'obj' in value;
 }

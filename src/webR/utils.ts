@@ -29,7 +29,7 @@ export interface Module extends EmscriptenModule {
   setPrompt: (prompt: string) => void;
   canvasExec: (op: string) => void;
   downloadFileContent: (URL: string, headers: Array<string>) => XHRResponse;
-  _evalRCode: (code: number, errPtr: number) => number;
+  _evalRCode: (code: RPtr, env: RPtr, errPtr: RPtr) => RPtr;
   // Utility functions from Rinternals.h
   _Rf_ScalarReal: (n: number) => RPtr;
   _Rf_ScalarLogical: (l: boolean) => RPtr;

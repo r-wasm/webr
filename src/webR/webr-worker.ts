@@ -3,7 +3,7 @@ import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions, Module, XHRResponse } from './utils';
-import { RawTypes, RSexp, RTargetObj, RTargetType, RRawObj, RSexpPtr } from './sexp';
+import { RawTypes, RSexp, RTargetObj, RTargetType, RRawObj, RSexpPtr, SexpType } from './sexp';
 
 let initialised = false;
 
@@ -155,7 +155,7 @@ function getRObj(root: RSexp, path: string[], args?: RTargetObj[]): RTargetObj {
     }
   } catch (e) {
     if (e instanceof Error) {
-      console.error(typeof e);
+      console.error(e);
     }
   }
   return ret;
@@ -194,10 +194,22 @@ function setRObj(root: RSexp, path: string[], value: RSexp) {
   }
 }
 
-function evalRCode(code: string): RSexpPtr {
+function evalRCode(code: string, env: RTargetObj | undefined): RSexpPtr {
   const str = allocateUTF8(code);
   const err = allocate(1, 'i32', 0);
-  const resultPtr = Module._evalRCode(str, err);
+
+  let envObj = RSexp.wrap(RSexp.R_GlobalEnv);
+  if (env && env.type === RTargetType.CODE) {
+    envObj = wrapRTargetObj(env);
+  } else if (env && env.type === RTargetType.SEXPPTR) {
+    envObj = RSexp.wrap(env.obj);
+  } else if (env) {
+    throw new Error('Attempted to eval R code with an invalid raw env argument');
+  }
+  if (envObj.type !== SexpType.ENVSXP) {
+    throw new Error('Attempted to eval R code with an env argument with invalid SEXP type');
+  }
+  const resultPtr = Module._evalRCode(str, envObj.ptr, err);
   const errValue = getValue(err, 'i32');
   if (errValue) {
     throw Error(`An error occured evaluating R code (${errValue})`);
@@ -212,14 +224,14 @@ function wrapRTargetObj(target: RTargetObj): RSexp {
     if (target.type === RTargetType.SEXPPTR) {
       return RSexp.wrap(target.obj);
     } else if (target.type === RTargetType.CODE) {
-      const res: RSexpPtr = evalRCode(target.obj);
+      const res: RSexpPtr = evalRCode(target.obj.code, target.obj.env);
       return RSexp.wrap(res.obj);
     } else if (target.type === RTargetType.RAW) {
       return new RSexp(target);
     }
   } catch (e) {
     if (e instanceof Error) {
-      console.error(typeof e);
+      console.error(e);
     }
   }
   return RSexp.wrap(RSexp.R_NilValue);

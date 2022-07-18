@@ -39,7 +39,10 @@ export enum RTargetType {
 }
 
 export type RCodeObj = {
-  obj: string;
+  obj: {
+    code: string;
+    env: RTargetObj | undefined;
+  };
   type: RTargetType.CODE;
 };
 export type RRawObj = {

@@ -1,7 +1,7 @@
 import { ChannelMain } from './chan/channel';
 import { Message } from './chan/message';
 import { FSNode, WebROptions } from './utils';
-import { createRProxy, RProxy } from './proxy';
+import { createRProxy, RProxy, isRProxy } from './proxy';
 import { RTargetType, RCodeObj } from './sexp';
 
 export class WebR {
@@ -37,8 +37,17 @@ export class WebR {
     return (await this.#chan.request({ type: 'getFSNode', data: { path: path } })) as FSNode;
   }
 
-  evalRCode(code: string): RProxy {
-    const RObj: RCodeObj = { obj: code, type: RTargetType.CODE };
+  evalRCode(code: string, envProxy?: RProxy): RProxy {
+    if (envProxy && !isRProxy(envProxy)) {
+      throw new Error('The envProxy object passed to evalRCode is not an RProxy object');
+    }
+    const RObj: RCodeObj = {
+      obj: {
+        code: code,
+        env: envProxy ? envProxy._target : undefined,
+      },
+      type: RTargetType.CODE,
+    };
     return createRProxy(this.#chan, RObj);
   }
 }
