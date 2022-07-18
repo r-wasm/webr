@@ -34,8 +34,12 @@ export interface Module extends EmscriptenModule {
   _Rf_ScalarReal: (n: number) => RPtr;
   _Rf_ScalarLogical: (l: boolean) => RPtr;
   _Rf_mkString: (ptr: number) => RPtr;
+  _Rf_mkChar: (ptr: number) => RPtr;
   _Rf_allocVector: (type: SexpType, n: number) => RPtr;
   _Rf_eval: (call: RPtr, env: RPtr) => RPtr;
+  _Rf_findVarInFrame: (rho: RPtr, symbol: RPtr) => RPtr;
+  _Rf_installTrChar: (name: RPtr) => RPtr;
+  _R_lsInternal: (env: RPtr, all: boolean) => RPtr;
   _LENGTH: (ptr: RPtr) => RPtr;
   _TYPEOF: (ptr: RPtr) => RPtr;
   _INTEGER: (ptr: RPtr) => RPtr;
@@ -55,7 +59,14 @@ export interface Module extends EmscriptenModule {
   _CLOENV: (x: RPtr) => RPtr;
   _STRING_ELT: (ptr: RPtr, idx: number) => RPtr;
   _VECTOR_ELT: (ptr: RPtr, idx: number) => RPtr;
+  _SET_STRING_ELT: (ptr: RPtr, idx: number, val: RPtr) => void;
+  _SET_VECTOR_ELT: (ptr: RPtr, idx: number, val: RPtr) => void;
   _SETCAR: (x: RPtr, y: RPtr) => void;
+  _R_GlobalEnv: RPtr;
+  _R_EmptyEnv: RPtr;
+  _R_BaseEnv: RPtr;
+  _R_NilValue: RPtr;
+  _R_UnboundValue: RPtr;
   // TODO: Namespace all webR properties
   webr: {
     readConsole: () => number;

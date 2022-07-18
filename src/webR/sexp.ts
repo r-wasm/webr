@@ -27,6 +27,7 @@ export enum SexpType {
   WEAKREFSXP,
   RAWSXP,
   S4SXP,
+  FUNSXP = 99,
 }
 
 export type RPtr = number;
@@ -70,26 +71,43 @@ export type RawTypes =
   | Set<RawTypes>
   | { [key: string]: RawTypes };
 
-export function createRSexp(target: RTargetObj): RSexp {
-  if (typeof target.obj === 'number') {
-    const ptr = Module._Rf_ScalarReal(target.obj);
-    return new RSexpReal(ptr);
-  } else if (typeof target.obj === 'string') {
-    const str = allocateUTF8(target.obj);
-    const ptr = Module._Rf_mkString(str);
-    Module._free(str);
-    return new RSexpStr(ptr);
-  } else if (typeof target.obj === 'boolean') {
-    const ptr = Module._Rf_ScalarLogical(target.obj);
-    return new RSexpLogical(ptr);
-  }
-  return new RSexpNil(0);
-}
-
 export class RSexp {
   ptr: RPtr;
-  constructor(ptr: RPtr) {
-    this.ptr = ptr;
+  constructor(target: RPtr | RTargetObj) {
+    this.ptr = RSexp.R_NilValue;
+    if (typeof target === 'number') {
+      this.ptr = target;
+    } else if (typeof target.obj === 'number') {
+      const ptr = Module._Rf_ScalarReal(target.obj);
+      return new RSexpReal(ptr);
+    } else if (typeof target.obj === 'string') {
+      const str = allocateUTF8(target.obj);
+      const ptr = Module._Rf_mkString(str);
+      Module._free(str);
+      return new RSexpStr(ptr);
+    } else if (typeof target.obj === 'boolean') {
+      const ptr = Module._Rf_ScalarLogical(target.obj);
+      return new RSexpLogical(ptr);
+    } else if (Array.isArray(target.obj) && target.obj.some((el) => typeof el === 'string')) {
+      const sexpVec = Module._Rf_allocVector(SexpType.STRSXP, target.obj.length);
+      target.obj.forEach((el, idx) => {
+        const str = allocateUTF8(String(el));
+        const ptr = Module._Rf_mkChar(str);
+        Module._free(str);
+        Module._SET_STRING_ELT(sexpVec, idx, ptr);
+      });
+      return RSexp.wrap(sexpVec);
+    } else if (Array.isArray(target.obj) && target.obj.some((el) => typeof el === 'number')) {
+      const sexpVec = Module._Rf_allocVector(SexpType.REALSXP, target.obj.length);
+      target.obj.forEach((el, idx) =>
+        setValue(Module._REAL(sexpVec) + 8 * idx, Number(el), 'double')
+      );
+      return RSexp.wrap(sexpVec);
+    } else if (Array.isArray(target.obj)) {
+      const sexpVec = Module._Rf_allocVector(SexpType.LGLSXP, target.obj.length);
+      target.obj.forEach((el, idx) => setValue(Module._LOGICAL(sexpVec) + 4 * idx, el, 'i32'));
+      return RSexp.wrap(sexpVec);
+    }
   }
   get [Symbol.toStringTag](): string {
     return `RSexp:${this.typeName}`;
@@ -104,7 +122,7 @@ export class RSexp {
     return false;
   }
   get attrs(): RSexp {
-    return wrapRSexp(Module._ATTRIB(this.ptr));
+    return RSexp.wrap(Module._ATTRIB(this.ptr));
   }
   get isNil(): boolean {
     return Module._TYPEOF(this.ptr) === SexpType.NILSXP;
@@ -123,6 +141,25 @@ export class RSexp {
   }
   _call(_args: Array<RSexp>): RSexp {
     throw new Error('This R object cannot be called');
+  }
+  static get R_GlobalEnv(): RPtr {
+    return getValue(Module._R_GlobalEnv, '*');
+  }
+  static get R_EmptyEnv(): RPtr {
+    return getValue(Module._R_EmptyEnv, '*');
+  }
+  static get R_BaseEnv(): RPtr {
+    return getValue(Module._R_BaseEnv, '*');
+  }
+  static get R_NilValue(): RPtr {
+    return getValue(Module._R_NilValue, '*');
+  }
+  static get R_UnboundValue(): RPtr {
+    return getValue(Module._R_UnboundValue, '*');
+  }
+  static wrap(ptr: RPtr): RSexp {
+    const type = Module._TYPEOF(ptr);
+    return new (getRSexpClass(type))(ptr);
   }
 }
 
@@ -144,40 +181,39 @@ class RSexpSymbol extends RSexp {
     };
   }
   get printname(): RSexpChar {
-    return wrapRSexp(Module._PRINTNAME(this.ptr)) as RSexpChar;
+    return RSexp.wrap(Module._PRINTNAME(this.ptr)) as RSexpChar;
   }
   get symvalue(): RSexp {
-    return wrapRSexp(Module._SYMVALUE(this.ptr));
+    return RSexp.wrap(Module._SYMVALUE(this.ptr));
   }
   get internal(): RSexp {
-    return wrapRSexp(Module._INTERNAL(this.ptr));
+    return RSexp.wrap(Module._INTERNAL(this.ptr));
   }
 }
 
 class RSexpPairlist extends RSexp {
   toJs(): { [key: string]: RawTypes } {
     const d: { [key: string]: RawTypes } = {};
-    let v: RSexp = wrapRSexp(Module._CAR(this.ptr));
+    let v: RSexp = RSexp.wrap(Module._CAR(this.ptr));
     for (let next = this.ptr; Module._TYPEOF(next) !== SexpType.NILSXP; next = Module._CDR(next)) {
-      v = wrapRSexp(Module._CAR(next));
-      d[(wrapRSexp(Module._TAG(next)) as RSexpSymbol).printname.toJs()] = v.toJs();
+      v = RSexp.wrap(Module._CAR(next));
+      d[(RSexp.wrap(Module._TAG(next)) as RSexpSymbol).printname.toJs()] = v.toJs();
     }
     return d;
   }
   get car(): RSexp {
-    return wrapRSexp(Module._CAR(this.ptr));
+    return RSexp.wrap(Module._CAR(this.ptr));
   }
   get cdr(): RSexp {
-    return wrapRSexp(Module._CDR(this.ptr));
+    return RSexp.wrap(Module._CDR(this.ptr));
   }
   get tag(): RSexp {
-    return wrapRSexp(Module._TAG(this.ptr));
+    return RSexp.wrap(Module._TAG(this.ptr));
   }
 }
 
 class RSexpClosure extends RSexp {
   _call(args: Array<RSexp>): RSexp {
-    // TODO: This needs to be tidied up and be made to work with other argument types
     const call = Module._Rf_allocVector(SexpType.LANGSXP, args.length + 1);
     let c = call;
     Module._SETCAR(call, this.ptr);
@@ -185,7 +221,20 @@ class RSexpClosure extends RSexp {
       c = Module._CDR(c);
       Module._SETCAR(c, args[i].ptr);
     }
-    return wrapRSexp(Module._Rf_eval(call, Module._CLOENV(this.ptr)));
+    return RSexp.wrap(Module._Rf_eval(call, Module._CLOENV(this.ptr)));
+  }
+}
+
+class RSexpFunction extends RSexp {
+  _call(args: Array<RSexp>): RSexp {
+    const call = Module._Rf_allocVector(SexpType.LANGSXP, args.length + 1);
+    let c = call;
+    Module._SETCAR(call, this.ptr);
+    for (let i = 0; i < args.length; i++) {
+      c = Module._CDR(c);
+      Module._SETCAR(c, args[i].ptr);
+    }
+    return RSexp.wrap(Module._Rf_eval(call, RSexp.R_GlobalEnv));
   }
 }
 
@@ -194,14 +243,14 @@ class RSexpVector extends RSexp {
     return Module._LENGTH(this.ptr);
   }
   getIdx(idx: number): RSexp | RawTypes {
-    return wrapRSexp(Module._VECTOR_ELT(this.ptr, idx));
+    return RSexp.wrap(Module._VECTOR_ELT(this.ptr, idx));
   }
   toJs(): RawTypes {
     const list: { [keys: string | number]: RawTypes } = {};
     for (let idx = 0; idx < this.length; idx++) {
       const attrs = (this.attrs as RSexpPairlist).toJs();
       const listIdx = 'names' in attrs ? (attrs['names'] as Array<string>)[idx] : idx + 1;
-      list[listIdx] = wrapRSexp(Module._VECTOR_ELT(this.ptr, idx)).toJs();
+      list[listIdx] = RSexp.wrap(Module._VECTOR_ELT(this.ptr, idx)).toJs();
     }
     return list;
   }
@@ -370,8 +419,21 @@ class RSexpRawdata extends RSexpVector {
 }
 
 class RSexpEnv extends RSexp {
+  get ls(): RSexp {
+    return RSexp.wrap(Module._R_lsInternal(this.ptr, true));
+  }
   get frame(): RSexp {
-    return wrapRSexp(Module._FRAME(this.ptr));
+    return RSexp.wrap(Module._FRAME(this.ptr));
+  }
+  getDollar(prop: string): RSexp {
+    const str = allocateUTF8(prop);
+    const strPtr = Module._Rf_installTrChar(Module._STRING_ELT(Module._Rf_mkString(str), 0));
+    Module._free(str);
+    const val = RSexp.wrap(Module._Rf_findVarInFrame(this.ptr, strPtr));
+    if (val.ptr === RSexp.R_UnboundValue) {
+      return new RSexpNil(RSexp.R_NilValue);
+    }
+    return val;
   }
 }
 
@@ -381,6 +443,9 @@ function getRSexpClass(type: SexpType): typeof RSexp {
     [SexpType.LISTSXP]: RSexpPairlist,
     [SexpType.VECSXP]: RSexpVector,
     [SexpType.CLOSXP]: RSexpClosure,
+    [SexpType.SPECIALSXP]: RSexpFunction,
+    [SexpType.BUILTINSXP]: RSexpFunction,
+    [SexpType.FUNSXP]: RSexpFunction,
     [SexpType.ENVSXP]: RSexpEnv,
     [SexpType.LGLSXP]: RSexpLogical,
     [SexpType.INTSXP]: RSexpInt,
@@ -395,9 +460,4 @@ function getRSexpClass(type: SexpType): typeof RSexp {
     return typeClasses[type];
   }
   throw new TypeError(`RSexp SEXP type ${SexpType[type]} has not yet been implemented.`);
-}
-
-export function wrapRSexp(ptr: RPtr): RSexp {
-  const type = Module._TYPEOF(ptr);
-  return new (getRSexpClass(type))(ptr);
 }

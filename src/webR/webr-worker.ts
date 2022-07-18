@@ -3,17 +3,7 @@ import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions, Module, XHRResponse } from './utils';
-import {
-  RawTypes,
-  RSexp,
-  wrapRSexp,
-  RTargetObj,
-  RTargetType,
-  RRawObj,
-  RSexpPtr,
-  createRSexp,
-  RSexpNil,
-} from './sexp';
+import { RawTypes, RSexp, RTargetObj, RTargetType, RRawObj, RSexpPtr } from './sexp';
 
 let initialised = false;
 
@@ -127,6 +117,7 @@ function getRObj(root: RSexp, path: string[], args?: RTargetObj[]): RTargetObj {
       return obj.getIdx(Number(prop));
     } else if (prop.startsWith('$')) {
       prop = prop.slice(1);
+      if (prop === '') return undefined;
       return obj.getDollar(prop);
     }
     // @ts-expect-error ts(7053)
@@ -163,7 +154,9 @@ function getRObj(root: RSexp, path: string[], args?: RTargetObj[]): RTargetObj {
       throw Error('Resulting object cannot be transferred to main thread');
     }
   } catch (e) {
-    console.error(e);
+    if (e instanceof Error) {
+      console.error(typeof e);
+    }
   }
   return ret;
 }
@@ -217,17 +210,19 @@ function evalRCode(code: string): RSexpPtr {
 function wrapRTargetObj(target: RTargetObj): RSexp {
   try {
     if (target.type === RTargetType.SEXPPTR) {
-      return wrapRSexp(target.obj);
+      return RSexp.wrap(target.obj);
     } else if (target.type === RTargetType.CODE) {
       const res: RSexpPtr = evalRCode(target.obj);
-      return wrapRSexp(res.obj);
-    } else {
-      return createRSexp(target);
+      return RSexp.wrap(res.obj);
+    } else if (target.type === RTargetType.RAW) {
+      return new RSexp(target);
     }
   } catch (e) {
-    console.error(e);
-    return new RSexpNil(0);
+    if (e instanceof Error) {
+      console.error(typeof e);
+    }
   }
+  return RSexp.wrap(RSexp.R_NilValue);
 }
 
 function getFSNode(path: string): FSNode {
