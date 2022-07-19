@@ -26,6 +26,14 @@ test-all: clean $(OUTPUTS)
 		exit 1; \
 	fi
 
+.PHONY: run-%
+run-%: %.R
+	@echo "Testing $<..." && \
+	cd $(DIST) && \
+	node --experimental-wasm-bigint $(TEST_DIR)/testRCode.js \
+		"$(TEST_DIR)/$<" --quiet; \
+	cd $(TEST_DIR)
+
 .PHONY: clean
 clean:
 	@rm -f *.Rout

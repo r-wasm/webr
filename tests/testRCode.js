@@ -11,19 +11,23 @@ if (!sourceFile) {
 (async () => {
     let args = process.argv;
     args.splice(0, 3);
-    const { WebR } = require(`../dist/webR.js`);
+    let l = 0;
+
+    const { WebR } = require(`../dist/webr.js`);
     const webR = new WebR({
         RArgs: args,
-      });
+    });
     await webR.init();
-    const code = await fs.readFile(`${sourceFile}`, { encoding: 'utf8' });
-    webR.writeConsole(code);
-    for (;;) {
-      const output = await webR.read();
+    const code = (await fs.readFile(`${sourceFile}`, { encoding: 'utf8' })).toString().split("\n");
+    while (l < code.length) {
+      const output = await webR.read()
       if (output.type === 'stdout') {
         console.log(output.data);
       } else if (output.type === 'stderr') {
         console.error(output.data);
+      } else if (output.type === 'prompt') {
+        webR.writeConsole(code[l++] + '\n');
       }
     }
+    process.exit(0);
 })();

@@ -20,7 +20,7 @@ const onmessage = function (ev: MessageEvent) {
     throw new Error("Can't initialise worker multiple times.");
   }
 
-  init(msg as WebROptions);
+  init(msg.data as WebROptions);
   initialised = true;
 };
 
@@ -338,6 +338,10 @@ function init(options: WebROptions = {}) {
   Module.webr = {
     resolveInit: () => {
       chan.resolve();
+    },
+
+    exit: () => {
+      chan.write({ type: 'exit' });
     },
 
     // C code must call `free()` on the result
