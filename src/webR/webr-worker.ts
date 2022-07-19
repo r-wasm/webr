@@ -195,8 +195,8 @@ function setRObj(root: RSexp, path: string[], value: RSexp) {
 }
 
 function evalRCode(code: string, env: RTargetObj | undefined): RSexpPtr {
-  const str = allocateUTF8(code);
-  const err = allocate(1, 'i32', 0);
+  const str = Module.allocateUTF8(code);
+  const err = Module.allocate(1, 'i32', 0);
 
   let envObj = RSexp.wrap(RSexp.R_GlobalEnv);
   if (env && env.type === RTargetType.CODE) {
@@ -309,6 +309,11 @@ function init(options: WebROptions = {}) {
   Module.noAudioDecoding = true;
 
   Module.preRun.push(() => {
+    if (IN_NODE) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      globalThis.FS = Module.FS;
+    }
+
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore: next-line
     FS.mkdirTree(_config.homedir);
@@ -327,7 +332,7 @@ function init(options: WebROptions = {}) {
     // C code must call `free()` on the result
     readConsole: () => {
       const input = inputOrDispatch(chan);
-      return allocateUTF8(input);
+      return Module.allocateUTF8(input);
     },
   };
 
