@@ -12,6 +12,9 @@ EMFC_FILES = $(EMFC) $(FORTRAN_WASM_LIB)
 webr: $(EMFC_FILES)
 	cd R && $(MAKE) && $(MAKE) install
 	cd src && $(MAKE)
+# Patch R.bin.js to workaround Emscripten issue #14502
+# https://github.com/emscripten-core/emscripten/issues/14502
+	sed -i '' "s|readAsync(libFile,|readAsync(locateFile(libFile),|" dist/R.bin.js
 
 $(EMFC_FILES):
 	cd $(EMFC_DIR) && $(MAKE) && $(MAKE) install
