@@ -4,20 +4,31 @@ import { ChannelWorker } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions, Module, XHRResponse } from './utils';
 import { RawTypes, RSexp, RTargetObj, RTargetType, RRawObj, RSexpPtr, SexpType } from './sexp';
+import { IN_NODE } from './compat';
 
 let initialised = false;
 
-self.onmessage = function (ev: MessageEvent) {
-  if (!ev || !ev.data || !ev.data.type || ev.data.type !== 'init') {
+const onmessage = function (ev: MessageEvent) {
+  let msg = ev.data as Message;
+  if (IN_NODE) {
+    msg = ev;
+  }
+  if (!msg || !msg.data || !msg.type || msg.type !== 'init') {
     return;
   }
   if (initialised) {
     throw new Error("Can't initialise worker multiple times.");
   }
 
-  init(ev.data as WebROptions);
+  init(msg as WebROptions);
   initialised = true;
 };
+
+if (IN_NODE) {
+  require('worker_threads').parentPort.on('message', onmessage);
+} else {
+  globalThis.onmessage = onmessage;
+}
 
 const defaultEnv = {
   R_HOME: '/usr/lib/R',
