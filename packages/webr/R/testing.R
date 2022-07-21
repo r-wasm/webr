@@ -51,8 +51,10 @@ remove_lines_in_file <- function(src_file, lines) {
 
 #' Test an installed R package by running the package examples and tests
 #'
-#' Based on [tools::testInstalledPackage()], with modifications for running
-#' tests under WASM, where the [system()] function cannot be used.
+#' @description
+#' This function runs R package examples and tests. The implementation is based
+#' on [tools::testInstalledPackage()], with modifications for webR where the
+#' [system()] function cannot be used.
 #'
 #' @export
 #'

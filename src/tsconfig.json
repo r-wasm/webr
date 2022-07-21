@@ -13,5 +13,26 @@
     "noEmit": true,
     "lib": ["dom", "webworker"],
   },
+  "typedocOptions": {
+    "entryPointStrategy": "expand",
+    "entryPoints": [
+      "webR/chan/channel.ts",
+      "webR/chan/message.ts",
+      "webR/chan/queue.ts",
+      "webR/payload.ts",
+      "webR/proxy.ts",
+      "webR/robj.ts",
+      "webR/robj-main.ts",
+      "webR/robj-worker.ts",
+      "webR/tree.ts",
+      "webR/webr-main.ts",
+      "webR/webr-chan.ts"
+    ],
+    "name": "WebR - R in the browser",
+    "out": "docs/api/js",
+    "hideBreadcrumbs": true,
+    "githubPages": false,
+    "excludePrivate": true,
+  },
   "include": ["**/*.ts"],
 }

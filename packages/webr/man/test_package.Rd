@@ -13,6 +13,7 @@ test_package(pkg)
 0 if the test was successful, otherwise 1.
 }
 \description{
-Based on [tools::testInstalledPackage()], with modifications for running
-tests under WASM, where the [system()] function cannot be used.
+This function runs R package examples and tests. The implementation is based
+on [tools::testInstalledPackage()], with modifications for webR where the
+[system()] function cannot be used.
 }

@@ -1,3 +1,8 @@
+/**
+ * Interfaces for the webR main and worker thread communication channels.
+ * @module Channel
+ */
+
 import { promiseHandles, ResolveFn, RejectFn } from '../utils';
 import { AsyncQueue } from './queue';
 import { Message, newRequest, Response } from './message';

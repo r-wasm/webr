@@ -1,10 +1,16 @@
+/**
+ * WebR communication channel messaging and request types.
+ * @module Message
+ */
 import { generateUUID, transfer, UUID } from './task-common';
 
+/** A webR communication channel message. */
 export interface Message {
   type: string;
   data?: any;
 }
 
+/** A webR communication channel request. */
 export interface Request {
   type: 'request';
   data: {
@@ -13,6 +19,7 @@ export interface Request {
   };
 }
 
+/** A webR communication channel response. */
 export interface Response {
   type: 'response';
   data: {
@@ -56,6 +63,7 @@ function newRequestResponseMessage<T>(msg: T, transferables?: [Transferable]): T
   return msg;
 }
 
+/** A webR communication channel sync-request. */
 export interface SyncRequest {
   type: 'sync-request';
   data: {
@@ -64,6 +72,7 @@ export interface SyncRequest {
   };
 }
 
+/** Transfer data required when using sync-request with SharedArrayBuffer. */
 export interface SyncRequestData {
   taskId?: number;
   sizeBuffer: Int32Array;
@@ -81,11 +90,21 @@ export function newSyncRequest(msg: Message, data: SyncRequestData): SyncRequest
 const encoder = new TextEncoder();
 const decoder = new TextDecoder('utf-8');
 
-// TODO: Pass a `replacer` function
+/**
+ * Encode data for transfering from worker thread to main thread.
+ * @param {any} data The message data to be serialised and encoded.
+ * @return {Uint8Array} The encoded data.
+ * */
 export function encodeData(data: any): Uint8Array {
+  // TODO: Pass a `replacer` function
   return encoder.encode(JSON.stringify(data));
 }
 
+/**
+ * Decode data that has been transferred from worker thread to main thread.
+ * @param {any} data The message data to be decoded.
+ * @return {unknown} The data after decoding.
+ * */
 export function decodeData(data: Uint8Array): unknown {
   return JSON.parse(decoder.decode(data)) as unknown;
 }

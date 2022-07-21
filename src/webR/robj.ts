@@ -1,3 +1,7 @@
+/**
+ * Common module for working with R objects.
+ * @module RObject
+ */
 import { WebRDataTree, WebRDataTreeAtomic } from './tree';
 import * as RMain from './robj-main';
 import * as RWorker from './robj-worker';
@@ -61,11 +65,11 @@ export type NamedEntries<T> = [string | null, T][];
 export type NamedObject<T> = { [key: string]: T };
 
 /**
- * WebRData is a union of the JavaScript types that are able to be converted
- * into an R object.
+ * A union of JavaScript types that are able to be converted into an R object.
  *
- * WebRData is used both as a general input argument for R object construction
+ * `WebRData` is used both as a general input argument for R object construction
  * and also as a general return type when converting R objects into JavaScript.
+ *
  */
 export type WebRData =
   | RMain.RObject
@@ -77,9 +81,10 @@ export type WebRData =
   | { [key: string]: WebRData };
 
 /**
- * A subset of WebRData for JavaScript objects that can be converted into R
- * atomic vectors. The parameter T is the JavaScript scalar type associated with
- * the vector.
+ * A subset of {@link WebRData} for JavaScript objects that can be converted
+ * into R atomic vectors.
+ *
+ * @typeParam T The JavaScript scalar type associated with the atomic vector.
  */
 export type WebRDataAtomic<T> =
   | WebRDataScalar<T>
@@ -93,10 +98,10 @@ export type WebRDataAtomic<T> =
 export type WebRDataScalar<T> = T | RMain.RObject | RWorker.RObjectBase;
 
 /**
- * Test if an object is of type Complex
+ * Test if an object is of type {@link Complex}.
  *
  * @param {any} value The object to test.
- * @return {boolean} True if the object is of type Complex.
+ * @return {boolean} True if the object is of type {@link Complex}.
  */
 export function isComplex(value: any): value is Complex {
   return value && typeof value === 'object' && 're' in value && 'im' in value;

@@ -35,6 +35,10 @@ docker-container-%:
 	docker build -t webr-build .
 	docker run -dit --name $* --mount type=bind,source=$(PWD),target=/app webr-build bash
 
+docs: docs/build
+docs/build:
+	cd docs && $(MAKE) api && $(MAKE) html
+
 .PHONY: check
 check:
 	cd src && $(MAKE) check
