@@ -3,7 +3,7 @@ import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions, Module, XHRResponse } from './utils';
-import { RawTypes, RSexp, RTargetObj, RTargetType, RRawObj, RSexpPtr, SexpType } from './sexp';
+import { RawTypes, RObj, RTargetObj, RTargetType, RRawObj, RPtrObj, RType } from './robj';
 
 let initialised = false;
 
@@ -94,16 +94,16 @@ function inputOrDispatch(chan: ChannelWorker): string {
   }
 }
 
-function isRSexp(value: any): value is RSexp {
+function isRObj(value: any): value is RObj {
   return typeof value === 'object' && 'convertImplicitly' in value && 'type' in value;
 }
 
-function getProp(obj: RawTypes | RSexp | Function, prop: string): RawTypes | RSexp | Function {
+function getProp(obj: RawTypes | RObj | Function, prop: string): RawTypes | RObj | Function {
   if (!obj) {
     return undefined;
-  } else if (isRSexp(obj) && !isNaN(Number(prop))) {
+  } else if (isRObj(obj) && !isNaN(Number(prop))) {
     return obj.getIdx(Number(prop));
-  } else if (isRSexp(obj) && prop.startsWith('$')) {
+  } else if (isRObj(obj) && prop.startsWith('$')) {
     prop = prop.slice(1);
     if (prop === '') return undefined;
     return obj.getDollar(prop);
@@ -112,43 +112,43 @@ function getProp(obj: RawTypes | RSexp | Function, prop: string): RawTypes | RSe
 }
 
 /**
- * Given a root RSexp object, return the result of walking the given path of
+ * Given a root RObj object, return the result of walking the given path of
  * properties, optionally calling a function at the end of the path.
  *
  * Returns a RTargetObj containing either a reference to the resulting SEXP
  * object in WASM memory, or the object represented in an equivalent raw
  * JS form.
  *
- * @param {RSexp}  root The root R RSexp object
+ * @param {RObj}  root The root R RObj object
  * @param {string[]} [path] List of properties to iteratively navigate
  * @param {RTargetObj[]} [args] List of arguments to call with
  * @return {RTargetObj} The resulting R object
  */
-function getRObj(root: RSexp, path: string[], args?: RTargetObj[]): RTargetObj {
-  let ret: RSexpPtr | RRawObj = { obj: undefined, type: RTargetType.RAW };
+function getRObj(root: RObj, path: string[], args?: RTargetObj[]): RTargetObj {
+  let ret: RPtrObj | RRawObj = { data: undefined, type: RTargetType.RAW };
   try {
-    // Navigate the property array and grab the requested RSexp objects
+    // Navigate the property array and grab the requested RObj objects
     let res = path.reduce(getProp, root);
-    const parent = path.slice(0, -1).reduce(getProp, root) as RSexp;
+    const parent = path.slice(0, -1).reduce(getProp, root) as RObj;
 
     // If requested, call the resulting object with the provided arguments
     if (typeof res === 'function' && args) {
-      res = res.apply(parent, args) as RawTypes | RSexp | Function;
-    } else if (isRSexp(res) && args) {
+      res = res.apply(parent, args) as RawTypes | RObj | Function;
+    } else if (isRObj(res) && args) {
       res = res._call.call(
         parent,
         Array.from({ length: args.length }, (_, idx) => wrapRTargetObj(args[idx]))
       );
     }
 
-    // Return a RSexpPtr reference, or otherwise a raw JS object where
+    // Return a RPtrObj reference, or otherwise a raw JS object where
     // implicit conversion is enabled
-    if (isRSexp(res) && res.convertImplicitly) {
-      ret = { obj: res.toJs(), type: RTargetType.RAW };
-    } else if (isRSexp(res)) {
-      ret = { obj: res.ptr, type: RTargetType.SEXPPTR };
+    if (isRObj(res) && res.convertImplicitly) {
+      ret = { data: res.toJs(), type: RTargetType.RAW };
+    } else if (isRObj(res)) {
+      ret = { data: res.ptr, type: RTargetType.PTR };
     } else if (!(typeof res === 'function')) {
-      ret = { obj: res, type: RTargetType.RAW };
+      ret = { data: res, type: RTargetType.RAW };
     } else {
       throw Error('Resulting object cannot be transferred to main thread');
     }
@@ -161,16 +161,16 @@ function getRObj(root: RSexp, path: string[], args?: RTargetObj[]): RTargetObj {
 }
 
 /**
- * Given a root RSexp object, walk the given path of properties and set
+ * Given a root RObj object, walk the given path of properties and set
  * the value of the result, if possible.
  *
- * @param {RSexp}  root The root R RSexp object
+ * @param {RObj}  root The root R RObj object
  * @param {string[]} [path] List of properties to iteratively navigate
- * @param {RSexp} [value] The R RSexp object to set the value to
+ * @param {RObj} [value] The R RObj object to set the value to
  */
-function setRObj(root: RSexp, path: string[], value: RSexp) {
+function setRObj(root: RObj, path: string[], value: RObj) {
   try {
-    const parent = path.slice(0, -1).reduce(getProp, root) as RSexp;
+    const parent = path.slice(0, -1).reduce(getProp, root) as RObj;
     let prop = path[path.length - 1];
     if (prop.startsWith('$')) {
       prop = prop.slice(1);
@@ -181,19 +181,19 @@ function setRObj(root: RSexp, path: string[], value: RSexp) {
   }
 }
 
-function evalRCode(code: string, env: RTargetObj | undefined): RSexpPtr {
+function evalRCode(code: string, env: RTargetObj | undefined): RPtrObj {
   const str = allocateUTF8(code);
   const err = Module._malloc(4);
 
-  let envObj = RSexp.wrap(RSexp.R_GlobalEnv);
+  let envObj = RObj.wrap(RObj.R_GlobalEnv);
   if (env && env.type === RTargetType.CODE) {
     envObj = wrapRTargetObj(env);
-  } else if (env && env.type === RTargetType.SEXPPTR) {
-    envObj = RSexp.wrap(env.obj);
+  } else if (env && env.type === RTargetType.PTR) {
+    envObj = RObj.wrap(env.data);
   } else if (env) {
     throw new Error('Attempted to eval R code with an invalid raw env argument');
   }
-  if (envObj.type !== SexpType.ENVSXP) {
+  if (envObj.type !== RType.Environment) {
     throw new Error('Attempted to eval R code with an env argument with invalid SEXP type');
   }
   const resultPtr = Module._evalRCode(str, envObj.ptr, err);
@@ -203,25 +203,25 @@ function evalRCode(code: string, env: RTargetObj | undefined): RSexpPtr {
   }
   Module._free(str);
   Module._free(err);
-  return { obj: resultPtr, type: RTargetType.SEXPPTR };
+  return { data: resultPtr, type: RTargetType.PTR };
 }
 
-function wrapRTargetObj(target: RTargetObj): RSexp {
+function wrapRTargetObj(target: RTargetObj): RObj {
   try {
-    if (target.type === RTargetType.SEXPPTR) {
-      return RSexp.wrap(target.obj);
+    if (target.type === RTargetType.PTR) {
+      return RObj.wrap(target.data);
     } else if (target.type === RTargetType.CODE) {
-      const res: RSexpPtr = evalRCode(target.obj.code, target.obj.env);
-      return RSexp.wrap(res.obj);
+      const res: RPtrObj = evalRCode(target.data.code, target.data.env);
+      return RObj.wrap(res.data);
     } else if (target.type === RTargetType.RAW) {
-      return new RSexp(target);
+      return new RObj(target);
     }
   } catch (e) {
     if (e instanceof Error) {
       console.error(e);
     }
   }
-  return RSexp.wrap(RSexp.R_NilValue);
+  return RObj.wrap(RObj.R_NilValue);
 }
 
 function getFSNode(path: string): FSNode {

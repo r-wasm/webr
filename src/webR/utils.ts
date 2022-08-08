@@ -1,4 +1,4 @@
-import { RPtr, SexpType } from './sexp';
+import { RPtr, RType } from './robj';
 
 export type FSNode = {
   id: number;
@@ -36,7 +36,7 @@ export interface Module extends EmscriptenModule {
   _Rf_ScalarLogical: (l: boolean) => RPtr;
   _Rf_mkString: (ptr: number) => RPtr;
   _Rf_mkChar: (ptr: number) => RPtr;
-  _Rf_allocVector: (type: SexpType, n: number) => RPtr;
+  _Rf_allocVector: (type: RType, n: number) => RPtr;
   _Rf_eval: (call: RPtr, env: RPtr) => RPtr;
   _Rf_findVarInFrame: (rho: RPtr, symbol: RPtr) => RPtr;
   _Rf_installTrChar: (name: RPtr) => RPtr;

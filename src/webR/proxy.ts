@@ -1,15 +1,15 @@
-import { RTargetObj, RTargetType, RawTypes, RSexp } from './sexp';
+import { RTargetObj, RTargetType, RawTypes, RObj } from './robj';
 import { ChannelMain } from './chan/channel';
 
 type Promisify<T> = T extends Promise<unknown> ? T : Promise<T>;
-type RemoteProperty<T> = T extends Function | RSexp ? RProxy : Promisify<T>;
-export type RProxy = { [P in keyof RSexp]: RemoteProperty<RSexp[P]> } & {
+type RemoteProperty<T> = T extends Function | RObj ? RProxy : Promisify<T>;
+export type RProxy = { [P in keyof RObj]: RemoteProperty<RObj[P]> } & {
   [_target: string]: RTargetObj;
 };
 
 export function isRProxy(value: any): value is RProxy {
   // An RProxy acts like a function, but with RTargetObj properties
-  return typeof value === 'function' && 'type' in value && 'obj' in value;
+  return typeof value === 'function' && 'type' in value && 'data' in value;
 }
 
 export function createRProxy(
@@ -33,9 +33,9 @@ export function createRProxy(
   const proxy = new Proxy(callableTarget, {
     get: (target: RTargetObj, prop: string | number | symbol) => {
       if (prop === '_target') {
-        return { obj: target.obj, type: target.type };
+        return { data: target.data, type: target.type };
       } else if (prop === 'then') {
-        if (path.length === 0 && target.type === RTargetType.SEXPPTR) {
+        if (path.length === 0 && target.type === RTargetType.PTR) {
           return { then: () => proxy };
         }
         const r = chan
@@ -48,7 +48,7 @@ export function createRProxy(
             },
           })
           .then((r: RTargetObj) => {
-            return r.type === RTargetType.RAW ? r.obj : createRProxy(chan, r);
+            return r.type === RTargetType.RAW ? r.data : createRProxy(chan, r);
           });
         return r.then.bind(r);
       }
@@ -62,11 +62,11 @@ export function createRProxy(
           path: path.map((p) => p.toString()),
           args: Array.from({ length: args.length }, (_, idx) => {
             const arg = args[idx];
-            return isRProxy(arg) ? arg._target : { obj: arg, type: RTargetType.RAW };
+            return isRProxy(arg) ? arg._target : { data: arg, type: RTargetType.RAW };
           }),
         },
       })) as RTargetObj;
-      return r.type === RTargetType.RAW ? r.obj : createRProxy(chan, r);
+      return r.type === RTargetType.RAW ? r.data : createRProxy(chan, r);
     },
     set(target: RTargetObj, prop: string | number | symbol, value: RProxy | RawTypes) {
       chan.request({
@@ -74,7 +74,7 @@ export function createRProxy(
         data: {
           target: { ...target },
           path: [...path, prop].map((p) => p.toString()),
-          value: isRProxy(value) ? value._target : { obj: value, type: RTargetType.RAW },
+          value: isRProxy(value) ? value._target : { data: value, type: RTargetType.RAW },
         },
       });
       // TODO: This should return false if the assignment failed.

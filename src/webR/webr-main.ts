@@ -2,7 +2,7 @@ import { ChannelMain } from './chan/channel';
 import { Message } from './chan/message';
 import { FSNode, WebROptions } from './utils';
 import { createRProxy, RProxy, isRProxy } from './proxy';
-import { RTargetType, RCodeObj } from './sexp';
+import { RTargetType, RCodeObj } from './robj';
 
 export class WebR {
   #chan;
@@ -42,7 +42,7 @@ export class WebR {
       throw new Error('The envProxy object passed to evalRCode is not an RProxy object');
     }
     const RObj: RCodeObj = {
-      obj: {
+      data: {
         code: code,
         env: envProxy ? envProxy._target : undefined,
       },

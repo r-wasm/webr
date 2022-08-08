@@ -2,32 +2,34 @@ import type { Module } from './utils';
 
 declare let Module: Module;
 
-export enum SexpType {
-  NILSXP = 0,
-  SYMSXP,
-  LISTSXP,
-  CLOSXP,
-  ENVSXP,
-  PROMSXP,
-  LANGSXP,
-  SPECIALSXP,
-  BUILTINSXP,
-  CHARSXP,
-  LGLSXP,
-  INTSXP = 13,
-  REALSXP,
-  CPLXSXP,
-  STRSXP,
-  DOTSXP,
-  ANYSXP,
-  VECSXP,
-  EXPRSXP,
-  BCODESXP,
-  EXTPTRSXP,
-  WEAKREFSXP,
-  RAWSXP,
-  S4SXP,
-  FUNSXP = 99,
+export enum RType {
+  Null = 0,
+  Symbol,
+  Pairlist,
+  Closure,
+  Environment,
+  Promise,
+  Call,
+  Special,
+  Builtin,
+  String,
+  Logical,
+  Integer = 13,
+  Double,
+  Complex,
+  Character,
+  Dots,
+  Any,
+  List,
+  Expression,
+  Bytecode,
+  Pointer,
+  Weakref,
+  Raw,
+  S4,
+  New = 30,
+  Free = 31,
+  Function = 99,
 }
 
 export type RPtr = number;
@@ -35,25 +37,25 @@ export type RPtr = number;
 export enum RTargetType {
   CODE = 'CODE',
   RAW = 'RAW',
-  SEXPPTR = 'SEXPPTR',
+  PTR = 'PTR',
 }
 
 export type RCodeObj = {
-  obj: {
+  data: {
     code: string;
     env: RTargetObj | undefined;
   };
   type: RTargetType.CODE;
 };
 export type RRawObj = {
-  obj: RawTypes;
+  data: RawTypes;
   type: RTargetType.RAW;
 };
-export type RSexpPtr = {
-  obj: RPtr;
-  type: RTargetType.SEXPPTR;
+export type RPtrObj = {
+  data: RPtr;
+  type: RTargetType.PTR;
 };
-export type RTargetObj = RCodeObj | RRawObj | RSexpPtr;
+export type RTargetObj = RCodeObj | RRawObj | RPtrObj;
 
 type Complex = {
   re: number;
@@ -74,82 +76,82 @@ export type RawTypes =
   | Set<RawTypes>
   | { [key: string]: RawTypes };
 
-export class RSexp {
+export class RObj {
   ptr: RPtr;
   constructor(target: RPtr | RTargetObj) {
-    this.ptr = RSexp.R_NilValue;
+    this.ptr = RObj.R_NilValue;
     if (typeof target === 'number') {
-      // We have a number, assume it is an RPtr to an RSexp
+      // We have a number, assume it is an RPtr to an RObj
       this.ptr = target;
-    } else if (target.type === RTargetType.SEXPPTR) {
-      // We have an RSexpPtr, wrap using the RPtr within
-      return RSexp.wrap(target.obj);
-    } else if (typeof target.obj === 'number') {
-      const ptr = Module._Rf_ScalarReal(target.obj);
-      return new RSexpReal(ptr);
-    } else if (typeof target.obj === 'string') {
-      const str = allocateUTF8(target.obj);
+    } else if (target.type === RTargetType.PTR) {
+      // We have an RPtrObj, wrap using the RPtr within
+      return RObj.wrap(target.data);
+    } else if (typeof target.data === 'number') {
+      const ptr = Module._Rf_ScalarReal(target.data);
+      return new RObjReal(ptr);
+    } else if (typeof target.data === 'string') {
+      const str = allocateUTF8(target.data);
       const ptr = Module._Rf_mkString(str);
       Module._free(str);
-      return new RSexpStr(ptr);
-    } else if (typeof target.obj === 'boolean') {
-      const ptr = Module._Rf_ScalarLogical(target.obj);
-      return new RSexpLogical(ptr);
-    } else if (Array.isArray(target.obj) && target.obj.some((el) => typeof el === 'string')) {
+      return new RObjStr(ptr);
+    } else if (typeof target.data === 'boolean') {
+      const ptr = Module._Rf_ScalarLogical(target.data);
+      return new RObjLogical(ptr);
+    } else if (Array.isArray(target.data) && target.data.some((el) => typeof el === 'string')) {
       // Create a vector of strings
-      const sexpVec = Module._Rf_allocVector(SexpType.STRSXP, target.obj.length);
-      target.obj.forEach((el, idx) => {
+      const robjVec = Module._Rf_allocVector(RType.Character, target.data.length);
+      target.data.forEach((el, idx) => {
         const str = allocateUTF8(String(el));
         const ptr = Module._Rf_mkChar(str);
         Module._free(str);
-        Module._SET_STRING_ELT(sexpVec, idx, ptr);
+        Module._SET_STRING_ELT(robjVec, idx, ptr);
       });
-      return RSexp.wrap(sexpVec);
-    } else if (Array.isArray(target.obj) && target.obj.some((el) => typeof el === 'number')) {
+      return RObj.wrap(robjVec);
+    } else if (Array.isArray(target.data) && target.data.some((el) => typeof el === 'number')) {
       // Create a vector of reals
-      const sexpVec = Module._Rf_allocVector(SexpType.REALSXP, target.obj.length);
-      target.obj.forEach((el, idx) =>
-        setValue(Module._REAL(sexpVec) + 8 * idx, Number(el), 'double')
+      const robjVec = Module._Rf_allocVector(RType.Double, target.data.length);
+      target.data.forEach((el, idx) =>
+        setValue(Module._REAL(robjVec) + 8 * idx, Number(el), 'double')
       );
-      return RSexp.wrap(sexpVec);
-    } else if (Array.isArray(target.obj)) {
+      return RObj.wrap(robjVec);
+    } else if (Array.isArray(target.data)) {
       // Create a vector of logicals
-      const sexpVec = Module._Rf_allocVector(SexpType.LGLSXP, target.obj.length);
-      target.obj.forEach((el, idx) => setValue(Module._LOGICAL(sexpVec) + 4 * idx, el, 'i32'));
-      return RSexp.wrap(sexpVec);
+      const robjVec = Module._Rf_allocVector(RType.Logical, target.data.length);
+      target.data.forEach((el, idx) => setValue(Module._LOGICAL(robjVec) + 4 * idx, el, 'i32'));
+      return RObj.wrap(robjVec);
     }
   }
   get [Symbol.toStringTag](): string {
-    return `RSexp:${this.typeName}`;
+    return `RObj:${this.typeName}`;
   }
-  get type(): SexpType {
+  get type(): RType {
     return Module._TYPEOF(this.ptr);
   }
   get typeName(): string {
-    return SexpType[this.type];
+    return RType[this.type];
   }
   get convertImplicitly(): boolean {
     return false;
   }
-  get attrs(): RSexp {
-    return RSexp.wrap(Module._ATTRIB(this.ptr));
+  get attrs(): RObj {
+    return RObj.wrap(Module._ATTRIB(this.ptr));
   }
   get isNil(): boolean {
-    return Module._TYPEOF(this.ptr) === SexpType.NILSXP;
+    return Module._TYPEOF(this.ptr) === RType.Null;
   }
-  getDollar(prop: string): RSexp | RawTypes {
+  getDollar(prop: string): RObj | RawTypes {
     throw new Error('The $ operator is not yet supported for this R object');
   }
-  getIdx(idx: number): RSexp | RawTypes {
+  getIdx(idx: number): RObj | RawTypes {
     throw new Error('This R object cannot be indexed');
   }
   toJs(): RawTypes {
     throw new Error('JS conversion for this R object is not yet supported');
   }
-  _set(prop: string, value: RSexp) {
+  _set(prop: string, value: RObj) {
     throw new Error('Setting this R object is not yet supported');
   }
-  _call(_args: Array<RSexp>): RSexp {
+  _call(_args: Array<RObj>): RObj {
     throw new Error('This R object cannot be called');
   }
   static get R_GlobalEnv(): RPtr {
@@ -167,13 +169,13 @@ export class RSexp {
   static get R_UnboundValue(): RPtr {
     return getValue(Module._R_UnboundValue, '*');
   }
-  static wrap(ptr: RPtr): RSexp {
+  static wrap(ptr: RPtr): RObj {
     const type = Module._TYPEOF(ptr);
-    return new (getRSexpClass(type))(ptr);
+    return new (getRObjClass(type))(ptr);
   }
 }
 
-export class RSexpNil extends RSexp {
+export class RObjNil extends RObj {
   toJs(): RawTypes {
     return undefined;
   }
@@ -182,7 +184,7 @@ export class RSexpNil extends RSexp {
   }
 }
 
-class RSexpSymbol extends RSexp {
+class RObjSymbol extends RObj {
   toJs(): RawTypes {
     return {
       printname: this.printname.toJs(),
@@ -190,84 +192,84 @@ class RSexpSymbol extends RSexp {
       internal: this.internal.toJs(),
     };
   }
-  get printname(): RSexpChar {
-    return RSexp.wrap(Module._PRINTNAME(this.ptr)) as RSexpChar;
+  get printname(): RObjChar {
+    return RObj.wrap(Module._PRINTNAME(this.ptr)) as RObjChar;
   }
-  get symvalue(): RSexp {
-    return RSexp.wrap(Module._SYMVALUE(this.ptr));
+  get symvalue(): RObj {
+    return RObj.wrap(Module._SYMVALUE(this.ptr));
   }
-  get internal(): RSexp {
-    return RSexp.wrap(Module._INTERNAL(this.ptr));
+  get internal(): RObj {
+    return RObj.wrap(Module._INTERNAL(this.ptr));
   }
 }
 
-class RSexpPairlist extends RSexp {
+class RObjPairlist extends RObj {
   toJs(): { [key: string]: RawTypes } {
     const d: { [key: string]: RawTypes } = {};
-    let v: RSexp = RSexp.wrap(Module._CAR(this.ptr));
-    for (let next = this.ptr; Module._TYPEOF(next) !== SexpType.NILSXP; next = Module._CDR(next)) {
-      v = RSexp.wrap(Module._CAR(next));
-      d[(RSexp.wrap(Module._TAG(next)) as RSexpSymbol).printname.toJs()] = v.toJs();
+    let v: RObj = RObj.wrap(Module._CAR(this.ptr));
+    for (let next = this.ptr; Module._TYPEOF(next) !== RType.Null; next = Module._CDR(next)) {
+      v = RObj.wrap(Module._CAR(next));
+      d[(RObj.wrap(Module._TAG(next)) as RObjSymbol).printname.toJs()] = v.toJs();
     }
     return d;
   }
-  get car(): RSexp {
-    return RSexp.wrap(Module._CAR(this.ptr));
+  get car(): RObj {
+    return RObj.wrap(Module._CAR(this.ptr));
   }
-  get cdr(): RSexp {
-    return RSexp.wrap(Module._CDR(this.ptr));
+  get cdr(): RObj {
+    return RObj.wrap(Module._CDR(this.ptr));
   }
-  get tag(): RSexp {
-    return RSexp.wrap(Module._TAG(this.ptr));
+  get tag(): RObj {
+    return RObj.wrap(Module._TAG(this.ptr));
   }
 }
 
-class RSexpClosure extends RSexp {
-  _call(args: Array<RSexp>): RSexp {
-    const call = Module._Rf_allocVector(SexpType.LANGSXP, args.length + 1);
+class RObjClosure extends RObj {
+  _call(args: Array<RObj>): RObj {
+    const call = Module._Rf_allocVector(RType.Call, args.length + 1);
     let c = call;
     Module._SETCAR(call, this.ptr);
     for (let i = 0; i < args.length; i++) {
       c = Module._CDR(c);
       Module._SETCAR(c, args[i].ptr);
     }
-    return RSexp.wrap(Module._Rf_eval(call, Module._CLOENV(this.ptr)));
+    return RObj.wrap(Module._Rf_eval(call, Module._CLOENV(this.ptr)));
   }
 }
 
-class RSexpFunction extends RSexp {
-  _call(args: Array<RSexp>): RSexp {
-    const call = Module._Rf_allocVector(SexpType.LANGSXP, args.length + 1);
+class RObjFunction extends RObj {
+  _call(args: Array<RObj>): RObj {
+    const call = Module._Rf_allocVector(RType.Call, args.length + 1);
     let c = call;
     Module._SETCAR(call, this.ptr);
     for (let i = 0; i < args.length; i++) {
       c = Module._CDR(c);
       Module._SETCAR(c, args[i].ptr);
     }
-    return RSexp.wrap(Module._Rf_eval(call, RSexp.R_GlobalEnv));
+    return RObj.wrap(Module._Rf_eval(call, RObj.R_GlobalEnv));
   }
 }
 
-class RSexpVector extends RSexp {
+class RObjVector extends RObj {
   get length(): number {
     return Module._LENGTH(this.ptr);
   }
-  getIdx(idx: number): RSexp | RawTypes {
-    return RSexp.wrap(Module._VECTOR_ELT(this.ptr, idx));
+  getIdx(idx: number): RObj | RawTypes {
+    return RObj.wrap(Module._VECTOR_ELT(this.ptr, idx));
   }
   toJs(): RawTypes {
     const list: { [keys: string | number]: RawTypes } = {};
     for (let idx = 0; idx < this.length; idx++) {
-      const attrs = (this.attrs as RSexpPairlist).toJs();
+      const attrs = (this.attrs as RObjPairlist).toJs();
       const listIdx = 'names' in attrs ? (attrs['names'] as Array<string>)[idx] : idx + 1;
-      list[listIdx] = RSexp.wrap(Module._VECTOR_ELT(this.ptr, idx)).toJs();
+      list[listIdx] = RObj.wrap(Module._VECTOR_ELT(this.ptr, idx)).toJs();
     }
     return list;
   }
 }
 
 type logical = boolean | 'NA';
-class RSexpLogical extends RSexpVector {
+class RObjLogical extends RObjVector {
   toJs(): logical | Array<logical> {
     const valAtIdx = (idx: number) => {
       const val = getValue(Module._LOGICAL(this.ptr) + 4 * idx, 'i32');
@@ -289,7 +291,7 @@ class RSexpLogical extends RSexpVector {
   }
 }
 
-class RSexpInt extends RSexpVector {
+class RObjInt extends RObjVector {
   toJs(): number | ArrayBufferView {
     if (this.length === 1) {
       return getValue(Module._INTEGER(this.ptr), 'i32');
@@ -306,12 +308,12 @@ class RSexpInt extends RSexpVector {
   }
 }
 
-class RSexpReal extends RSexpVector {
+class RObjReal extends RObjVector {
   #getIdxValue(idx: number): number {
     return this.#arrView[idx];
   }
   #getIdxName(idx: number): string | number {
-    const attrs = (this.attrs as RSexpPairlist).toJs();
+    const attrs = (this.attrs as RObjPairlist).toJs();
     return 'names' in attrs ? (attrs['names'] as Array<string>)[idx] : idx + 1;
   }
   get #arrView() {
@@ -346,7 +348,7 @@ class RSexpReal extends RSexpVector {
       return { [this.#getIdxName(idx)]: this.#getIdxValue(idx) };
     }
   }
-  _set(prop: string, value: RSexpReal) {
+  _set(prop: string, value: RObjReal) {
     if (isNaN(Number(prop))) {
       const attrs = this.attrs.toJs();
       if (attrs && typeof attrs === 'object' && 'names' in attrs) {
@@ -369,7 +371,7 @@ class RSexpReal extends RSexpVector {
   }
 }
 
-class RSexpComplex extends RSexpVector {
+class RObjComplex extends RObjVector {
   toJs(): Complex | Array<Complex> {
     const valAtIdx = (idx: number) => {
       return {
@@ -388,7 +390,7 @@ class RSexpComplex extends RSexpVector {
   }
 }
 
-class RSexpChar extends RSexp {
+class RObjChar extends RObj {
   toJs(): string {
     return UTF8ToString(Module._R_CHAR(this.ptr));
   }
@@ -397,7 +399,7 @@ class RSexpChar extends RSexp {
   }
 }
 
-class RSexpStr extends RSexpVector {
+class RObjStr extends RObjVector {
   toJs(): string | Array<string> {
     const valAtIdx = (idx: number) => {
       return UTF8ToString(Module._R_CHAR(Module._STRING_ELT(this.ptr, idx)));
@@ -413,7 +415,7 @@ class RSexpStr extends RSexpVector {
   }
 }
 
-class RSexpRawdata extends RSexpVector {
+class RObjRawdata extends RObjVector {
   toJs(): Uint8Array {
     const arrView = Module.HEAPU8.subarray(
       Module._RAW(this.ptr),
@@ -426,46 +428,46 @@ class RSexpRawdata extends RSexpVector {
   }
 }
 
-class RSexpEnv extends RSexp {
-  get ls(): RSexp {
-    return RSexp.wrap(Module._R_lsInternal(this.ptr, true));
+class RObjEnv extends RObj {
+  get ls(): RObj {
+    return RObj.wrap(Module._R_lsInternal(this.ptr, true));
   }
-  get frame(): RSexp {
-    return RSexp.wrap(Module._FRAME(this.ptr));
+  get frame(): RObj {
+    return RObj.wrap(Module._FRAME(this.ptr));
   }
-  getDollar(prop: string): RSexp {
+  getDollar(prop: string): RObj {
     const str = allocateUTF8(prop);
     const strPtr = Module._Rf_installTrChar(Module._STRING_ELT(Module._Rf_mkString(str), 0));
     Module._free(str);
-    const val = RSexp.wrap(Module._Rf_findVarInFrame(this.ptr, strPtr));
-    if (val.ptr === RSexp.R_UnboundValue) {
-      return new RSexpNil(RSexp.R_NilValue);
+    const val = RObj.wrap(Module._Rf_findVarInFrame(this.ptr, strPtr));
+    if (val.ptr === RObj.R_UnboundValue) {
+      return new RObjNil(RObj.R_NilValue);
     }
     return val;
   }
 }
 
-function getRSexpClass(type: SexpType): typeof RSexp {
-  const typeClasses: { [key: number]: typeof RSexp } = {
-    [SexpType.NILSXP]: RSexpNil,
-    [SexpType.LISTSXP]: RSexpPairlist,
-    [SexpType.VECSXP]: RSexpVector,
-    [SexpType.CLOSXP]: RSexpClosure,
-    [SexpType.SPECIALSXP]: RSexpFunction,
-    [SexpType.BUILTINSXP]: RSexpFunction,
-    [SexpType.FUNSXP]: RSexpFunction,
-    [SexpType.ENVSXP]: RSexpEnv,
-    [SexpType.LGLSXP]: RSexpLogical,
-    [SexpType.INTSXP]: RSexpInt,
-    [SexpType.REALSXP]: RSexpReal,
-    [SexpType.CPLXSXP]: RSexpComplex,
-    [SexpType.STRSXP]: RSexpStr,
-    [SexpType.RAWSXP]: RSexpRawdata,
-    [SexpType.SYMSXP]: RSexpSymbol,
-    [SexpType.CHARSXP]: RSexpChar,
+function getRObjClass(type: RType): typeof RObj {
+  const typeClasses: { [key: number]: typeof RObj } = {
+    [RType.Null]: RObjNil,
+    [RType.Pairlist]: RObjPairlist,
+    [RType.List]: RObjVector,
+    [RType.Closure]: RObjClosure,
+    [RType.Special]: RObjFunction,
+    [RType.Builtin]: RObjFunction,
+    [RType.Function]: RObjFunction,
+    [RType.Environment]: RObjEnv,
+    [RType.Logical]: RObjLogical,
+    [RType.Integer]: RObjInt,
+    [RType.Double]: RObjReal,
+    [RType.Complex]: RObjComplex,
+    [RType.Character]: RObjStr,
+    [RType.Raw]: RObjRawdata,
+    [RType.Symbol]: RObjSymbol,
+    [RType.String]: RObjChar,
   };
   if (type in typeClasses) {
     return typeClasses[type];
   }
-  throw new TypeError(`RSexp SEXP type ${SexpType[type]} has not yet been implemented.`);
+  throw new TypeError(`RObj type ${RType[type]} has not yet been implemented.`);
 }
