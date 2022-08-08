@@ -79,7 +79,11 @@ export class RSexp {
   constructor(target: RPtr | RTargetObj) {
     this.ptr = RSexp.R_NilValue;
     if (typeof target === 'number') {
+      // We have a number, assume it is an RPtr to an RSexp
       this.ptr = target;
+    } else if (target.type === RTargetType.SEXPPTR) {
+      // We have an RSexpPtr, wrap using the RPtr within
+      return RSexp.wrap(target.obj);
     } else if (typeof target.obj === 'number') {
       const ptr = Module._Rf_ScalarReal(target.obj);
       return new RSexpReal(ptr);
@@ -92,6 +96,7 @@ export class RSexp {
       const ptr = Module._Rf_ScalarLogical(target.obj);
       return new RSexpLogical(ptr);
     } else if (Array.isArray(target.obj) && target.obj.some((el) => typeof el === 'string')) {
+      // Create a vector of strings
       const sexpVec = Module._Rf_allocVector(SexpType.STRSXP, target.obj.length);
       target.obj.forEach((el, idx) => {
         const str = allocateUTF8(String(el));
@@ -101,12 +106,14 @@ export class RSexp {
       });
       return RSexp.wrap(sexpVec);
     } else if (Array.isArray(target.obj) && target.obj.some((el) => typeof el === 'number')) {
+      // Create a vector of reals
       const sexpVec = Module._Rf_allocVector(SexpType.REALSXP, target.obj.length);
       target.obj.forEach((el, idx) =>
         setValue(Module._REAL(sexpVec) + 8 * idx, Number(el), 'double')
       );
       return RSexp.wrap(sexpVec);
     } else if (Array.isArray(target.obj)) {
+      // Create a vector of logicals
       const sexpVec = Module._Rf_allocVector(SexpType.LGLSXP, target.obj.length);
       target.obj.forEach((el, idx) => setValue(Module._LOGICAL(sexpVec) + 4 * idx, el, 'i32'));
       return RSexp.wrap(sexpVec);
