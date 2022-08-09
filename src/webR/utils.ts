@@ -22,6 +22,7 @@ export type XHRResponse = {
 };
 
 export interface Module extends EmscriptenModule {
+  FS: any;
   ENV: { [key: string]: string };
   monitorRunDependencies: (n: number) => void;
   noImageDecoding: boolean;
@@ -79,9 +80,7 @@ export type RejectFn = (_reason?: any) => void;
 
 export function promiseHandles() {
   const out = {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     resolve: (_value?: unknown) => {},
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     reject: (_reason?: any) => {},
     promise: null as unknown as Promise<unknown>,
   };

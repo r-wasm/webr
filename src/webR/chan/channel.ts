@@ -35,12 +35,11 @@ export class ChannelMain {
 
   #parked = new Map<string, ResolveFn>();
 
-  constructor(url: string, data: any) {
+  constructor(url: string, data: unknown) {
     const worker = new Worker(url);
 
     this.#handleEventsFromWorker(worker);
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const msg = { type: 'init', data: data } as Message;
     worker.postMessage(msg);
 

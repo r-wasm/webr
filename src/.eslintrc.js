@@ -21,12 +21,15 @@ module.exports = {
   ignorePatterns: ['.eslintrc.js', 'pre.js', 'esbuild.js'],
   plugins: ['@typescript-eslint'],
   rules: {
-    "@typescript-eslint/no-explicit-any": "off",
+     "@typescript-eslint/no-explicit-any": "off",
      "@typescript-eslint/no-unsafe-member-access": "off",
      "@typescript-eslint/no-unsafe-call": "off",
+     "@typescript-eslint/no-unsafe-return": "off",
      "@typescript-eslint/require-await": "off",
      "@typescript-eslint/no-floating-promises": "off",
      "@typescript-eslint/no-unused-vars": "off",
+     "@typescript-eslint/no-implied-eval": "off",
+     "new-cap": ["error", { "capIsNewExceptions": ["UTF8ToString"] }],
      "require-jsdoc": "off",
      'prettier/prettier': [
        'error',

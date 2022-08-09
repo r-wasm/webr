@@ -40,8 +40,7 @@ export async function syncResponse(endpoint: Endpoint, data: SyncRequestData, re
       await signalRequester(signalBuffer, taskId!);
 
       // Wait for response with new bigger dataBuffer
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      dataBuffer = (await dataPromise).dataBuffer;
+      dataBuffer = (await dataPromise).dataBuffer as Uint8Array;
     }
 
     // Encode result into dataBuffer

@@ -98,6 +98,19 @@ function isRSexp(value: any): value is RSexp {
   return typeof value === 'object' && 'convertImplicitly' in value && 'type' in value;
 }
 
+function getProp(obj: RawTypes | RSexp | Function, prop: string): RawTypes | RSexp | Function {
+  if (!obj) {
+    return undefined;
+  } else if (isRSexp(obj) && !isNaN(Number(prop))) {
+    return obj.getIdx(Number(prop));
+  } else if (isRSexp(obj) && prop.startsWith('$')) {
+    prop = prop.slice(1);
+    if (prop === '') return undefined;
+    return obj.getDollar(prop);
+  }
+  return obj[prop as keyof typeof obj];
+}
+
 /**
  * Given a root RSexp object, return the result of walking the given path of
  * properties, optionally calling a function at the end of the path.
@@ -112,29 +125,15 @@ function isRSexp(value: any): value is RSexp {
  * @return {RTargetObj} The resulting R object
  */
 function getRObj(root: RSexp, path: string[], args?: RTargetObj[]): RTargetObj {
-  const getProp = (obj: RSexp, prop: string) => {
-    if (!isNaN(Number(prop))) {
-      return obj.getIdx(Number(prop));
-    } else if (prop.startsWith('$')) {
-      prop = prop.slice(1);
-      if (prop === '') return undefined;
-      return obj.getDollar(prop);
-    }
-    // @ts-expect-error ts(7053)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return obj[prop];
-  };
-
   let ret: RSexpPtr | RRawObj = { obj: undefined, type: RTargetType.RAW };
   try {
     // Navigate the property array and grab the requested RSexp objects
-    let res = path.reduce(getProp, root) as RawTypes | RSexp | Function;
-    const parent = path.slice(0, -1).reduce(getProp, root) as RawTypes | RSexp;
+    let res = path.reduce(getProp, root);
+    const parent = path.slice(0, -1).reduce(getProp, root) as RSexp;
 
     // If requested, call the resulting object with the provided arguments
     if (typeof res === 'function' && args) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      res = res.apply(parent, args);
+      res = res.apply(parent, args) as RawTypes | RSexp | Function;
     } else if (isRSexp(res) && args) {
       res = res._call.call(
         parent,
@@ -170,20 +169,8 @@ function getRObj(root: RSexp, path: string[], args?: RTargetObj[]): RTargetObj {
  * @param {RSexp} [value] The R RSexp object to set the value to
  */
 function setRObj(root: RSexp, path: string[], value: RSexp) {
-  const getProp = (obj: RSexp, prop: string) => {
-    if (!isNaN(Number(prop))) {
-      return obj.getIdx(Number(prop));
-    } else if (prop.startsWith('$')) {
-      prop = prop.slice(1);
-      return obj.getDollar(prop);
-    }
-    // @ts-expect-error ts(7053)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return obj[prop];
-  };
-
   try {
-    const parent = path.slice(0, -1).reduce(getProp, root);
+    const parent = path.slice(0, -1).reduce(getProp, root) as RSexp;
     let prop = path[path.length - 1];
     if (prop.startsWith('$')) {
       prop = prop.slice(1);
@@ -309,10 +296,8 @@ function init(options: WebROptions = {}) {
   Module.noAudioDecoding = true;
 
   Module.preRun.push(() => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: next-line
-    FS.mkdirTree(_config.homedir);
-    FS.chdir(_config.homedir);
+    Module.FS.mkdirTree(_config.homedir);
+    Module.FS.chdir(_config.homedir);
     Module.ENV.HOME = _config.homedir;
     Module.ENV = Object.assign(Module.ENV, _config.REnv);
   });

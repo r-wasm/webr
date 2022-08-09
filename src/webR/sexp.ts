@@ -383,7 +383,6 @@ class RSexpComplex extends RSexpVector {
 
 class RSexpChar extends RSexp {
   toJs(): string {
-    // eslint-disable-next-line new-cap
     return UTF8ToString(Module._R_CHAR(this.ptr));
   }
   get convertImplicitly(): boolean {
@@ -394,7 +393,6 @@ class RSexpChar extends RSexp {
 class RSexpStr extends RSexpVector {
   toJs(): string | Array<string> {
     const valAtIdx = (idx: number) => {
-      // eslint-disable-next-line new-cap
       return UTF8ToString(Module._R_CHAR(Module._STRING_ELT(this.ptr, idx)));
     };
     if (this.length === 1) {

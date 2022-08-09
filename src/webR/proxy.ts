@@ -18,13 +18,16 @@ export function createRProxy(
   path: (string | number | symbol)[] = []
 ): RProxy {
   // Make target callable, so we can trap calls using the apply handler
-  const callableTarget = function () {} as unknown as RTargetObj;
+  const callableTarget = function () {} as unknown as RTargetObj & {
+    length: unknown;
+    name: unknown;
+    prototype: unknown;
+  };
   Object.assign(callableTarget, { ...target });
-  // @ts-expect-error ts(2339)
+
+  // Remove some unwanted properties added by the above procedure
   delete callableTarget.length;
-  // @ts-expect-error ts(2339)
   delete callableTarget.name;
-  // @ts-expect-error ts(2339)
   callableTarget.prototype = undefined;
 
   const proxy = new Proxy(callableTarget, {
