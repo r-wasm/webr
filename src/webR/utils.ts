@@ -47,6 +47,7 @@ export interface Module extends EmscriptenModule {
   _REAL: (ptr: RPtr) => RPtr;
   _COMPLEX: (ptr: RPtr) => RPtr;
   _R_CHAR: (ptr: RPtr) => RPtr;
+  _STRING_PTR: (ptr: RPtr) => RPtr;
   _RAW: (ptr: RPtr) => RPtr;
   _LOGICAL: (ptr: RPtr) => RPtr;
   _FRAME: (ptr: RPtr) => RPtr;

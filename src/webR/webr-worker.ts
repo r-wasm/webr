@@ -102,13 +102,17 @@ function getProp(obj: RawTypes | RObj | Function, prop: string): RawTypes | RObj
   if (!obj) {
     return undefined;
   } else if (isRObj(obj) && !isNaN(Number(prop))) {
-    return obj.getIdx(Number(prop));
+    return obj.extractIndex(Number(prop));
   } else if (isRObj(obj) && prop.startsWith('$')) {
     prop = prop.slice(1);
     if (prop === '') return undefined;
-    return obj.getDollar(prop);
+    return obj.extractName(prop);
+  } else if (typeof obj === 'object' && prop in obj) {
+    return obj[prop as keyof typeof obj];
+  } else if (isRObj(obj) && obj.includes(prop)) {
+    return obj.extractName(prop);
   }
-  return obj[prop as keyof typeof obj];
+  return undefined;
 }
 
 /**
@@ -143,7 +147,7 @@ function getRObj(root: RObj, path: string[], args?: RTargetObj[]): RTargetObj {
 
     // Return a RPtrObj reference, or otherwise a raw JS object where
     // implicit conversion is enabled
-    if (isRObj(res) && res.convertImplicitly) {
+    if (isRObj(res) && res.convertImplicitly && path[path.length - 1] !== 'toRObj') {
       ret = { data: res.toJs(), type: RTargetType.RAW };
     } else if (isRObj(res)) {
       ret = { data: res.ptr, type: RTargetType.PTR };
