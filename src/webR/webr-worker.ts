@@ -196,7 +196,7 @@ function setRObj(root: RSexp, path: string[], value: RSexp) {
 
 function evalRCode(code: string, env: RTargetObj | undefined): RSexpPtr {
   const str = allocateUTF8(code);
-  const err = allocate(1, 'i32', 0);
+  const err = Module._malloc(4);
 
   let envObj = RSexp.wrap(RSexp.R_GlobalEnv);
   if (env && env.type === RTargetType.CODE) {
