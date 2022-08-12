@@ -50,6 +50,9 @@ export class WebR {
     return (await this.#chan.request({ type: 'getFSNode', data: { path: path } })) as FSNode;
   }
   async evalRCode(code: string): Promise<number> {
-    return (await this.#chan.request({ type: 'evalRCode', data: { code: code } })) as number;
+    return (await this.#chan.request({
+      type: 'evalRCode',
+      data: { code: code, env: 0 },
+    })) as number;
   }
 }

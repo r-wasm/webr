@@ -4,6 +4,7 @@ import { ChannelWorker } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions } from './webr-main';
 import { Module } from './module';
+import { RObj, RPtr, RType } from './robj';
 
 let initialised = false;
 
@@ -73,8 +74,9 @@ function inputOrDispatch(chan: ChannelWorker): string {
           case 'evalRCode': {
             const data = reqMsg.data as {
               code: string;
+              env: RPtr;
             };
-            write(evalRCode(data.code, 0));
+            write(evalRCode(data.code, data.env));
             continue;
           }
           default:
@@ -137,9 +139,16 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
   }
 }
 
-function evalRCode(code: string, env: RPtr): RPtr {
+function evalRCode(code: string, env?: RPtr): RPtr {
   const str = allocateUTF8(code);
-  const resultPtr = Module._evalRCode(str, env);
+  let envObj = RObj.globalEnv;
+  if (env) {
+    envObj = RObj.wrap(env);
+    if (envObj.type !== RType.Environment) {
+      throw new Error('Attempted to eval R code with an env argument with invalid SEXP type');
+    }
+  }
+  const resultPtr = Module._evalRCode(str, envObj.ptr);
   Module._free(str);
   return resultPtr;
 }
