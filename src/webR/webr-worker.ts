@@ -15,7 +15,7 @@ self.onmessage = function (ev: MessageEvent) {
     throw new Error("Can't initialise worker multiple times.");
   }
 
-  init(ev.data as WebROptions);
+  init(ev.data.data as WebROptions);
   initialised = true;
 };
 
