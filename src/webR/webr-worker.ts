@@ -70,6 +70,13 @@ function inputOrDispatch(chan: ChannelWorker): string {
           case 'getFSNode':
             write(getFSNode(reqMsg.data.path as string));
             continue;
+          case 'evalRCode': {
+            const data = reqMsg.data as {
+              code: string;
+            };
+            write(evalRCode(data.code, 0));
+            continue;
+          }
           default:
             throw new Error('Unknown event `' + reqMsg.type + '`');
         }
@@ -128,6 +135,13 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
   } catch {
     return { status: 400, response: 'An error occured in XMLHttpRequest' };
   }
+}
+
+function evalRCode(code: string, env: RPtr): RPtr {
+  const str = allocateUTF8(code);
+  const resultPtr = Module._evalRCode(str, env);
+  Module._free(str);
+  return resultPtr;
 }
 
 function getFileData(name: string): Uint8Array {
