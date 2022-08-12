@@ -1,30 +1,30 @@
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
-import { Message,
-         Request,
-         newResponse } from './chan/message';
-import { FSNode,
-         WebROptions } from './webr-main'
-
+import { Message, Request, newResponse } from './chan/message';
+import { FSNode, WebROptions } from './webr-main';
 
 let initialised = false;
 
-self.onmessage = function(ev: MessageEvent) {
-  if (!ev || !ev.data || !ev.data.type || ev.data.type != 'init') {
+self.onmessage = function (ev: MessageEvent) {
+  if (!ev || !ev.data || !ev.data.type || ev.data.type !== 'init') {
     return;
   }
   if (initialised) {
-    throw `Can't initialise worker multiple times.`;
+    throw new Error("Can't initialise worker multiple times.");
   }
 
-  init(ev.data);
+  init(ev.data as WebROptions);
   initialised = true;
-}
-
+};
 
 interface Module extends EmscriptenModule {
-  FS: any;
+  /* Add mkdirTree to FS namespace, missing from @types/emscripten at the
+   * time of writing.
+   */
+  FS: typeof FS & {
+    mkdirTree(path: string): void;
+  };
   ENV: { [key: string]: string };
   monitorRunDependencies: (n: number) => void;
   noImageDecoding: boolean;
@@ -41,14 +41,6 @@ interface Module extends EmscriptenModule {
     resolveInit: () => void;
   };
 }
-
-type WebRConfig = {
-  RArgs: string[];
-  REnv: { [key: string]: string };
-  WEBR_URL: string;
-  PKG_URL: string;
-  homedir: string;
-};
 
 type XHRResponse = {
   status: number;
@@ -69,49 +61,52 @@ const defaultOptions = {
 };
 
 const Module = {} as Module;
-let _config: WebRConfig;
+let _config: Required<WebROptions>;
 
 function inputOrDispatch(chan: ChannelWorker): string {
-  while (true) {
+  for (;;) {
     // This blocks the thread until a response
-    let msg: Message = chan.read();
+    const msg: Message = chan.read();
 
     switch (msg.type) {
       case 'stdin':
-        return msg.data;
+        return msg.data as string;
 
-      case 'request':
-        let req = msg as unknown as Request;
-        let reqMsg = req.data.msg;
+      case 'request': {
+        const req = msg as Request;
+        const reqMsg = req.data.msg;
 
-        let write = (resp: any, transferables?: [Transferable]) =>
+        const write = (resp: any, transferables?: [Transferable]) =>
           chan.write(newResponse(req.data.uuid, resp, transferables));
         switch (reqMsg.type) {
-          case 'putFileData':
+          case 'putFileData': {
             // FIXME: Use a replacer + reviver to transfer Uint8Array
-            let data = Uint8Array.from(Object.values(reqMsg.data.data));
-            write(putFileData(reqMsg.data.name, data))
+            const data = Uint8Array.from(Object.values(reqMsg.data.data as ArrayLike<number>));
+            write(putFileData(reqMsg.data.name as string, data));
             continue;
-          case 'getFileData':
-            let out = getFileData(reqMsg.data.name);
+          }
+          case 'getFileData': {
+            const out = getFileData(reqMsg.data.name as string);
             write(out, [out.buffer]);
             continue;
+          }
           case 'getFSNode':
-            write(getFSNode(reqMsg.data.path));
+            write(getFSNode(reqMsg.data.path as string));
             continue;
           default:
-            throw('Unknown event `' + reqMsg.type + '`');
+            throw new Error('Unknown event `' + reqMsg.type + '`');
         }
+      }
 
       default:
-        throw('Unknown event `' + msg.type + '`');
+        throw new Error('Unknown event `' + msg.type + '`');
     }
   }
 }
 
 function getFSNode(path: string): FSNode {
-  const node = Module.FS.lookupPath(path).node;
-  return copyFSNode(node);
+  const node = FS.lookupPath(path, {}).node;
+  return copyFSNode(node as FSNode);
 }
 
 function copyFSNode(obj: FSNode): FSNode {
@@ -159,8 +154,7 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
 }
 
 function getFileData(name: string): Uint8Array {
-  const FS = Module.FS;
-  const size = FS.stat(name).size;
+  const size = FS.stat(name).size as number;
   const stream = FS.open(name, 'r');
   const buf = new Uint8Array(size);
   FS.read(stream, buf, 0, size, 0);
@@ -188,7 +182,7 @@ function init(options: WebROptions = {}) {
     Module.ENV = Object.assign(Module.ENV, _config.REnv);
   });
 
-  let chan = new ChannelWorker();
+  const chan = new ChannelWorker();
 
   Module.webr = {
     resolveInit: () => {
@@ -197,10 +191,10 @@ function init(options: WebROptions = {}) {
 
     // C code must call `free()` on the result
     readConsole: () => {
-      let input = inputOrDispatch(chan);
+      const input = inputOrDispatch(chan);
       return allocUTF8(input);
-    }
-  }
+    },
+  };
 
   Module.locateFile = (path: string) => _config.WEBR_URL + path;
   Module.downloadFileContent = downloadFileContent;
@@ -208,7 +202,7 @@ function init(options: WebROptions = {}) {
   Module.print = (text: string) => {
     chan.write({ type: 'stdout', data: text });
   };
-  Module.printErr = async (text: string) => {
+  Module.printErr = (text: string) => {
     chan.write({ type: 'stderr', data: text });
   };
   Module.setPrompt = (prompt: string) => {
@@ -229,8 +223,8 @@ function init(options: WebROptions = {}) {
 }
 
 function allocUTF8(x: string) {
-  let nBytes = lengthBytesUTF8(x) + 1;
-  let out = Module._malloc(nBytes);
+  const nBytes = lengthBytesUTF8(x) + 1;
+  const out = Module._malloc(nBytes);
   stringToUTF8(x, out, nBytes);
   return out;
 }

@@ -2,13 +2,13 @@ export type ResolveFn = (_value?: unknown) => void;
 export type RejectFn = (_reason?: any) => void;
 
 export function promiseHandles() {
-  let out = {
-    resolve: (_value?: unknown) => { },
-    reject: (_reason?: any) => { },
-    promise: null as unknown as Promise<unknown>
+  const out = {
+    resolve: (_value?: unknown) => {},
+    reject: (_reason?: any) => {},
+    promise: null as unknown as Promise<unknown>,
   };
 
-  let promise = new Promise((resolve, reject) => {
+  const promise = new Promise((resolve, reject) => {
     out.resolve = resolve;
     out.reject = reject;
   });
