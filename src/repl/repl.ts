@@ -1,5 +1,5 @@
-import { initFSTree, FSTreeInterface, JSTreeNode, FSNode } from './fstree';
-import { WebR } from '../webR/webr-main';
+import { initFSTree, FSTreeInterface, JSTreeNode } from './fstree';
+import { WebR, FSNode } from '../webR/webr-main';
 
 import $ from 'jquery';
 import 'jquery.terminal/css/jquery.terminal.css';

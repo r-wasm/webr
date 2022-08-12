@@ -1,3 +1,5 @@
+import { FSNode } from '../webR/webr-main';
+
 import $ from 'jquery';
 import 'jstree/dist/themes/default/style.css';
 
@@ -21,14 +23,6 @@ interface JQueryJSTreeElement extends Omit<JQuery, 'on'> {
     ) => void
   ): this;
 }
-
-export type FSNode = {
-  id: number;
-  name: string;
-  mode: number;
-  isFolder: boolean;
-  contents: { [key: string]: FSNode };
-};
 
 export type JSTreeNode = {
   text: string;
