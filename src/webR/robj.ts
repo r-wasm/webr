@@ -204,8 +204,19 @@ class RObjList extends RObj {
     return Module._LENGTH(this.ptr);
   }
 
-  get(idx: number): RObj {
+  getIndex(idx: number): RObj {
     return RObj.wrap(Module._VECTOR_ELT(this.ptr, idx));
+  }
+
+  get(idx: number | string): RObj {
+    if (typeof idx === 'number') {
+      return this.getIndex(idx);
+    }
+    const names = this.names();
+    if (names && this.includes(idx)) {
+      return this.getIndex(names.indexOf(idx));
+    }
+    return RObj.null;
   }
 
   toJs(): RawType[] {
