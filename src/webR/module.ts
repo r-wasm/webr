@@ -27,10 +27,15 @@ export interface Module extends EmscriptenModule {
   _ATTRIB: (ptr: RPtr) => RPtr;
   _CAR: (ptr: RPtr) => RPtr;
   _CDR: (ptr: RPtr) => RPtr;
+  _COMPLEX: (ptr: RPtr) => RPtr;
+  _INTEGER: (ptr: RPtr) => RPtr;
   _INTERNAL: (ptr: RPtr) => RPtr;
   _LENGTH: (ptr: RPtr) => number;
+  _LOGICAL: (ptr: RPtr) => RPtr;
   _PRINTNAME: (ptr: RPtr) => RPtr;
   _R_CHAR: (ptr: RPtr) => RPtr;
+  _RAW: (ptr: RPtr) => RPtr;
+  _REAL: (ptr: RPtr) => RPtr;
   _STRING_ELT: (ptr: RPtr, idx: number) => RPtr;
   _STRING_PTR: (ptr: RPtr) => RPtr;
   _SYMVALUE: (ptr: RPtr) => RPtr;

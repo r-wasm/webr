@@ -83,12 +83,21 @@ export class RObj {
     return RObj.wrap(Module._ATTRIB(this.ptr)) as RObjPairlist;
   }
 
-  names(): Nullable<RObjList> {
+  names(): string[] | undefined {
     const attrs = this.attrs();
     if (attrs.isNull()) {
-      return attrs;
+      return undefined;
     }
-    return attrs.get('names') as Nullable<RObjList>;
+    const names = attrs.get('names') as Nullable<RObjCharacter>;
+    if (names.isNull()) {
+      return undefined;
+    }
+    return names.toJs();
+  }
+
+  includes(name: string) {
+    const names = this.names();
+    return names && names.includes(name);
   }
 
   toJs(): RawType {
@@ -208,11 +217,144 @@ class RObjList extends RObj {
   }
 }
 
+type TypedArray =
+  | Int8Array
+  | Uint8Array
+  | Int16Array
+  | Uint16Array
+  | Int32Array
+  | Uint32Array
+  | Float32Array
+  | Float64Array
+  | Array<Complex>;
+
+abstract class RObjAtomicVector extends RObj {
+  get length(): number {
+    return Module._LENGTH(this.ptr);
+  }
+
+  abstract toArray(): TypedArray;
+
+  toObject(): { [key: string | number]: RawType } {
+    const names = this.names();
+    return Object.fromEntries(
+      [...Array(this.length).keys()].map((i) => [
+        names && names[i] !== '' ? names[i] : i,
+        this.getIndex(i),
+      ])
+    );
+  }
+
+  getIndex(idx: number): RawType {
+    return this.toArray()[idx];
+  }
+
+  get(idx: number | string): RawType {
+    if (typeof idx === 'number') {
+      return this.getIndex(idx);
+    }
+    const names = this.names();
+    if (names && this.includes(idx)) {
+      return this.getIndex(names.indexOf(idx));
+    }
+    return undefined;
+  }
+
+  toJs(): RawType {
+    return this.toArray();
+  }
+}
+
+type RLogical = boolean | 'NA' | undefined;
+class RObjLogical extends RObjAtomicVector {
+  toArray(): Int32Array {
+    return Module.HEAP32.subarray(
+      Module._LOGICAL(this.ptr) / 4,
+      Module._LOGICAL(this.ptr) / 4 + this.length
+    );
+  }
+  getIndex(idx: number): RLogical {
+    const elem = this.toArray()[idx];
+    if (typeof elem === 'undefined') return undefined;
+    if (elem === 0 || elem === 1) {
+      return elem === 1;
+    }
+    return 'NA';
+  }
+
+  toJs(): RLogical[] {
+    return Array.from({ length: this.length }, (_, idx) => this.getIndex(idx));
+  }
+}
+
+class RObjInt extends RObjAtomicVector {
+  toArray(): Int32Array {
+    return Module.HEAP32.subarray(
+      Module._INTEGER(this.ptr) / 4,
+      Module._INTEGER(this.ptr) / 4 + this.length
+    );
+  }
+}
+
+class RObjReal extends RObjAtomicVector {
+  toArray(): Float64Array {
+    return Module.HEAPF64.subarray(
+      Module._REAL(this.ptr) / 8,
+      Module._REAL(this.ptr) / 8 + this.length
+    );
+  }
+}
+
+class RObjComplex extends RObjAtomicVector {
+  toArray(): Float64Array {
+    return Module.HEAPF64.subarray(
+      Module._COMPLEX(this.ptr) / 8,
+      Module._COMPLEX(this.ptr) / 8 + 2 * this.length
+    );
+  }
+  getIndex(idx: number): Complex {
+    return {
+      re: this.toArray()[2 * idx],
+      im: this.toArray()[2 * idx + 1],
+    };
+  }
+  toJs(): Complex[] {
+    return Array.from({ length: this.length }, (_, idx) => this.getIndex(idx));
+  }
+}
+
+class RObjCharacter extends RObjAtomicVector {
+  toArray(): Uint32Array {
+    return Module.HEAPU32.subarray(
+      Module._STRING_PTR(this.ptr) / 4,
+      Module._STRING_PTR(this.ptr) / 4 + this.length
+    );
+  }
+  getIndex(idx: number): string {
+    return UTF8ToString(Module._R_CHAR(Module._STRING_ELT(this.ptr, idx)));
+  }
+  toJs(): string[] {
+    return Array.from({ length: this.length }, (_, idx) => this.getIndex(idx));
+  }
+}
+
+class RObjRawdata extends RObjAtomicVector {
+  toArray(): Uint8Array {
+    return Module.HEAPU8.subarray(Module._RAW(this.ptr), Module._RAW(this.ptr) + this.length);
+  }
+}
+
 function getRObjClass(type: RType): typeof RObj {
   const typeClasses: { [key: number]: typeof RObj } = {
     [RType.Null]: RObjNull,
     [RType.Symbol]: RObjSymbol,
     [RType.Pairlist]: RObjPairlist,
+    [RType.Logical]: RObjLogical,
+    [RType.Integer]: RObjInt,
+    [RType.Double]: RObjReal,
+    [RType.Complex]: RObjComplex,
+    [RType.Character]: RObjCharacter,
+    [RType.Raw]: RObjRawdata,
     [RType.List]: RObjList,
   };
   if (type in typeClasses) {
