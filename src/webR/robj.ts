@@ -34,6 +34,8 @@ export enum RType {
 
 export type RPtr = number;
 
+type Nullable<T> = T | RObjNull;
+
 type Complex = {
   re: number;
   im: number;
@@ -69,7 +71,7 @@ export class RObj {
     return Module._TYPEOF(this.ptr);
   }
 
-  isNull(): boolean {
+  isNull(): this is RObjNull {
     return Module._TYPEOF(this.ptr) === RType.Null;
   }
 
@@ -77,8 +79,16 @@ export class RObj {
     return this.ptr === RObj.unboundValue.ptr;
   }
 
-  attrs(): RObj {
-    return RObj.wrap(Module._ATTRIB(this.ptr));
+  attrs(): Nullable<RObjPairlist> {
+    return RObj.wrap(Module._ATTRIB(this.ptr)) as RObjPairlist;
+  }
+
+  names(): Nullable<RObjList> {
+    const attrs = this.attrs();
+    if (attrs.isNull()) {
+      return attrs;
+    }
+    return attrs.get('names') as Nullable<RObjList>;
   }
 
   toJs(): RawType {
@@ -97,8 +107,8 @@ export class RObj {
     return RObj.wrap(getValue(Module._R_BaseEnv, '*'));
   }
 
-  static get null(): RObj {
-    return RObj.wrap(getValue(Module._R_NilValue, '*'));
+  static get null(): RObjNull {
+    return new RObjNull(getValue(Module._R_NilValue, '*'));
   }
 
   static get unboundValue(): RObj {
@@ -114,6 +124,69 @@ export class RObj {
 export class RObjNull extends RObj {
   toJs(): null {
     return null;
+  }
+}
+
+class RObjSymbol extends RObj {
+  toJs(): RawType {
+    return this.toObject();
+  }
+  toObject(): { printname: string; symvalue: RPtr | undefined; internal: RPtr | undefined } {
+    return {
+      printname: UTF8ToString(Module._R_CHAR(this.printname().ptr)),
+      symvalue: this.symvalue().isUnbound() ? undefined : this.symvalue().ptr,
+      internal: this.internal().isNull() ? undefined : this.internal().ptr,
+    };
+  }
+  printname(): RObj {
+    return RObj.wrap(Module._PRINTNAME(this.ptr));
+  }
+  symvalue(): RObj {
+    return RObj.wrap(Module._SYMVALUE(this.ptr));
+  }
+  internal(): RObj {
+    return RObj.wrap(Module._INTERNAL(this.ptr));
+  }
+}
+
+class RObjPairlist extends RObj {
+  get(name: string): Nullable<RObj> {
+    for (let next = this as Nullable<RObjPairlist>; !next.isNull(); next = next.cdr()) {
+      const symbol = next.tag();
+      if (!symbol.isNull() && symbol.toObject().printname === name) {
+        return next.car();
+      }
+    }
+    return RObj.null;
+  }
+
+  includes(name: string): boolean {
+    return !this.get(name).isNull();
+  }
+
+  toObject(): { [key: string]: RawType } {
+    const d: { [key: string]: RawType } = {};
+    for (let next = this as Nullable<RObjPairlist>; !next.isNull(); next = next.cdr()) {
+      const symbol = next.tag();
+      if (!symbol.isNull() && symbol.toObject().printname !== '') {
+        d[symbol.toObject().printname] = next.car().toJs();
+      } else {
+        d[Object.keys(d).length] = next.car().toJs();
+      }
+    }
+    return d;
+  }
+
+  car(): RObj {
+    return RObj.wrap(Module._CAR(this.ptr));
+  }
+
+  cdr(): Nullable<RObjPairlist> {
+    return RObj.wrap(Module._CDR(this.ptr)) as Nullable<RObjPairlist>;
+  }
+
+  tag(): Nullable<RObjSymbol> {
+    return RObj.wrap(Module._TAG(this.ptr)) as Nullable<RObjSymbol>;
   }
 }
 
@@ -138,6 +211,8 @@ class RObjList extends RObj {
 function getRObjClass(type: RType): typeof RObj {
   const typeClasses: { [key: number]: typeof RObj } = {
     [RType.Null]: RObjNull,
+    [RType.Symbol]: RObjSymbol,
+    [RType.Pairlist]: RObjPairlist,
     [RType.List]: RObjList,
   };
   if (type in typeClasses) {
