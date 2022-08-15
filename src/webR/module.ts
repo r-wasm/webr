@@ -1,4 +1,4 @@
-import type { RPtr } from './robj';
+import type { RPtr, RType } from './robj';
 
 export interface Module extends EmscriptenModule {
   /* Add mkdirTree to FS namespace, missing from @types/emscripten at the
@@ -27,7 +27,9 @@ export interface Module extends EmscriptenModule {
   _ATTRIB: (ptr: RPtr) => RPtr;
   _CAR: (ptr: RPtr) => RPtr;
   _CDR: (ptr: RPtr) => RPtr;
+  _CLOENV: (ptr: RPtr) => RPtr;
   _COMPLEX: (ptr: RPtr) => RPtr;
+  _FRAME: (ptr: RPtr) => RPtr;
   _INTEGER: (ptr: RPtr) => RPtr;
   _INTERNAL: (ptr: RPtr) => RPtr;
   _LENGTH: (ptr: RPtr) => number;
@@ -36,12 +38,19 @@ export interface Module extends EmscriptenModule {
   _R_CHAR: (ptr: RPtr) => RPtr;
   _RAW: (ptr: RPtr) => RPtr;
   _REAL: (ptr: RPtr) => RPtr;
+  _SETCAR: (x: RPtr, y: RPtr) => void;
   _STRING_ELT: (ptr: RPtr, idx: number) => RPtr;
   _STRING_PTR: (ptr: RPtr) => RPtr;
   _SYMVALUE: (ptr: RPtr) => RPtr;
   _TAG: (ptr: RPtr) => RPtr;
   _TYPEOF: (ptr: RPtr) => RPtr;
   _VECTOR_ELT: (ptr: RPtr, idx: number) => RPtr;
+  _R_lsInternal: (env: RPtr, all: boolean) => RPtr;
+  _Rf_allocVector: (type: RType, len: number) => RPtr;
+  _Rf_eval: (call: RPtr, env: RPtr) => RPtr;
+  _Rf_findVarInFrame: (rho: RPtr, symbol: RPtr) => RPtr;
+  _Rf_installTrChar: (name: RPtr) => RPtr;
+  _Rf_mkString: (ptr: number) => RPtr;
   _Rf_protect: (ptr: RPtr) => RPtr;
   _Rf_unprotect: (n: number) => void;
   _Rf_unprotect_ptr: (ptr: RPtr) => void;

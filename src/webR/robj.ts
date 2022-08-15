@@ -158,17 +158,24 @@ export class RObjNull extends RObj {
 
 class RObjSymbol extends RObj {
   toJs(): RawType {
+    if (this.isUnbound()) {
+      return undefined;
+    }
     return this.toObject();
   }
-  toObject(): { printname: string; symvalue: RPtr | undefined; internal: RPtr | undefined } {
+  toObject(): {
+    printname: string | undefined;
+    symvalue: RPtr | undefined;
+    internal: RPtr | undefined;
+  } {
     return {
-      printname: UTF8ToString(Module._R_CHAR(this.printname().ptr)),
+      printname: this.printname().isUnbound() ? undefined : this.printname().toJs(),
       symvalue: this.symvalue().isUnbound() ? undefined : this.symvalue().ptr,
       internal: this.internal().isNull() ? undefined : this.internal().ptr,
     };
   }
-  printname(): RObj {
-    return RObj.wrap(Module._PRINTNAME(this.ptr));
+  printname(): RObjString {
+    return new RObjString(Module._PRINTNAME(this.ptr));
   }
   symvalue(): RObj {
     return RObj.wrap(Module._SYMVALUE(this.ptr));
@@ -197,13 +204,17 @@ class RObjPairlist extends RObj {
     const d: { [key: string]: RawType } = {};
     for (let next = this as Nullable<RObjPairlist>; !next.isNull(); next = next.cdr()) {
       const symbol = next.tag();
-      if (!symbol.isNull() && symbol.toObject().printname !== '') {
-        d[symbol.toObject().printname] = next.car().toJs();
+      if (!symbol.isNull() && symbol.printname()) {
+        d[symbol.printname().toJs()] = next.car().toJs();
       } else {
         d[Object.keys(d).length] = next.car().toJs();
       }
     }
     return d;
+  }
+
+  setcar(obj: RObj): void {
+    Module._SETCAR(this.ptr, obj.ptr);
   }
 
   car(): RObj {
@@ -245,6 +256,49 @@ class RObjList extends RObj {
 
   toArray(): RawType[] {
     return [...Array(this.length).keys()].map((i) => this.get(i).toJs());
+  }
+}
+
+class RObjFunction extends RObj {
+  _call(args: Array<RObj>): RObj {
+    const call = RObj.protect(
+      new RObjPairlist(Module._Rf_allocVector(RType.Call, args.length + 1))
+    );
+    call.setcar(this);
+    let c = call.cdr();
+    let i = 0;
+    while (!c.isNull()) {
+      c.setcar(args[i++]);
+      c = c.cdr();
+    }
+    return RObj.wrap(Module._Rf_eval(call.ptr, RObj.globalEnv.ptr));
+  }
+}
+
+class RObjString extends RObj {
+  toJs(): string {
+    return UTF8ToString(Module._R_CHAR(this.ptr));
+  }
+}
+
+class RObjEnv extends RObj {
+  ls(): string[] {
+    return new RObjCharacter(Module._R_lsInternal(this.ptr, true)).toJs();
+  }
+  frame(): RObj {
+    return RObj.wrap(Module._FRAME(this.ptr));
+  }
+  get(name: string): RObj {
+    const char = allocateUTF8(name);
+    const str = RObj.protect(RObj.wrap(Module._Rf_mkString(char)));
+    const strPtr = Module._Rf_installTrChar(Module._STRING_ELT(str.ptr, 0));
+    Module._free(char);
+    const variable = RObj.wrap(Module._Rf_findVarInFrame(this.ptr, strPtr));
+    RObj.unprotect(1);
+    return variable;
+  }
+  includes(name: string) {
+    return !this.get(name).isUnbound();
   }
 }
 
@@ -362,7 +416,7 @@ class RObjCharacter extends RObjAtomicVector {
     );
   }
   getIndex(idx: number): string {
-    return UTF8ToString(Module._R_CHAR(Module._STRING_ELT(this.ptr, idx)));
+    return new RObjString(Module._STRING_ELT(this.ptr, idx)).toJs();
   }
   toJs(): string[] {
     return Array.from({ length: this.length }, (_, idx) => this.getIndex(idx));
@@ -380,13 +434,20 @@ function getRObjClass(type: RType): typeof RObj {
     [RType.Null]: RObjNull,
     [RType.Symbol]: RObjSymbol,
     [RType.Pairlist]: RObjPairlist,
+    [RType.Closure]: RObjFunction,
+    [RType.Environment]: RObjEnv,
+    [RType.Call]: RObjPairlist,
+    [RType.Special]: RObjFunction,
+    [RType.Builtin]: RObjFunction,
+    [RType.String]: RObjString,
     [RType.Logical]: RObjLogical,
     [RType.Integer]: RObjInt,
     [RType.Double]: RObjReal,
     [RType.Complex]: RObjComplex,
     [RType.Character]: RObjCharacter,
-    [RType.Raw]: RObjRawdata,
     [RType.List]: RObjList,
+    [RType.Raw]: RObjRawdata,
+    [RType.Function]: RObjFunction,
   };
   if (type in typeClasses) {
     return typeClasses[type];
