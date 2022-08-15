@@ -128,6 +128,18 @@ export class RObj {
     const type = Module._TYPEOF(ptr);
     return new (getRObjClass(type))(ptr);
   }
+
+  static protect<T extends RObj>(obj: T): T {
+    return RObj.wrap(Module._Rf_protect(obj.ptr)) as T;
+  }
+
+  static unprotect(n: number): void {
+    Module._Rf_unprotect(n);
+  }
+
+  static unprotectPtr(obj: RObj): void {
+    Module._Rf_unprotect_ptr(obj.ptr);
+  }
 }
 
 export class RObjNull extends RObj {

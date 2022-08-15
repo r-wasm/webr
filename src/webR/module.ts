@@ -42,6 +42,9 @@ export interface Module extends EmscriptenModule {
   _TAG: (ptr: RPtr) => RPtr;
   _TYPEOF: (ptr: RPtr) => RPtr;
   _VECTOR_ELT: (ptr: RPtr, idx: number) => RPtr;
+  _Rf_protect: (ptr: RPtr) => RPtr;
+  _Rf_unprotect: (n: number) => void;
+  _Rf_unprotect_ptr: (ptr: RPtr) => void;
   _R_BaseEnv: RPtr;
   _R_EmptyEnv: RPtr;
   _R_GlobalEnv: RPtr;
