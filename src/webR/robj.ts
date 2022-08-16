@@ -226,7 +226,7 @@ export class RObjNull extends RObj {
   }
 }
 
-class RObjSymbol extends RObj {
+export class RObjSymbol extends RObj {
   toJs(): RawType {
     if (this.isUnbound()) {
       return undefined;
@@ -255,7 +255,7 @@ class RObjSymbol extends RObj {
   }
 }
 
-class RObjPairlist extends RObj {
+export class RObjPairlist extends RObj {
   toObject(): { [key: string]: RawType } {
     const d: { [key: string]: RawType } = {};
     for (let next = this as Nullable<RObjPairlist>; !next.isNull(); next = next.cdr()) {
@@ -294,7 +294,7 @@ class RObjPairlist extends RObj {
   }
 }
 
-class RObjList extends RObj {
+export class RObjList extends RObj {
   get length(): number {
     return Module._LENGTH(this.ptr);
   }
@@ -318,7 +318,7 @@ class RObjList extends RObj {
   }
 }
 
-class RObjFunction extends RObj {
+export class RObjFunction extends RObj {
   _call(args: Array<RObj>): RObj {
     const call = RObj.protect(
       new RObjPairlist(Module._Rf_allocVector(RType.Call, args.length + 1))
@@ -334,13 +334,13 @@ class RObjFunction extends RObj {
   }
 }
 
-class RObjString extends RObj {
+export class RObjString extends RObj {
   toJs(): string {
     return UTF8ToString(Module._R_CHAR(this.ptr));
   }
 }
 
-class RObjEnv extends RObj {
+export class RObjEnv extends RObj {
   ls(all = false, sorted = true): string[] {
     return new RObjCharacter(Module._R_lsInternal3(this.ptr, all, sorted)).toJs();
   }
@@ -420,7 +420,7 @@ abstract class RObjAtomicVector extends RObj {
 }
 
 type RLogical = boolean | 'NA' | undefined;
-class RObjLogical extends RObjAtomicVector {
+export class RObjLogical extends RObjAtomicVector {
   getLogical(idx: number): RLogical {
     return this.get(idx).toJs()[0];
   }
@@ -450,7 +450,7 @@ class RObjLogical extends RObjAtomicVector {
   }
 }
 
-class RObjInt extends RObjAtomicVector {
+export class RObjInt extends RObjAtomicVector {
   getNumber(idx: number): number {
     return this.get(idx).toArray()[0];
   }
@@ -470,7 +470,7 @@ class RObjInt extends RObjAtomicVector {
   }
 }
 
-class RObjReal extends RObjAtomicVector {
+export class RObjReal extends RObjAtomicVector {
   getNumber(idx: number): number {
     return this.get(idx).toArray()[0];
   }
@@ -490,7 +490,7 @@ class RObjReal extends RObjAtomicVector {
   }
 }
 
-class RObjComplex extends RObjAtomicVector {
+export class RObjComplex extends RObjAtomicVector {
   getComplex(idx: number): Complex {
     return this.get(idx).toJs()[0];
   }
@@ -519,7 +519,7 @@ class RObjComplex extends RObjAtomicVector {
   }
 }
 
-class RObjCharacter extends RObjAtomicVector {
+export class RObjCharacter extends RObjAtomicVector {
   getString(idx: number): string {
     return this.get(idx).toJs()[0];
   }
@@ -545,7 +545,7 @@ class RObjCharacter extends RObjAtomicVector {
   }
 }
 
-class RObjRawdata extends RObjAtomicVector {
+export class RObjRawdata extends RObjAtomicVector {
   getNumber(idx: number): number {
     return this.get(idx).toArray()[0];
   }
