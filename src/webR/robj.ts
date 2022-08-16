@@ -34,12 +34,90 @@ export enum RType {
 
 export type RPtr = number;
 
+export enum RTargetType {
+  RAW = 'RAW',
+  PTR = 'PTR',
+}
+
+export type RTargetPtr = {
+  obj: RPtr;
+  type: RTargetType.PTR;
+};
+export type RTargetRaw = {
+  obj: RawType;
+  type: RTargetType.RAW;
+};
+export type RTargetObj = RTargetRaw | RTargetPtr;
+
 type Nullable<T> = T | RObjNull;
 
 type Complex = {
   re: number;
   im: number;
 };
+
+function newRObjFromTarget(target: RTargetObj): RObj {
+  const obj = target.obj;
+  if (target.type === RTargetType.PTR) {
+    return RObj.wrap(target.obj);
+  }
+
+  if (typeof obj === 'number') {
+    const ptr = Module._Rf_ScalarReal(obj);
+    return new RObjReal(ptr);
+  }
+
+  if (typeof obj === 'string') {
+    const str = allocateUTF8(obj);
+    const ptr = Module._Rf_mkString(str);
+    Module._free(str);
+    return new RObjCharacter(ptr);
+  }
+
+  if (typeof obj === 'boolean') {
+    const ptr = Module._Rf_ScalarLogical(obj);
+    return new RObjLogical(ptr);
+  }
+
+  if (typeof obj === 'object' && obj && 're' in obj && 'im' in obj) {
+    const ptr = Module._Rf_protect(Module._Rf_allocVector(RType.Complex, 1));
+    setValue(Module._COMPLEX(ptr), obj.re, 'double');
+    setValue(Module._COMPLEX(ptr) + 8, obj.im, 'double');
+    Module._Rf_unprotect(1);
+    return new RObjComplex(ptr);
+  }
+
+  if (Array.isArray(obj) && obj.some((el) => typeof el === 'string')) {
+    // Create a vector of strings
+    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.Character, obj.length));
+    obj.forEach((el, idx) => {
+      const str = allocateUTF8(String(el));
+      const ptr = Module._Rf_protect(Module._Rf_mkChar(str));
+      Module._free(str);
+      Module._SET_STRING_ELT(robjVec, idx, ptr);
+    });
+    Module._Rf_unprotect(2);
+    return RObj.wrap(robjVec);
+  }
+
+  if (Array.isArray(obj) && obj.some((el) => typeof el === 'number')) {
+    // Create a vector of reals
+    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.Double, obj.length));
+    obj.forEach((el, idx) => setValue(Module._REAL(robjVec) + 8 * idx, Number(el), 'double'));
+    Module._Rf_unprotect(1);
+    return RObj.wrap(robjVec);
+  }
+
+  if (Array.isArray(obj)) {
+    // Create a vector of logicals
+    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.Logical, obj.length));
+    obj.forEach((el, idx) => setValue(Module._LOGICAL(robjVec) + 4 * idx, el, 'i32'));
+    Module._Rf_unprotect(1);
+    return RObj.wrap(robjVec);
+  }
+
+  throw new Error('Robj construction for this JS object is not yet supported');
+}
 
 export type RawType =
   | number
@@ -59,8 +137,14 @@ export type RawType =
 export class RObj {
   ptr: RPtr;
 
-  constructor(target: RPtr) {
-    this.ptr = target;
+  constructor(target: RPtr | RTargetObj) {
+    this.ptr = 0;
+    if (typeof target === 'number') {
+      // We have a number, assume it is an RPtr to an RObj
+      this.ptr = target;
+      return this;
+    }
+    return RObj.protect(newRObjFromTarget(target));
   }
 
   get [Symbol.toStringTag](): string {
@@ -566,7 +650,14 @@ export class RObjRawdata extends RObjAtomicVector {
   }
 }
 
-function getRObjClass(type: RType): typeof RObj {
+export function isRObj(value: any): value is RObj {
+  return value && typeof value === 'object' && 'type' in value && 'toJs' in value;
+}
+export function isRObjCallable(value: any): value is RObjFunction {
+  return value && typeof isRObj(value) && '_call' in value;
+}
+
+export function getRObjClass(type: RType): typeof RObj {
   const typeClasses: { [key: number]: typeof RObj } = {
     [RType.Null]: RObjNull,
     [RType.Symbol]: RObjSymbol,

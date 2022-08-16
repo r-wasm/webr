@@ -4,7 +4,17 @@ import { ChannelWorker } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions } from './webr-main';
 import { Module } from './module';
-import { RObj, RPtr, RType } from './robj';
+import {
+  RObj,
+  RPtr,
+  RTargetObj,
+  RTargetPtr,
+  RTargetType,
+  RType,
+  isRObj,
+  isRObjCallable,
+  RawType,
+} from './robj';
 
 let initialised = false;
 
@@ -76,7 +86,36 @@ function inputOrDispatch(chan: ChannelWorker): string {
               code: string;
               env: RPtr;
             };
-            write(evalRCode(data.code, data.env));
+            try {
+              write(evalRCode(data.code, data.env));
+            } catch (e) {
+              write({ type: RTargetType.RAW, obj: e });
+            }
+            continue;
+          }
+          case 'getRObj': {
+            const data = reqMsg.data as {
+              target: RTargetPtr;
+              path: string[];
+            };
+            try {
+              write(getRObj(RObj.wrap(data.target.obj), data.path));
+            } catch (e) {
+              write({ type: RTargetType.RAW, obj: e });
+            }
+            continue;
+          }
+          case 'callRObj': {
+            const data = reqMsg.data as {
+              target: RTargetPtr;
+              path: string[];
+              args: RTargetObj[];
+            };
+            try {
+              write(callRObj(RObj.wrap(data.target.obj), data.path, data.args));
+            } catch (e) {
+              write({ type: RTargetType.RAW, obj: e });
+            }
             continue;
           }
           default:
@@ -139,8 +178,102 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
   }
 }
 
-function evalRCode(code: string, env?: RPtr): RPtr {
-  const str = allocateUTF8(code);
+function getProp(obj: unknown, prop: string): RawType | RObj | Function {
+  if (!obj) {
+    throw new TypeError('Cannot read properties of undefined');
+  } else if (isRObj(obj) && !isNaN(Number(prop))) {
+    return obj.get(Number(prop));
+  } else if (isRObj(obj) && prop.startsWith('$')) {
+    prop = prop.slice(1);
+    return obj.getDollar(prop);
+  } else if (typeof obj === 'object' && prop in obj) {
+    return obj[prop as keyof typeof obj];
+  } else if (isRObj(obj) && obj.includes(prop)) {
+    return obj.get(prop);
+  }
+  return undefined;
+}
+
+/**
+ * Given a root RObj object, return the result of walking the given path of
+ * properties.
+ *
+ * Returns a RTargetObj containing either a reference to the resulting SEXP
+ * object in WASM memory, or the object represented in an equivalent raw
+ * JS form.
+ *
+ * @param {RObj}  root The root R RObj object
+ * @param {string[]} [path] List of properties to iteratively navigate
+ * @return {RTargetObj} The resulting R object
+ */
+function getRObj(root: RObj, path: string[]): RTargetObj {
+  const res = path.reduce(getProp, root);
+  if (isRObj(res)) {
+    return { obj: res.ptr, type: RTargetType.PTR };
+  } else if (!(typeof res === 'function')) {
+    return { obj: res, type: RTargetType.RAW };
+  }
+  throw Error('Resulting object cannot be transferred to main thread');
+}
+
+/**
+ * Given a root RObj object, call the result of walking the given path of
+ * properties.
+ *
+ * Returns a RTargetObj containing either a reference to the resulting SEXP
+ * object in WASM memory, or the object represented in an equivalent raw
+ * JS form.
+ *
+ * @param {RObj}  root The root R RObj object
+ * @param {string[]} [path] List of properties to iteratively navigate
+ * @param {RTargetObj[]} [args] List of arguments to call with
+ * @return {RTargetObj} The resulting R object
+ */
+function callRObj(root: RObj, path: string[], args: RTargetObj[]): RTargetObj {
+  let res = path.reduce(getProp, root);
+  const parent = path.slice(0, -1).reduce(getProp, root) as RObj;
+
+  if (typeof res === 'function') {
+    res = res.apply(
+      parent,
+      Array.from({ length: args.length }, (_, idx) => {
+        const arg = args[idx];
+        return arg.type === RTargetType.PTR ? RObj.wrap(arg.obj) : arg.obj;
+      })
+    ) as RawType | RObj | Function;
+  } else if (isRObjCallable(res)) {
+    res = res._call.call(
+      parent,
+      Array.from({ length: args.length }, (_, idx) => {
+        const arg = args[idx];
+        return arg.type === RTargetType.PTR ? RObj.wrap(arg.obj) : new RObj(arg);
+      })
+    );
+  } else {
+    throw Error('Resulting object cannot be invoked');
+  }
+
+  if (isRObj(res)) {
+    return { obj: res.ptr, type: RTargetType.PTR };
+  } else if (!(typeof res === 'function')) {
+    return { obj: res, type: RTargetType.RAW };
+  }
+  throw Error('Resulting object cannot be transferred to main thread');
+}
+
+/**
+ * Evaluate the given R code, within the given environment if provided.
+ *
+ * Returns a RTargetObj containing either a reference to the resulting SEXP
+ * object in WASM memory, or the object represented in an equivalent raw
+ * JS form.
+ *
+ * @param {string}  code The R code to evaluate
+ * @param {RPtr} env? An RPtr to the environment to evaluate within
+ * @return {RTargetObj} The resulting R object
+ */
+function evalRCode(code: string, env?: RPtr): RTargetObj {
+  const str = allocateUTF8(`{${code}}`);
   let envObj = RObj.globalEnv;
   if (env) {
     envObj = RObj.wrap(env);
@@ -148,9 +281,16 @@ function evalRCode(code: string, env?: RPtr): RPtr {
       throw new Error('Attempted to eval R code with an env argument with invalid SEXP type');
     }
   }
-  const resultPtr = Module._evalRCode(str, envObj.ptr);
+
+  const evalResult = RObj.wrap(Module._evalRCode(str, envObj.ptr));
+  const result = evalResult.get(1);
+  const error = evalResult.get(2);
+
   Module._free(str);
-  return resultPtr;
+  if (!error.isNull()) {
+    throw new Error(error.get(1).toJs()?.toString());
+  }
+  return { obj: result.ptr, type: RTargetType.PTR };
 }
 
 function getFileData(name: string): Uint8Array {
