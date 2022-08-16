@@ -1,6 +1,8 @@
 import { ChannelMain } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
+import { isRProxy, newRProxy, RProxy } from './proxy';
+import { RTargetObj, RTargetType, RObj } from './robj';
 
 export type FSNode = {
   id: number;
@@ -64,10 +66,24 @@ export class WebR {
   async getFSNode(path: string): Promise<FSNode> {
     return (await this.#chan.request({ type: 'getFSNode', data: { path: path } })) as FSNode;
   }
-  async evalRCode(code: string): Promise<number> {
-    return (await this.#chan.request({
+
+  async evalRCode(code: string, env?: RProxy<RObj>): Promise<RProxy<RObj>> {
+    if (env && !isRProxy(env)) {
+      throw new Error('Attempted to evalRcode with invalid environment object');
+    }
+
+    const target = (await this.#chan.request({
       type: 'evalRCode',
-      data: { code: code, env: 0 },
-    })) as number;
+      data: { code: code, env: env?._target.obj },
+    })) as RTargetObj;
+
+    if (target.obj instanceof Error) {
+      throw target.obj;
+    }
+    if (target.type === RTargetType.RAW) {
+      throw new Error('Unexpected raw target type returned from evalRCode');
+    }
+
+    return newRProxy(this.#chan, target);
   }
 }
