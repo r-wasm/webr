@@ -96,7 +96,7 @@ export class RObj {
     if (attrs.isNull()) {
       return undefined;
     }
-    const names = attrs.get('names') as Nullable<RObjCharacter>;
+    const names = attrs.get2('names') as Nullable<RObjCharacter>;
     if (names.isNull()) {
       return undefined;
     }
@@ -110,6 +110,48 @@ export class RObj {
 
   toJs(): RawType {
     throw new Error('This R object cannot be converted to JS');
+  }
+
+  get(prop: number | string): RObj {
+    let idx: RPtr;
+    let char: RPtr = 0;
+    if (typeof prop === 'number') {
+      idx = Module._Rf_protect(Module._Rf_ScalarInteger(prop));
+    } else {
+      char = allocateUTF8(prop);
+      idx = Module._Rf_protect(Module._Rf_mkString(char));
+    }
+    const call = Module._Rf_protect(Module._Rf_lang3(RObj.bracketSymbol.ptr, this.ptr, idx));
+    const sub = RObj.wrap(Module._Rf_eval(call, RObj.globalEnv.ptr));
+    Module._Rf_unprotect(2);
+    if (char) Module._free(char);
+    return sub;
+  }
+
+  get2(prop: number | string): RObj {
+    let idx: RPtr;
+    let char: RPtr = 0;
+    if (typeof prop === 'number') {
+      idx = Module._Rf_protect(Module._Rf_ScalarInteger(prop));
+    } else {
+      char = allocateUTF8(prop);
+      idx = Module._Rf_protect(Module._Rf_mkString(char));
+    }
+    const call = Module._Rf_protect(Module._Rf_lang3(RObj.bracket2Symbol.ptr, this.ptr, idx));
+    const sub = RObj.wrap(Module._Rf_eval(call, RObj.globalEnv.ptr));
+    Module._Rf_unprotect(2);
+    if (char) Module._free(char);
+    return sub;
+  }
+
+  getDollar(prop: string): RObj {
+    const char = allocateUTF8(prop);
+    const idx = Module._Rf_protect(Module._Rf_mkString(char));
+    const call = Module._Rf_protect(Module._Rf_lang3(RObj.dollarSymbol.ptr, this.ptr, idx));
+    const sub = RObj.wrap(Module._Rf_eval(call, RObj.globalEnv.ptr));
+    Module._Rf_unprotect(2);
+    Module._free(char);
+    return sub;
   }
 
   static get globalEnv(): RObj {
@@ -130,6 +172,18 @@ export class RObj {
 
   static get unboundValue(): RObj {
     return RObj.wrap(getValue(Module._R_UnboundValue, '*'));
+  }
+
+  static get bracketSymbol(): RObjSymbol {
+    return new RObjSymbol(getValue(Module._R_BracketSymbol, '*'));
+  }
+
+  static get bracket2Symbol(): RObjSymbol {
+    return new RObjSymbol(getValue(Module._R_Bracket2Symbol, '*'));
+  }
+
+  static get dollarSymbol(): RObjSymbol {
+    return new RObjSymbol(getValue(Module._R_DollarSymbol, '*'));
   }
 
   static wrap(ptr: RPtr): RObj {
@@ -186,20 +240,6 @@ class RObjSymbol extends RObj {
 }
 
 class RObjPairlist extends RObj {
-  get(name: string): Nullable<RObj> {
-    for (let next = this as Nullable<RObjPairlist>; !next.isNull(); next = next.cdr()) {
-      const symbol = next.tag();
-      if (!symbol.isNull() && symbol.toObject().printname === name) {
-        return next.car();
-      }
-    }
-    return RObj.null;
-  }
-
-  includes(name: string): boolean {
-    return !this.get(name).isNull();
-  }
-
   toObject(): { [key: string]: RawType } {
     const d: { [key: string]: RawType } = {};
     for (let next = this as Nullable<RObjPairlist>; !next.isNull(); next = next.cdr()) {
@@ -211,6 +251,10 @@ class RObjPairlist extends RObj {
       }
     }
     return d;
+  }
+
+  includes(name: string): boolean {
+    return !this.get2(name).isNull();
   }
 
   setcar(obj: RObj): void {
@@ -228,6 +272,10 @@ class RObjPairlist extends RObj {
   tag(): Nullable<RObjSymbol> {
     return RObj.wrap(Module._TAG(this.ptr)) as Nullable<RObjSymbol>;
   }
+
+  toJs(): RawType {
+    return this.toObject();
+  }
 }
 
 class RObjList extends RObj {
@@ -235,27 +283,22 @@ class RObjList extends RObj {
     return Module._LENGTH(this.ptr);
   }
 
-  getIndex(idx: number): RObj {
-    return RObj.wrap(Module._VECTOR_ELT(this.ptr, idx));
-  }
-
-  get(idx: number | string): RObj {
-    if (typeof idx === 'number') {
-      return this.getIndex(idx);
-    }
+  toObject(): { [key: string | number]: RawType } {
     const names = this.names();
-    if (names && this.includes(idx)) {
-      return this.getIndex(names.indexOf(idx));
-    }
-    return RObj.null;
+    return Object.fromEntries(
+      [...Array(this.length).keys()].map((i) => {
+        const idx = names && names[i] !== '' ? names[i] : i;
+        return [idx, this.get2(idx).toJs()];
+      })
+    );
   }
 
-  toJs(): RawType[] {
-    return this.toArray();
+  toJs(): RawType {
+    return this.toObject();
   }
 
   toArray(): RawType[] {
-    return [...Array(this.length).keys()].map((i) => this.get(i).toJs());
+    return [...Array(this.length).keys()].map((i) => this.get2(i + 1).toJs());
   }
 }
 
@@ -285,20 +328,34 @@ class RObjEnv extends RObj {
   ls(): string[] {
     return new RObjCharacter(Module._R_lsInternal(this.ptr, true)).toJs();
   }
+
   frame(): RObj {
     return RObj.wrap(Module._FRAME(this.ptr));
   }
-  get(name: string): RObj {
-    const char = allocateUTF8(name);
-    const str = RObj.protect(RObj.wrap(Module._Rf_mkString(char)));
-    const strPtr = Module._Rf_installTrChar(Module._STRING_ELT(str.ptr, 0));
-    Module._free(char);
-    const variable = RObj.wrap(Module._Rf_findVarInFrame(this.ptr, strPtr));
-    RObj.unprotect(1);
-    return variable;
-  }
+
   includes(name: string) {
-    return !this.get(name).isUnbound();
+    return !this.getDollar(name).isUnbound();
+  }
+
+  get(prop: number | string): RObj {
+    if (typeof prop === 'number') {
+      throw new Error('Object of type environment is not subsettable');
+    }
+    return this.getDollar(prop);
+  }
+
+  toObject(): { [key: string | number]: RawType } {
+    const names = this.ls();
+    return Object.fromEntries(
+      [...Array(this.ls().length).keys()].map((i) => {
+        const idx = names && names[i] !== '' ? names[i] : i;
+        return [idx, this.get(idx).toJs()];
+      })
+    );
+  }
+
+  toJs(): RawType {
+    return this.toObject();
   }
 }
 
@@ -318,31 +375,20 @@ abstract class RObjAtomicVector extends RObj {
     return Module._LENGTH(this.ptr);
   }
 
+  getDollar(prop: string): RObj {
+    throw new Error('$ operator is invalid for atomic vectors');
+  }
+
   abstract toArray(): TypedArray;
 
   toObject(): { [key: string | number]: RawType } {
     const names = this.names();
     return Object.fromEntries(
-      [...Array(this.length).keys()].map((i) => [
-        names && names[i] !== '' ? names[i] : i,
-        this.getIndex(i),
-      ])
+      [...Array(this.length).keys()].map((i) => {
+        const idx = names && names[i] !== '' ? names[i] : i;
+        return [idx, this.get2(idx).toJs()];
+      })
     );
-  }
-
-  getIndex(idx: number): RawType {
-    return this.toArray()[idx];
-  }
-
-  get(idx: number | string): RawType {
-    if (typeof idx === 'number') {
-      return this.getIndex(idx);
-    }
-    const names = this.names();
-    if (names && this.includes(idx)) {
-      return this.getIndex(names.indexOf(idx));
-    }
-    return undefined;
   }
 
   toJs(): RawType {
