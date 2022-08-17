@@ -30,6 +30,13 @@ export class WebR {
     return await this.#chan.initialised;
   }
 
+  async ready() {
+    /* Create a barrier and await until R has caught up.
+       TODO: Handle this using a busy signal within webR.
+     */
+    return await this.#chan.request({ type: 'tic' });
+  }
+
   async read(): Promise<Message> {
     return await this.#chan.read();
   }

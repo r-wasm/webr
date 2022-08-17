@@ -81,6 +81,9 @@ function inputOrDispatch(chan: ChannelWorker): string {
           case 'getFSNode':
             write(getFSNode(reqMsg.data.path as string));
             continue;
+          case 'tic':
+            write('toc');
+            continue;
           case 'evalRCode': {
             const data = reqMsg.data as {
               code: string;
