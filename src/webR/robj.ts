@@ -246,6 +246,19 @@ export class RObj {
     return sub;
   }
 
+  pluck(...path: (string | number)[]): RObj | undefined {
+    try {
+      const result = path.reduce((obj: RObj, prop: string | number): RObj => obj.get(prop), this);
+      return result.isNull() ? undefined : result;
+    } catch (err) {
+      // Deal with subscript out of bounds error
+      if (err === Infinity) {
+        return undefined;
+      }
+      throw err;
+    }
+  }
+
   static get globalEnv(): RObj {
     return RObj.wrap(getValue(Module._R_GlobalEnv, '*'));
   }
@@ -415,6 +428,11 @@ export class RObjFunction extends RObj {
       c = c.cdr();
     }
     return RObj.wrap(Module._Rf_eval(call.ptr, RObj.globalEnv.ptr));
+  }
+  exec(...args: (RawType | RObj)[]): RObj {
+    return this._call(
+      args.map((arg) => (isRObj(arg) ? arg : new RObj({ obj: arg, type: RTargetType.RAW })))
+    );
   }
 }
 
