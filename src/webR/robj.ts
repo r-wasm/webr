@@ -71,6 +71,14 @@ export class RObj {
     return Module._TYPEOF(this.ptr);
   }
 
+  protect(): void {
+    this.ptr = Module._Rf_protect(this.ptr);
+  }
+
+  unprotect(): void {
+    Module._Rf_unprotect_ptr(this.ptr);
+  }
+
   isNull(): this is RObjNull {
     return Module._TYPEOF(this.ptr) === RType.Null;
   }
