@@ -287,7 +287,7 @@ class RObjList extends RObj {
     const names = this.names();
     return Object.fromEntries(
       [...Array(this.length).keys()].map((i) => {
-        const idx = names && names[i] !== '' ? names[i] : i;
+        const idx = names && names[i] !== '' ? names[i] : i + 1;
         return [idx, this.get2(idx).toJs()];
       })
     );
@@ -345,11 +345,10 @@ class RObjEnv extends RObj {
   }
 
   toObject(): { [key: string | number]: RawType } {
-    const names = this.ls();
+    const symbols = this.ls();
     return Object.fromEntries(
-      [...Array(this.ls().length).keys()].map((i) => {
-        const idx = names && names[i] !== '' ? names[i] : i;
-        return [idx, this.get(idx).toJs()];
+      [...Array(symbols.length).keys()].map((i) => {
+        return [symbols[i], this.get(symbols[i]).toJs()];
       })
     );
   }
@@ -385,7 +384,7 @@ abstract class RObjAtomicVector extends RObj {
     const names = this.names();
     return Object.fromEntries(
       [...Array(this.length).keys()].map((i) => {
-        const idx = names && names[i] !== '' ? names[i] : i;
+        const idx = names && names[i] !== '' ? names[i] : i + 1;
         return [idx, this.get2(idx).toJs()];
       })
     );
