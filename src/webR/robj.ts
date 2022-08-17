@@ -68,7 +68,7 @@ function newRObjFromTarget(target: RTargetObj): RObj {
   }
 
   if (typeof obj === 'string') {
-    const str = allocateUTF8(obj);
+    const str = Module.allocateUTF8(obj);
     const ptr = Module._Rf_mkString(str);
     Module._free(str);
     return new RObjCharacter(ptr);
@@ -81,8 +81,8 @@ function newRObjFromTarget(target: RTargetObj): RObj {
 
   if (typeof obj === 'object' && obj && 're' in obj && 'im' in obj) {
     const ptr = Module._Rf_protect(Module._Rf_allocVector(RType.Complex, 1));
-    setValue(Module._COMPLEX(ptr), obj.re, 'double');
-    setValue(Module._COMPLEX(ptr) + 8, obj.im, 'double');
+    Module.setValue(Module._COMPLEX(ptr), obj.re, 'double');
+    Module.setValue(Module._COMPLEX(ptr) + 8, obj.im, 'double');
     Module._Rf_unprotect(1);
     return new RObjComplex(ptr);
   }
@@ -91,7 +91,7 @@ function newRObjFromTarget(target: RTargetObj): RObj {
     // Create a vector of strings
     const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.Character, obj.length));
     obj.forEach((el, idx) => {
-      const str = allocateUTF8(String(el));
+      const str = Module.allocateUTF8(String(el));
       const ptr = Module._Rf_protect(Module._Rf_mkChar(str));
       Module._free(str);
       Module._SET_STRING_ELT(robjVec, idx, ptr);
@@ -103,7 +103,9 @@ function newRObjFromTarget(target: RTargetObj): RObj {
   if (Array.isArray(obj) && obj.some((el) => typeof el === 'number')) {
     // Create a vector of reals
     const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.Double, obj.length));
-    obj.forEach((el, idx) => setValue(Module._REAL(robjVec) + 8 * idx, Number(el), 'double'));
+    obj.forEach((el, idx) =>
+      Module.setValue(Module._REAL(robjVec) + 8 * idx, Number(el), 'double')
+    );
     Module._Rf_unprotect(1);
     return RObj.wrap(robjVec);
   }
@@ -111,7 +113,7 @@ function newRObjFromTarget(target: RTargetObj): RObj {
   if (Array.isArray(obj)) {
     // Create a vector of logicals
     const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.Logical, obj.length));
-    obj.forEach((el, idx) => setValue(Module._LOGICAL(robjVec) + 4 * idx, el, 'i32'));
+    obj.forEach((el, idx) => Module.setValue(Module._LOGICAL(robjVec) + 4 * idx, el, 'i32'));
     Module._Rf_unprotect(1);
     return RObj.wrap(robjVec);
   }
@@ -210,7 +212,7 @@ export class RObj {
     if (typeof prop === 'number') {
       idx = Module._Rf_protect(Module._Rf_ScalarInteger(prop));
     } else {
-      char = allocateUTF8(prop);
+      char = Module.allocateUTF8(prop);
       idx = Module._Rf_protect(Module._Rf_mkString(char));
     }
     const call = Module._Rf_protect(Module._Rf_lang3(RObj.bracketSymbol.ptr, this.ptr, idx));
@@ -226,7 +228,7 @@ export class RObj {
     if (typeof prop === 'number') {
       idx = Module._Rf_protect(Module._Rf_ScalarInteger(prop));
     } else {
-      char = allocateUTF8(prop);
+      char = Module.allocateUTF8(prop);
       idx = Module._Rf_protect(Module._Rf_mkString(char));
     }
     const call = Module._Rf_protect(Module._Rf_lang3(RObj.bracket2Symbol.ptr, this.ptr, idx));
@@ -237,7 +239,7 @@ export class RObj {
   }
 
   getDollar(prop: string): RObj {
-    const char = allocateUTF8(prop);
+    const char = Module.allocateUTF8(prop);
     const idx = Module._Rf_protect(Module._Rf_mkString(char));
     const call = Module._Rf_protect(Module._Rf_lang3(RObj.dollarSymbol.ptr, this.ptr, idx));
     const sub = RObj.wrap(Module._Rf_eval(call, RObj.baseEnv.ptr));
@@ -265,10 +267,10 @@ export class RObj {
     if (typeof prop === 'number') {
       idx = Module._Rf_protect(Module._Rf_ScalarInteger(prop));
     } else {
-      char = allocateUTF8(prop);
+      char = Module.allocateUTF8(prop);
       idx = Module._Rf_protect(Module._Rf_mkString(char));
     }
-    const assign = allocateUTF8('[[<-');
+    const assign = Module.allocateUTF8('[[<-');
     const call = Module._Rf_protect(
       Module._Rf_lang4(Module._Rf_install(assign), this.ptr, idx, value.ptr)
     );
@@ -280,35 +282,35 @@ export class RObj {
   }
 
   static get globalEnv(): RObj {
-    return RObj.wrap(getValue(Module._R_GlobalEnv, '*'));
+    return RObj.wrap(Module.getValue(Module._R_GlobalEnv, '*'));
   }
 
   static get emptyEnv(): RObj {
-    return RObj.wrap(getValue(Module._R_EmptyEnv, '*'));
+    return RObj.wrap(Module.getValue(Module._R_EmptyEnv, '*'));
   }
 
   static get baseEnv(): RObj {
-    return RObj.wrap(getValue(Module._R_BaseEnv, '*'));
+    return RObj.wrap(Module.getValue(Module._R_BaseEnv, '*'));
   }
 
   static get null(): RObjNull {
-    return new RObjNull(getValue(Module._R_NilValue, '*'));
+    return new RObjNull(Module.getValue(Module._R_NilValue, '*'));
   }
 
   static get unboundValue(): RObj {
-    return RObj.wrap(getValue(Module._R_UnboundValue, '*'));
+    return RObj.wrap(Module.getValue(Module._R_UnboundValue, '*'));
   }
 
   static get bracketSymbol(): RObjSymbol {
-    return new RObjSymbol(getValue(Module._R_BracketSymbol, '*'));
+    return new RObjSymbol(Module.getValue(Module._R_BracketSymbol, '*'));
   }
 
   static get bracket2Symbol(): RObjSymbol {
-    return new RObjSymbol(getValue(Module._R_Bracket2Symbol, '*'));
+    return new RObjSymbol(Module.getValue(Module._R_Bracket2Symbol, '*'));
   }
 
   static get dollarSymbol(): RObjSymbol {
-    return new RObjSymbol(getValue(Module._R_DollarSymbol, '*'));
+    return new RObjSymbol(Module.getValue(Module._R_DollarSymbol, '*'));
   }
 
   static wrap(ptr: RPtr): RObj {
@@ -458,7 +460,7 @@ export class RObjFunction extends RObj {
 
 export class RObjString extends RObj {
   toJs(): string {
-    return UTF8ToString(Module._R_CHAR(this.ptr));
+    return Module.UTF8ToString(Module._R_CHAR(this.ptr));
   }
 }
 
@@ -559,9 +561,11 @@ export class RObjLogical extends RObjAtomicVector {
   }
 
   toArray(): Int32Array {
-    return Module.HEAP32.subarray(
-      Module._LOGICAL(this.ptr) / 4,
-      Module._LOGICAL(this.ptr) / 4 + this.length
+    return new Int32Array(
+      Module.HEAP32.subarray(
+        Module._LOGICAL(this.ptr) / 4,
+        Module._LOGICAL(this.ptr) / 4 + this.length
+      )
     );
   }
 
@@ -589,9 +593,11 @@ export class RObjInt extends RObjAtomicVector {
   }
 
   toArray(): Int32Array {
-    return Module.HEAP32.subarray(
-      Module._INTEGER(this.ptr) / 4,
-      Module._INTEGER(this.ptr) / 4 + this.length
+    return new Int32Array(
+      Module.HEAP32.subarray(
+        Module._INTEGER(this.ptr) / 4,
+        Module._INTEGER(this.ptr) / 4 + this.length
+      )
     );
   }
 }
@@ -609,9 +615,8 @@ export class RObjReal extends RObjAtomicVector {
   }
 
   toArray(): Float64Array {
-    return Module.HEAPF64.subarray(
-      Module._REAL(this.ptr) / 8,
-      Module._REAL(this.ptr) / 8 + this.length
+    return new Float64Array(
+      Module.HEAPF64.subarray(Module._REAL(this.ptr) / 8, Module._REAL(this.ptr) / 8 + this.length)
     );
   }
 }
@@ -629,9 +634,11 @@ export class RObjComplex extends RObjAtomicVector {
   }
 
   toArray(): Float64Array {
-    return Module.HEAPF64.subarray(
-      Module._COMPLEX(this.ptr) / 8,
-      Module._COMPLEX(this.ptr) / 8 + 2 * this.length
+    return new Float64Array(
+      Module.HEAPF64.subarray(
+        Module._COMPLEX(this.ptr) / 8,
+        Module._COMPLEX(this.ptr) / 8 + 2 * this.length
+      )
     );
   }
 
@@ -658,9 +665,11 @@ export class RObjCharacter extends RObjAtomicVector {
   }
 
   toArray(): Uint32Array {
-    return Module.HEAPU32.subarray(
-      Module._STRING_PTR(this.ptr) / 4,
-      Module._STRING_PTR(this.ptr) / 4 + this.length
+    return new Uint32Array(
+      Module.HEAPU32.subarray(
+        Module._STRING_PTR(this.ptr) / 4,
+        Module._STRING_PTR(this.ptr) / 4 + this.length
+      )
     );
   }
 
@@ -684,7 +693,9 @@ export class RObjRawdata extends RObjAtomicVector {
   }
 
   toArray(): Uint8Array {
-    return Module.HEAPU8.subarray(Module._RAW(this.ptr), Module._RAW(this.ptr) + this.length);
+    return new Uint8Array(
+      Module.HEAPU8.subarray(Module._RAW(this.ptr), Module._RAW(this.ptr) + this.length)
+    );
   }
 }
 
