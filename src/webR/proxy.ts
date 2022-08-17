@@ -79,6 +79,27 @@ export function newRProxy(
       }
       return r.type === RTargetType.PTR ? newRProxy(chan, r) : r.obj;
     },
+    set(callableTarget: RTargetObj, prop: string | number | symbol, value: RProxy<RObj> | RawType) {
+      chan
+        .request({
+          type: 'setRObj',
+          data: {
+            target: { ...target },
+            path: [...path, prop].map((p) => p.toString()),
+            value: isRProxy(value) ? value._target : { obj: value, type: RTargetType.RAW },
+          },
+        })
+        .then((r: RTargetObj) => {
+          if (r.obj instanceof Error) {
+            throw r.obj;
+          }
+          if (r.type === RTargetType.RAW) {
+            throw Error('Unexpected raw response from RObj setter');
+          }
+          target = r;
+        });
+      return true;
+    },
   }) as unknown as RProxy<RObj>;
   return proxy;
 }

@@ -259,6 +259,26 @@ export class RObj {
     }
   }
 
+  set(prop: string | number, value: RObj) {
+    let idx: RPtr;
+    let char: RPtr = 0;
+    if (typeof prop === 'number') {
+      idx = Module._Rf_protect(Module._Rf_ScalarInteger(prop));
+    } else {
+      char = allocateUTF8(prop);
+      idx = Module._Rf_protect(Module._Rf_mkString(char));
+    }
+    const assign = allocateUTF8('[[<-');
+    const call = Module._Rf_protect(
+      Module._Rf_lang4(Module._Rf_install(assign), this.ptr, idx, value.ptr)
+    );
+    const val = RObj.wrap(Module._Rf_eval(call, RObj.globalEnv.ptr));
+    Module._Rf_unprotect(2);
+    if (char) Module._free(char);
+    Module._free(assign);
+    return val;
+  }
+
   static get globalEnv(): RObj {
     return RObj.wrap(getValue(Module._R_GlobalEnv, '*'));
   }

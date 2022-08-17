@@ -105,6 +105,19 @@ function inputOrDispatch(chan: ChannelWorker): string {
             }
             continue;
           }
+          case 'setRObj': {
+            const data = reqMsg.data as {
+              target: RTargetPtr;
+              path: string[];
+              value: RTargetObj;
+            };
+            try {
+              write(setRObj(RObj.wrap(data.target.obj), data.path, data.value));
+            } catch (e) {
+              write({ type: RTargetType.RAW, obj: e });
+            }
+            continue;
+          }
           case 'callRObj': {
             const data = reqMsg.data as {
               target: RTargetPtr;
@@ -214,6 +227,28 @@ function getRObj(root: RObj, path: string[]): RTargetObj {
     return { obj: res, type: RTargetType.RAW };
   }
   throw Error('Resulting object cannot be transferred to main thread');
+}
+
+/**
+ * Given a root RObj object, walk the given path of properties and set
+ * the value of the result, if possible.
+ *
+ * @param {RObj}  root The root R RObj object
+ * @param {string[]} [path] List of properties to iteratively navigate
+ * @param {RObj} [value] The R RObj object to set the value to
+ * @return {RTargetObj} The resulting R object
+ */
+function setRObj(root: RObj, path: string[], value: RTargetObj): RTargetObj {
+  const parent = path.slice(0, -1).reduce(getProp, root) as RObj;
+  let idx: string | number = path[path.length - 1];
+  if (idx.startsWith('$')) {
+    idx = idx.slice(1);
+  }
+  if (!isNaN(Number(idx))) {
+    idx = Number(idx);
+  }
+  const obj = value.type === RTargetType.PTR ? RObj.wrap(value.obj) : new RObj(value);
+  return { obj: parent.set(idx, obj).ptr, type: RTargetType.PTR };
 }
 
 /**
