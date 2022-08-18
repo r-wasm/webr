@@ -562,7 +562,14 @@ export class RObjRawdata extends RObjAtomicVector {
   }
 }
 
-function getRObjClass(type: RType): typeof RObj {
+export function isRObj(value: any): value is RObj {
+  return value && typeof value === 'object' && 'type' in value && 'toJs' in value;
+}
+export function isRObjCallable(value: any): value is RObjFunction {
+  return isRObj(value) && '_call' in value;
+}
+
+export function getRObjClass(type: RType): typeof RObj {
   const typeClasses: { [key: number]: typeof RObj } = {
     [RType.Null]: RObjNull,
     [RType.Symbol]: RObjSymbol,
