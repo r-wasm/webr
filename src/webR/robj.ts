@@ -672,7 +672,7 @@ export function isRObj(value: any): value is RObj {
   return value && typeof value === 'object' && 'type' in value && 'toJs' in value;
 }
 export function isRObjCallable(value: any): value is RObjFunction {
-  return value && typeof isRObj(value) && '_call' in value;
+  return isRObj(value) && '_call' in value;
 }
 
 export function getRObjClass(type: RType): typeof RObj {
