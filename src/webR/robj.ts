@@ -394,6 +394,14 @@ abstract class RObjAtomicVector extends RObj {
     return Module._LENGTH(this.ptr);
   }
 
+  get(prop: number | string): typeof this {
+    return super.get(prop) as typeof this;
+  }
+
+  subset(prop: number | string): typeof this {
+    return super.subset(prop) as typeof this;
+  }
+
   getDollar(prop: string): RObj {
     throw new Error('$ operator is invalid for atomic vectors');
   }
@@ -417,27 +425,47 @@ abstract class RObjAtomicVector extends RObj {
 
 type RLogical = boolean | 'NA' | undefined;
 class RObjLogical extends RObjAtomicVector {
+  getLogical(idx: number): RLogical {
+    return this.get(idx).toJs()[0];
+  }
+
+  toLogical(): RLogical {
+    if (this.length !== 1) {
+      throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
+    }
+    return this.getLogical(1);
+  }
+
   toArray(): Int32Array {
     return Module.HEAP32.subarray(
       Module._LOGICAL(this.ptr) / 4,
       Module._LOGICAL(this.ptr) / 4 + this.length
     );
   }
-  getIndex(idx: number): RLogical {
-    const elem = this.toArray()[idx];
-    if (typeof elem === 'undefined') return undefined;
-    if (elem === 0 || elem === 1) {
-      return elem === 1;
-    }
-    return 'NA';
-  }
 
   toJs(): RLogical[] {
-    return Array.from({ length: this.length }, (_, idx) => this.getIndex(idx));
+    return Array.from({ length: this.length }, (_, idx) => {
+      const elem = this.toArray()[idx];
+      if (elem === 0 || elem === 1) {
+        return elem === 1;
+      }
+      return 'NA';
+    });
   }
 }
 
 class RObjInt extends RObjAtomicVector {
+  getNumber(idx: number): number {
+    return this.get(idx).toArray()[0];
+  }
+
+  toNumber(): number {
+    if (this.length !== 1) {
+      throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
+    }
+    return this.getNumber(1);
+  }
+
   toArray(): Int32Array {
     return Module.HEAP32.subarray(
       Module._INTEGER(this.ptr) / 4,
@@ -447,6 +475,17 @@ class RObjInt extends RObjAtomicVector {
 }
 
 class RObjReal extends RObjAtomicVector {
+  getNumber(idx: number): number {
+    return this.get(idx).toArray()[0];
+  }
+
+  toNumber(): number {
+    if (this.length !== 1) {
+      throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
+    }
+    return this.getNumber(1);
+  }
+
   toArray(): Float64Array {
     return Module.HEAPF64.subarray(
       Module._REAL(this.ptr) / 8,
@@ -456,39 +495,72 @@ class RObjReal extends RObjAtomicVector {
 }
 
 class RObjComplex extends RObjAtomicVector {
+  getComplex(idx: number): Complex {
+    return this.get(idx).toJs()[0];
+  }
+
+  toComplex(): Complex {
+    if (this.length !== 1) {
+      throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
+    }
+    return this.getComplex(1);
+  }
+
   toArray(): Float64Array {
     return Module.HEAPF64.subarray(
       Module._COMPLEX(this.ptr) / 8,
       Module._COMPLEX(this.ptr) / 8 + 2 * this.length
     );
   }
-  getIndex(idx: number): Complex {
-    return {
-      re: this.toArray()[2 * idx],
-      im: this.toArray()[2 * idx + 1],
-    };
-  }
+
   toJs(): Complex[] {
-    return Array.from({ length: this.length }, (_, idx) => this.getIndex(idx));
+    return Array.from({ length: this.length }, (_, idx) => {
+      return {
+        re: this.toArray()[2 * idx],
+        im: this.toArray()[2 * idx + 1],
+      };
+    });
   }
 }
 
 class RObjCharacter extends RObjAtomicVector {
+  getString(idx: number): string {
+    return this.get(idx).toJs()[0];
+  }
+
+  toString(): string {
+    if (this.length !== 1) {
+      throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
+    }
+    return this.getString(1);
+  }
+
   toArray(): Uint32Array {
     return Module.HEAPU32.subarray(
       Module._STRING_PTR(this.ptr) / 4,
       Module._STRING_PTR(this.ptr) / 4 + this.length
     );
   }
-  getIndex(idx: number): string {
-    return new RObjString(Module._STRING_ELT(this.ptr, idx)).toJs();
-  }
+
   toJs(): string[] {
-    return Array.from({ length: this.length }, (_, idx) => this.getIndex(idx));
+    return Array.from({ length: this.length }, (_, idx) =>
+      new RObjString(Module._STRING_ELT(this.ptr, idx)).toJs()
+    );
   }
 }
 
 class RObjRawdata extends RObjAtomicVector {
+  getNumber(idx: number): number {
+    return this.get(idx).toArray()[0];
+  }
+
+  toNumber(): number {
+    if (this.length !== 1) {
+      throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
+    }
+    return this.getNumber(1);
+  }
+
   toArray(): Uint8Array {
     return Module.HEAPU8.subarray(Module._RAW(this.ptr), Module._RAW(this.ptr) + this.length);
   }
