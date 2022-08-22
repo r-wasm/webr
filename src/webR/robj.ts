@@ -263,14 +263,14 @@ class RObjPairlist extends RObj {
       if (!symbol.isNull()) {
         d[symbol.printname().toJs()] = next.car().toJs();
       } else {
-        d[Object.keys(d).length] = next.car().toJs();
+        d[Object.keys(d).length + 1] = next.car().toJs();
       }
     }
     return d;
   }
 
   includes(name: string): boolean {
-    return !this.get(name).isNull();
+    return name in this.toObject();
   }
 
   setcar(obj: RObj): void {
