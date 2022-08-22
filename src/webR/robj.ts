@@ -96,7 +96,7 @@ export class RObj {
     if (attrs.isNull()) {
       return undefined;
     }
-    const names = attrs.get2('names') as Nullable<RObjCharacter>;
+    const names = attrs.get('names') as Nullable<RObjCharacter>;
     if (names.isNull()) {
       return undefined;
     }
@@ -112,7 +112,7 @@ export class RObj {
     throw new Error('This R object cannot be converted to JS');
   }
 
-  get(prop: number | string): RObj {
+  subset(prop: number | string): RObj {
     let idx: RPtr;
     let char: RPtr = 0;
     if (typeof prop === 'number') {
@@ -128,7 +128,7 @@ export class RObj {
     return sub;
   }
 
-  get2(prop: number | string): RObj {
+  get(prop: number | string): RObj {
     let idx: RPtr;
     let char: RPtr = 0;
     if (typeof prop === 'number') {
@@ -254,7 +254,7 @@ class RObjPairlist extends RObj {
   }
 
   includes(name: string): boolean {
-    return !this.get2(name).isNull();
+    return !this.get(name).isNull();
   }
 
   setcar(obj: RObj): void {
@@ -288,7 +288,7 @@ class RObjList extends RObj {
     return Object.fromEntries(
       [...Array(this.length).keys()].map((i) => {
         const idx = names && names[i] !== '' ? names[i] : i + 1;
-        return [idx, this.get2(idx).toJs()];
+        return [idx, this.get(idx).toJs()];
       })
     );
   }
@@ -298,7 +298,7 @@ class RObjList extends RObj {
   }
 
   toArray(): RawType[] {
-    return [...Array(this.length).keys()].map((i) => this.get2(i + 1).toJs());
+    return [...Array(this.length).keys()].map((i) => this.get(i + 1).toJs());
   }
 }
 
@@ -337,7 +337,7 @@ class RObjEnv extends RObj {
     return !this.getDollar(name).isUnbound();
   }
 
-  get(prop: number | string): RObj {
+  subset(prop: number | string): RObj {
     if (typeof prop === 'number') {
       throw new Error('Object of type environment is not subsettable');
     }
@@ -348,7 +348,7 @@ class RObjEnv extends RObj {
     const symbols = this.ls();
     return Object.fromEntries(
       [...Array(symbols.length).keys()].map((i) => {
-        return [symbols[i], this.get(symbols[i]).toJs()];
+        return [symbols[i], this.getDollar(symbols[i]).toJs()];
       })
     );
   }
@@ -385,7 +385,7 @@ abstract class RObjAtomicVector extends RObj {
     return Object.fromEntries(
       [...Array(this.length).keys()].map((i) => {
         const idx = names && names[i] !== '' ? names[i] : i + 1;
-        return [idx, this.get2(idx).toJs()];
+        return [idx, this.get(idx).toJs()];
       })
     );
   }
