@@ -45,7 +45,7 @@ export interface Module extends EmscriptenModule {
   _TAG: (ptr: RPtr) => RPtr;
   _TYPEOF: (ptr: RPtr) => RPtr;
   _VECTOR_ELT: (ptr: RPtr, idx: number) => RPtr;
-  _R_lsInternal: (env: RPtr, all: boolean) => RPtr;
+  _R_lsInternal3: (env: RPtr, all: boolean, sorted: boolean) => RPtr;
   _Rf_ScalarReal: (n: number) => RPtr;
   _Rf_ScalarLogical: (l: boolean) => RPtr;
   _Rf_ScalarInteger: (n: number) => RPtr;

@@ -325,8 +325,12 @@ class RObjString extends RObj {
 }
 
 class RObjEnv extends RObj {
-  ls(): string[] {
-    return new RObjCharacter(Module._R_lsInternal(this.ptr, true)).toJs();
+  ls(all = false, sorted = true): string[] {
+    return new RObjCharacter(Module._R_lsInternal3(this.ptr, all, sorted)).toJs();
+  }
+
+  names(): string[] {
+    return this.ls(true, true);
   }
 
   frame(): RObj {
@@ -345,7 +349,7 @@ class RObjEnv extends RObj {
   }
 
   toObject(): { [key: string | number]: RawType } {
-    const symbols = this.ls();
+    const symbols = this.names();
     return Object.fromEntries(
       [...Array(symbols.length).keys()].map((i) => {
         return [symbols[i], this.getDollar(symbols[i]).toJs()];
