@@ -1,0 +1,25 @@
+name: Build webR
+
+on:
+  push:
+    branches:
+      - "main"
+      - "build_ci"
+  pull_request:
+    branches:
+      - "main"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: georgestagg/webr-flang:latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Configure webR
+        run: ./configure
+      - name: Copy flang into webR tree
+        run: cp -r /opt/flang/wasm . && cp -r /opt/flang/host . && cp /opt/flang/emfc ./tools/flang
+      - name: Build webR
+        run: cd /opt/emsdk && . emsdk_env.sh && cd - && make
+        shell: bash
