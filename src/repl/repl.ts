@@ -1,5 +1,5 @@
-import { initFSTree, FSTreeInterface, JSTreeNode, FSNode } from './fstree';
-import { WebR } from '../webR/webr-main';
+import { initFSTree, FSTreeInterface, JSTreeNode } from './fstree';
+import { WebR, FSNode } from '../webR/webr-main';
 
 import $ from 'jquery';
 import 'jquery.terminal/css/jquery.terminal.css';
@@ -49,9 +49,6 @@ function FSTreeData(
     webR.getFSNode('/').then((node: FSNode) => {
       const jsTreeNode = FSTree.createJSTreeNodefromFSNode(node);
       jsTreeNode.parents = [];
-      jsTreeNode.state = Object.assign(jsTreeNode.state, {
-        selected: true,
-      });
       cb.call(FSTree, jsTreeNode);
     });
   }
@@ -66,6 +63,7 @@ const webR = new WebR({
     COLORTERM: 'truecolor',
   },
 });
+(globalThis as any).webR = webR;
 
 (async () => {
   await webR.init();
@@ -85,23 +83,22 @@ const webR = new WebR({
 
   const download = document.getElementById('download-file');
   if (download)
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    download.addEventListener('click', async () => {
+    download.addEventListener('click', () => {
       const node = FSTree.getSelectedNode();
       if (!node) return;
 
       const filepath = FSTree.getNodeFileName(node);
-      const data = await webR.getFileData(filepath);
+      webR.getFileData(filepath).then((data) => {
+        const filename = node.text;
+        const blob = new Blob([data], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
 
-      const filename = node.text;
-      const blob = new Blob([data], { type: 'application/octet-stream' });
-      const url = URL.createObjectURL(blob);
-
-      const link = document.createElement('a');
-      link.download = filename;
-      link.href = url;
-      link.click();
-      link.remove();
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = url;
+        link.click();
+        link.remove();
+      });
     });
 
   const upload = document.getElementById('input-upload') as HTMLInputElement;
