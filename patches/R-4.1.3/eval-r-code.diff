@@ -13,13 +13,13 @@ Index: R-4.1.3/src/main/main.c
 +/* TODO: This patch should be moved to an external emscripten SIDE_MODULE
 + * This will help to keep webR features separate from required patches to R core
 + */
-+typedef struct {
++struct eval_args {
 +    const char *str;
 +    SEXP env;
-+} eval_args;
++};
 +
 +SEXP eval_tryCatch_body(void *data) {
-+    eval_args *args = (eval_args*) data;
++    struct eval_args *args = (struct eval_args*) data;
 +    return R_ParseEvalString(args->str, args->env);
 +}
 +
@@ -37,7 +37,7 @@ Index: R-4.1.3/src/main/main.c
 +    SEXP hdata = R_NilValue;
 +    SEXP fdata = R_NilValue;
 +
-+    eval_args data = { str, env };
++    struct eval_args data = { str, env };
 +    SEXP conds = PROTECT(allocVector(STRSXP, 1));
 +    SET_STRING_ELT(conds, 0, mkChar("error"));
 +
