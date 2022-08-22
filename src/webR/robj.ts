@@ -260,7 +260,7 @@ class RObjPairlist extends RObj {
     const d: { [key: string]: RawType } = {};
     for (let next = this as Nullable<RObjPairlist>; !next.isNull(); next = next.cdr()) {
       const symbol = next.tag();
-      if (!symbol.isNull() && symbol.printname()) {
+      if (!symbol.isNull()) {
         d[symbol.printname().toJs()] = next.car().toJs();
       } else {
         d[Object.keys(d).length] = next.car().toJs();
