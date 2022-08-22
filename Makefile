@@ -14,7 +14,9 @@ webr: $(EMFC_FILES)
 	cd src && $(MAKE)
 # Patch R.bin.js to workaround Emscripten issue #14502
 # https://github.com/emscripten-core/emscripten/issues/14502
-	sed -i '' "s|readAsync(libFile,|readAsync(locateFile(libFile),|" dist/R.bin.js
+	sed -i.bak "s|readAsync(libFile,|readAsync(locateFile(libFile),|" dist/R.bin.js
+	rm dist/R.bin.js.bak
+
 
 $(EMFC_FILES):
 	cd $(EMFC_DIR) && $(MAKE) && $(MAKE) install

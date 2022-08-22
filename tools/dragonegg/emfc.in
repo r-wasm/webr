@@ -13,8 +13,8 @@ fi
 DRAGONEGG_SO="${DRAGONEGG_SO-@LIB_PATH@/dragonegg.so}"
 
 gfortran-4.6 -emit-llvm -S -flto -m32 -fverbose-asm -nostdlib -fplugin="${DRAGONEGG_SO}" "$@" ${EXTRA_FFLAGS-} && \
-sed -i 's/^\(target\sdatalayout\s*=\s*\).*$/\1"e-m:e-p:32:32-i64:64-n32:64-S128"/' "$OUT" && \
-sed -i 's/^\(target\striple\s*=\s*\).*$/\1"wasm32-unknown-emscripten"/' "$OUT" && \
+sed -i.bak 's/^\(target\sdatalayout\s*=\s*\).*$/\1"e-m:e-p:32:32-i64:64-n32:64-S128"/' "$OUT" && \
+sed -i.bak 's/^\(target\striple\s*=\s*\).*$/\1"wasm32-unknown-emscripten"/' "$OUT" && \
 
 # Hardcoded fixes for external fortran symbols
 # Required due to a bug in gfortran which creates invalid decl trees
@@ -25,12 +25,12 @@ while read -r line ; do
     symbol=`echo $line | cut -d' ' -f3 | cut -d'(' -f1`
     cast=`egrep -o "${symbol} to ${retval} \([^)]+\)"  "${OUT}.ll.orig" | head -n 1`
     args=`echo ${cast} | cut -d'(' -f2 | cut -d')' -f1`
-    sed -i "s/declare ${retval} ${symbol}([^)(]*,\?\s\?\.\.\.)/declare ${retval} ${symbol}(${args})/" "${OUT}"
-    sed -i "s/${retval} ([^)(]*,\?\s\?\.\.\.)\* ${symbol} to ${retval}/${retval} (${args})* ${symbol} to ${retval}/" "${OUT}"
+    sed -i.bak "s/declare ${retval} ${symbol}([^)(]*,\?\s\?\.\.\.)/declare ${retval} ${symbol}(${args})/" "${OUT}"
+    sed -i.bak "s/${retval} ([^)(]*,\?\s\?\.\.\.)\* ${symbol} to ${retval}/${retval} (${args})* ${symbol} to ${retval}/" "${OUT}"
     echo "patching ${retval} ${symbol} to ${retval} ${symbol}(${args})"
 done < <(egrep '@.*_\([^)(]*,?\s?\.\.\.\)' "${OUT}.ll.orig")
-sed -i "s/@cabs(/@cabs_alt(/" "${OUT}"
-sed -i "s/@csqrt(/@csqrt_alt(/" "${OUT}"
+sed -i.bak "s/@cabs(/@cabs_alt(/" "${OUT}"
+sed -i.bak "s/@csqrt(/@csqrt_alt(/" "${OUT}" && rm "${OUT}.bak"
 if [ -z "${KEEP_TEMPS-}" ]; then rm "${OUT}.ll.orig"; fi
 ########
 
