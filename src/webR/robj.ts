@@ -477,10 +477,6 @@ export class RObjEnv extends RObj {
     return RObj.wrap(Module._FRAME(this.ptr));
   }
 
-  includes(name: string) {
-    return !this.getDollar(name).isUnbound();
-  }
-
   subset(prop: number | string): RObj {
     if (typeof prop === 'number') {
       throw new Error('Object of type environment is not subsettable');
