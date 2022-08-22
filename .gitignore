@@ -11,5 +11,7 @@ R/download
 R/build
 src/webR/config.[jt]s
 src/node_modules
+tests/R/*.Rout
+tests/*.out
 **/.DS_Store
 .vscode

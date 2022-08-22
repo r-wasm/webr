@@ -1,0 +1,160 @@
+[object RObj:Null]
+0
+true
+null
+[object RObj:Symbol]
+1
+false
+x
+undefined
+null
+{ printname: 'x', symvalue: undefined, internal: undefined }
+[object RObj:Pairlist]
+2
+true
+false
+Float64Array(1) [ 1 ]
+{ b: Float64Array(1) [ 2 ], c: Float64Array(1) [ 3 ] }
+{ printname: 'a', symvalue: undefined, internal: undefined }
+Float64Array(1) [ 1 ]
+{ b: Float64Array(1) [ 2 ] }
+Float64Array(1) [ 3 ]
+{ a: [ 'Hello, ' ], b: [ 'world!' ], c: Float64Array(1) [ 3 ] }
+true
+false
+[object RObj:List]
+19
+3
+true
+false
+{
+  a: Float64Array(1) [ 4 ],
+  b: Float64Array(1) [ 5 ],
+  c: Float64Array(1) [ 6 ]
+}
+[ Float64Array(1) [ 4 ], Float64Array(1) [ 5 ], Float64Array(1) [ 6 ] ]
+Float64Array(1) [ 4 ]
+{ b: Float64Array(1) [ 5 ] }
+Float64Array(1) [ 6 ]
+[object RObj:Builtin]
+Float64Array(3) [
+  0.04997916927067833,
+  0.09983341664682815,
+  0.19866933079506122
+]
+Float64Array(3) [
+  0.29552020666133955,
+  0.3894183423086505,
+  0.479425538604203
+]
+Float64Array(1) [ 0.15116976798239495 ]
+[object RObj:String]
+9
+x
+[object RObj:Environment]
+4
+[ 'x', 'y' ]
+[ '.hidden', 'x', 'y' ]
+null
+true
+true
+false
+Float64Array(1) [ 43 ]
+{
+  '.hidden': Float64Array(1) [ 44 ],
+  b: Float64Array(1) [ 3.1415 ],
+  x: Float64Array(1) [ 42 ],
+  y: Float64Array(1) [ 43 ]
+}
+[object RObj:Logical]
+10
+3
+[ true, false, 'NA' ]
+[ true, false, 'NA' ]
+[ 'x', 'y', 'z' ]
+Int32Array(3) [ 1, 0, -2147483648 ]
+{ x: [ true ], y: [ false ], z: [ 'NA' ] }
+true
+false
+NA
+[ true, true, true ]
+true
+[object RObj:Integer]
+13
+3
+Int32Array(3) [ 1, 2, 3 ]
+Int32Array(3) [ 1, 2, 3 ]
+[ 'x', 'y', 'z' ]
+Int32Array(3) [ 1, 2, 3 ]
+{
+  x: Int32Array(1) [ 1 ],
+  y: Int32Array(1) [ 2 ],
+  z: Int32Array(1) [ 3 ]
+}
+1
+2
+3
+Float64Array(3) [ 1, 4, 4 ]
+4
+[object RObj:Double]
+14
+3
+Float64Array(3) [ 4, 5, 6 ]
+Float64Array(3) [ 4, 5, 6 ]
+[ 'x', 'y', 'z' ]
+Float64Array(3) [ 4, 5, 6 ]
+{
+  x: Float64Array(1) [ 4 ],
+  y: Float64Array(1) [ 5 ],
+  z: Float64Array(1) [ 6 ]
+}
+4
+5
+6
+Float64Array(3) [ 4, 7, 7 ]
+7
+[object RObj:Complex]
+15
+3
+[ { re: 8, im: 9 }, { re: 10, im: -11 }, { re: -12, im: 13 } ]
+[ { re: 8, im: 9 }, { re: 10, im: -11 }, { re: -12, im: 13 } ]
+[ 'x', 'y', 'z' ]
+Float64Array(6) [ 8, 9, 10, -11, -12, 13 ]
+{
+  x: [ { re: 8, im: 9 } ],
+  y: [ { re: 10, im: -11 } ],
+  z: [ { re: -12, im: 13 } ]
+}
+{ re: 8, im: 9 }
+{ re: 10, im: -11 }
+{ re: -12, im: 13 }
+[ { re: 8, im: 9 }, { re: 1, im: 1 }, { re: 1, im: 1 } ]
+{ re: 14, im: 0 }
+16
+3
+[ 'a', 'b', 'c' ]
+[ 'a', 'b', 'c' ]
+[ 'x', 'y', 'z' ]
+{ x: [ 'a' ], y: [ 'b' ], z: [ 'c' ] }
+a
+b
+c
+[ 'a', 'Hello,', 'world!' ]
+abc
+[object RObj:Raw]
+24
+3
+Uint8Array(3) [ 255, 254, 253 ]
+Uint8Array(3) [ 255, 254, 253 ]
+[ 'a', 'b', 'c' ]
+Uint8Array(3) [ 255, 254, 253 ]
+{
+  a: Uint8Array(1) [ 255 ],
+  b: Uint8Array(1) [ 254 ],
+  c: Uint8Array(1) [ 253 ]
+}
+255
+254
+253
+Uint8Array(3) [ 255, 54, 55 ]
+50
