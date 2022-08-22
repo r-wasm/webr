@@ -15,7 +15,7 @@ self.onmessage = function (ev: MessageEvent) {
     throw new Error("Can't initialise worker multiple times.");
   }
 
-  init(ev.data as WebROptions);
+  init(ev.data.data as WebROptions);
   initialised = true;
 };
 
@@ -70,6 +70,13 @@ function inputOrDispatch(chan: ChannelWorker): string {
           case 'getFSNode':
             write(getFSNode(reqMsg.data.path as string));
             continue;
+          case 'evalRCode': {
+            const data = reqMsg.data as {
+              code: string;
+            };
+            write(evalRCode(data.code, 0));
+            continue;
+          }
           default:
             throw new Error('Unknown event `' + reqMsg.type + '`');
         }
@@ -130,6 +137,13 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
   }
 }
 
+function evalRCode(code: string, env: RPtr): RPtr {
+  const str = allocateUTF8(code);
+  const resultPtr = Module._evalRCode(str, env);
+  Module._free(str);
+  return resultPtr;
+}
+
 function getFileData(name: string): Uint8Array {
   const size = FS.stat(name).size as number;
   const stream = FS.open(name, 'r');
@@ -169,7 +183,7 @@ function init(options: WebROptions = {}) {
     // C code must call `free()` on the result
     readConsole: () => {
       const input = inputOrDispatch(chan);
-      return allocUTF8(input);
+      return Module.allocateUTF8(input);
     },
   };
 
@@ -197,11 +211,4 @@ function init(options: WebROptions = {}) {
     const scriptSrc = `${_config.WEBR_URL}R.bin.js`;
     loadScript(scriptSrc);
   });
-}
-
-function allocUTF8(x: string) {
-  const nBytes = lengthBytesUTF8(x) + 1;
-  const out = Module._malloc(nBytes);
-  stringToUTF8(x, out, nBytes);
-  return out;
 }
