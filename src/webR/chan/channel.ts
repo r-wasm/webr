@@ -47,16 +47,7 @@ export class ChannelMain {
   }
 
   async read() {
-    for (;;) {
-      const msg = await this.outputQueue.get();
-
-      if (msg.type === 'response') {
-        this.#resolveResponse(msg as Response);
-        continue;
-      }
-
-      return msg;
-    }
+    return await this.outputQueue.get();
   }
 
   write(msg: Message) {
@@ -94,6 +85,10 @@ export class ChannelMain {
       switch (ev.data.type) {
         case 'resolve':
           this.resolve();
+          return;
+
+        case 'response':
+          this.#resolveResponse(ev.data as Response);
           return;
 
         default:
