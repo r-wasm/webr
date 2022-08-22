@@ -18,9 +18,9 @@ export interface Module extends EmscriptenModule {
     status: number;
     response: string | ArrayBuffer;
   };
-  _runRCode: (code: number, length: number) => Promise<string>;
-  allocate(slab: number[] | ArrayBufferView | number, allocator: number): number;
-  intArrayFromString(stringy: string, dontAddNull?: boolean, length?: number): number[];
+  _evalRCode: (code: number, env: number) => number;
+  // Exported Emscripten JS API
+  allocateUTF8: (str: string) => number;
   // TODO: Namespace all webR properties
   webr: {
     readConsole: () => number;

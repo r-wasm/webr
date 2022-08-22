@@ -49,9 +49,7 @@ export class WebR {
   async getFSNode(path: string): Promise<FSNode> {
     return (await this.#chan.request({ type: 'getFSNode', data: { path: path } })) as FSNode;
   }
-
-  // Backend delegation
-  async runRCode(_code: string) {
-    return 'TODO';
+  async evalRCode(code: string): Promise<number> {
+    return (await this.#chan.request({ type: 'evalRCode', data: { code: code } })) as number;
   }
 }
