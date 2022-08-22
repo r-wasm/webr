@@ -122,7 +122,7 @@ export class RObj {
       idx = Module._Rf_protect(Module._Rf_mkString(char));
     }
     const call = Module._Rf_protect(Module._Rf_lang3(RObj.bracketSymbol.ptr, this.ptr, idx));
-    const sub = RObj.wrap(Module._Rf_eval(call, RObj.globalEnv.ptr));
+    const sub = RObj.wrap(Module._Rf_eval(call, RObj.baseEnv.ptr));
     Module._Rf_unprotect(2);
     if (char) Module._free(char);
     return sub;
@@ -138,7 +138,7 @@ export class RObj {
       idx = Module._Rf_protect(Module._Rf_mkString(char));
     }
     const call = Module._Rf_protect(Module._Rf_lang3(RObj.bracket2Symbol.ptr, this.ptr, idx));
-    const sub = RObj.wrap(Module._Rf_eval(call, RObj.globalEnv.ptr));
+    const sub = RObj.wrap(Module._Rf_eval(call, RObj.baseEnv.ptr));
     Module._Rf_unprotect(2);
     if (char) Module._free(char);
     return sub;
@@ -148,7 +148,7 @@ export class RObj {
     const char = allocateUTF8(prop);
     const idx = Module._Rf_protect(Module._Rf_mkString(char));
     const call = Module._Rf_protect(Module._Rf_lang3(RObj.dollarSymbol.ptr, this.ptr, idx));
-    const sub = RObj.wrap(Module._Rf_eval(call, RObj.globalEnv.ptr));
+    const sub = RObj.wrap(Module._Rf_eval(call, RObj.baseEnv.ptr));
     Module._Rf_unprotect(2);
     Module._free(char);
     return sub;
