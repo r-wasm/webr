@@ -79,6 +79,14 @@ export class RObj {
     Module._Rf_unprotect_ptr(this.ptr);
   }
 
+  preserve(): void {
+    Module._R_PreserveObject(this.ptr);
+  }
+
+  release(): void {
+    Module._R_ReleaseObject(this.ptr);
+  }
+
   isNull(): this is RObjNull {
     return Module._TYPEOF(this.ptr) === RType.Null;
   }
@@ -201,6 +209,14 @@ export class RObj {
 
   static unprotectPtr(obj: RObj): void {
     Module._Rf_unprotect_ptr(obj.ptr);
+  }
+
+  static preserveObject(obj: RObj): void {
+    Module._R_PreserveObject(obj.ptr);
+  }
+
+  static releaseObject(obj: RObj): void {
+    Module._R_ReleaseObject(obj.ptr);
   }
 }
 
