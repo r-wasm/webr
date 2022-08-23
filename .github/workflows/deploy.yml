@@ -1,0 +1,49 @@
+name: Build, test and deploy webR
+
+on:
+  push:
+    branches:
+      - "main"
+    tags:
+      - "v*.*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: georgestagg/webr-flang:latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Configure webR for flang
+        run: ./configure
+      - name: Copy flang into webR tree
+        run: cp -r /opt/flang/wasm . && cp -r /opt/flang/host . && cp /opt/flang/emfc ./tools/flang
+      - name: Build webR
+        run: cd /opt/emsdk && . emsdk_env.sh && cd - && make
+        shell: bash
+      - name: Archive webR build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: webr-dist
+          path: |
+            dist
+            !dist/index.html
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: deploy
+    steps:
+      - name: Download build archive
+        uses: actions/download-artifact@v3
+        with:
+          name: webr-dist
+      - uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --follow-symlinks --delete
+        env:
+          AWS_S3_BUCKET: ${{ secrets.R2_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_S3_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          SOURCE_DIR: .
+          DEST_DIR: ${{ github.ref_name }}/
