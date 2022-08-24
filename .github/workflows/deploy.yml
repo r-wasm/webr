@@ -18,6 +18,9 @@ jobs:
         run: ./configure
       - name: Copy flang into webR tree
         run: cp -r /opt/flang/wasm . && cp -r /opt/flang/host . && cp /opt/flang/emfc ./tools/flang
+      - name: Set the webR CDN URL as the BASE_URL
+        run: echo "BASE_URL=https://cdn.webr.workers.dev/${{ github.ref_name }}/" > "$HOME/.webr-config.mk"
+        shell: bash
       - name: Build webR
         run: cd /opt/emsdk && . emsdk_env.sh && cd - && make
         shell: bash
