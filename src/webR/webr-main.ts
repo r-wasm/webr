@@ -1,5 +1,6 @@
 import { ChannelMain } from './chan/channel';
 import { Message } from './chan/message';
+import { BASE_URL } from './config';
 
 export type FSNode = {
   id: number;
@@ -21,7 +22,7 @@ export class WebR {
   #chan;
 
   constructor(options: WebROptions = {}) {
-    this.#chan = new ChannelMain('./webr-worker.js', options);
+    this.#chan = new ChannelMain(`${BASE_URL}webr-worker.js`, options);
   }
 
   async init() {
