@@ -1,0 +1,360 @@
+       Eye
+Hair    Brown Blue Hazel Green
+  Black    68   20    15     5
+  Brown   119   84    54    29
+  Red      26   17    14    14
+  Blond     7   94    10    16
+[1] 1 2 3 4 5 6 7
+[1] 210 220 230 240 250 260 270
+ 1000 1e+05     3 ; 200 500 1000 2000 5000 10000 20000 50000 1e+05 2e+05 5e+05 
+ 1000 1e+06     2 ; 500 1000 5000 10000 50000 1e+05 5e+05 1e+06 
+ 1000 1e+07     1 ; 1000 10000 1e+05 1e+06 1e+07 
+[1] 1e-01 1e+01 1e+03 1e+05 1e+07 1e+09 1e+11
+ [1] 1e-02 1e-01 1e+00 1e+01 1e+02 1e+03 1e+04 1e+05 1e+06 1e+07 1e+08 1e+09
+[13] 1e+10 1e+11
+[1]  0.2  0.5  1.0  2.0  5.0 10.0 20.0 50.0
+[1]   0.2   0.5   1.0   2.0   5.0  10.0  20.0  50.0 100.0
+  Class       Sex        Age     Survived      Freq       
+ 1st :8   Male  :16   Child:16   No :16   Min.   :  0.00  
+ 2nd :8   Female:16   Adult:16   Yes:16   1st Qu.:  0.75  
+ 3rd :8                                   Median : 13.50  
+ Crew:8                                   Mean   : 68.78  
+                                          3rd Qu.: 77.00  
+                                          Max.   :670.00  
+, , Sex = Male
+
+        Class
+Survived 1st 2nd 3rd Crew
+     No  118 154 387  670
+     Yes  57  14  75  192
+
+, , Sex = Female
+
+        Class
+Survived 1st 2nd 3rd Crew
+     No    4  13  89    3
+     Yes 140  80  76   20
+
+[1] 0.7 1.9 3.1 4.3
+     [,1] [,2] [,3] [,4]
+[1,]  1.5  7.5 13.5 19.5
+[2,]  2.5  8.5 14.5 20.5
+[3,]  3.5  9.5 15.5 21.5
+[4,]  4.5 10.5 16.5 22.5
+[5,]  5.5 11.5 17.5 23.5
+Warning in (function (z, notch = FALSE, width = NULL, varwidth = FALSE,  :
+  some notches went outside hinges ('box'): maybe set notch=FALSE
+$stats
+            [,1]        [,2]        [,3]        [,4]        [,5]
+[1,] -1.66391873 -2.02625162 -2.12785004 -2.76510496 -1.70034047
+[2,] -0.55308292 -0.65897584 -0.86705616 -1.63431484 -0.81848966
+[3,] -0.06763313  0.04887846  0.09674026 -0.06712275 -0.01150075
+[4,]  0.68813940  0.91705734  1.05562526  0.56746581  0.49017934
+[5,]  1.14222667  3.16270157  2.07574986  2.09523462  1.87734641
+
+$n
+[1] 20 20 20 20 20
+
+$conf
+           [,1]       [,2]       [,3]       [,4]       [,5]
+[1,] -0.5061554 -0.5079321 -0.5825407 -0.8450091 -0.4738519
+[2,]  0.3708891  0.6056890  0.7760212  0.7107636  0.4508504
+
+$out
+[1]  4.115274  3.224584  3.920438  4.168341 -4.357819  2.498006
+
+$group
+[1] 1 1 1 4 5 5
+
+$names
+[1] "1" "2" "3" "4" "5"
+
+Warning in bxp(bx.p, notch = TRUE, axes = FALSE, pch = 4, boxfill = 1:5) :
+  some notches went outside hinges ('box'): maybe set notch=FALSE
+Warning in bxp(bx.p, notch = TRUE, boxfill = "lightblue", frame.plot = FALSE,  :
+  some notches went outside hinges ('box'): maybe set notch=FALSE
+Warning in bxp(bx.p, notch = TRUE, boxfill = "lightblue", border = 2:6,  :
+  some notches went outside hinges ('box'): maybe set notch=FALSE
+           fail
+temperature no yes
+    [50,60]  0   3
+    (60,70]  8   3
+    (70,80]  7   1
+    (80,90]  1   0
+ [1] -300 -200 -100    0  100  200  300  400  500  600  700
+[1] 1.577778 3.022222
+[1] 113.6 217.6
+[1] 0.2253968 0.4317460
+[1] 0.3134921 0.8293651
+[1] 0.03703704 0.96296296
+[1] 0.1567460 0.4146825
+[1]  7.888889 15.111111
+[1]  7.888889 15.111111
+              Department   A   B   C   D   E   F
+Sex    Admit?                                   
+Male   Yes               512 353 120 138  53  22
+       No                313 207 205 279 138 351
+Female Yes                89  17 202 131  94  24
+       No                 19   8 391 244 299 317
+List of 6
+ $ breaks  : num [1:10] 0 2000 4000 6000 8000 10000 12000 14000 16000 18000
+ $ counts  : int [1:9] 41 2 1 1 1 1 0 0 1
+ $ density : num [1:9] 4.27e-04 2.08e-05 1.04e-05 1.04e-05 1.04e-05 ...
+ $ mids    : num [1:9] 1000 3000 5000 7000 9000 11000 13000 15000 17000
+ $ xname   : chr "islands"
+ $ equidist: logi TRUE
+ - attr(*, "class")= chr "histogram"
+   counts   density 
+48.000000  0.215625 
+[1] 1
+List of 6
+ $ breaks  : num [1:10] 0 2000 4000 6000 8000 10000 12000 14000 16000 18000
+ $ counts  : int [1:9] 41 2 1 1 1 1 0 0 1
+ $ density : num [1:9] 4.27e-04 2.08e-05 1.04e-05 1.04e-05 1.04e-05 ...
+ $ mids    : num [1:9] 1000 3000 5000 7000 9000 11000 13000 15000 17000
+ $ xname   : chr "islands"
+ $ equidist: logi TRUE
+ - attr(*, "class")= chr "histogram"
+List of 6
+ $ breaks  : num [1:7] 12 20 36 80 200 1000 17000
+ $ counts  : int [1:6] 12 11 8 6 4 7
+ $ density : num [1:6] 0.03125 0.014323 0.003788 0.001042 0.000104 ...
+ $ mids    : num [1:6] 16 28 58 140 600 9000
+ $ xname   : chr "islands"
+ $ equidist: logi FALSE
+ - attr(*, "class")= chr "histogram"
+Warning in plot.histogram(r, freq = freq1, col = col, border = border, angle = angle,  :
+  the AREAS in the plot are wrong -- rather use 'freq = FALSE'
+  xchar= 0.1723,0.1969,0.2215,0.2461 ; (yextra, ychar)= 0,0,0,0, 0.1648,0.1884,0.2119,0.2355 
+  rect2(6.121,2.6622.7212.782.839, w=2.159, h=0.82410.94191.061.177, ...)
+  points2( 6.293 6.318 6.342 6.367 , 2.497 2.344 2.144 1.897 , pch= s S v V , ...) 
+  xchar= 0.1767 ; (yextra, ychar)= 0, 0.1256 
+  rect2(-0.4885,1.92, w=0.977, h=0.5023, ...)
+  segments2( -0.4355 -0.4355 , 1.794 1.543 , dx= 0.3534 , dy=0, ...) 
+  points2( -0.2588 -0.2588 , 1.669 1.543 , pch= 3 4 , ...) 
+waiting .. done
+  xchar= -0.1767 ; (yextra, ychar)= -0, -0.1256 
+  rect2(0.4885,-1.32, w=-0.977, h=-0.5023, ...)
+  segments2( 0.4355 0.4355 , -1.194 -0.9433 , dx= -0.3534 , dy=0, ...) 
+  points2( 0.2588 0.2588 , -1.069 -0.9433 , pch= 3 4 , ...) 
+Error in legend("topright", legend = c(" ", " "), text.width = strwidth("1,000,000"),  : 
+  unused argument (title.cex = 0.5)
+Error in text(temp$rect$left + temp$rect$w, temp$text$y, c("1,000", "1,000,000"),  : 
+  object 'temp' not found
+List of 2
+ $ rect:List of 4
+  ..$ w   : num 1.2
+  ..$ h   : num 0.251
+  ..$ left: num -3
+  ..$ top : num 0.9
+ $ text:List of 2
+  ..$ x: num [1:2] -2.29 -2.29
+  ..$ y: num [1:2] 0.816 0.733
+List of 2
+ $ rect:List of 4
+  ..$ w   : num 4.27
+  ..$ h   : num 6.78
+  ..$ left: num 4.1
+  ..$ top : num 30
+ $ text:List of 2
+  ..$ x: num [1:2] 5.22 5.22
+  ..$ y: num [1:2] 27.3 24.6
+waiting .. done
+Error in legend("bottomleft", c("This legend", "has", "optimally sized",  : 
+  'text.width' must be numeric, >= 0
+
+    setosa versicolor  virginica 
+        50         50         50 
+2 iterations: deviation 5.684342e-14 
+[1] 5.320872e-23
+2 iterations: deviation 5.684342e-14 
+[1] 0.1891745
+[1] FALSE
+[1] TRUE
+$usr
+[1] 1.00 2.00 0.96 2.04
+
+$xaxp
+[1] 1 2 5
+
+ prof.pilots      lawyers      farmers     salesmen   physicians    mechanics 
+          16           11           10            9            9            6 
+   policemen     managers    engineers     teachers   housewives     students 
+           6            6            5            4            3            3 
+armed.forces 
+           1 
+      [,1]   [,2]   [,3]   [,4]
+[1,] 0.087 -0.025  0.043 -0.043
+[2,] 0.050  0.043 -0.075  0.075
+[3,] 0.000  0.074  0.042 -0.042
+[4,] 0.000 -0.273 -2.890  3.890
+            Df Sum Sq Mean Sq F value  Pr(>F)   
+wool         1    451   450.7   3.339 0.07361 . 
+tension      2   2034  1017.1   7.537 0.00138 **
+Residuals   50   6748   135.0                   
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+'data.frame':	88 obs. of  5 variables:
+ $ agegp    : Ord.factor w/ 6 levels "25-34"<"35-44"<..: 1 1 1 1 1 1 1 1 1 1 ...
+ $ alcgp    : Ord.factor w/ 4 levels "0-39g/day"<"40-79"<..: 1 1 1 1 2 2 2 2 3 3 ...
+ $ tobgp    : Ord.factor w/ 4 levels "0-9g/day"<"10-19"<..: 1 2 3 4 1 2 3 4 1 2 ...
+ $ ncases   : num  0 0 0 0 0 0 0 0 0 0 ...
+ $ ncontrols: num  40 10 6 5 27 7 4 7 2 1 ...
+N
+ 1  2  3  4  5  6  7  8  9 10 11 
+ 4 14 25 38 40 33 21 16  4  2  3 
+function (x, y = NULL, type = "p", ...) 
+plot.xy(xy.coords(x, y), type = type, ...)
+<environment: namespace:graphics>
+$breaks
+ [1] 115 120 125 130 135 140 145 150 155 160 165
+
+$counts
+ [1] 3 1 2 2 1 1 2 1 1 1
+
+$density
+ [1] 0.04000000 0.01333333 0.02666667 0.02666667 0.01333333 0.01333333
+ [7] 0.02666667 0.01333333 0.01333333 0.01333333
+
+$mids
+ [1] 117.5 122.5 127.5 132.5 137.5 142.5 147.5 152.5 157.5 162.5
+
+$xname
+[1] "women$weight"
+
+$equidist
+[1] TRUE
+
+attr(,"class")
+[1] "histogram"
+Warning in matrix(0:1, ncol = 5, nrow = 3) :
+  data length [2] is not a sub-multiple or multiple of the number of rows [3]
+         improved
+treatment none some marked
+  placebo   29    7      7
+  treated   13    7     21
+    Gender
+Dept Male Female
+   A  825    108
+   B  560     25
+   C  325    593
+   D  417    375
+   E  191    393
+   F  373    341
+    Admit
+Dept Admitted Rejected
+   A      601      332
+   B      370      215
+   C      322      596
+   D      269      523
+   E      147      437
+   F       46      668
+           fail
+temperature no yes
+    [50,55]  0   1
+    (55,60]  0   2
+    (60,65]  0   1
+    (65,70]  8   2
+    (70,75]  3   1
+    (75,80]  4   0
+    (80,85]  1   0
+           fail
+temperature no yes
+    [50,60]  0   3
+    (60,70]  8   3
+    (70,80]  7   1
+    (80,90]  1   0
+           fail
+temperature no yes
+    [53,67]  4   4
+    (67,70]  4   2
+    (70,75]  3   1
+    (75,81]  5   0
+
+  The decimal point is 3 digit(s) to the right of the |
+
+   0 | 00000000000000000000000000000111111222338
+   2 | 07
+   4 | 5
+   6 | 8
+   8 | 4
+  10 | 5
+  12 | 
+  14 | 
+  16 | 0
+
+
+  The decimal point is at the |
+
+  1 | 1111112222233444
+  1 | 5555556666667899999
+  2 | 3344
+  2 | 59
+  3 | 
+  3 | 5678
+  4 | 012
+
+[1] 3.2600930 2.4934186 0.9600698 0.9600698 7.6736512
+[1] TRUE
+[1] 3.996267 3.056467 1.176867 1.176867 9.406467
+[1] 20.72093 20.72093
+[1] 1
+shL
+8.616 
+   52 
+[1] 43.08
+ [1]  6.672  6.672  6.000  6.672  6.672  3.336  6.672  6.672  2.664  2.664
+[11]  6.000  2.664  9.996  6.672  6.672  6.672  6.672  3.996  6.000  3.336
+[21]  6.672  6.000  8.664  6.000  6.000  6.000  8.004  8.004  8.664  8.664
+[31]  8.004  7.332  9.336  8.664  3.336  6.000  8.004  6.672  9.996  8.664
+[41]  9.336  8.004  9.336  8.664  8.004  7.332  8.664  8.004 11.328  8.004
+[51]  8.004  7.332
+$`2.66`
+[1] "i" "j" "l"
+
+$`3.34`
+[1] "f" "t" "I"
+
+$`4`
+[1] "r"
+
+$`6`
+[1] "c" "k" "s" "v" "x" "y" "z" "J"
+
+$`6.67`
+ [1] "a" "b" "d" "e" "g" "h" "n" "o" "p" "q" "u" "L"
+
+$`7.33`
+[1] "F" "T" "Z"
+
+$`8`
+[1] "A" "B" "E" "K" "P" "S" "V" "X" "Y"
+
+$`8.66`
+[1] "w" "C" "D" "H" "N" "R" "U"
+
+$`9.34`
+[1] "G" "O" "Q"
+
+$`10`
+[1] "m" "M"
+
+$`11.33`
+[1] "W"
+
+[1]  5.795241 11.484959
+[1] 8.057449 3.420738
+List of 3
+ $ x     : num [1:25] -6 -4 -4 -4 -4 -2 -2 -2 -2 -2 0 0 0 0 0 0 2 2 2 2 2 4 4 4 4
+ $ y     : num [1:25] 0 -2 0 1 2 -2 -1 0 1 2 -3 -2 -1 0 1 2 -2 -1 0 1 3 -1 0 1 2
+ $ number: int [1:25] 1 1 1 1 3 1 4 8 4 1 1 3 5 17 12 2 1 8 12 6 1 1 3 2 1
+[1] TRUE
+[1] 1.5000000 0.4185559
+function (xy = 1, warn.log = TRUE) 
+{
+    if (warn.log && (par("xlog") || par("ylog"))) 
+        warning("log scale:  xyinch() is nonsense")
+    u <- par("usr")
+    xy * c(u[2L] - u[1L], u[4L] - u[3L])/par("pin")
+}
+<environment: namespace:graphics>

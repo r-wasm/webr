@@ -1,0 +1,2306 @@
+$typeface
+[1] "serif"             "sans serif"        "script"           
+[4] "gothic english"    "gothic german"     "gothic italian"   
+[7] "serif symbol"      "sans serif symbol"
+
+$fontindex
+[1] "plain"            "italic"           "bold"             "bold italic"     
+[5] "cyrillic"         "oblique cyrillic" "EUC"             
+
+$allowed
+      [,1] [,2]
+ [1,]    1    1
+ [2,]    1    2
+ [3,]    1    3
+ [4,]    1    4
+ [5,]    1    5
+ [6,]    1    6
+ [7,]    1    7
+ [8,]    2    1
+ [9,]    2    2
+[10,]    2    3
+[11,]    2    4
+[12,]    3    1
+[13,]    3    2
+[14,]    3    3
+[15,]    4    1
+[16,]    5    1
+[17,]    6    1
+[18,]    7    1
+[19,]    7    2
+[20,]    7    3
+[21,]    7    4
+[22,]    8    1
+[23,]    8    2
+
+     [,1]      [,2]       
+[1,] "black"   "#000000BF"
+[2,] "#DF536B" "#DF536BBF"
+[3,] "#61D04F" "#61D04FBF"
+[4,] "#2297E6" "#2297E6BF"
+[5,] "#28E2E5" "#28E2E5BF"
+[6,] "#CD0BBC" "#CD0BBCBF"
+[7,] "#F5C710" "#F5C710BF"
+[8,] "gray62"  "#9E9E9EBF"
+     x         x.         
+[1,] "black"   "#80808099"
+[2,] "#DF536B" "#FFBACA99"
+[3,] "#61D04F" "#C3FFB799"
+[4,] "#2297E6" "#97E9FF99"
+[5,] "#28E2E5" "#9BFFFF99"
+[6,] "#CD0BBC" "#FF87FF99"
+[7,] "#F5C710" "#FFFF8B99"
+[8,] "gray62"  "#EEEEEE99"
+          [,1]      [,2]      [,3] [,4]
+[1,] 0.3333333 0.3333333 0.3333333    0
+[2,] 0.3333333 0.3333333 0.3333333    0
+[3,] 0.3333333 0.3333333 0.3333333    0
+[4,] 0.0000000 0.0000000 0.0000000    1
+[1] "#000000FF" "#8A8A8AFF" "#808080FF" "#8A8A8AFF" "#A5A5A5FF" "#878787FF"
+[7] "#999999FF" "#9E9E9EFF"
+     [,1]      [,2]      [,3]      [,4]      [,5]     
+[1,] "#C54E6D" "#C54E6D" "#C54E6D" "#C54E6D" "#C54E6D"
+[2,] "#E16A86" "#E16A86" "#E16A86" "#E16A86" "#E16A86"
+[3,] "#FE86A1" "#FE86A1" "#FE86A1" "#FE86A1" "#FE86A1"
+[4,] "#FFA2BC" "#FFA2BC" "#FFA2BC" "#FFA2BC" "#FFA2BC"
+     [,1]     
+[1,] "#C54E6D"
+[2,] "#E16A86"
+[3,] "#FE86A1"
+[4,] "#FFA2BC"
+     [,1]     
+[1,] "#333333"
+[2,] "#666666"
+[3,] "#999999"
+[4,] "#CCCCCC"
+[5,] "#FFFFFF"
+      [,1]     
+ [1,] "#000000"
+ [2,] "#FFFFFF"
+ [3,] "#000000"
+ [4,] "#FFFFFF"
+ [5,] "#000000"
+ [6,] "#FFFFFF"
+ [7,] "#000000"
+ [8,] "#FFFFFF"
+ [9,] "#000000"
+[10,] "#FFFFFF"
+     [,1]      [,2]      [,3]      [,4]      [,5]      [,6]      [,7]     
+[1,] "#000000" "#FFFFFF" "#000000" "#FFFFFF" "#000000" "#FFFFFF" "#000000"
+     [,8]      [,9]      [,10]    
+[1,] "#FFFFFF" "#000000" "#FFFFFF"
+     [,1]      [,2]     
+[1,] "#FFFFFF" "#000000"
+[2,] "#000000" "#FFFFFF"
+[3,] "#FFFFFF" "#000000"
+     [,1]      [,2]      [,3]      [,4]     
+[1,] "#404040" "#404040" "#404040" "#404040"
+[2,] "#808080" "#808080" "#808080" "#808080"
+[3,] "#BFBFBF" "#BFBFBF" "#BFBFBF" "#BFBFBF"
+     [,1]     
+[1,] "#008080"
+[2,] "#FF8080"
+     [,1]       
+[1,] "#00808080"
+[2,] "#FF808080"
+      [,1]         
+ [1,] "aquamarine3"
+ [2,] "aquamarine4"
+ [3,] "azure"      
+ [4,] "azure1"     
+ [5,] "azure2"     
+ [6,] "azure3"     
+ [7,] "azure4"     
+ [8,] "beige"      
+ [9,] "bisque"     
+[10,] "bisque1"    
+     [,1]          [,2]      [,3]     [,4]        
+[1,] "aquamarine4" "bisque3" "brown"  "cadetblue" 
+[2,] "azure"       "bisque4" "brown1" "cadetblue1"
+[3,] "azure1"      "black"   "brown2" "cadetblue2"
+       [,1]  [,2]  [,3]  [,4]  [,5]  [,6]  [,7]  [,8]  [,9] [,10]
+ [1,]  TRUE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+ [2,] FALSE  TRUE  TRUE  TRUE  TRUE FALSE FALSE FALSE FALSE FALSE
+ [3,] FALSE  TRUE  TRUE  TRUE  TRUE FALSE FALSE FALSE FALSE FALSE
+ [4,] FALSE  TRUE  TRUE  TRUE  TRUE FALSE FALSE FALSE FALSE FALSE
+ [5,] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+ [6,] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+ [7,] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+ [8,] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+ [9,] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+[10,] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+[1]   0.6  11.4  -4.0 104.0
+[1]  2  4  6  8 10
+[1]   0  20  40  60  80 100
+ [1]   0  10  20  30  40  50  60  70  80  90 100
+Warning in xy.coords(x, y, xlabel, ylabel, log) :
+  1 y value <= 0 omitted from logarithmic plot
+[1]  0.60 11.40  0.96  2.04
+[1]  10  20  50 100
+[1]  0.6400000 10.3600000 -0.1083708  2.8176408
+[1]   1   2   5  10  20  50 100 200 500
+$stats
+[1]   1  26  51  76 100
+
+$n
+[1] 101
+
+$conf
+[1] 43.13921 58.86079
+
+$out
+[1] 1000
+
+$stats
+[1]   1  26  51  76 100
+
+$n
+[1] 101
+
+$conf
+NULL
+
+$out
+numeric(0)
+
+$stats
+[1]   1  26  51  76 100
+
+$n
+[1] 101
+
+$conf
+NULL
+
+$out
+[1] 1000
+
+$stats
+[1]    1   26   51   76 1000
+
+$n
+[1] 101
+
+$conf
+[1] 43.13921 58.86079
+
+$out
+numeric(0)
+
+$stats
+[1]   1  26  51  76 100
+
+$n
+[1] 101
+
+$conf
+[1] 43.13921 58.86079
+
+$out
+[1] 1000
+
+$stats
+[1]   1.0  25.5  51.0  76.5 100.0
+
+$n
+[1] 103
+
+$conf
+[1] 43.06022 58.93978
+
+$out
+[1] 1000 -Inf  Inf
+
+   q1    lH    q3    uH   
+1   1.00  =     1.00  =   
+2   1.25  1.00  1.75  2.00
+3   1.50  =     2.50  =   
+4   1.75  1.50  3.25  3.50
+5   2.00  =     4.00  =   
+6   2.25  2.00  4.75  5.00
+7   2.50  =     5.50  =   
+8   2.75  2.50  6.25  6.50
+9   3.00  =     7.00  =   
+10  3.25  3.00  7.75  8.00
+11  3.50  =     8.50  =   
+12  3.75  3.50  9.25  9.50
+13  4.00  =    10.00  =   
+14  4.25  4.00 10.75 11.00
+15  4.50  =    11.50  =   
+16  4.75  4.50 12.25 12.50
+17  5.00  =    13.00  =   
+$a
+[1] 1 2 3
+
+$b
+[1] 3.141593
+
+$ch
+[1] "CH"
+
+$a
+[1] 0 1 2
+
+$b
+[1] 3.141593
+
+$ch
+[1] "CH"
+
+$a
+[1] 1 2 3
+
+$b
+[1] 3.141593
+
+$ch
+[1] "CH"
+
+ [1]  61 442 165 899 697 446 975 656 232 557 938 295 495
+[1] 2.54
+[1] 3.937008
+      [,1]
+red    255
+green  218
+blue   185
+      blu reddish
+red    65     255
+green 105      99
+blue  225      71
+      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8]
+red      0  223   97   34   40  205  245  158
+green    0   83  208  151  226   11  199  158
+blue     0  107   79  230  229  188   16  158
+      [,1] [,2] [,3] [,4]
+red    255  238  205  139
+green  215  201  173  117
+blue     0    0    0    0
+      [,1]
+red      8
+green  160
+blue   255
+      red hex
+red   255 171
+green   0 205
+blue    0 239
+      palette1 palette2 palette3
+red          0      223       97
+green        0       83      208
+blue         0      107       79
+  [1] 3 2 3 2 3 2 3 2 3 3 2 3 2 3 2 3 2 3 2 3 3 2 3 2 3 2 3 2 3 3 2 3 2 3 2 3 2
+ [38] 3 2 3 3 2 3 2 3 2 3 2 3 2 3 3 2 3 2 3 2 3 2 3 3 2 3 2 3 2 3 2 3 3 2 3 2 3
+ [75] 2 3 2 3 2 3 3 2 3 2 3 2 3 2 3 2 3 3 2 3 2 3 2 3 2 3
+
+ 2  3 
+45 55 
+      g66 darkg g67 g74 gray g75 g82 light g83
+red   168   169 171 189  190 191 209   211 212
+green 168   169 171 189  190 191 209   211 212
+blue  168   169 171 189  190 191 209   211 212
+                     red green blue
+white                255   255  255
+aliceblue            240   248  255
+antiquewhite         250   235  215
+antiquewhite1        255   239  219
+antiquewhite2        238   223  204
+antiquewhite3        205   192  176
+antiquewhite4        139   131  120
+aquamarine           127   255  212
+aquamarine1          127   255  212
+aquamarine2          118   238  198
+aquamarine3          102   205  170
+aquamarine4           69   139  116
+azure                240   255  255
+azure1               240   255  255
+azure2               224   238  238
+azure3               193   205  205
+azure4               131   139  139
+beige                245   245  220
+bisque               255   228  196
+bisque1              255   228  196
+bisque2              238   213  183
+bisque3              205   183  158
+bisque4              139   125  107
+black                  0     0    0
+blanchedalmond       255   235  205
+blue                   0     0  255
+blue1                  0     0  255
+blue2                  0     0  238
+blue3                  0     0  205
+blue4                  0     0  139
+blueviolet           138    43  226
+brown                165    42   42
+brown1               255    64   64
+brown2               238    59   59
+brown3               205    51   51
+brown4               139    35   35
+burlywood            222   184  135
+burlywood1           255   211  155
+burlywood2           238   197  145
+burlywood3           205   170  125
+burlywood4           139   115   85
+cadetblue             95   158  160
+cadetblue1           152   245  255
+cadetblue2           142   229  238
+cadetblue3           122   197  205
+cadetblue4            83   134  139
+chartreuse           127   255    0
+chartreuse1          127   255    0
+chartreuse2          118   238    0
+chartreuse3          102   205    0
+chartreuse4           69   139    0
+chocolate            210   105   30
+chocolate1           255   127   36
+chocolate2           238   118   33
+chocolate3           205   102   29
+chocolate4           139    69   19
+coral                255   127   80
+coral1               255   114   86
+coral2               238   106   80
+coral3               205    91   69
+coral4               139    62   47
+cornflowerblue       100   149  237
+cornsilk             255   248  220
+cornsilk1            255   248  220
+cornsilk2            238   232  205
+cornsilk3            205   200  177
+cornsilk4            139   136  120
+cyan                   0   255  255
+cyan1                  0   255  255
+cyan2                  0   238  238
+cyan3                  0   205  205
+cyan4                  0   139  139
+darkblue               0     0  139
+darkcyan               0   139  139
+darkgoldenrod        184   134   11
+darkgoldenrod1       255   185   15
+darkgoldenrod2       238   173   14
+darkgoldenrod3       205   149   12
+darkgoldenrod4       139   101    8
+darkgray             169   169  169
+darkgreen              0   100    0
+darkgrey             169   169  169
+darkkhaki            189   183  107
+darkmagenta          139     0  139
+darkolivegreen        85   107   47
+darkolivegreen1      202   255  112
+darkolivegreen2      188   238  104
+darkolivegreen3      162   205   90
+darkolivegreen4      110   139   61
+darkorange           255   140    0
+darkorange1          255   127    0
+darkorange2          238   118    0
+darkorange3          205   102    0
+darkorange4          139    69    0
+darkorchid           153    50  204
+darkorchid1          191    62  255
+darkorchid2          178    58  238
+darkorchid3          154    50  205
+darkorchid4          104    34  139
+darkred              139     0    0
+darksalmon           233   150  122
+darkseagreen         143   188  143
+darkseagreen1        193   255  193
+darkseagreen2        180   238  180
+darkseagreen3        155   205  155
+darkseagreen4        105   139  105
+darkslateblue         72    61  139
+darkslategray         47    79   79
+darkslategray1       151   255  255
+darkslategray2       141   238  238
+darkslategray3       121   205  205
+darkslategray4        82   139  139
+darkslategrey         47    79   79
+darkturquoise          0   206  209
+darkviolet           148     0  211
+deeppink             255    20  147
+deeppink1            255    20  147
+deeppink2            238    18  137
+deeppink3            205    16  118
+deeppink4            139    10   80
+deepskyblue            0   191  255
+deepskyblue1           0   191  255
+deepskyblue2           0   178  238
+deepskyblue3           0   154  205
+deepskyblue4           0   104  139
+dimgray              105   105  105
+dimgrey              105   105  105
+dodgerblue            30   144  255
+dodgerblue1           30   144  255
+dodgerblue2           28   134  238
+dodgerblue3           24   116  205
+dodgerblue4           16    78  139
+firebrick            178    34   34
+firebrick1           255    48   48
+firebrick2           238    44   44
+firebrick3           205    38   38
+firebrick4           139    26   26
+floralwhite          255   250  240
+forestgreen           34   139   34
+gainsboro            220   220  220
+ghostwhite           248   248  255
+gold                 255   215    0
+gold1                255   215    0
+gold2                238   201    0
+gold3                205   173    0
+gold4                139   117    0
+goldenrod            218   165   32
+goldenrod1           255   193   37
+goldenrod2           238   180   34
+goldenrod3           205   155   29
+goldenrod4           139   105   20
+gray                 190   190  190
+gray0                  0     0    0
+gray1                  3     3    3
+gray2                  5     5    5
+gray3                  8     8    8
+gray4                 10    10   10
+gray5                 13    13   13
+gray6                 15    15   15
+gray7                 18    18   18
+gray8                 20    20   20
+gray9                 23    23   23
+gray10                26    26   26
+gray11                28    28   28
+gray12                31    31   31
+gray13                33    33   33
+gray14                36    36   36
+gray15                38    38   38
+gray16                41    41   41
+gray17                43    43   43
+gray18                46    46   46
+gray19                48    48   48
+gray20                51    51   51
+gray21                54    54   54
+gray22                56    56   56
+gray23                59    59   59
+gray24                61    61   61
+gray25                64    64   64
+gray26                66    66   66
+gray27                69    69   69
+gray28                71    71   71
+gray29                74    74   74
+gray30                77    77   77
+gray31                79    79   79
+gray32                82    82   82
+gray33                84    84   84
+gray34                87    87   87
+gray35                89    89   89
+gray36                92    92   92
+gray37                94    94   94
+gray38                97    97   97
+gray39                99    99   99
+gray40               102   102  102
+gray41               105   105  105
+gray42               107   107  107
+gray43               110   110  110
+gray44               112   112  112
+gray45               115   115  115
+gray46               117   117  117
+gray47               120   120  120
+gray48               122   122  122
+gray49               125   125  125
+gray50               127   127  127
+gray51               130   130  130
+gray52               133   133  133
+gray53               135   135  135
+gray54               138   138  138
+gray55               140   140  140
+gray56               143   143  143
+gray57               145   145  145
+gray58               148   148  148
+gray59               150   150  150
+gray60               153   153  153
+gray61               156   156  156
+gray62               158   158  158
+gray63               161   161  161
+gray64               163   163  163
+gray65               166   166  166
+gray66               168   168  168
+gray67               171   171  171
+gray68               173   173  173
+gray69               176   176  176
+gray70               179   179  179
+gray71               181   181  181
+gray72               184   184  184
+gray73               186   186  186
+gray74               189   189  189
+gray75               191   191  191
+gray76               194   194  194
+gray77               196   196  196
+gray78               199   199  199
+gray79               201   201  201
+gray80               204   204  204
+gray81               207   207  207
+gray82               209   209  209
+gray83               212   212  212
+gray84               214   214  214
+gray85               217   217  217
+gray86               219   219  219
+gray87               222   222  222
+gray88               224   224  224
+gray89               227   227  227
+gray90               229   229  229
+gray91               232   232  232
+gray92               235   235  235
+gray93               237   237  237
+gray94               240   240  240
+gray95               242   242  242
+gray96               245   245  245
+gray97               247   247  247
+gray98               250   250  250
+gray99               252   252  252
+gray100              255   255  255
+green                  0   255    0
+green1                 0   255    0
+green2                 0   238    0
+green3                 0   205    0
+green4                 0   139    0
+greenyellow          173   255   47
+grey                 190   190  190
+grey0                  0     0    0
+grey1                  3     3    3
+grey2                  5     5    5
+grey3                  8     8    8
+grey4                 10    10   10
+grey5                 13    13   13
+grey6                 15    15   15
+grey7                 18    18   18
+grey8                 20    20   20
+grey9                 23    23   23
+grey10                26    26   26
+grey11                28    28   28
+grey12                31    31   31
+grey13                33    33   33
+grey14                36    36   36
+grey15                38    38   38
+grey16                41    41   41
+grey17                43    43   43
+grey18                46    46   46
+grey19                48    48   48
+grey20                51    51   51
+grey21                54    54   54
+grey22                56    56   56
+grey23                59    59   59
+grey24                61    61   61
+grey25                64    64   64
+grey26                66    66   66
+grey27                69    69   69
+grey28                71    71   71
+grey29                74    74   74
+grey30                77    77   77
+grey31                79    79   79
+grey32                82    82   82
+grey33                84    84   84
+grey34                87    87   87
+grey35                89    89   89
+grey36                92    92   92
+grey37                94    94   94
+grey38                97    97   97
+grey39                99    99   99
+grey40               102   102  102
+grey41               105   105  105
+grey42               107   107  107
+grey43               110   110  110
+grey44               112   112  112
+grey45               115   115  115
+grey46               117   117  117
+grey47               120   120  120
+grey48               122   122  122
+grey49               125   125  125
+grey50               127   127  127
+grey51               130   130  130
+grey52               133   133  133
+grey53               135   135  135
+grey54               138   138  138
+grey55               140   140  140
+grey56               143   143  143
+grey57               145   145  145
+grey58               148   148  148
+grey59               150   150  150
+grey60               153   153  153
+grey61               156   156  156
+grey62               158   158  158
+grey63               161   161  161
+grey64               163   163  163
+grey65               166   166  166
+grey66               168   168  168
+grey67               171   171  171
+grey68               173   173  173
+grey69               176   176  176
+grey70               179   179  179
+grey71               181   181  181
+grey72               184   184  184
+grey73               186   186  186
+grey74               189   189  189
+grey75               191   191  191
+grey76               194   194  194
+grey77               196   196  196
+grey78               199   199  199
+grey79               201   201  201
+grey80               204   204  204
+grey81               207   207  207
+grey82               209   209  209
+grey83               212   212  212
+grey84               214   214  214
+grey85               217   217  217
+grey86               219   219  219
+grey87               222   222  222
+grey88               224   224  224
+grey89               227   227  227
+grey90               229   229  229
+grey91               232   232  232
+grey92               235   235  235
+grey93               237   237  237
+grey94               240   240  240
+grey95               242   242  242
+grey96               245   245  245
+grey97               247   247  247
+grey98               250   250  250
+grey99               252   252  252
+grey100              255   255  255
+honeydew             240   255  240
+honeydew1            240   255  240
+honeydew2            224   238  224
+honeydew3            193   205  193
+honeydew4            131   139  131
+hotpink              255   105  180
+hotpink1             255   110  180
+hotpink2             238   106  167
+hotpink3             205    96  144
+hotpink4             139    58   98
+indianred            205    92   92
+indianred1           255   106  106
+indianred2           238    99   99
+indianred3           205    85   85
+indianred4           139    58   58
+ivory                255   255  240
+ivory1               255   255  240
+ivory2               238   238  224
+ivory3               205   205  193
+ivory4               139   139  131
+khaki                240   230  140
+khaki1               255   246  143
+khaki2               238   230  133
+khaki3               205   198  115
+khaki4               139   134   78
+lavender             230   230  250
+lavenderblush        255   240  245
+lavenderblush1       255   240  245
+lavenderblush2       238   224  229
+lavenderblush3       205   193  197
+lavenderblush4       139   131  134
+lawngreen            124   252    0
+lemonchiffon         255   250  205
+lemonchiffon1        255   250  205
+lemonchiffon2        238   233  191
+lemonchiffon3        205   201  165
+lemonchiffon4        139   137  112
+lightblue            173   216  230
+lightblue1           191   239  255
+lightblue2           178   223  238
+lightblue3           154   192  205
+lightblue4           104   131  139
+lightcoral           240   128  128
+lightcyan            224   255  255
+lightcyan1           224   255  255
+lightcyan2           209   238  238
+lightcyan3           180   205  205
+lightcyan4           122   139  139
+lightgoldenrod       238   221  130
+lightgoldenrod1      255   236  139
+lightgoldenrod2      238   220  130
+lightgoldenrod3      205   190  112
+lightgoldenrod4      139   129   76
+lightgoldenrodyellow 250   250  210
+lightgray            211   211  211
+lightgreen           144   238  144
+lightgrey            211   211  211
+lightpink            255   182  193
+lightpink1           255   174  185
+lightpink2           238   162  173
+lightpink3           205   140  149
+lightpink4           139    95  101
+lightsalmon          255   160  122
+lightsalmon1         255   160  122
+lightsalmon2         238   149  114
+lightsalmon3         205   129   98
+lightsalmon4         139    87   66
+lightseagreen         32   178  170
+lightskyblue         135   206  250
+lightskyblue1        176   226  255
+lightskyblue2        164   211  238
+lightskyblue3        141   182  205
+lightskyblue4         96   123  139
+lightslateblue       132   112  255
+lightslategray       119   136  153
+lightslategrey       119   136  153
+lightsteelblue       176   196  222
+lightsteelblue1      202   225  255
+lightsteelblue2      188   210  238
+lightsteelblue3      162   181  205
+lightsteelblue4      110   123  139
+lightyellow          255   255  224
+lightyellow1         255   255  224
+lightyellow2         238   238  209
+lightyellow3         205   205  180
+lightyellow4         139   139  122
+limegreen             50   205   50
+linen                250   240  230
+magenta              255     0  255
+magenta1             255     0  255
+magenta2             238     0  238
+magenta3             205     0  205
+magenta4             139     0  139
+maroon               176    48   96
+maroon1              255    52  179
+maroon2              238    48  167
+maroon3              205    41  144
+maroon4              139    28   98
+mediumaquamarine     102   205  170
+mediumblue             0     0  205
+mediumorchid         186    85  211
+mediumorchid1        224   102  255
+mediumorchid2        209    95  238
+mediumorchid3        180    82  205
+mediumorchid4        122    55  139
+mediumpurple         147   112  219
+mediumpurple1        171   130  255
+mediumpurple2        159   121  238
+mediumpurple3        137   104  205
+mediumpurple4         93    71  139
+mediumseagreen        60   179  113
+mediumslateblue      123   104  238
+mediumspringgreen      0   250  154
+mediumturquoise       72   209  204
+mediumvioletred      199    21  133
+midnightblue          25    25  112
+mintcream            245   255  250
+mistyrose            255   228  225
+mistyrose1           255   228  225
+mistyrose2           238   213  210
+mistyrose3           205   183  181
+mistyrose4           139   125  123
+moccasin             255   228  181
+navajowhite          255   222  173
+navajowhite1         255   222  173
+navajowhite2         238   207  161
+navajowhite3         205   179  139
+navajowhite4         139   121   94
+navy                   0     0  128
+navyblue               0     0  128
+oldlace              253   245  230
+olivedrab            107   142   35
+olivedrab1           192   255   62
+olivedrab2           179   238   58
+olivedrab3           154   205   50
+olivedrab4           105   139   34
+orange               255   165    0
+orange1              255   165    0
+orange2              238   154    0
+orange3              205   133    0
+orange4              139    90    0
+orangered            255    69    0
+orangered1           255    69    0
+orangered2           238    64    0
+orangered3           205    55    0
+orangered4           139    37    0
+orchid               218   112  214
+orchid1              255   131  250
+orchid2              238   122  233
+orchid3              205   105  201
+orchid4              139    71  137
+palegoldenrod        238   232  170
+palegreen            152   251  152
+palegreen1           154   255  154
+palegreen2           144   238  144
+palegreen3           124   205  124
+palegreen4            84   139   84
+paleturquoise        175   238  238
+paleturquoise1       187   255  255
+paleturquoise2       174   238  238
+paleturquoise3       150   205  205
+paleturquoise4       102   139  139
+palevioletred        219   112  147
+palevioletred1       255   130  171
+palevioletred2       238   121  159
+palevioletred3       205   104  137
+palevioletred4       139    71   93
+papayawhip           255   239  213
+peachpuff            255   218  185
+peachpuff1           255   218  185
+peachpuff2           238   203  173
+peachpuff3           205   175  149
+peachpuff4           139   119  101
+peru                 205   133   63
+pink                 255   192  203
+pink1                255   181  197
+pink2                238   169  184
+pink3                205   145  158
+pink4                139    99  108
+plum                 221   160  221
+plum1                255   187  255
+plum2                238   174  238
+plum3                205   150  205
+plum4                139   102  139
+powderblue           176   224  230
+purple               160    32  240
+purple1              155    48  255
+purple2              145    44  238
+purple3              125    38  205
+purple4               85    26  139
+red                  255     0    0
+red1                 255     0    0
+red2                 238     0    0
+red3                 205     0    0
+red4                 139     0    0
+rosybrown            188   143  143
+rosybrown1           255   193  193
+rosybrown2           238   180  180
+rosybrown3           205   155  155
+rosybrown4           139   105  105
+royalblue             65   105  225
+royalblue1            72   118  255
+royalblue2            67   110  238
+royalblue3            58    95  205
+royalblue4            39    64  139
+saddlebrown          139    69   19
+salmon               250   128  114
+salmon1              255   140  105
+salmon2              238   130   98
+salmon3              205   112   84
+salmon4              139    76   57
+sandybrown           244   164   96
+seagreen              46   139   87
+seagreen1             84   255  159
+seagreen2             78   238  148
+seagreen3             67   205  128
+seagreen4             46   139   87
+seashell             255   245  238
+seashell1            255   245  238
+seashell2            238   229  222
+seashell3            205   197  191
+seashell4            139   134  130
+sienna               160    82   45
+sienna1              255   130   71
+sienna2              238   121   66
+sienna3              205   104   57
+sienna4              139    71   38
+skyblue              135   206  235
+skyblue1             135   206  255
+skyblue2             126   192  238
+skyblue3             108   166  205
+skyblue4              74   112  139
+slateblue            106    90  205
+slateblue1           131   111  255
+slateblue2           122   103  238
+slateblue3           105    89  205
+slateblue4            71    60  139
+slategray            112   128  144
+slategray1           198   226  255
+slategray2           185   211  238
+slategray3           159   182  205
+slategray4           108   123  139
+slategrey            112   128  144
+snow                 255   250  250
+snow1                255   250  250
+snow2                238   233  233
+snow3                205   201  201
+snow4                139   137  137
+springgreen            0   255  127
+springgreen1           0   255  127
+springgreen2           0   238  118
+springgreen3           0   205  102
+springgreen4           0   139   69
+steelblue             70   130  180
+steelblue1            99   184  255
+steelblue2            92   172  238
+steelblue3            79   148  205
+steelblue4            54   100  139
+tan                  210   180  140
+tan1                 255   165   79
+tan2                 238   154   73
+tan3                 205   133   63
+tan4                 139    90   43
+thistle              216   191  216
+thistle1             255   225  255
+thistle2             238   210  238
+thistle3             205   181  205
+thistle4             139   123  139
+tomato               255    99   71
+tomato1              255    99   71
+tomato2              238    92   66
+tomato3              205    79   57
+tomato4              139    54   38
+turquoise             64   224  208
+turquoise1             0   245  255
+turquoise2             0   229  238
+turquoise3             0   197  205
+turquoise4             0   134  139
+violet               238   130  238
+violetred            208    32  144
+violetred1           255    62  150
+violetred2           238    58  140
+violetred3           205    50  120
+violetred4           139    34   82
+wheat                245   222  179
+wheat1               255   231  186
+wheat2               238   216  174
+wheat3               205   186  150
+wheat4               139   126  102
+whitesmoke           245   245  245
+yellow               255   255    0
+yellow1              255   255    0
+yellow2              238   238    0
+yellow3              205   205    0
+yellow4              139   139    0
+yellowgreen          154   205   50
+
+  1   2   3   4 
+352 146   3   1 
+[1] 502
+List of 150
+ $ 0,0,0      : chr [1:3] "black" "gray0" "grey0"
+ $ 0,0,128    : chr [1:2] "navy" "navyblue"
+ $ 0,0,139    : chr [1:2] "blue4" "darkblue"
+ $ 0,0,205    : chr [1:2] "blue3" "mediumblue"
+ $ 0,0,255    : chr [1:2] "blue" "blue1"
+ $ 0,139,139  : chr [1:2] "cyan4" "darkcyan"
+ $ 0,191,255  : chr [1:2] "deepskyblue" "deepskyblue1"
+ $ 0,255,0    : chr [1:2] "green" "green1"
+ $ 0,255,127  : chr [1:2] "springgreen" "springgreen1"
+ $ 0,255,255  : chr [1:2] "cyan" "cyan1"
+ $ 3,3,3      : chr [1:2] "gray1" "grey1"
+ $ 5,5,5      : chr [1:2] "gray2" "grey2"
+ $ 8,8,8      : chr [1:2] "gray3" "grey3"
+ $ 10,10,10   : chr [1:2] "gray4" "grey4"
+ $ 13,13,13   : chr [1:2] "gray5" "grey5"
+ $ 15,15,15   : chr [1:2] "gray6" "grey6"
+ $ 18,18,18   : chr [1:2] "gray7" "grey7"
+ $ 20,20,20   : chr [1:2] "gray8" "grey8"
+ $ 23,23,23   : chr [1:2] "gray9" "grey9"
+ $ 26,26,26   : chr [1:2] "gray10" "grey10"
+ $ 28,28,28   : chr [1:2] "gray11" "grey11"
+ $ 30,144,255 : chr [1:2] "dodgerblue" "dodgerblue1"
+ $ 31,31,31   : chr [1:2] "gray12" "grey12"
+ $ 33,33,33   : chr [1:2] "gray13" "grey13"
+ $ 36,36,36   : chr [1:2] "gray14" "grey14"
+ $ 38,38,38   : chr [1:2] "gray15" "grey15"
+ $ 41,41,41   : chr [1:2] "gray16" "grey16"
+ $ 43,43,43   : chr [1:2] "gray17" "grey17"
+ $ 46,46,46   : chr [1:2] "gray18" "grey18"
+ $ 46,139,87  : chr [1:2] "seagreen" "seagreen4"
+ $ 47,79,79   : chr [1:2] "darkslategray" "darkslategrey"
+ $ 48,48,48   : chr [1:2] "gray19" "grey19"
+ $ 51,51,51   : chr [1:2] "gray20" "grey20"
+ $ 54,54,54   : chr [1:2] "gray21" "grey21"
+ $ 56,56,56   : chr [1:2] "gray22" "grey22"
+ $ 59,59,59   : chr [1:2] "gray23" "grey23"
+ $ 61,61,61   : chr [1:2] "gray24" "grey24"
+ $ 64,64,64   : chr [1:2] "gray25" "grey25"
+ $ 66,66,66   : chr [1:2] "gray26" "grey26"
+ $ 69,69,69   : chr [1:2] "gray27" "grey27"
+ $ 71,71,71   : chr [1:2] "gray28" "grey28"
+ $ 74,74,74   : chr [1:2] "gray29" "grey29"
+ $ 77,77,77   : chr [1:2] "gray30" "grey30"
+ $ 79,79,79   : chr [1:2] "gray31" "grey31"
+ $ 82,82,82   : chr [1:2] "gray32" "grey32"
+ $ 84,84,84   : chr [1:2] "gray33" "grey33"
+ $ 87,87,87   : chr [1:2] "gray34" "grey34"
+ $ 89,89,89   : chr [1:2] "gray35" "grey35"
+ $ 92,92,92   : chr [1:2] "gray36" "grey36"
+ $ 94,94,94   : chr [1:2] "gray37" "grey37"
+ $ 97,97,97   : chr [1:2] "gray38" "grey38"
+ $ 99,99,99   : chr [1:2] "gray39" "grey39"
+ $ 102,102,102: chr [1:2] "gray40" "grey40"
+ $ 102,205,170: chr [1:2] "aquamarine3" "mediumaquamarine"
+ $ 105,105,105: chr [1:4] "dimgray" "dimgrey" "gray41" "grey41"
+ $ 107,107,107: chr [1:2] "gray42" "grey42"
+ $ 110,110,110: chr [1:2] "gray43" "grey43"
+ $ 112,112,112: chr [1:2] "gray44" "grey44"
+ $ 112,128,144: chr [1:2] "slategray" "slategrey"
+ $ 115,115,115: chr [1:2] "gray45" "grey45"
+ $ 117,117,117: chr [1:2] "gray46" "grey46"
+ $ 119,136,153: chr [1:2] "lightslategray" "lightslategrey"
+ $ 120,120,120: chr [1:2] "gray47" "grey47"
+ $ 122,122,122: chr [1:2] "gray48" "grey48"
+ $ 125,125,125: chr [1:2] "gray49" "grey49"
+ $ 127,127,127: chr [1:2] "gray50" "grey50"
+ $ 127,255,0  : chr [1:2] "chartreuse" "chartreuse1"
+ $ 127,255,212: chr [1:2] "aquamarine" "aquamarine1"
+ $ 130,130,130: chr [1:2] "gray51" "grey51"
+ $ 133,133,133: chr [1:2] "gray52" "grey52"
+ $ 135,135,135: chr [1:2] "gray53" "grey53"
+ $ 138,138,138: chr [1:2] "gray54" "grey54"
+ $ 139,0,0    : chr [1:2] "darkred" "red4"
+ $ 139,0,139  : chr [1:2] "darkmagenta" "magenta4"
+ $ 139,69,19  : chr [1:2] "chocolate4" "saddlebrown"
+ $ 140,140,140: chr [1:2] "gray55" "grey55"
+ $ 143,143,143: chr [1:2] "gray56" "grey56"
+ $ 144,238,144: chr [1:2] "lightgreen" "palegreen2"
+ $ 145,145,145: chr [1:2] "gray57" "grey57"
+ $ 148,148,148: chr [1:2] "gray58" "grey58"
+ $ 150,150,150: chr [1:2] "gray59" "grey59"
+ $ 153,153,153: chr [1:2] "gray60" "grey60"
+ $ 154,205,50 : chr [1:2] "olivedrab3" "yellowgreen"
+ $ 156,156,156: chr [1:2] "gray61" "grey61"
+ $ 158,158,158: chr [1:2] "gray62" "grey62"
+ $ 161,161,161: chr [1:2] "gray63" "grey63"
+ $ 163,163,163: chr [1:2] "gray64" "grey64"
+ $ 166,166,166: chr [1:2] "gray65" "grey65"
+ $ 168,168,168: chr [1:2] "gray66" "grey66"
+ $ 169,169,169: chr [1:2] "darkgray" "darkgrey"
+ $ 171,171,171: chr [1:2] "gray67" "grey67"
+ $ 173,173,173: chr [1:2] "gray68" "grey68"
+ $ 176,176,176: chr [1:2] "gray69" "grey69"
+ $ 179,179,179: chr [1:2] "gray70" "grey70"
+ $ 181,181,181: chr [1:2] "gray71" "grey71"
+ $ 184,184,184: chr [1:2] "gray72" "grey72"
+ $ 186,186,186: chr [1:2] "gray73" "grey73"
+ $ 189,189,189: chr [1:2] "gray74" "grey74"
+ $ 190,190,190: chr [1:2] "gray" "grey"
+  [list output truncated]
+       [,1]   [,2] [,3]
+[1,] 255.00   0.00    0
+[2,] 191.25  63.75    0
+[3,] 127.50 127.50    0
+[4,]  63.75 191.25    0
+[5,]   0.00 255.00    0
+[1] "#0000FF" "#5500AA" "#AA0055" "#FF0000"
+[1] "#0000FFFF" "#0000FFDA" "#0000FFB6" "#0000FF91" "#0000FF6D" "#0000FF48"
+[7] "#0000FF24" "#0000FF00"
+[1] 657
+ [1] "white"         "aliceblue"     "antiquewhite"  "antiquewhite1"
+ [5] "antiquewhite2" "antiquewhite3" "antiquewhite4" "aquamarine"   
+ [9] "aquamarine1"   "aquamarine2"   "aquamarine3"   "aquamarine4"  
+[13] "azure"         "azure1"        "azure2"        "azure3"       
+[17] "azure4"        "beige"         "bisque"        "bisque1"      
+[1] 502
+
+
+	demo(colors)
+	---- ~~~~~~
+
+> ### ----------- Show (almost) all named colors ---------------------
+> 
+> ## 1) with traditional 'graphics' package:
+> showCols1 <- function(bg = "gray", cex = 0.75, srt = 30) {
++     m <- ceiling(sqrt(n <- length(cl <- colors())))
++     length(cl) <- m*m; cm <- matrix(cl, m)
++     ##
++     require("graphics")
++     op <- par(mar=rep(0,4), ann=FALSE, bg = bg); on.exit(par(op))
++     plot(1:m,1:m, type="n", axes=FALSE)
++     text(col(cm), rev(row(cm)), cm,  col = cl, cex=cex, srt=srt)
++ }
+
+> showCols1()
+
+> ## 2) with 'grid' package:
+> showCols2 <- function(bg = "grey", cex = 0.75, rot = 30) {
++     m <- ceiling(sqrt(n <- length(cl <- colors())))
++     length(cl) <- m*m; cm <- matrix(cl, m)
++     ##
++     require("grid")
++     grid.newpage(); vp <- viewport(width = .92, height = .92)
++     grid.rect(gp=gpar(fill=bg))
++     grid.text(cm, x = col(cm)/m, y = rev(row(cm))/m, rot = rot,
++               vp=vp, gp=gpar(cex = cex, col = cm))
++ }
+
+> showCols2()
+Loading required package: grid
+
+> showCols2(bg = "gray33")
+
+> ###
+> 
+> ##' @title Comparing Colors
+> ##' @param col
+> ##' @param nrow
+> ##' @param ncol
+> ##' @param txt.col
+> ##' @return the grid layout, invisibly
+> ##' @author Marius Hofert, originally
+> plotCol <- function(col, nrow=1, ncol=ceiling(length(col) / nrow),
++                     txt.col="black") {
++     stopifnot(nrow >= 1, ncol >= 1)
++     if(length(col) > nrow*ncol)
++         warning("some colors will not be shown")
++     require(grid)
++     grid.newpage()
++     gl <- grid.layout(nrow, ncol)
++     pushViewport(viewport(layout=gl))
++     ic <- 1
++     for(i in 1:nrow) {
++         for(j in 1:ncol) {
++             pushViewport(viewport(layout.pos.row=i, layout.pos.col=j))
++             grid.rect(gp= gpar(fill=col[ic]))
++             grid.text(col[ic], gp=gpar(col=txt.col))
++             upViewport()
++             ic <- ic+1
++         }
++     }
++     upViewport()
++     invisible(gl)
++ }
+
+> ## A Chocolate Bar of colors:
+> plotCol(c("#CC8C3C", paste0("chocolate", 2:4),
++           paste0("darkorange", c("",1:2)), paste0("darkgoldenrod", 1:2),
++           "orange", "orange1", "sandybrown", "tan1", "tan2"),
++         nrow=2)
+
+> ##' Find close R colors() to a given color {original by Marius Hofert)
+> ##' using Euclidean norm in (HSV / RGB / ...) color space
+> nearRcolor <- function(rgb, cSpace = c("hsv", "rgb255", "Luv", "Lab"),
++                        dist = switch(cSpace, "hsv" = 0.10, "rgb255" = 30,
++                        "Luv" = 15, "Lab" = 12))
++ {
++     if(is.character(rgb)) rgb <- col2rgb(rgb)
++     stopifnot(length(rgb <- as.vector(rgb)) == 3)
++     Rcol <- col2rgb(.cc <- colors())
++     uniqC <- !duplicated(t(Rcol)) # gray9 == grey9 (etc)
++     Rcol <- Rcol[, uniqC] ; .cc <- .cc[uniqC]
++     cSpace <- match.arg(cSpace)
++     convRGB2 <- function(Rgb, to)
++         t(convertColor(t(Rgb), from="sRGB", to=to, scale.in=255))
++     ## the transformation,  rgb{0..255} --> cSpace :
++     TransF <- switch(cSpace,
++                      "rgb255" = identity,
++                      "hsv" = rgb2hsv,
++                      "Luv" = function(RGB) convRGB2(RGB, "Luv"),
++                      "Lab" = function(RGB) convRGB2(RGB, "Lab"))
++     d <- sqrt(colSums((TransF(Rcol) - as.vector(TransF(rgb)))^2))
++     iS <- sort.list(d[near <- d <= dist])# sorted: closest first
++     setNames(.cc[near][iS], format(zapsmall(d[near][iS]), digits=3))
++ }
+
+> nearRcolor(col2rgb("tan2"), "rgb")
+         0.0         21.1         25.8         29.5 
+      "tan2"       "tan1" "sandybrown"    "sienna1" 
+
+> nearRcolor(col2rgb("tan2"), "hsv")
+      0.0000       0.0410       0.0618       0.0638       0.0667       0.0766 
+      "tan2"    "sienna2"     "coral2"    "tomato2"       "tan1"      "coral" 
+      0.0778       0.0900       0.0912       0.0918 
+   "sienna1" "sandybrown"     "coral1"     "tomato" 
+
+> nearRcolor(col2rgb("tan2"), "Luv")
+        0.00         7.42         7.48        12.41        13.69 
+      "tan2"       "tan1" "sandybrown"    "orange3"    "orange2" 
+
+> nearRcolor(col2rgb("tan2"), "Lab")
+        0.00         5.56         8.08        11.31 
+      "tan2"       "tan1" "sandybrown"       "peru" 
+
+> nearRcolor("#334455")
+         0.0867 
+"darkslategray" 
+
+> ## Now, consider choosing a color by looking in the
+> ## neighborhood of one you know :
+> 
+> plotCol(nearRcolor("deepskyblue", "rgb", dist=50))
+
+> plotCol(nearRcolor("deepskyblue", dist=.1))
+
+> plotCol(nearRcolor("tomato", "rgb", dist= 50), nrow=3)
+
+> plotCol(nearRcolor("tomato", "hsv", dist=.12), nrow=3)
+
+> plotCol(nearRcolor("tomato", "Luv", dist= 25), nrow=3)
+
+> plotCol(nearRcolor("tomato", "Lab", dist= 18), nrow=3)
+
+detaching ‘package:grid’
+
+      lev   n
+ [1,] 100  47
+ [2,] 100  16
+ [3,] 100  11
+ [4,] 110  45
+ [5,] 110  48
+ [6,] 110 126
+ [7,] 110  14
+ [8,] 120 270
+ [9,] 130 259
+[10,] 140 245
+[11,] 150 207
+[12,] 150  13
+[13,] 160 165
+[14,] 160  31
+[15,] 170 169
+[16,] 170   5
+[17,] 170  21
+[18,] 180 105
+[19,] 180  15
+[20,] 190  49
+ [1] -300 -200 -100    0  100  200  300  400  500  600  700
+List of 12
+ $ :List of 3
+  ..$ level: num -200
+  ..$ x    : num [1:4] 0 0.00895 0.01961 0.02844
+  ..$ y    : num [1:4] 0.918 0.941 0.971 1
+ $ :List of 3
+  ..$ level: num -200
+  ..$ x    : num [1:4] 0.918 0.941 0.971 1
+  ..$ y    : num [1:4] 0 0.00895 0.01961 0.02844
+ $ :List of 3
+  ..$ level: num -100
+  ..$ x    : num [1:19] 0 0.0196 0.0294 0.0385 0.0546 ...
+  ..$ y    : num [1:19] 0.592 0.618 0.632 0.647 0.676 ...
+ $ :List of 3
+  ..$ level: num -100
+  ..$ x    : num [1:19] 0.592 0.618 0.632 0.647 0.676 ...
+  ..$ y    : num [1:19] 0 0.0196 0.0294 0.0385 0.0546 ...
+ $ :List of 3
+  ..$ level: num 0
+  ..$ x    : num [1:34] 0 0.0294 0.0588 0.0882 0.1176 ...
+  ..$ y    : num [1:34] 0.267 0.268 0.268 0.268 0.269 ...
+ $ :List of 3
+  ..$ level: num 0
+  ..$ x    : num [1:34] 0.267 0.268 0.268 0.268 0.269 ...
+  ..$ y    : num [1:34] 0 0.0294 0.0588 0.0882 0.1176 ...
+ $ :List of 3
+  ..$ level: num 100
+  ..$ x    : num [1:44] 1 0.995 0.971 0.941 0.912 ...
+  ..$ y    : num [1:44] 0.381 0.382 0.387 0.393 0.398 ...
+ $ :List of 3
+  ..$ level: num 200
+  ..$ x    : num [1:36] 1 0.997 0.971 0.941 0.918 ...
+  ..$ y    : num [1:36] 0.499 0.5 0.51 0.52 0.529 ...
+ $ :List of 3
+  ..$ level: num 300
+  ..$ x    : num [1:28] 1 0.998 0.971 0.943 0.941 ...
+  ..$ y    : num [1:28] 0.617 0.618 0.632 0.647 0.648 ...
+ $ :List of 3
+  ..$ level: num 400
+  ..$ x    : num [1:20] 1 0.999 0.971 0.957 0.941 ...
+  ..$ y    : num [1:20] 0.734 0.735 0.755 0.765 0.776 ...
+ $ :List of 3
+  ..$ level: num 500
+  ..$ x    : num [1:12] 1 0.999 0.971 0.965 0.941 ...
+  ..$ y    : num [1:12] 0.852 0.853 0.877 0.882 0.904 ...
+ $ :List of 3
+  ..$ level: num 600
+  ..$ x    : num [1:4] 1 0.999 0.971 0.97
+  ..$ y    : num [1:4] 0.97 0.971 0.999 1
+        red green blue
+black     0     0    0
+#DF536B 223    83  107
+#61D04F  97   208   79
+#2297E6  34   151  230
+#28E2E5  40   226  229
+#CD0BBC 205    11  188
+#F5C710 245   199   16
+gray62  158   158  158
+               L         a         b
+black    0.00000   0.00000   0.00000
+#DF536B 55.16051  56.30900  16.18063
+#61D04F 74.89688 -55.97739  53.00681
+#2297E6 59.98342  -3.54255 -48.62932
+#28E2E5 82.01645 -41.73498 -14.10432
+#CD0BBC 48.23048  79.84315 -42.53326
+#F5C710 82.05072   2.31748  81.63638
+gray62  65.11425   0.00000   0.00000
+$semiTransparency
+[1] TRUE
+
+$transparentBackground
+[1] "semi"
+
+$rasterImage
+[1] "yes"
+
+$capture
+[1] FALSE
+
+$locator
+[1] FALSE
+
+$events
+character(0)
+
+[1] FALSE
+[1] "X11"      "X11cairo" "quartz"   "windows"  "JavaGD"   "CairoWin" "CairoX11"
+[1] 17.78 17.78
+[1] 1 5
+[1] 0.8 5.2
+[1] 0.96 5.04
+[1] 0.96 5.12
+[1] "#000000" "#202020" "#404040" "#606060" "#808080" "#9F9F9F" "#BFBFBF"
+[8] "#DFDFDF" "#FFFFFF"
+
+
+	demo(hclColors)
+	---- ~~~~~~~~~
+
+> ### ------ hcl() explorations
+> 
+> hcl.wheel <-
++     function(chroma = 35, lums = 0:100, hues = 1:360, asp = 1,
++              p.cex = 0.6, do.label = FALSE, rev.lum = FALSE,
++              fixup = TRUE)
++ {
++     ## Purpose: show chroma "sections" of hcl() color space; see  ?hcl
++     ## ----------------------------------------------------------------------
++     ## Arguments: chroma: can be vector -> multiple plots are done,
++     ##            lums, hues, fixup : all corresponding to hcl()'s args
++     ##            rev.lum: logical indicating if luminance
++     ## 			should go from outer to inner
++     ## ----------------------------------------------------------------------
++     ## Author: Martin Maechler, Date: 24 Jun 2005
++ 
++     require("graphics")
++     stopifnot(is.numeric(lums), lums >= 0, lums <= 100,
++               is.numeric(hues), hues >= 0, hues <= 360,
++               is.numeric(chroma), chroma >= 0, (nch <- length(chroma)) >= 1)
++     if(is.unsorted(hues)) hues <- sort(hues)
++     if(nch > 1) {
++         op <- par(mfrow= n2mfrow(nch), mar = c(0,0,0,0), xpd = TRUE)
++         on.exit(par(op))
++     }
++     for(i.c in 1:nch) {
++         plot(-1:1,-1:1, type="n", axes = FALSE, xlab="",ylab="", asp = asp)
++         ## main = sprintf("hcl(h = <angle>, c = %g)", chroma[i.c]),
++         text(0.4, 0.99, paste("chroma =", format(chroma[i.c])),
++              adj = 0, font = 4)
++         l.s <- (if(rev.lum) rev(lums) else lums) / max(lums) # <= 1
++         for(ang in hues) { # could do all this using outer() instead of for()...
++             a. <- ang * pi/180
++             z.a <- exp(1i * a.)
++             cols <- hcl(ang, c = chroma[i.c], l = lums, fixup = fixup)
++             points(l.s * z.a, pch = 16, col = cols, cex = p.cex)
++             ##if(do."text") : draw the 0,45,90,... angle "lines"
++             if(do.label)
++                 text(z.a*1.05, labels = ang, col = cols[length(cols)/2],
++                      srt = ang)
++         }
++         if(!fixup) ## show the outline
++             lines(exp(1i * hues * pi/180))
++    }
++    invisible()
++ }
+
+> ## and now a few interesting calls :
+> 
+> hcl.wheel() # and watch it redraw when you fiddle with the graphic window
+
+> hcl.wheel(rev.lum= TRUE) # ditto
+
+> hcl.wheel(do.label = TRUE) # ditto
+
+> ## Now watch:
+> hcl.wheel(chroma = c(25,35,45,55))
+
+> hcl.wheel(chroma = seq(10, 90, by = 10), p.cex = 0.4)
+
+> hcl.wheel(chroma = seq(10, 90, by = 10), p.cex = 0.3, fixup = FALSE)
+
+> hcl.wheel(chroma = seq(10, 90, by = 10), p.cex = 0.3, rev.lum = TRUE)
+
+> if(dev.interactive()) # new "graphics window" -- to compare with previous :
++     dev.new()
+
+> hcl.wheel(chroma = seq(10, 90, by = 10), p.cex = 0.3, rev.lum = TRUE, fixup=FALSE)
+[1] "#408080"
+Color space converter: PAL/SECAM RGB
+Reference white: D65
+display gamma = 2.2
+     red green blue
+[1,]   0     0    0
+[2,] 223    83  107
+[3,]  97   208   79
+[4,]  34   151  230
+[5,]  40   226  229
+[6,] 205    11  188
+[7,] 245   199   16
+[8,] 158   158  158
+            L         u         v
+[1,]  0.00000   0.00000   0.00000
+[2,] 55.16051  99.94871   8.95299
+[3,] 74.89688 -51.95694  73.49647
+[4,] 59.98342 -36.43653 -76.74275
+[5,] 82.01645 -61.64283 -15.85619
+[6,] 48.23048  74.70628 -73.95136
+[7,] 82.05072  40.07525  84.92489
+[8,] 65.11425   0.00000   0.00000
+     [,1]     
+[1,] "#000000"
+[2,] "#DF536B"
+[3,] "#61D04F"
+[4,] "#2297E6"
+[5,] "#28E2E5"
+[6,] "#CD0BBC"
+[7,] "#F5C710"
+[8,] "#9E9E9E"
+     [,1] [,2] [,3]
+[1,]    0    0    0
+[2,]  223   83  107
+[3,]   97  208   79
+[4,]   34  151  230
+[5,]   40  226  229
+[6,]  205   11  188
+[7,]  245  199   16
+[8,]  158  158  158
+     [,1] [,2] [,3]
+[1,]    0    0    0
+[2,]  223   83  107
+[3,]   97  208   79
+[4,]   34  151  230
+[5,]   40  226  229
+[6,]  205   11  188
+[7,]  245  199   16
+[8,]  158  158  158
+[1] 3 3
+     [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11] [,12] [,13] [,14]
+[1,]    1    2    3    2    3    3    3    3    3     4     4     4     4     4
+[2,]    1    1    1    2    2    2    3    3    3     3     3     3     4     4
+     [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11] [,12] [,13] [,14]
+[1,]    1    2    2    2    2    2    2    3    3     3     3     3     3     3
+[2,]    1    1    2    2    3    3    4    3    3     4     4     4     5     5
+[1] 12
+Sturges   Scott      FD 
+     12      20      26 
+Sturges   Scott      FD 
+      5       1       1 
+[1] "black"   "#DF536B" "#61D04F" "#2297E6" "#28E2E5" "#CD0BBC" "#F5C710"
+[8] "gray62" 
+[1] "black"   "red"     "green3"  "blue"    "cyan"    "magenta" "yellow" 
+[8] "gray"   
+[1] "black"   "#F8766D" "#00BA38" "#619CFF" "#00BFC4" "#F564E3" "#B79F00"
+[8] "gray62" 
+[1] "#4B0055" "#3C3777" "#006290" "#008A98" "#00AC8E" "#25C771" "#A6DA42"
+[8] "#FDE333"
+ [1] "R3"              "R4"              "ggplot2"         "Okabe-Ito"      
+ [5] "Accent"          "Dark 2"          "Paired"          "Pastel 1"       
+ [9] "Pastel 2"        "Set 1"           "Set 2"           "Set 3"          
+[13] "Tableau 10"      "Classic Tableau" "Polychrome 36"   "Alphabet"       
+[1] "Pastel 1" "Dark 2"   "Dark 3"   "Set 2"    "Set 3"    "Warm"     "Cold"    
+[8] "Harmonic" "Dynamic" 
+ [1] "Grays"         "Light Grays"   "Blues 2"       "Blues 3"      
+ [5] "Purples 2"     "Purples 3"     "Reds 2"        "Reds 3"       
+ [9] "Greens 2"      "Greens 3"      "Oslo"          "Purple-Blue"  
+[13] "Red-Purple"    "Red-Blue"      "Purple-Orange" "Purple-Yellow"
+[17] "Blue-Yellow"   "Green-Yellow"  "Red-Yellow"    "Heat"         
+[21] "Heat 2"        "Terrain"       "Terrain 2"     "Viridis"      
+[25] "Plasma"        "Inferno"       "Rocket"        "Mako"         
+[29] "Dark Mint"     "Mint"          "BluGrn"        "Teal"         
+[33] "TealGrn"       "Emrld"         "BluYl"         "ag_GrnYl"     
+[37] "Peach"         "PinkYl"        "Burg"          "BurgYl"       
+[41] "RedOr"         "OrYel"         "Purp"          "PurpOr"       
+[45] "Sunset"        "Magenta"       "SunsetDark"    "ag_Sunset"    
+[49] "BrwnYl"        "YlOrRd"        "YlOrBr"        "OrRd"         
+[53] "Oranges"       "YlGn"          "YlGnBu"        "Reds"         
+[57] "RdPu"          "PuRd"          "Purples"       "PuBuGn"       
+[61] "PuBu"          "Greens"        "BuGn"          "GnBu"         
+[65] "BuPu"          "Blues"         "Lajolla"       "Turku"        
+[69] "Hawaii"        "Batlow"       
+ [1] "Blue-Red"      "Blue-Red 2"    "Blue-Red 3"    "Red-Green"    
+ [5] "Purple-Green"  "Purple-Brown"  "Green-Brown"   "Blue-Yellow 2"
+ [9] "Blue-Yellow 3" "Green-Orange"  "Cyan-Magenta"  "Tropic"       
+[13] "Broc"          "Cork"          "Vik"           "Berlin"       
+[17] "Lisbon"        "Tofino"       
+ [1] "ArmyRose" "Earth"    "Fall"     "Geyser"   "TealRose" "Temps"   
+ [7] "PuOr"     "RdBu"     "RdGy"     "PiYG"     "PRGn"     "BrBG"    
+[13] "RdYlBu"   "RdYlGn"   "Spectral" "Zissou 1" "Cividis"  "Roma"    
+List of 18
+ $ width      : num 7
+ $ height     : num 7
+ $ onefile    : logi TRUE
+ $ family     : chr "Helvetica"
+ $ title      : chr "R Graphics Output"
+ $ fonts      : NULL
+ $ version    : chr "1.4"
+ $ paper      : chr "special"
+ $ encoding   : chr "default"
+ $ bg         : chr "pink"
+ $ fg         : chr "black"
+ $ pointsize  : num 12
+ $ pagecentre : logi TRUE
+ $ colormodel : chr "srgb"
+ $ useDingbats: logi FALSE
+ $ useKerning : logi TRUE
+ $ fillOddEven: logi FALSE
+ $ compress   : logi TRUE
+pdf 
+  2 
+$serif
+$family
+[1] "Times"
+
+$metrics
+[1] "Times-Roman.afm"      "Times-Bold.afm"       "Times-Italic.afm"    
+[4] "Times-BoldItalic.afm" "Symbol.afm"          
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$sans
+$family
+[1] "Helvetica"
+
+$metrics
+[1] "Helvetica.afm"             "Helvetica-Bold.afm"       
+[3] "Helvetica-Oblique.afm"     "Helvetica-BoldOblique.afm"
+[5] "Symbol.afm"               
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$mono
+$family
+[1] "Courier"
+
+$metrics
+[1] "Courier.afm"             "Courier-Bold.afm"       
+[3] "Courier-Oblique.afm"     "Courier-BoldOblique.afm"
+[5] "Symbol.afm"             
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$AvantGarde
+$family
+[1] "AvantGarde"
+
+$metrics
+[1] "agw_____.afm" "agd_____.afm" "agwo____.afm" "agdo____.afm" "Symbol.afm"  
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$Bookman
+$family
+[1] "Bookman"
+
+$metrics
+[1] "bkl_____.afm" "bkd_____.afm" "bkli____.afm" "bkdi____.afm" "Symbol.afm"  
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$Courier
+$family
+[1] "Courier"
+
+$metrics
+[1] "Courier.afm"             "Courier-Bold.afm"       
+[3] "Courier-Oblique.afm"     "Courier-BoldOblique.afm"
+[5] "Symbol.afm"             
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$Helvetica
+$family
+[1] "Helvetica"
+
+$metrics
+[1] "Helvetica.afm"             "Helvetica-Bold.afm"       
+[3] "Helvetica-Oblique.afm"     "Helvetica-BoldOblique.afm"
+[5] "Symbol.afm"               
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$`Helvetica-Narrow`
+$family
+[1] "Helvetica-Narrow"
+
+$metrics
+[1] "hvn_____.afm" "hvnb____.afm" "hvno____.afm" "hvnbo___.afm" "Symbol.afm"  
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$NewCenturySchoolbook
+$family
+[1] "NewCenturySchoolbook"
+
+$metrics
+[1] "ncr_____.afm" "ncb_____.afm" "nci_____.afm" "ncbi____.afm" "Symbol.afm"  
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$Palatino
+$family
+[1] "Palatino"
+
+$metrics
+[1] "por_____.afm" "pob_____.afm" "poi_____.afm" "pobi____.afm" "Symbol.afm"  
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$Times
+$family
+[1] "Times"
+
+$metrics
+[1] "Times-Roman.afm"      "Times-Bold.afm"       "Times-Italic.afm"    
+[4] "Times-BoldItalic.afm" "Symbol.afm"          
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$URWGothic
+$family
+[1] "URWGothic"
+
+$metrics
+[1] "a010013l.afm" "a010015l.afm" "a010033l.afm" "a010035l.afm" "s050000l.afm"
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$URWBookman
+$family
+[1] "URWBookman"
+
+$metrics
+[1] "b018012l.afm" "b018015l.afm" "b018032l.afm" "b018035l.afm" "s050000l.afm"
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$NimbusMon
+$family
+[1] "NimbusMon"
+
+$metrics
+[1] "n022003l.afm" "n022004l.afm" "n022023l.afm" "n022024l.afm" "s050000l.afm"
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$NimbusSan
+$family
+[1] "NimbusSan"
+
+$metrics
+[1] "n019003l.afm" "n019004l.afm" "n019023l.afm" "n019024l.afm" "s050000l.afm"
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$URWHelvetica
+$family
+[1] "URWHelvetica"
+
+$metrics
+[1] "n019003l.afm" "n019004l.afm" "n019023l.afm" "n019024l.afm" "s050000l.afm"
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$NimbusSanCond
+$family
+[1] "NimbusSanCond"
+
+$metrics
+[1] "n019043l.afm" "n019044l.afm" "n019063l.afm" "n019064l.afm" "s050000l.afm"
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$CenturySch
+$family
+[1] "CenturySch"
+
+$metrics
+[1] "c059013l.afm" "c059016l.afm" "c059033l.afm" "c059036l.afm" "s050000l.afm"
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$URWPalladio
+$family
+[1] "URWPalladio"
+
+$metrics
+[1] "p052003l.afm" "p052004l.afm" "p052023l.afm" "p052024l.afm" "s050000l.afm"
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$NimbusRom
+$family
+[1] "NimbusRom"
+
+$metrics
+[1] "n021003l.afm" "n021004l.afm" "n021023l.afm" "n021024l.afm" "s050000l.afm"
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$URWTimes
+$family
+[1] "URWTimes"
+
+$metrics
+[1] "n021003l.afm" "n021004l.afm" "n021023l.afm" "n021024l.afm" "s050000l.afm"
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$ArialMT
+$family
+[1] "ArialMT"
+
+$metrics
+[1] "ArialMT.afm"            "ArialMT-Bold.afm"       "ArialMT-Italic.afm"    
+[4] "ArialMT-BoldItalic.afm" "Symbol.afm"            
+
+$encoding
+[1] "default"
+
+attr(,"class")
+[1] "Type1Font"
+
+$ComputerModern
+$family
+[1] "ComputerModern"
+
+$metrics
+[1] "CM_regular_10.afm"      "CM_boldx_10.afm"        "CM_italic_10.afm"      
+[4] "CM_boldx_italic_10.afm" "CM_symbol_10.afm"      
+
+$encoding
+[1] "TeXtext.enc"
+
+attr(,"class")
+[1] "Type1Font"
+
+$ComputerModernItalic
+$family
+[1] "ComputerModernItalic"
+
+$metrics
+[1] "CM_regular_10.afm" "CM_boldx_10.afm"   "cmti10.afm"       
+[4] "cmbxti10.afm"      "CM_symbol_10.afm" 
+
+$encoding
+[1] "TeXtext.enc"
+
+attr(,"class")
+[1] "Type1Font"
+
+$Japan1
+$family
+[1] "HeiseiKakuGo-W5"
+
+$metrics
+[1] ""           ""           ""           ""           "Symbol.afm"
+
+$cmap
+[1] "EUC-H"
+
+$cmapEncoding
+[1] "EUC-JP"
+
+$pdfresource
+[1] ""
+
+attr(,"class")
+[1] "CIDFont"
+
+$Japan1HeiMin
+$family
+[1] "HeiseiMin-W3"
+
+$metrics
+[1] ""           ""           ""           ""           "Symbol.afm"
+
+$cmap
+[1] "EUC-H"
+
+$cmapEncoding
+[1] "EUC-JP"
+
+$pdfresource
+[1] ""
+
+attr(,"class")
+[1] "CIDFont"
+
+$Japan1GothicBBB
+$family
+[1] "GothicBBB-Medium"
+
+$metrics
+[1] ""           ""           ""           ""           "Symbol.afm"
+
+$cmap
+[1] "EUC-H"
+
+$cmapEncoding
+[1] "EUC-JP"
+
+$pdfresource
+[1] ""
+
+attr(,"class")
+[1] "CIDFont"
+
+$Japan1Ryumin
+$family
+[1] "Ryumin-Light"
+
+$metrics
+[1] ""           ""           ""           ""           "Symbol.afm"
+
+$cmap
+[1] "EUC-H"
+
+$cmapEncoding
+[1] "EUC-JP"
+
+$pdfresource
+[1] ""
+
+attr(,"class")
+[1] "CIDFont"
+
+$Korea1
+$family
+[1] "Baekmuk-Batang"
+
+$metrics
+[1] ""           ""           ""           ""           "Symbol.afm"
+
+$cmap
+[1] "KSCms-UHC-H"
+
+$cmapEncoding
+[1] "CP949"
+
+$pdfresource
+[1] ""
+
+attr(,"class")
+[1] "CIDFont"
+
+$Korea1deb
+$family
+[1] "Batang-Regular"
+
+$metrics
+[1] ""           ""           ""           ""           "Symbol.afm"
+
+$cmap
+[1] "KSCms-UHC-H"
+
+$cmapEncoding
+[1] "CP949"
+
+$pdfresource
+[1] ""
+
+attr(,"class")
+[1] "CIDFont"
+
+$CNS1
+$family
+[1] "MOESung-Regular"
+
+$metrics
+[1] ""           ""           ""           ""           "Symbol.afm"
+
+$cmap
+[1] "B5pc-H"
+
+$cmapEncoding
+[1] "CP950"
+
+$pdfresource
+[1] ""
+
+attr(,"class")
+[1] "CIDFont"
+
+$GB1
+$family
+[1] "BousungEG-Light-GB"
+
+$metrics
+[1] ""           ""           ""           ""           "Symbol.afm"
+
+$cmap
+[1] "GBK-EUC-H"
+
+$cmapEncoding
+[1] "GBK"
+
+$pdfresource
+[1] ""
+
+attr(,"class")
+[1] "CIDFont"
+
+ [1] "serif"                "sans"                 "mono"                
+ [4] "AvantGarde"           "Bookman"              "Courier"             
+ [7] "Helvetica"            "Helvetica-Narrow"     "NewCenturySchoolbook"
+[10] "Palatino"             "Times"                "URWGothic"           
+[13] "URWBookman"           "NimbusMon"            "NimbusSan"           
+[16] "URWHelvetica"         "NimbusSanCond"        "CenturySch"          
+[19] "URWPalladio"          "NimbusRom"            "URWTimes"            
+[22] "ArialMT"              "Japan1"               "Japan1HeiMin"        
+[25] "Japan1GothicBBB"      "Japan1Ryumin"         "Korea1"              
+[28] "Korea1deb"            "CNS1"                 "GB1"                 
+[31] "Jp_UCS-2"            
+$`10 secs`
+[1] "00" "02" "04" "06" "08" "10"
+
+$`1 min`
+[1] "00" "10" "20" "30" "40" "50" "00"
+
+$`5 mins`
+[1] "02:02" "02:03" "02:04" "02:05" "02:06" "02:07"
+
+$`30 mins`
+[1] "02:00" "02:10" "02:20" "02:30" "02:40"
+
+$`6 hours`
+[1] "02:00" "03:00" "04:00" "05:00" "06:00" "07:00" "08:00" "09:00"
+
+$`12 hours`
+[1] "00:00" "03:00" "06:00" "09:00" "12:00" "15:00"
+
+$`1 DSTday`
+[1] "Feb 02 00:00" "Feb 02 06:00" "Feb 02 12:00" "Feb 02 18:00" "Feb 03 00:00"
+[6] "Feb 03 06:00"
+
+$`2 weeks`
+[1] "Jan 28" "Feb 04" "Feb 11" "Feb 18"
+
+$`1 month`
+[1] "Jan 28" "Feb 04" "Feb 11" "Feb 18" "Feb 25" "Mar 04"
+
+$`6 months`
+[1] "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep"
+
+$`1 year`
+[1] "Jan" "Apr" "Jul" "Oct" "Jan" "Apr"
+
+$`10 years`
+[1] "2002" "2004" "2006" "2008" "2010" "2012" "2014"
+
+$`50 years`
+[1] "2000" "2010" "2020" "2030" "2040" "2050" "2060"
+
+$`1000 years`
+[1] "2000" "2200" "2400" "2600" "2800" "3000" "3200"
+
+List of 18
+ $ onefile    : logi TRUE
+ $ family     : chr "Helvetica"
+ $ title      : chr "R Graphics Output"
+ $ fonts      : NULL
+ $ encoding   : chr "default"
+ $ bg         : chr "pink"
+ $ fg         : chr "black"
+ $ width      : num 0
+ $ height     : num 0
+ $ horizontal : logi TRUE
+ $ pointsize  : num 12
+ $ paper      : chr "default"
+ $ pagecentre : logi TRUE
+ $ print.it   : logi FALSE
+ $ command    : chr "default"
+ $ colormodel : chr "srgb"
+ $ useKerning : logi TRUE
+ $ fillOddEven: logi FALSE
+Warning: ‘mode(onefile)’ and ‘mode(bg)’ differ between new and previous
+	 ==> NOT changing ‘onefile’ & ‘bg’
+Warning: ‘length(width)’ differs between new and previous
+	 ==> NOT changing ‘width’
+Warning: ‘mode(bg)’ differs between new and previous
+	 ==> NOT changing ‘bg’
+Warning: ‘length(width)’ differs between new and previous
+List of 18
+ $ onefile    : logi TRUE
+ $ family     : chr "Helvetica"
+ $ title      : chr "R Graphics Output"
+ $ fonts      : NULL
+ $ encoding   : chr "default"
+ $ bg         : chr "pink"
+ $ fg         : chr "black"
+ $ width      : int [1:13] 0 1 2 3 4 5 6 7 8 9 ...
+ $ height     : num 0
+ $ horizontal : logi TRUE
+ $ pointsize  : num 12
+ $ paper      : chr "default"
+ $ pagecentre : logi TRUE
+ $ print.it   : logi FALSE
+ $ command    : chr "default"
+ $ colormodel : chr "srgb"
+ $ useKerning : logi TRUE
+ $ fillOddEven: logi FALSE
+List of 3
+ $ serif: chr [1:4] "Times-Roman" "Times-Bold" "Times-Italic" "Times-BoldItalic"
+ $ sans : chr [1:4] "Helvetica" "Helvetica-Bold" "Helvetica-Oblique" "Helvetica-BoldOblique"
+ $ mono : chr [1:4] "Courier" "Courier-Bold" "Courier-Oblique" "Courier-BoldOblique"
+$mono
+[1] "Courier"             "Courier-Bold"        "Courier-Oblique"    
+[4] "Courier-BoldOblique"
+
+[1] "#00FF00"
+    red.0     red.1     red.2     red.3     red.4     red.5     red.6     red.7 
+"#000000" "#110000" "#220000" "#330000" "#440000" "#550000" "#660000" "#770000" 
+    red.8     red.9    red.10    red.11    red.12    red.13    red.14    red.15 
+"#880000" "#990000" "#AA0000" "#BB0000" "#CC0000" "#DD0000" "#EE0000" "#FF0000" 
+ [1] "#000000" "#000100" "#000200" "#000300" "#000400" "#000500" "#000600"
+ [8] "#000700" "#000800" "#000900" "#000A00" "#000B00" "#000C00"
+[1] "#FF0000" "#FF3F3F" "#FF7F7F" "#FFBFBF" "#FFFFFF"
+      [,1] [,2] [,3] [,4] [,5] [,6]
+red    255  255    0    0    0  255
+green    0  255  255  255    0    0
+blue     0    0    0  255  255  255
+  [,1]      [,2]      [,3] [,4]      [,5]      [,6]
+h    0 0.1666667 0.3333333  0.5 0.6666667 0.8333333
+s    1 1.0000000 1.0000000  1.0 1.0000000 1.0000000
+v    1 1.0000000 1.0000000  1.0 1.0000000 1.0000000
+[1] 0 1 2 3 4 5
+     [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11] [,12]
+[1,]  122  137  116  244   20  153  191  250  134   117    27   202
+[2,]  221  113  210  200  218  151   64  182  195   103   218   254
+[3,]  199  157   88   76   39   91   80  146   22   105    17   239
+       [,1]      [,2]      [,3]      [,4]      [,5]      [,6]      [,7]
+h 0.4629630 0.7575758 0.2950820 0.1230159 0.3493266 0.1612903 0.9790026
+s 0.4479638 0.2802548 0.5809524 0.6885246 0.9082569 0.4052288 0.6649215
+v 0.8666667 0.6156863 0.8235294 0.9568627 0.8549020 0.6000000 0.7490196
+        [,8]      [,9]     [,10]     [,11]     [,12]
+h 0.05769231 0.2254335 0.9761905 0.3250415 0.4519231
+s 0.41600000 0.8871795 0.1196581 0.9220183 0.2047244
+v 0.98039216 0.7647059 0.4588235 0.8549020 0.9960784
+[1] TRUE
+$x
+[1] 45.0 -4.5 -4.5 -4.5 -4.5 -4.5 -4.5 -4.5 -4.5
+
+$y
+[1]   0.0000000  12.3636484   5.3628912   2.5980762   0.7934714  -0.7934714
+[7]  -2.5980762  -5.3628912 -12.3636484
+
+$xlab
+[1] "Re()"
+
+$ylab
+[1] "Im()"
+
+$x
+[1] 45.0 -4.5 -4.5 -4.5 -4.5 -4.5 -4.5 -4.5 -4.5
+
+$y
+[1]   0.0000000  12.3636484   5.3628912   2.5980762   0.7934714  -0.7934714
+[7]  -2.5980762  -5.3628912 -12.3636484
+
+$xlab
+[1] "Re(fft)"
+
+$ylab
+[1] "Im(fft)"
+
+[1] "speed"
+$x
+[1] 1 2 3
+
+$y
+[1] 1 2 1
+
+$xlab
+NULL
+
+$ylab
+NULL
+
+Warning in xy.coords(-2:10, log = "y") :
+  3 y values <= 0 omitted from logarithmic plot
+$x
+ [1]  1  2  3  4  5  6  7  8  9 10 11 12 13
+
+$y
+ [1] NA NA NA  1  2  3  4  5  6  7  8  9 10
+
+$xlab
+[1] "Index"
+
+$ylab
+NULL
+
+$x
+  [1] 1.0 1.1 1.2 1.3 1.3 1.3 1.4 1.4 1.4 1.5 1.5 1.5 1.5 1.6 1.6 1.6 1.7 1.7
+ [19] 1.7 1.7 1.9 1.9 3.0 3.3 3.5 3.6 3.7 3.8 3.9 3.9 3.9 4.0 4.0 4.0 4.1 4.1
+ [37] 4.2 4.2 4.2 4.3 4.4 4.4 4.4 4.5 4.5 4.5 4.5 4.6 4.6 4.6 4.7 4.7 4.7 4.7
+ [55] 4.8 4.8 4.9 4.9 4.9 5.0 5.0 5.0 5.0 5.1 5.1 5.1 5.1 5.1 5.1 5.1 5.2 5.2
+ [73] 5.3 5.3 5.4 5.4 5.5 5.5 5.6 5.6 5.6 5.6 5.6 5.7 5.7 5.7 5.8 5.8 5.8 5.9
+ [91] 5.9 6.0 6.0 6.1 6.1 6.1 6.3 6.4 6.6 6.7 6.7 6.9
+
+$y
+  [1] 0.2 0.1 0.2 0.2 0.3 0.4 0.1 0.2 0.3 0.1 0.2 0.3 0.4 0.2 0.4 0.6 0.2 0.3
+ [19] 0.4 0.5 0.2 0.4 1.1 1.0 1.0 1.3 1.0 1.1 1.1 1.2 1.4 1.0 1.2 1.3 1.0 1.3
+ [37] 1.2 1.3 1.5 1.3 1.2 1.3 1.4 1.3 1.5 1.6 1.7 1.3 1.4 1.5 1.2 1.4 1.5 1.6
+ [55] 1.4 1.8 1.5 1.8 2.0 1.5 1.7 1.9 2.0 1.5 1.6 1.8 1.9 2.0 2.3 2.4 2.0 2.3
+ [73] 1.9 2.3 2.1 2.3 1.8 2.1 1.4 1.8 2.1 2.2 2.4 2.1 2.3 2.5 1.6 1.8 2.2 2.1
+ [91] 2.3 1.8 2.5 1.9 2.3 2.5 1.8 2.0 2.1 2.0 2.2 2.3
+
+$number
+  [1] 1 1 2 4 2 1 2 8 3 2 7 1 3 5 1 1 1 1 1 1 1 1 1 2 2 1 1 1 1 1 1 1 1 3 1 2 1
+ [38] 2 1 2 1 1 2 1 5 1 1 1 1 1 1 2 1 1 1 3 2 2 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1
+ [75] 1 1 2 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+
+$x
+ [1] -2 -2 -2 -2 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1  0  0  0  0  0  0  0  0
+[26]  0  0  0  0  0  0  0  0  0  0  0  0  0  0  1  1  1  1  1  1  1  1  1  1  1
+[51]  1  1  1  1  1  1  2  2  2  2
+
+$y
+ [1] -0.90 -0.60  0.04  0.20 -0.70 -0.60 -0.50 -0.40 -0.30 -0.20 -0.10  0.40
+[13]  0.50  0.70  0.90  1.00  2.00 -2.00 -1.00 -0.90 -0.80 -0.70 -0.60 -0.50
+[25] -0.30 -0.20 -0.07 -0.06 -0.04 -0.02  0.02  0.06  0.30  0.40  0.50  0.70
+[37]  0.90  1.00  2.00 -1.00 -0.90 -0.80 -0.70 -0.40 -0.30 -0.20 -0.10 -0.08
+[49] -0.03  0.10  0.20  0.40  0.50  0.80  1.00  2.00 -1.00 -0.40  0.40  1.00
+
+$number
+ [1] 1 1 1 1 2 1 2 1 2 4 1 1 1 1 1 2 2 5 5 1 1 2 3 2 3 1 1 1 1 1 1 1 1 1 2 1 1 3
+[39] 3 3 1 1 1 1 2 2 1 1 1 1 2 1 2 2 4 2 3 1 1 1
+
+$x
+[1] 1 2 3 4 5 6 7 8 9
+
+$y
+[1] 10 20 30 40 50 60 70 80 90
+
+$z
+[1] -4 -4 -4 -4 -4 -4 -4 -4 -4
+
+$xlab
+[1] "Index"
+
+$ylab
+NULL
+
+$zlab
+NULL
+
+$x
+[1] 15.0 -2.5 -2.5 -2.5 -2.5
+
+$y
+[1]  0.0000000  3.4409548  0.8122992 -0.8122992 -3.4409548
+
+$z
+[1] 1 2 3 4 5
+
+$xlab
+[1] "Re(Y)"
+
+$ylab
+[1] "Im(Y)"
+
+$zlab
+[1] "X"
+
+$x
+ [1]  1  2  3  4  5  6  7  8  9 10
+
+$y
+ [1] 11 12 13 14 15 16 17 18 19 20
+
+$z
+ [1] 22 24 26 28 30 32 34 36 38 40
+
+$xlab
+[1] "x1"
+
+$ylab
+[1] "x2"
+
+$zlab
+[1] "y"
+
+Warning in xyz.coords(data.frame(x = -1:9, y = 2:12, z = 3:13), y = NULL,  :
+  2 x values <= 0 omitted from logarithmic plot
+$x
+ [1] NA NA  1  2  3  4  5  6  7  8  9
+
+$y
+ [1]  2  3  4  5  6  7  8  9 10 11 12
+
+$z
+ [1]  3  4  5  6  7  8  9 10 11 12 13
+
+$xlab
+[1] "x"
+
+$ylab
+[1] "y"
+
+$zlab
+[1] "z"
+

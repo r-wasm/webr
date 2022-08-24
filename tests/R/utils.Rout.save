@@ -1,0 +1,1741 @@
+Writing to file example-1.R 
+[1] TRUE
+Writing to file example-1.R 
+[1] TRUE
+Writing to file example-1.R 
+[1] TRUE
+[1] "a%20url%20with%20spaces%20and%20/%20and%20@"
+[1] "a url with spaces and / and @"
+[1] "a%20url%20with%20spaces%20and%20%2F%20and%20%40"
+[1] "a url with spaces and / and @"
+[1] "ab cd"
+[1] "ab%20cd"   "ab%2520cd"
+     [,1]
+[1,]    3
+ins del sub 
+  1   0   2 
+     [,1]      [,2]     
+[1,] "MMMMMM"  "SMMMSMI"
+[2,] "SMMMSMD" "MMMMMMM"
+     [,1]
+[1,]    5
+     [,1]
+[1,]    1
+[1] "glm"           "glm.control"   "glm.fit"       "predict.glm"  
+[5] "residuals.glm" "summary.glm"  
+character(0)
+[1] "evalq"       "evalqOnLoad"
+[1] ".GlobalEnv"    "package:stats"
+   .GlobalEnv package:stats 
+            1             3 
+package:stats 
+            3 
+ [1] "["                    "[.AsIs"               "[.DLLInfoList"       
+ [4] "[.Date"               "[.Dlist"              "[.POSIXct"           
+ [7] "[.POSIXlt"            "[.data.frame"         "[.difftime"          
+[10] "[.factor"             "[.hexmode"            "[.listof"            
+[13] "[.noquote"            "[.numeric_version"    "[.octmode"           
+[16] "[.simple.list"        "[.table"              "[.warnings"          
+[19] "[<-"                  "[<-.Date"             "[<-.POSIXct"         
+[22] "[<-.POSIXlt"          "[<-.data.frame"       "[<-.difftime"        
+[25] "[<-.factor"           "[<-.numeric_version"  "[["                  
+[28] "[[.Date"              "[[.POSIXct"           "[[.POSIXlt"          
+[31] "[[.data.frame"        "[[.factor"            "[[.numeric_version"  
+[34] "[[<-"                 "[[<-.POSIXlt"         "[[<-.data.frame"     
+[37] "[[<-.factor"          "[[<-.numeric_version"
+[[1]]
+[1] 3
+attr(,"match.length")
+[1] 4
+
+[[2]]
+[1] -1
+attr(,"match.length")
+[1] -1
+
+[[3]]
+[1] -1
+attr(,"match.length")
+[1] -1
+
+[[1]]
+[1] 3 3 5
+attr(,"match.length")
+[1] 4 2 2
+
+[[2]]
+[1] -1
+attr(,"match.length")
+[1] -1
+
+[[3]]
+[1] -1
+attr(,"match.length")
+[1] -1
+
+[[1]]
+[1] 3 3 6
+attr(,"match.length")
+[1] 4 3 1
+
+[[2]]
+[1] -1
+attr(,"match.length")
+[1] -1
+
+[[3]]
+[1] 3 3 6
+attr(,"match.length")
+[1] 4 3 1
+
+[[1]]
+[1] "lazy" "la"   "zy"  
+
+[[2]]
+character(0)
+
+[[3]]
+character(0)
+
+[1] TRUE
+[1] "/usr/lib/R/share/dictionaries/en_stats.rds"
+R Core Team (2014). _R: A Language and Environment for Statistical
+Computing_. R Foundation for Statistical Computing, Vienna, Austria.
+<URL: https://www.R-project.org/>.
+@Manual{,
+  title = {R: A Language and Environment for Statistical Computing},
+  author = {{R Core Team}},
+  organization = {R Foundation for Statistical Computing},
+  address = {Vienna, Austria},
+  year = {2014},
+  url = {https://www.R-project.org/},
+}
+
+R Core Team (2014). _R: A Language and Environment for Statistical
+Computing_. R Foundation for Statistical Computing, Vienna, Austria.
+<URL: https://www.R-project.org/>.
+
+A BibTeX entry for LaTeX users is
+
+  @Manual{,
+    title = {R: A Language and Environment for Statistical Computing},
+    author = {{R Core Team}},
+    organization = {R Foundation for Statistical Computing},
+    address = {Vienna, Austria},
+    year = {2014},
+    url = {https://www.R-project.org/},
+  }
+
+<p>R Core Team (2014).
+<em>R: A Language and Environment for Statistical Computing</em>.
+R Foundation for Statistical Computing, Vienna, Austria.
+<a href="https://www.R-project.org/">https://www.R-project.org/</a>. 
+</p>
+R Core Team (2014).
+\emph{R: A Language and Environment for Statistical Computing}.
+R Foundation for Statistical Computing, Vienna, Austria.
+\url{https://www.R-project.org/}.
+bibentry(bibtype = "Manual",
+         title = "R: A Language and Environment for Statistical Computing",
+         author = person(given = "R Core Team"),
+         organization = "R Foundation for Statistical Computing",
+         address = "Vienna, Austria",
+         year = "2014",
+         url = "https://www.R-project.org/")
+R Core Team (2014). _R: A Language and Environment for Statistical
+Computing_. R Foundation for Statistical Computing, Vienna, Austria.
+<URL: https://www.R-project.org/>.
+
+Canty A, Ripley BD (2012). _boot: Bootstrap R (S-PLUS) Functions_. R
+package version 1.3-4, <URL: https://CRAN.R-project.org/package=boot>.
+
+Davison AC, Hinkley DV (1997). _Bootstrap Methods and Their
+Applications_. Cambridge University Press, Cambridge. ISBN
+0-521-57391-2, <URL: http://statwww.epfl.ch/davison/BMA/>.
+Davison AC, Hinkley DV (1997). _Bootstrap Methods and Their
+Applications_. Cambridge University Press, Cambridge. ISBN
+0-521-57391-2, <URL: http://statwww.epfl.ch/davison/BMA/>.
+Davison AC, Hinkley DV (1997). _Bootstrap Methods and Their
+Applications_. Cambridge University Press, Cambridge. ISBN
+0-521-57391-2, <URL: http://statwww.epfl.ch/davison/BMA/>.
+[[1]]
+[1] "Angelo Canty [aut] (S original)"                                                             
+[2] "Brian D. Ripley <ripley@stats.ox.ac.uk> [aut, trl, cre] (R port, author of parallel support)"
+
+[[2]]
+[1] "Anthony C. Davison [aut]" "David V. Hinkley [aut]"  
+
+[1] "Angelo Canty [aut] (S original)"                                                             
+[2] "Brian D. Ripley <ripley@stats.ox.ac.uk> [aut, trl, cre] (R port, author of parallel support)"
+[1] "ripley@stats.ox.ac.uk"
+NULL
+@Manual{boot-package,
+  title = {boot: Bootstrap R (S-PLUS) Functions},
+  author = {Angelo Canty and Brian D. Ripley},
+  year = {2012},
+  note = {R package version 1.3-4},
+  url = {https://CRAN.R-project.org/package=boot},
+}
+
+@Book{boot-book,
+  title = {Bootstrap Methods and Their Applications},
+  author = {Anthony C. Davison and David V. Hinkley},
+  year = {1997},
+  publisher = {Cambridge University Press},
+  address = {Cambridge},
+  isbn = {0-521-57391-2},
+  url = {http://statwww.epfl.ch/davison/BMA/},
+}
+bibentry(bibtype = "Manual",
+         key = "boot-package",
+         title = "boot: Bootstrap R (S-PLUS) Functions",
+         author = c(person(given = "Angelo",
+                           family = "Canty",
+                           role = "aut",
+                           comment = "S original"),
+                    person(given = c("Brian", "D."),
+                           family = "Ripley",
+                           role = c("aut", "trl", "cre"),
+                           email = "ripley@stats.ox.ac.uk",
+                           comment = "R port, author of parallel support")),
+         year = "2012",
+         note = "R package version 1.3-4",
+         url = "https://CRAN.R-project.org/package=boot")
+
+bibentry(bibtype = "Book",
+         key = "boot-book",
+         title = "Bootstrap Methods and Their Applications",
+         author = c(person(given = c("Anthony", "C."),
+                           family = "Davison",
+                           role = "aut"),
+                    person(given = c("David", "V."),
+                           family = "Hinkley",
+                           role = "aut")),
+         year = "1997",
+         publisher = "Cambridge University Press",
+         address = "Cambridge",
+         isbn = "0-521-57391-2",
+         url = "http://statwww.epfl.ch/davison/BMA/")
+c(bibentry(bibtype = "Manual",
+           key = "boot-package",
+           title = "boot: Bootstrap R (S-PLUS) Functions",
+           author = c(person(given = "Angelo",
+                             family = "Canty",
+                             role = "aut",
+                             comment = "S original"),
+                      person(given = c("Brian", "D."),
+                             family = "Ripley",
+                             role = c("aut", "trl", "cre"),
+                             email = "ripley@stats.ox.ac.uk",
+                             comment = "R port, author of parallel support")),
+           year = "2012",
+           note = "R package version 1.3-4",
+           url = "https://CRAN.R-project.org/package=boot"),
+  bibentry(bibtype = "Book",
+           key = "boot-book",
+           title = "Bootstrap Methods and Their Applications",
+           author = c(person(given = c("Anthony", "C."),
+                             family = "Davison",
+                             role = "aut"),
+                      person(given = c("David", "V."),
+                             family = "Hinkley",
+                             role = "aut")),
+           year = "1997",
+           publisher = "Cambridge University Press",
+           address = "Cambridge",
+           isbn = "0-521-57391-2",
+           url = "http://statwww.epfl.ch/davison/BMA/"))
+Warning in example(factor, echo = FALSE) : no help found for ‘factor’
+Warning in example(table, echo = FALSE) : no help found for ‘table’
+Warning in example(ftable, echo = FALSE) : no help found for ‘ftable’
+Warning in example(lm, echo = FALSE, ask = FALSE) :
+  no help found for ‘lm’
+Warning in example(str, echo = FALSE) : no help found for ‘str’
+R objects in .GlobalEnv environment is shown in browser ‘/usr/bin/open’ 
+R objects in environment(af12) environment is shown in browser ‘/usr/bin/open’ 
+[1] ""                                                                 
+[2] "Call:"                                                            
+[3] "glm(formula = case ~ spontaneous + induced, family = binomial(), "
+[4] "    data = infert)"                                               
+[5] ""                                                                 
+[1] "[1] 2" "[1] 4"
+[1] "[1] 4"
+    alnum alpha blank digit graph punct upper xdigit
+‘0’  TRUE FALSE FALSE  TRUE  TRUE FALSE FALSE   TRUE
+‘1’  TRUE FALSE FALSE  TRUE  TRUE FALSE FALSE   TRUE
+‘2’  TRUE FALSE FALSE  TRUE  TRUE FALSE FALSE   TRUE
+‘3’  TRUE FALSE FALSE  TRUE  TRUE FALSE FALSE   TRUE
+‘4’  TRUE FALSE FALSE  TRUE  TRUE FALSE FALSE   TRUE
+‘5’  TRUE FALSE FALSE  TRUE  TRUE FALSE FALSE   TRUE
+‘6’  TRUE FALSE FALSE  TRUE  TRUE FALSE FALSE   TRUE
+‘7’  TRUE FALSE FALSE  TRUE  TRUE FALSE FALSE   TRUE
+‘8’  TRUE FALSE FALSE  TRUE  TRUE FALSE FALSE   TRUE
+‘9’  TRUE FALSE FALSE  TRUE  TRUE FALSE FALSE   TRUE
+‘:’ FALSE FALSE FALSE FALSE  TRUE  TRUE FALSE  FALSE
+‘;’ FALSE FALSE FALSE FALSE  TRUE  TRUE FALSE  FALSE
+‘<’ FALSE FALSE FALSE FALSE  TRUE  TRUE FALSE  FALSE
+‘=’ FALSE FALSE FALSE FALSE  TRUE  TRUE FALSE  FALSE
+‘>’ FALSE FALSE FALSE FALSE  TRUE  TRUE FALSE  FALSE
+‘?’ FALSE FALSE FALSE FALSE  TRUE  TRUE FALSE  FALSE
+‘@’ FALSE FALSE FALSE FALSE  TRUE  TRUE FALSE  FALSE
+‘A’  TRUE  TRUE FALSE FALSE  TRUE FALSE  TRUE   TRUE
+‘B’  TRUE  TRUE FALSE FALSE  TRUE FALSE  TRUE   TRUE
+‘C’  TRUE  TRUE FALSE FALSE  TRUE FALSE  TRUE   TRUE
+‘D’  TRUE  TRUE FALSE FALSE  TRUE FALSE  TRUE   TRUE
+‘E’  TRUE  TRUE FALSE FALSE  TRUE FALSE  TRUE   TRUE
+‘F’  TRUE  TRUE FALSE FALSE  TRUE FALSE  TRUE   TRUE
+‘ ’ FALSE FALSE  TRUE FALSE FALSE FALSE FALSE  FALSE
+‘ ’ FALSE FALSE FALSE FALSE  TRUE  TRUE FALSE  FALSE
+[1]  TRUE  TRUE  TRUE FALSE FALSE FALSE
+[1] "ΆΈΉ"
+[1] TRUE TRUE TRUE
+pr
+  FALSE    TRUE 
+ 985191 1111960 
+
+To cite R in publications use:
+
+  R Core Team (2022). R: A language and environment for statistical
+  computing. R Foundation for Statistical Computing, Vienna, Austria.
+  URL https://www.R-project.org/.
+
+A BibTeX entry for LaTeX users is
+
+  @Manual{,
+    title = {R: A Language and Environment for Statistical Computing},
+    author = {{R Core Team}},
+    organization = {R Foundation for Statistical Computing},
+    address = {Vienna, Austria},
+    year = {2022},
+    url = {https://www.R-project.org/},
+  }
+
+We have invested a lot of time and effort in creating R, please cite it
+when using it for data analysis. See also ‘citation("pkgname")’ for
+citing R packages.
+
+@Manual{,
+  title = {R: A Language and Environment for Statistical Computing},
+  author = {{R Core Team}},
+  organization = {R Foundation for Statistical Computing},
+  address = {Vienna, Austria},
+  year = {2022},
+  url = {https://www.R-project.org/},
+}
+[1] "(R Core Team 2013; Canty and Ripley 2012)"
+[1] "R Core Team [3]; Canty and Ripley [1]"
+[1] R Core Team (2013). _R: A Language and Environment for Statistical
+Computing_. R Foundation for Statistical Computing, Vienna, Austria.
+<URL: https://www.R-project.org/>.
+
+[2] Canty A, Ripley BD (2012). _boot: Bootstrap R (S-PLUS) Functions_.
+R package version 1.3-4, <URL:
+https://CRAN.R-project.org/package=boot>.
+
+[3] Davison AC, Hinkley DV (1997). _Bootstrap Methods and Their
+Applications_. Cambridge University Press, Cambridge. ISBN
+0-521-57391-2, <URL: http://statwww.epfl.ch/davison/BMA/>.
+     [,1] [,2] [,3] [,4] [,5] [,6]
+[1,] "a"  "a"  "a"  "b"  "b"  "c" 
+[2,] "b"  "c"  "d"  "c"  "d"  "d" 
+  [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+ [38] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+ [75] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+[112] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+[149] 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+[186] 2 2 2 2 2 2 2 2 2 2 2 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+[223] 3 3 3 3 3 3 3 3 3 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 5 5 5 5 5 6
+     [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11] [,12] [,13] [,14]
+[1,]    3    3    2    2    2    2    2    2    3     2     2     2     2     2
+[2,]    0    0    1    1    1    0    0    0    0     1     1     1     0     0
+[3,]    0    0    0    0    0    1    1    0    0     0     0     0     1     1
+[4,]    0    0    0    0    0    0    0    1    0     0     0     0     0     0
+     [,15] [,16] [,17] [,18] [,19] [,20] [,21] [,22] [,23] [,24] [,25] [,26]
+[1,]     2     2     2     2     2     2     2     1     1     1     1     1
+[2,]     0     1     1     1     0     0     0     2     2     1     1     1
+[3,]     0     0     0     0     1     1     0     0     0     1     1     0
+[4,]     1     0     0     0     0     0     1     0     0     0     0     1
+     [,27] [,28] [,29] [,30] [,31] [,32] [,33] [,34] [,35] [,36] [,37] [,38]
+[1,]     1     1     1     1     1     1     1     1     1     1     3     2
+[2,]     2     1     1     1     1     1     1     0     0     0     0     1
+[3,]     0     1     1     0     1     1     0     2     1     1     0     0
+[4,]     0     0     0     1     0     0     1     0     1     1     0     0
+     [,39] [,40] [,41] [,42] [,43] [,44] [,45] [,46] [,47] [,48] [,49] [,50]
+[1,]     2     2     2     2     2     2     2     2     2     2     2     1
+[2,]     1     1     0     0     0     1     1     1     0     0     0     2
+[3,]     0     0     1     1     0     0     0     0     1     1     0     0
+[4,]     0     0     0     0     1     0     0     0     0     0     1     0
+     [,51] [,52] [,53] [,54] [,55] [,56] [,57] [,58] [,59] [,60] [,61] [,62]
+[1,]     1     1     1     1     1     1     1     1     1     1     1     1
+[2,]     2     1     1     1     2     1     1     1     1     1     1     0
+[3,]     0     1     1     0     0     1     1     0     1     1     0     2
+[4,]     0     0     0     1     0     0     0     1     0     0     1     0
+     [,63] [,64] [,65] [,66] [,67] [,68] [,69] [,70] [,71] [,72] [,73] [,74]
+[1,]     1     1     2     2     2     2     2     2     1     1     1     1
+[2,]     0     0     1     1     1     0     0     0     2     2     1     1
+[3,]     1     1     0     0     0     1     1     0     0     0     1     1
+[4,]     1     1     0     0     0     0     0     1     0     0     0     0
+     [,75] [,76] [,77] [,78] [,79] [,80] [,81] [,82] [,83] [,84] [,85] [,86]
+[1,]     1     1     1     1     1     1     1     1     1     1     1     1
+[2,]     1     2     1     1     1     1     1     1     0     0     0     2
+[3,]     0     0     1     1     0     1     1     0     2     1     1     0
+[4,]     1     0     0     0     1     0     0     1     0     1     1     0
+     [,87] [,88] [,89] [,90] [,91] [,92] [,93] [,94] [,95] [,96] [,97] [,98]
+[1,]     1     1     1     1     1     1     1     1     1     1     1     1
+[2,]     2     1     1     1     2     1     1     1     1     1     1     0
+[3,]     0     1     1     0     0     1     1     0     1     1     0     2
+[4,]     0     0     0     1     0     0     0     1     0     0     1     0
+     [,99] [,100] [,101] [,102] [,103] [,104] [,105] [,106] [,107] [,108]
+[1,]     1      1      0      0      0      0      0      0      0      0
+[2,]     0      0      3      2      2      2      2      2      2      1
+[3,]     1      1      0      1      1      0      1      1      0      2
+[4,]     1      1      0      0      0      1      0      0      1      0
+     [,109] [,110] [,111] [,112] [,113] [,114] [,115] [,116] [,117] [,118]
+[1,]      0      0      0      0      0      0      0      0      0      0
+[2,]      1      1      2      2      2      1      1      1      1      1
+[3,]      1      1      1      1      0      2      1      1      2      1
+[4,]      1      1      0      0      1      0      1      1      0      1
+     [,119] [,120]
+[1,]      0      0
+[2,]      1      0
+[3,]      1      2
+[4,]      1      1
+[1] -1
+[1] 1
+[1] 1 2 2
+No documentation for ‘USArrests’ in specified packages and libraries:
+you could try ‘??USArrests’
+no demos found
+
+Use ‘demo(package = .packages(all.available = TRUE))’
+to list the demos in all *available* packages.
+no demos found
+[1] "/usr/lib/R/library/stats/demo/lm.glm.R"
+Warning in example(InsectSprays) : no help found for ‘InsectSprays’
+Warning in example("smooth", package = "stats", lib.loc = .Library) :
+  no help found for ‘smooth’
+Warning in example(quantile, setRNG = TRUE) :
+  no help found for ‘quantile’
+Warning in example(quantile, setRNG = TRUE) :
+  no help found for ‘quantile’
+[1] -0.6264538
+[1] 1.329799
+Warning in FUN(X[[i]], ...) : no help found for ‘lm’
+Warning in FUN(X[[i]], ...) : no help found for ‘lm.fit’
+Warning in FUN(X[[i]], ...) : no help found for ‘lm.influence’
+Warning in FUN(X[[i]], ...) : no help found for ‘lm.wfit’
+          lm       lm.fit lm.influence      lm.wfit 
+           0            0            0            0 
+[1] TRUE
+[1] FALSE
+* Mix dry ingredients thoroughly.
+* Pour in wet ingredients.
+* Mix for 10 minutes.
+* Bake for one hour at 300 degrees.
+1. Mix dry ingredients thoroughly.
+2. Pour in wet ingredients.
+3. Mix for 10 minutes.
+4. Bake for one hour at 300 degrees.
+  i. Mix dry ingredients thoroughly.
+ ii. Pour in wet ingredients.
+iii. Mix for 10 minutes.
+ iv. Bake for one hour at 300 degrees.
+     A. Mix dry ingredients thoroughly.
+     B. Pour in wet ingredients.
+     C. Mix for 10 minutes.
+     D. Bake for one hour at 300 degrees.
+A single object matching ‘format.dist’ was found
+It was found in the following places
+  registered S3 method for format from namespace stats
+  namespace:stats
+with value
+
+function (x, ...) 
+format(as.vector(x), ...)
+<environment: namespace:stats>
+A single object matching ‘simpleLoess’ was found
+It was found in the following places
+  namespace:stats
+with value
+
+function (y, x, weights, span = 0.75, degree = 2L, parametric = FALSE, 
+    drop.square = FALSE, normalize = TRUE, statistics = "approximate", 
+    surface = "interpolate", cell, iterations, iterTrace, trace.hat) 
+{
+    D <- as.integer(NCOL(x))
+    if (is.na(D)) 
+        stop("invalid NCOL(X)")
+    if (D > 4) 
+        stop("only 1-4 predictors are allowed")
+    N <- as.integer(NROW(x))
+    if (is.na(N)) 
+        stop("invalid NROW(X)")
+    if (!N || !D) 
+        stop("invalid 'x'")
+    if (length(y) != N) 
+        stop("invalid 'y'")
+    x <- as.matrix(x)
+    storage.mode(x) <- "double"
+    storage.mode(y) <- "double"
+    storage.mode(weights) <- "double"
+    max.kd <- max(N, 200L)
+    robust <- rep_len(1, N)
+    if (normalize && D > 1L) {
+        trim <- ceiling(0.1 * N)
+        divisor <- sqrt(apply(apply(x, 2L, sort)[seq(trim + 1, 
+            N - trim), , drop = FALSE], 2L, var))
+        x <- x/rep(divisor, rep_len(N, D))
+    }
+    else divisor <- 1
+    sum.drop.sqr <- sum(drop.square)
+    sum.parametric <- sum(parametric)
+    nonparametric <- sum(!parametric)
+    order.parametric <- order(parametric)
+    x <- x[, order.parametric]
+    order.drop.sqr <- (2L - drop.square)[order.parametric]
+    if (degree == 1L && sum.drop.sqr) 
+        stop("specified the square of a factor predictor to be dropped when degree = 1")
+    if (D == 1L && sum.drop.sqr) 
+        stop("specified the square of a predictor to be dropped with only one numeric predictor")
+    if (sum.parametric == D) 
+        stop("specified parametric for all predictors")
+    if (length(span) != 1L) 
+        stop("invalid argument 'span'")
+    if (length(cell) != 1L) 
+        stop("invalid argument 'cell'")
+    if (length(degree) != 1L) 
+        stop("invalid argument 'degree'")
+    if (surface == "interpolate" && statistics == "approximate") 
+        statistics <- if (trace.hat == "exact") 
+            "1.approx"
+        else "2.approx"
+    surf.stat <- paste(surface, statistics, sep = "/")
+    do.rob <- (iterations > 1L)
+    if (!do.rob && iterTrace) {
+        warning(sprintf(gettext("iterTrace = %d is not obeyed since iterations = %d"), 
+            iterTrace, iterations))
+        iterTrace <- FALSE
+    }
+    no.st <- (statistics == "none")
+    if (iterTrace) 
+        wRSS <- NA
+    for (j in seq_len(iterations)) {
+        no.st <- (statistics == "none")
+        z <- .C(C_loess_raw, y, x, if (no.st) 1 else weights, 
+            if (no.st) weights * robust else 1, D, N, as.double(span), 
+            as.integer(degree), as.integer(nonparametric), as.integer(order.drop.sqr), 
+            as.integer(sum.drop.sqr), as.double(span * cell), 
+            as.character(surf.stat), fitted.values = double(N), 
+            parameter = integer(7L), a = integer(max.kd), xi = double(max.kd), 
+            vert = double(2L * D), vval = double((D + 1L) * max.kd), 
+            diagonal = double(N), trL = double(1L), delta1 = double(1L), 
+            delta2 = double(1L), as.integer(surf.stat == "interpolate/exact"))
+        fitted <- z$fitted.values
+        fitted.residuals <- y - fitted
+        if (j < iterations) {
+            if (iterTrace) 
+                old.rob <- robust
+            robust <- .Fortran(C_lowesw, fitted.residuals, N, 
+                robust = double(N), integer(N))$robust
+        }
+        if (j == 1) {
+            trace.hat.out <- z$trL
+            one.delta <- z$delta1
+            two.delta <- z$delta2
+            if (do.rob) {
+                statistics <- "none"
+                surf.stat <- paste(surface, statistics, sep = "/")
+                no.st <- TRUE
+            }
+        }
+        if (iterTrace) {
+            oSS <- wRSS
+            wRSS <- sum(weights * fitted.residuals^2)
+            del.SS <- abs(oSS - wRSS)/(if (wRSS == 0) 
+                1
+            else wRSS)
+            d.rob.w <- if (j < iterations) 
+                sum(abs(old.rob - robust))/sum(robust)
+            else NA
+            cat(sprintf("iter.%2d: wRSS=%#14.9g, rel. changes: (SS=%#9.4g, rob.wgts=%#9.4g)\n", 
+                j, wRSS, del.SS, d.rob.w))
+            if (iterTrace >= 2 && j < iterations) {
+                cat("robustness weights:\n")
+                print(quantile(robust, probs = (0:8)/8), digits = 3)
+            }
+        }
+    }
+    if (surface == "interpolate") {
+        pars <- setNames(z$parameter, c("d", "n", "vc", "nc", 
+            "nv", "liv", "lv"))
+        enough <- (D + 1L) * pars[["nv"]]
+        fit.kd <- list(parameter = pars, a = z$a[1L:pars[4L]], 
+            xi = z$xi[1L:pars[4L]], vert = z$vert, vval = z$vval[1L:enough])
+    }
+    if (do.rob) {
+        pseudovalues <- .Fortran(C_lowesp, N, as.double(y), fitted, 
+            as.double(weights), as.double(robust), integer(N), 
+            pseudovalues = double(N))$pseudovalues
+        zz <- .C(C_loess_raw, pseudovalues, x, weights, weights, 
+            D, N, as.double(span), as.integer(degree), as.integer(nonparametric), 
+            as.integer(order.drop.sqr), as.integer(sum.drop.sqr), 
+            as.double(span * cell), as.character(surf.stat), 
+            fitted = double(N), parameter = integer(7L), a = integer(max.kd), 
+            xi = double(max.kd), vert = double(2L * D), vval = double((D + 
+                1L) * max.kd), diagonal = double(N), trL = double(1L), 
+            delta1 = double(1L), delta2 = double(1L), 0L)[["fitted"]]
+        pseudo.resid <- pseudovalues - zz
+    }
+    sum.squares <- if (do.rob) 
+        sum(weights * pseudo.resid^2)
+    else sum(weights * fitted.residuals^2)
+    enp <- one.delta + 2 * trace.hat.out - N
+    s <- sqrt(sum.squares/one.delta)
+    structure(class = "loess", list(n = N, fitted = fitted, residuals = fitted.residuals, 
+        enp = enp, s = s, one.delta = one.delta, two.delta = two.delta, 
+        trace.hat = trace.hat.out, divisor = divisor, robust = robust, 
+        pars = list(span = span, degree = degree, normalize = normalize, 
+            parametric = parametric, drop.square = drop.square, 
+            surface = surface, cell = cell, family = if (iterations <= 
+                1L) "gaussian" else "symmetric", trace.hat = trace.hat, 
+            iterations = iterations), kd = if (surface == "interpolate") fit.kd))
+}
+<environment: namespace:stats>
+function (x, ...) 
+NULL
+function (fname, envir, warnS4only = TRUE) 
+{
+    if (!exists(fname, mode = "function", envir = envir)) 
+        return("")
+    f <- get(fname, mode = "function", envir = envir)
+    if (.isMethodsDispatchOn() && methods::is(f, "genericFunction")) {
+        fMethsEnv <- methods::getMethodsForDispatch(f)
+        meths <- as.list(fMethsEnv, all.names = TRUE)
+        r <- meths[grep("^ANY\\b", names(meths))]
+        if (any(ddm <- vapply(r, methods::is, logical(1L), "derivedDefaultMethod"))) 
+            f <- r[ddm][[1]]@.Data
+        else if (warnS4only) 
+            warning(gettextf("'%s' is a formal generic function; S3 methods will not likely be found", 
+                fname), domain = NA)
+    }
+    isUMEbrace <- function(e) {
+        for (ee in as.list(e[-1L])) if (nzchar(res <- isUME(ee))) 
+            return(res)
+        ""
+    }
+    isUMEif <- function(e) {
+        if (length(e) == 3L) 
+            isUME(e[[3L]])
+        else {
+            if (nzchar(res <- isUME(e[[3L]]))) 
+                res
+            else if (nzchar(res <- isUME(e[[4L]]))) 
+                res
+            else ""
+        }
+    }
+    isUME <- function(e) {
+        if (is.call(e) && (is.name(e[[1L]]) || is.character(e[[1L]]))) {
+            switch(as.character(e[[1L]]), UseMethod = as.character(e[[2L]]), 
+                `{` = isUMEbrace(e), `if` = isUMEif(e), "")
+        }
+        else ""
+    }
+    isUME(body(f))
+}
+<environment: namespace:utils>
+[1] FALSE
+function (object, newdata, ...) 
+{
+    if (missing(newdata)) 
+        return(fitted(object))
+    if (!is.null(object$terms)) {
+        newdata <- as.data.frame(newdata)
+        rn <- row.names(newdata)
+        Terms <- delete.response(object$terms)
+        m <- model.frame(Terms, newdata, na.action = na.omit, 
+            xlev = object$xlevels)
+        if (!is.null(cl <- attr(Terms, "dataClasses"))) 
+            .checkMFClasses(cl, m)
+        keep <- match(row.names(m), rn)
+        x <- model.matrix(Terms, m, contrasts.arg = object$contrasts)
+    }
+    else {
+        x <- as.matrix(newdata)
+        keep <- seq_len(nrow(x))
+        rn <- dimnames(x)[[1L]]
+    }
+    if (ncol(x) != object$p) 
+        stop("wrong number of columns in 'x'")
+    res <- matrix(NA, length(keep), object$q, dimnames = list(rn, 
+        object$ynames))
+    res[keep, ] <- matrix(.Fortran(C_pppred, as.integer(nrow(x)), 
+        as.double(x), as.double(object$smod), y = double(nrow(x) * 
+            object$q), double(2 * object$smod[4L]))$y, ncol = object$q)
+    drop(res)
+}
+<environment: namespace:stats>
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] FALSE
+[1] "a" "b" "c" "d" "e" "f"
+ [1] "a" "b" "c" "d" "e" "f" "g" "h" "i" "j" "k" "l" "m" "n" "o" "p" "q" "r" "s"
+[20] "t"
+      lag quarterly revenue price index income level market potential
+ [1,]               8.79636     4.70997      5.82110          12.9699
+ [2,]               8.79236     4.70217      5.82558          12.9733
+ [3,]               8.79137     4.68944      5.83112          12.9774
+ [4,]               8.81486     4.68558      5.84046          12.9806
+ [5,]               8.81301     4.64019      5.85036          12.9831
+ [6,]               8.90751     4.62553      5.86464          12.9854
+ [7,]               8.93673     4.61991      5.87769          12.9900
+ [8,]               8.96161     4.61654      5.89763          12.9943
+ [9,]               8.96044     4.61407      5.92574          12.9992
+[10,]               9.00868     4.60766      5.94232          13.0033
+[1] 8.79236 8.79137 8.81486 8.81301 8.90751 8.93673
+, , Setosa
+
+     Sepal L. Sepal W. Petal L. Petal W.
+[1,]      5.1      3.5      1.4      0.2
+[2,]      4.9      3.0      1.4      0.2
+[3,]      4.7      3.2      1.3      0.2
+[4,]      4.6      3.1      1.5      0.2
+[5,]      5.0      3.6      1.4      0.2
+[6,]      5.4      3.9      1.7      0.4
+
+, , Versicolor
+
+     Sepal L. Sepal W. Petal L. Petal W.
+[1,]      7.0      3.2      4.7      1.4
+[2,]      6.4      3.2      4.5      1.5
+[3,]      6.9      3.1      4.9      1.5
+[4,]      5.5      2.3      4.0      1.3
+[5,]      6.5      2.8      4.6      1.5
+[6,]      5.7      2.8      4.5      1.3
+
+, , Virginica
+
+     Sepal L. Sepal W. Petal L. Petal W.
+[1,]      6.3      3.3      6.0      2.5
+[2,]      5.8      2.7      5.1      1.9
+[3,]      7.1      3.0      5.9      2.1
+[4,]      6.3      2.9      5.6      1.8
+[5,]      6.5      3.0      5.8      2.2
+[6,]      7.6      3.0      6.6      2.1
+
+, , Setosa
+
+     Sepal L. Sepal W.
+[1,]      5.1      3.5
+[2,]      4.9      3.0
+[3,]      4.7      3.2
+[4,]      4.6      3.1
+[5,]      5.0      3.6
+[6,]      5.4      3.9
+
+, , Versicolor
+
+     Sepal L. Sepal W.
+[1,]      7.0      3.2
+[2,]      6.4      3.2
+[3,]      6.9      3.1
+[4,]      5.5      2.3
+[5,]      6.5      2.8
+[6,]      5.7      2.8
+
+, , Virginica
+
+     Sepal L. Sepal W.
+[1,]      6.3      3.3
+[2,]      5.8      2.7
+[3,]      7.1      3.0
+[4,]      6.3      2.9
+[5,]      6.5      3.0
+[6,]      7.6      3.0
+
+, , Setosa
+
+     Sepal L. Sepal W. Petal L.
+[1,]      5.1      3.5      1.4
+[2,]      4.9      3.0      1.4
+[3,]      4.7      3.2      1.3
+[4,]      4.6      3.1      1.5
+[5,]      5.0      3.6      1.4
+[6,]      5.4      3.9      1.7
+
+, , Versicolor
+
+     Sepal L. Sepal W. Petal L.
+[1,]      7.0      3.2      4.7
+[2,]      6.4      3.2      4.5
+[3,]      6.9      3.1      4.9
+[4,]      5.5      2.3      4.0
+[5,]      6.5      2.8      4.6
+[6,]      5.7      2.8      4.5
+
+[1] "u" "v" "w" "x" "y" "z"
+ [1] "g" "h" "i" "j" "k" "l" "m" "n" "o" "p" "q" "r" "s" "t" "u" "v" "w" "x" "y"
+[20] "z"
+      lag quarterly revenue price index income level market potential
+[34,]               9.69405     4.30909      6.17369          13.1459
+[35,]               9.69958     4.30909      6.16135          13.1520
+[36,]               9.68683     4.30552      6.18231          13.1593
+[37,]               9.71774     4.29627      6.18768          13.1579
+[38,]               9.74924     4.27839      6.19377          13.1625
+[39,]               9.77536     4.27789      6.20030          13.1664
+      income level market potential
+[36,]      6.18231          13.1593
+[37,]      6.18768          13.1579
+[38,]      6.19377          13.1625
+[39,]      6.20030          13.1664
+[1] 9.69958 9.68683 9.71774 9.74924 9.77536 9.79424
+, , Setosa
+
+      Sepal L. Sepal W. Petal L. Petal W.
+[45,]      5.1      3.8      1.9      0.4
+[46,]      4.8      3.0      1.4      0.3
+[47,]      5.1      3.8      1.6      0.2
+[48,]      4.6      3.2      1.4      0.2
+[49,]      5.3      3.7      1.5      0.2
+[50,]      5.0      3.3      1.4      0.2
+
+, , Versicolor
+
+      Sepal L. Sepal W. Petal L. Petal W.
+[45,]      5.6      2.7      4.2      1.3
+[46,]      5.7      3.0      4.2      1.2
+[47,]      5.7      2.9      4.2      1.3
+[48,]      6.2      2.9      4.3      1.3
+[49,]      5.1      2.5      3.0      1.1
+[50,]      5.7      2.8      4.1      1.3
+
+, , Virginica
+
+      Sepal L. Sepal W. Petal L. Petal W.
+[45,]      6.7      3.3      5.7      2.5
+[46,]      6.7      3.0      5.2      2.3
+[47,]      6.3      2.5      5.0      1.9
+[48,]      6.5      3.0      5.2      2.0
+[49,]      6.2      3.4      5.4      2.3
+[50,]      5.9      3.0      5.1      1.8
+
+, , Setosa
+
+      Petal L. Petal W.
+[45,]      1.9      0.4
+[46,]      1.4      0.3
+[47,]      1.6      0.2
+[48,]      1.4      0.2
+[49,]      1.5      0.2
+[50,]      1.4      0.2
+
+, , Versicolor
+
+      Petal L. Petal W.
+[45,]      4.2      1.3
+[46,]      4.2      1.2
+[47,]      4.2      1.3
+[48,]      4.3      1.3
+[49,]      3.0      1.1
+[50,]      4.1      1.3
+
+, , Virginica
+
+      Petal L. Petal W.
+[45,]      5.7      2.5
+[46,]      5.2      2.3
+[47,]      5.0      1.9
+[48,]      5.2      2.0
+[49,]      5.4      2.3
+[50,]      5.1      1.8
+
+, , Versicolor
+
+      Sepal W. Petal L. Petal W.
+[45,]      2.7      4.2      1.3
+[46,]      3.0      4.2      1.2
+[47,]      2.9      4.2      1.3
+[48,]      2.9      4.3      1.3
+[49,]      2.5      3.0      1.1
+[50,]      2.8      4.1      1.3
+
+, , Virginica
+
+      Sepal W. Petal L. Petal W.
+[45,]      3.3      5.7      2.5
+[46,]      3.0      5.2      2.3
+[47,]      2.5      5.0      1.9
+[48,]      3.0      5.2      2.0
+[49,]      3.4      5.4      2.3
+[50,]      3.0      5.1      1.8
+
+, , 2
+
+      [,2] [,3] [,4]
+[45,]  2.7  4.2  1.3
+[46,]  3.0  4.2  1.2
+[47,]  2.9  4.2  1.3
+[48,]  2.9  4.3  1.3
+[49,]  2.5  3.0  1.1
+[50,]  2.8  4.1  1.3
+
+, , 3
+
+      [,2] [,3] [,4]
+[45,]  3.3  5.7  2.5
+[46,]  3.0  5.2  2.3
+[47,]  2.5  5.0  1.9
+[48,]  3.0  5.2  2.0
+[49,]  3.4  5.4  2.3
+[50,]  3.0  5.1  1.8
+
+, , 1
+
+     [,1] [,2] [,3]
+[1,]  2.7  4.2  1.3
+[2,]  3.0  4.2  1.2
+[3,]  2.9  4.2  1.3
+[4,]  2.9  4.3  1.3
+[5,]  2.5  3.0  1.1
+[6,]  2.8  4.1  1.3
+
+, , 2
+
+     [,1] [,2] [,3]
+[1,]  3.3  5.7  2.5
+[2,]  3.0  5.2  2.3
+[3,]  2.5  5.0  1.9
+[4,]  3.0  5.2  2.0
+[5,]  3.4  5.4  2.3
+[6,]  3.0  5.1  1.8
+
+[1] 31
+                                   
+379         return(y)              
+380     }                          
+381     if (logical.return)        
+382         TRUE                   
+383     else invisible(.packages())
+384 }                              
+                                               
+                          "Survived" "No" "Yes"
+ "Class" "Sex"    "Age"                        
+ "1st"   "Male"   "Child"               0     5
+                  "Adult"             118    57
+         "Female" "Child"               0     1
+                  "Adult"               4   140
+ "2nd"   "Male"   "Child"               0    11
+                  "Adult"             154    14
+ chr [1:14, 1:16] "base" "compiler" "datasets" "grDevices" "graphics" ...
+ - attr(*, "dimnames")=List of 2
+  ..$ : chr [1:14] "base" "compiler" "datasets" "grDevices" ...
+  ..$ : chr [1:16] "Package" "LibPath" "Version" "Priority" ...
+          Package     Version Priority Depends
+base      "base"      "4.1.3" "base"   NA     
+compiler  "compiler"  "4.1.3" "base"   NA     
+datasets  "datasets"  "4.1.3" "base"   NA     
+grDevices "grDevices" "4.1.3" "base"   NA     
+graphics  "graphics"  "4.1.3" "base"   NA     
+grid      "grid"      "4.1.3" "base"   NA     
+methods   "methods"   "4.1.3" "base"   NA     
+parallel  "parallel"  "4.1.3" "base"   NA     
+splines   "splines"   "4.1.3" "base"   NA     
+stats     "stats"     "4.1.3" "base"   NA     
+stats4    "stats4"    "4.1.3" "base"   NA     
+tcltk     "tcltk"     "4.1.3" "base"   NA     
+tools     "tools"     "4.1.3" "base"   NA     
+utils     "utils"     "4.1.3" "base"   NA     
+
+Part of R 4.1.3 
+             14 
+[1] FALSE
+[1] TRUE
+[1] TRUE
+[1] FALSE
+[1] TRUE
+[1] FALSE
+[1] FALSE
+[1] "as.list.data.frame"     "as.matrix.data.frame"   "is.na.data.frame"      
+[4] "row.names.data.frame"   "row.names<-.data.frame"
+[1] NA
+Warning in example(glm, echo = FALSE) : no help found for ‘glm’
+ll : List of 26
+bzfile : function (description, open = "", encoding = getOption("encoding"), compression = 9)  
+close.srcfile : function (con, ...)  
+close.srcfilealias : function (con, ...)  
+env.profile : function (env)  
+file : function (description = "", open = "", blocking = TRUE, encoding = getOption("encoding"), 
+    raw = FALSE, method = getOption("url.method", "default"))  
+file.access : function (names, mode = 0)  
+file.append : function (file1, file2)  
+file.choose : function (new = FALSE)  
+file.copy : function (from, to, overwrite = recursive, recursive = FALSE, copy.mode = TRUE, 
+    copy.date = FALSE)  
+file.create : function (..., showWarnings = TRUE)  
+file.exists : function (...)  
+file.info : function (..., extra_cols = TRUE)  
+file.link : function (from, to)  
+file.mode : function (...)  
+file.mtime : function (...)  
+file.path : function (..., fsep = .Platform$file.sep)  
+file.remove : function (...)  
+file.rename : function (from, to)  
+file.show : function (..., header = rep("", nfiles), title = "R Information", delete.file = FALSE, 
+    pager = getOption("pager"), encoding = "")  
+file.size : function (...)  
+file.symlink : function (from, to)  
+gzfile : function (description, open = "", encoding = getOption("encoding"), compression = 6)  
+list.files : function (path = ".", pattern = NULL, all.files = FALSE, full.names = FALSE, 
+    recursive = FALSE, ignore.case = FALSE, include.dirs = FALSE, no.. = FALSE)  
+memory.profile : function ()  
+nullfile : function ()  
+open.srcfile : function (con, line, ...)  
+open.srcfilealias : function (con, line, ...)  
+open.srcfilecopy : function (con, line, ...)  
+print.srcfile : function (x, ...)  
+srcfile : function (filename, encoding = getOption("encoding"), Enc = "unknown")  
+srcfilealias : function (filename, srcfile)  
+srcfilecopy : function (filename, lines, timestamp = Sys.time(), isFile = FALSE)  
+summary.srcfile : function (object, ...)  
+system.file : function (..., package = "base", lib.loc = NULL, mustWork = FALSE)  
+tempfile : function (pattern = "file", tmpdir = tempdir(), fileext = "")  
+xzfile : function (description, open = "", encoding = getOption("encoding"), compression = 6)  
+[1] "aa" "r"  "x"  "y" 
+Warning in packageDescription(pkg) : no package 'MASS' was found
+[1] NA
+[1] format print 
+see '?methods' for accessing help and source code
+ [1] summary.Date                   summary.POSIXct               
+ [3] summary.POSIXlt                summary.aov                   
+ [5] summary.aovlist*               summary.aspell*               
+ [7] summary.check_packages_in_dir* summary.connection            
+ [9] summary.data.frame             summary.default               
+[11] summary.ecdf*                  summary.factor                
+[13] summary.glm                    summary.infl*                 
+[15] summary.lm                     summary.loess*                
+[17] summary.manova                 summary.matrix                
+[19] summary.mlm*                   summary.nls*                  
+[21] summary.packageStatus*         summary.ppr*                  
+[23] summary.prcomp*                summary.princomp*             
+[25] summary.proc_time              summary.srcfile               
+[27] summary.srcref                 summary.stepfun               
+[29] summary.stl*                   summary.table                 
+[31] summary.tukeysmooth*           summary.warnings              
+see '?methods' for accessing help and source code
+ [1] TukeyHSD     coef         coerce       extractAIC   initialize  
+ [6] model.tables print        proj         se.contrast  show        
+[11] slotsFromS3  summary      vcov        
+see '?methods' for accessing help and source code
+ [1] TukeyHSD.aov*               coef.aov*                  
+ [3] coerce,oldClass,S3-method   extractAIC.aov*            
+ [5] initialize,oldClass-method  model.tables.aov*          
+ [7] print.aov*                  proj.aov*                  
+ [9] se.contrast.aov*            show,oldClass-method       
+[11] slotsFromS3,oldClass-method summary.aov                
+[13] vcov.aov*                  
+see '?methods' for accessing help and source code
+[1] [[.Date            [[.POSIXct         [[.POSIXlt         [[.bibentry*      
+[5] [[.data.frame      [[.dendrogram*     [[.factor          [[.numeric_version
+[9] [[.person*        
+see '?methods' for accessing help and source code
+[1] $,envRefClass-method        $,refObjectGenerator-method
+[3] $.DLLInfo                   $.bibentry*                
+[5] $.package_version           $.person*                  
+see '?methods' for accessing help and source code
+[1] $<-,data.frame-method         $<-,envRefClass-method       
+[3] $<-,localRefClass-method      $<-,refObjectGenerator-method
+[5] $<-.bibentry*                 $<-.data.frame               
+[7] $<-.person*                  
+see '?methods' for accessing help and source code
+[1] +.Date   +.POSIXt
+see '?methods' for accessing help and source code
+[1] Math,nonStructure-method Math,structure-method    Math.Date               
+[4] Math.POSIXt              Math.data.frame          Math.difftime           
+[7] Math.factor             
+see '?methods' for accessing help and source code
+Warning in .S3methods(generic.function, class, envir) :
+  function 'axis' appears not to be S3 generic; found functions that look like S3 methods
+[1] axis.Date    axis.POSIXct
+see '?methods' for accessing help and source code
+      meth                                 
+[65,] "format.person*"                     
+[66,] "format.roman*"                      
+[67,] "format.subdir_tests*"               
+[68,] "format.summarize_CRAN_check_status*"
+[69,] "format.summaryDefault"              
+[70,] "format.undoc*"                      
+List of 2
+ $ a: num 1
+ $ b:List of 2
+  ..$ c: chr "a"
+  ..$ d: logi FALSE
+List of 3
+ $ a: num 1
+ $ b:List of 2
+  ..$ c: chr "a"
+  ..$ d: logi TRUE
+ $ e: num 2
+[1] "172.29.1.0"
+1200 bytes
+54160 bytes
+[1] "128.8 Kb"
+105072 bytes
+102.6 Kb
+102.6 KiB
+105.1 kB
+         Kb          KB         KiB 
+ "102.6 Kb"  "102.6 Kb" "102.6 KiB" 
+                     [,1]
+loadNamespace      190016
+library            131936
+[<-.data.frame     107824
+tryCatch            97016
+rbind.data.frame    79552
+parseNamespaceFile  79240
+seq.default         67904
+merge.data.frame    67784
+source              65336
+data.frame          56864
+Creating directories ...
+Creating DESCRIPTION ...
+Creating NAMESPACE ...
+Creating Read-and-delete-me ...
+Saving functions and data ...
+Making help files ...
+Done.
+Further steps are described in './mypkg/Read-and-delete-me'.
+[1] "base"
+[1] "Karl Pearson <pearson@stats.heaven>"
+[1] "Ronald Aylmer Fisher"
+[[1]]
+[1] "Pearson"
+
+[[2]]
+[1] "Fisher"
+
+[[1]]
+[1] "pearson@stats.heaven"
+
+[[2]]
+NULL
+
+[1] "pearson@stats.heaven"
+[1] "Angelo Canty [aut] (S original, <http://statwww.epfl.ch/davison/BMA/library.html>)"
+[2] "Brian D. Ripley <ripley@stats.ox.ac.uk> [aut, trl, cre] (R port)"                  
+[1] "Angelo Canty [aut] (S original, <http://statwww.epfl.ch/davison/BMA/library.html>)"
+[2] "Brian D. Ripley <ripley@stats.ox.ac.uk> [aut, trl, cre] (R port)"                  
+[1] "Canty, Angelo (Role(s): aut)"             
+[2] "Ripley, Brian D. (Role(s): aut, trl, cre)"
+[1] "Angelo Canty and Brian D. Ripley"
+[1] "Canty, Angelo and Ripley, Brian D."
+[1] "Achim Zeileis (<https://orcid.org/0000-0003-0918-3766>)"
+Created file named ‘plot.default.Rd’.
+Edit the file and move it to the appropriate directory.
+Created file named ‘interactive.Rd’.
+Edit the file and move it to the appropriate directory.
+Created file named ‘women.Rd’.
+Edit the file and move it to the appropriate directory.
+Created file named ‘sunspots.Rd’.
+Edit the file and move it to the appropriate directory.
+Created file named ‘sunspots.Rd’.
+Edit the file and move it to the appropriate directory.
+   V1 V2 V3
+1 1.2 34 56
+2 9.8 76 54
+  V1 V2 V3 V4
+1  1  2  5  6
+2  9  8  5  4
+    V1   V2 V3 V4 V5 V6
+1 12.3 45.6 AB 98 76 54
+            V1
+1   0.00123456
+2 123.45670000
+  V1 V2  V3
+1  1 23 456
+2  9 87 654
+  V1  V2
+1  1 456
+2  9 654
+  V1 V2 V3  V4
+1  1 NA 23  NA
+2  9 NA 87 654
+  V1 V2 V3  V4 V5 V6 V7
+1  1 NA 23 456 98 76 54
+  X1
+1  2
+2  3
+3  4
+4  5
+5  6
+6  7
+7  8
+8  9
+9 10
+  V1 V2 V3
+1  1 NA NA
+2  2 NA NA
+3  3 NA NA
+4  4 NA NA
+5  5 NA NA
+6  6  7 NA
+7  8  9 10
+  a b
+1 1 2
+2 3 4
+$mean
+[1] 0 1
+
+$vcov
+     [,1] [,2]
+[1,]    1    1
+[2,]    1    0
+
+attr(,"class")
+[1] "relistable" "list"      
+function(x) {
+  x + 1 # A comment, kept as part of the source
+}
+[1] "srcref"
+[1] "srcref"      "srcfile"     "wholeSrcref"
+function (x) 
+{
+    x + 1
+}
+[1] "srcref"      "srcfile"     "wholeSrcref"
+NULL
+[1] I   II  III IV  V  
+[1] III
+[1] MMXXII
+[1] MMXXII  MMXII   MMII    MCMXCII MCMXXII
+Warning in .roman2numeric(x[!dig.x]) : invalid roman numeral: IIIIII
+ [1] <NA> I    II   III  <NA> I    II   III  IV   V    <NA>
+ [1] <NA> I    II   III  <NA> I    II   III  IV   V   
+ [1] NA  1  2  3 NA  1  2  3  4  5
+[1] I   II  III I   II  III IV  V  
+[1] ""
+[1] 1
+weight ~ group
+   ctrl trt1 trt2
+1  4.17 4.81 6.31
+2  5.58 4.17 5.12
+3  5.18 4.41 5.54
+4  6.11 3.59 5.50
+5  4.50 5.87 5.37
+6  4.61 3.83 5.29
+7  5.17 6.03 4.92
+8  4.53 4.89 6.15
+9  5.33 4.32 5.80
+10 5.14 4.69 5.26
+   values  ind
+1    4.17 ctrl
+2    5.58 ctrl
+3    5.18 ctrl
+4    6.11 ctrl
+5    4.50 ctrl
+6    4.61 ctrl
+7    5.17 ctrl
+8    4.53 ctrl
+9    5.33 ctrl
+10   5.14 ctrl
+11   4.81 trt1
+12   4.17 trt1
+13   4.41 trt1
+14   3.59 trt1
+15   5.87 trt1
+16   3.83 trt1
+17   6.03 trt1
+18   4.89 trt1
+19   4.32 trt1
+20   4.69 trt1
+21   6.31 trt2
+22   5.12 trt2
+23   5.54 trt2
+24   5.50 trt2
+25   5.37 trt2
+26   5.29 trt2
+27   4.92 trt2
+28   6.15 trt2
+29   5.80 trt2
+30   5.26 trt2
+   values  ind
+1    4.81 trt1
+2    4.17 trt1
+3    4.41 trt1
+4    3.59 trt1
+5    5.87 trt1
+6    3.83 trt1
+7    6.03 trt1
+8    4.89 trt1
+9    4.32 trt1
+10   4.69 trt1
+11   6.31 trt2
+12   5.12 trt2
+13   5.54 trt2
+14   5.50 trt2
+15   5.37 trt2
+16   5.29 trt2
+17   4.92 trt2
+18   6.15 trt2
+19   5.80 trt2
+20   5.26 trt2
+ int [1:12] 1 2 3 4 5 6 7 8 9 10 ...
+function (name, pos = -1L, envir = as.environment(pos), all.names = FALSE, 
+    pattern, sorted = TRUE)  
+function (name)  
+'data.frame':	39 obs. of  5 variables:
+ $ y                    : Time-Series  from 1962 to 1972: 8.79 8.79 8.81 8.81 8.91 ...
+ $ lag.quarterly.revenue: num  8.8 8.79 8.79 8.81 8.81 ...
+ $ price.index          : num  4.71 4.7 4.69 4.69 4.64 ...
+ $ income.level         : num  5.82 5.83 5.83 5.84 5.85 ...
+ $ market.potential     : num  13 13 13 13 13 ...
+function (object, ...)  
+List of 28
+ $ double.eps               : num 2.2204460492503130808e-16
+ $ double.neg.eps           : num 1.1102230246251565404e-16
+ $ double.xmin              : num 2.2250738585072013831e-308
+ $ double.xmax              : num 1.7976931348623157081e+308
+ $ double.base              : int 2
+ $ double.digits            : int 53
+ $ double.rounding          : int 5
+ $ double.guard             : int 0
+ $ double.ulp.digits        : int -52
+ $ double.neg.ulp.digits    : int -53
+ $ double.exponent          : int 11
+ $ double.min.exp           : int -1022
+ $ double.max.exp           : int 1024
+ $ integer.max              : int 2147483647
+ $ sizeof.long              : int 4
+ $ sizeof.longlong          : int 8
+ $ sizeof.longdouble        : int 16
+ $ sizeof.pointer           : int 4
+ $ longdouble.eps           : num 1.9259299443872358531e-34
+ $ longdouble.neg.eps       : num 9.6296497219361792653e-35
+ $ longdouble.digits        : int 113
+ $ longdouble.rounding      : int 5
+ $ longdouble.guard         : int 0
+ $ longdouble.ulp.digits    : int -112
+ $ longdouble.neg.ulp.digits: int -113
+ $ longdouble.exponent      : int 15
+ $ longdouble.min.exp       : int -16382
+ $ longdouble.max.exp       : int 16384
+List of 4
+ $ coefficients: Named num [1:2] 1.18e-15 1.00
+  ..- attr(*, "names")= chr [1:2] "Intercept" "X"
+ $ residuals   : num [1:9] -9.01e-16 1.72e-15 -2.47e-16 -2.25e-16 -2.03e-16 ...
+ $ intercept   : logi TRUE
+ $ qr          :List of 6
+  ..$ qt   : num [1:9] -1.50e+01 7.75 -2.22e-16 0.00 2.22e-16 ...
+  ..$ qr   : num [1:9, 1:2] -3 0.333 0.333 0.333 0.333 ...
+  .. ..- attr(*, "dimnames")=List of 2
+  .. .. ..$ : NULL
+  .. .. ..$ : chr [1:2] "Intercept" "X"
+  ..$ qraux: num [1:2] 1.33 1.26
+  ..$ rank : int 2
+  ..$ pivot: int [1:2] 1 2
+  ..$ tol  : num 1e-07
+  ..- attr(*, "class")= chr "qr"
+List of 4
+ $ coefficients: Named num [1:2] 1.18e-15 1.00
+  ..- attr(*, "names")= chr [1:2] "Intercept" "X"
+ $ residuals   : num [1:9] -9.01e-16 1.72e-15 -2.47e-16 -2.25e-16 -2.03e-16 ...
+ $ intercept   : logi TRUE
+ $ qr          :List of 6
+  ..- attr(*, "class")= chr "qr"
+List of 4
+ $ coefficients: Named num [1:2] 1.18e-15 1.00
+  ..- attr(*, "names")= chr [1:2] "Intercept" "X"
+ $ residuals   : num [1:9] -9.01e-16 1.72e-15 -2.47e-16 -2..
+ $ intercept   : logi TRUE
+ $ qr          :List of 6
+  ..$ qt   : num [1:9] -1.50e+01 7.75 -2.22e-16 0.00 2.22e..
+  ..$ qr   : num [1:9, 1:2] -3 0.333 0.333 0.333 0.333 ...
+  .. ..- attr(*, "dimnames")=List of 2
+  .. .. ..$ : NULL
+  .. .. ..$ : chr [1:2] "Intercept" "X"
+  ..$ qraux: num [1:2] 1.33 1.26
+  ..$ rank : int 2
+  ..$ pivot: int [1:2] 1 2
+  ..$ tol  : num 1e-07
+  ..- attr(*, "class")= chr "qr"
+List of 4
+$ coefficients: Named num [1:2] 1.18e-15 1.00
+..- attr(*, "names")= chr [1:2] "Intercept" "X"
+$ residuals : num [1:9] -9.01e-16 1.72e-15 -2.47e-16
+   -2.25e-16 -2.03e-16 ...
+$ intercept : logi TRUE
+$ qr :List of 6
+..$ qt : num [1:9] -1.50e+01 7.75 -2.22e-16 0.00 2.22e-16
+   ...
+..$ qr : num [1:9, 1:2] -3 0.333 0.333 0.333 0.333 ...
+.. ..- attr(*, "dimnames")=List of 2
+.. .. ..$ : NULL
+.. .. ..$ : chr [1:2] "Intercept" "X"
+..$ qraux: num [1:2] 1.33 1.26
+..$ rank : int 2
+..$ pivot: int [1:2] 1 2
+..$ tol : num 1e-07
+..- attr(*, "class")= chr "qr"
+List of 64
+ $ CBoundsCheck         : logi FALSE
+ $ HTTPUserAgent        : chr "R (4.1.3 wasm32-unknown-emscripten wasm32 emscripten)"
+ $ OutDec               : chr "."
+ $ PCRE_limit_recursion : logi NA
+ $ PCRE_study           : logi FALSE
+ $ PCRE_use_JIT         : logi TRUE
+ $ add.smooth           : logi TRUE
+ $ bitmapType           : chr "Xlib"
+ $ browser              : chr "/usr/bin/open"
+ $ browserNLdisabled    : logi FALSE
+ $ check.bounds         : logi FALSE
+ $ citation.bibtex.max  : int 1
+ $ continue             : chr "+ "
+ $ contrasts            : Named chr [1:2] "contr.treatment" "contr.poly"
+  ..- attr(*, "names")= chr [1:2] "unordered" "ordered"
+ $ defaultPackages      : chr [1:6] "datasets" "utils" "grDevices" "graphics" ...
+ $ demo.ask             : chr "default"
+ $ deparse.cutoff       : int 60
+ $ device               :function (file = if (onefile) "Rplots.pdf" else "Rplot%03d.pdf", width, 
+    height, onefile, family, title, fonts, version, paper, encoding, bg, 
+    fg, pointsize, pagecentre, colormodel, useDingbats, useKerning, fillOddEven, 
+    compress)  
+ $ device.ask.default   : logi FALSE
+ $ digits               : int 7
+ $ dvipscmd             : chr "dvips"
+ $ echo                 : logi TRUE
+ $ editor               : chr "vi"
+ $ encoding             : chr "native.enc"
+ $ example.ask          : chr "default"
+ $ expressions          : int 400
+ $ help.search.types    : chr [1:3] "vignette" "demo" "help"
+ $ help.try.all.packages: logi FALSE
+ $ internet.info        : int 2
+ $ keep.parse.data      : logi TRUE
+ $ keep.parse.data.pkgs : logi FALSE
+ $ keep.source          : logi TRUE
+ $ keep.source.pkgs     : logi FALSE
+ $ locatorBell          : logi TRUE
+ $ mailer               : chr "mailto"
+ $ matprod              : chr "default"
+ $ max.print            : int 99999
+ $ menu.graphics        : logi TRUE
+ $ na.action            : chr "na.omit"
+ $ nwarnings            : int 50
+ $ pager                : chr "/usr/lib/R/bin/pager"
+ $ papersize            : chr "a4"
+ $ pdfviewer            : chr "/usr/bin/open"
+ $ pkgType              : chr "source"
+ $ printcmd             : chr "lpr"
+ $ prompt               : chr "> "
+ $ repos                : Named chr "@CRAN@"
+  ..- attr(*, "names")= chr "CRAN"
+ $ scipen               : num 0
+ $ show.coef.Pvalues    : logi TRUE
+ $ show.error.messages  : logi TRUE
+ $ show.signif.stars    : logi TRUE
+ $ str                  :List of 7
+  ..$ strict.width     : chr "no"
+  ..$ digits.d         : int 3
+  ..$ vec.len          : int 4
+  ..$ list.len         : int 99
+  ..$ deparse.lines    : NULL
+  ..$ drop.deparse.attr: logi TRUE
+  ..$ formatNum        :function (x, ...)  
+ $ str.dendrogram.last  : chr "`"
+ $ stringsAsFactors     : logi FALSE
+ $ texi2dvi             : chr "/usr/bin/texi2dvi"
+ $ timeout              : int 60
+ $ ts.S.compat          : logi FALSE
+ $ ts.eps               : num 1e-05
+ $ unzip                : chr "/usr/bin/unzip"
+ $ useFancyQuotes       : logi TRUE
+ $ verbose              : logi FALSE
+ $ warn                 : int 1
+ $ warning.length       : int 1000
+ $ width                : int 80
+List of 72
+ $ xlog     : logi FALSE
+ $ ylog     : logi FALSE
+ $ adj      : num 0.5
+ $ ann      : logi TRUE
+ $ ask      : logi FALSE
+ $ bg       : chr "transparent"
+ $ bty      : chr "o"
+ $ cex      : num 1
+ $ cex.axis : num 1
+ $ cex.lab  : num 1
+ $ cex.main : num 1.2
+ $ cex.sub  : num 1
+ $ cin      : num [1:2] 0.15 0.2
+ $ col      : chr "black"
+ $ col.axis : chr "black"
+ $ col.lab  : chr "black"
+ $ col.main : chr "black"
+ $ col.sub  : chr "black"
+ $ cra      : num [1:2] 10.8 14.4
+ $ crt      : num 0
+ $ csi      : num 0.2
+ $ cxy      : num [1:2] 0.026 0.0388
+ $ din      : num [1:2] 7 7
+ $ err      : int 0
+ $ family   : chr ""
+ $ fg       : chr "black"
+ $ fig      : num [1:4] 0 1 0 1
+ $ fin      : num [1:2] 7 7
+ $ font     : int 1
+ $ font.axis: int 1
+ $ font.lab : int 1
+ $ font.main: int 2
+ $ font.sub : int 1
+ $ lab      : int [1:3] 5 5 7
+ $ las      : int 0
+ $ lend     : chr "round"
+ $ lheight  : num 1
+ $ ljoin    : chr "round"
+ $ lmitre   : num 10
+ $ lty      : chr "solid"
+ $ lwd      : num 1
+ $ mai      : num [1:4] 1.02 0.82 0.82 0.42
+ $ mar      : num [1:4] 5.1 4.1 4.1 2.1
+ $ mex      : num 1
+ $ mfcol    : int [1:2] 1 1
+ $ mfg      : int [1:4] 1 1 1 1
+ $ mfrow    : int [1:2] 1 1
+ $ mgp      : num [1:3] 3 1 0
+ $ mkh      : num 0.001
+ $ new      : logi FALSE
+ $ oma      : num [1:4] 0 0 0 0
+ $ omd      : num [1:4] 0 1 0 1
+ $ omi      : num [1:4] 0 0 0 0
+ $ page     : logi TRUE
+ $ pch      : int 1
+ $ pin      : num [1:2] 5.76 5.16
+ $ plt      : num [1:4] 0.117 0.94 0.146 0.883
+ $ ps       : int 12
+ $ pty      : chr "m"
+ $ smo      : num 1
+ $ srt      : num 0
+ $ tck      : num NA
+ $ tcl      : num -0.5
+ $ usr      : num [1:4] 0 1 0 1
+ $ xaxp     : num [1:3] 0 1 5
+ $ xaxs     : chr "r"
+ $ xaxt     : chr "s"
+ $ xpd      : logi FALSE
+ $ yaxp     : num [1:3] 0 1 5
+ $ yaxs     : chr "r"
+ $ yaxt     : chr "s"
+ $ ylbias   : num 0.2
+ chr [1:12] "a" "b" NA NA NA "f" "g" "h" "i" "j" "k" "l"
+List of 2
+ $ a: chr "A"
+ $ L:List of 100
+  ..$ : int 1
+  ..$ : int 2
+  ..$ : int 3
+  ..$ : int 4
+  ..$ : int 5
+  ..$ : int 6
+  ..$ : int 7
+  ..$ : int 8
+  ..$ : int 9
+  .. [list output truncated]
+[1] 2600
+ chr "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefg"| __truncated__
+ chr "abcdefghijklmnopqrstuvwxyzabcdefghi"| __truncated__
+chr
+   "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstu"..
+   __truncated__
+c.ch w.ch c.fw w.fw 
+  64   64   32   64 
+ chr "ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵ"| __truncated__
+ chr "ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶ"| __truncated__
+ chr "ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶ"| __truncated__
+ chr "ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷ"| __truncated__
+ chr "ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷ"| __truncated__
+ chr "ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸ"| __truncated__
+ chr "ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆ"
+ chr "A._B._C._D._E._F._G._H._I._J._K._L._M._N._O"| __truncated__
+ chr "A._B._C._D._E._F._G._H._I._J._K._L._M._N._O."| __truncated__
+ chr "A._B._C._D._E._F._G._H._I._J._K._L._M._N._O._"| __truncated__
+ chr "A._B._C._D._E._F._G._H._I._J._K._L._M._N._O._P"| __truncated__
+ chr "A._B._C._D._E._F._G._H._I._J._K._L._M._N._O._P."| __truncated__
+ chr "A._B._C._D._E._F._G._H._I._J._K._L._M._N._O._P._"| __truncated__
+ chr "A._B._C._D._E._F._G._H._I._J._K._L._M._N._O._P._Q._R._S._T._U._V"
+List of 4
+$ coefficients: Named num [1:2] 1.18e-15 1.00
+..- attr(*, "names")= chr [1:2] "Intercept" "X"
+$ residuals : num [1:9] -9.01e-16 1.72e-15 -2.47e-16
+   -2.25e-16 -2.03e-16 ...
+$ intercept : logi TRUE
+$ qr :List of 6
+..$ qt : num [1:9] -1.50e+01 7.75 -2.22e-16 0.00 2.22e-16
+   ...
+..$ qr : num [1:9, 1:2] -3 0.333 0.333 0.333 0.333 ...
+.. ..- attr(*, "dimnames")=List of 2
+.. .. ..$ : NULL
+.. .. ..$ : chr [1:2] "Intercept" "X"
+..$ qraux: num [1:2] 1.33 1.26
+..$ rank : int 2
+..$ pivot: int [1:2] 1 2
+..$ tol : num 1e-07
+..- attr(*, "class")= chr "qr"
+List of 64
+$ CBoundsCheck : logi FALSE
+$ HTTPUserAgent : chr "R (4.1.3 wasm32-unknown-emscripten
+   wasm32 emscripten)"
+$ OutDec : chr "."
+$ PCRE_limit_recursion : logi NA
+$ PCRE_study : logi FALSE
+$ PCRE_use_JIT : logi TRUE
+$ add.smooth : logi TRUE
+$ bitmapType : chr "Xlib"
+$ browser : chr "/usr/bin/open"
+$ browserNLdisabled : logi FALSE
+$ check.bounds : logi FALSE
+$ citation.bibtex.max : int 1
+$ continue : chr "+ "
+$ contrasts : Named chr [1:2] "contr.treatment"
+   "contr.poly"
+..- attr(*, "names")= chr [1:2] "unordered" "ordered"
+$ defaultPackages : chr [1:6] "datasets" "utils"
+   "grDevices" "graphics" ...
+$ demo.ask : chr "default"
+$ deparse.cutoff : int 60
+$ device :function (file = if (onefile) "Rplots.pdf" else
+   "Rplot%03d.pdf",
+width, height, onefile, family, title, fonts, version,
+paper, encoding, bg, fg, pointsize, pagecentre,
+colormodel, useDingbats, useKerning, fillOddEven,
+compress)
+$ device.ask.default : logi FALSE
+$ digits : int 7
+$ dvipscmd : chr "dvips"
+$ echo : logi TRUE
+$ editor : chr "vi"
+$ encoding : chr "native.enc"
+$ example.ask : chr "default"
+$ expressions : int 400
+$ help.search.types : chr [1:3] "vignette" "demo" "help"
+$ help.try.all.packages: logi FALSE
+$ internet.info : int 2
+$ keep.parse.data : logi TRUE
+$ keep.parse.data.pkgs : logi FALSE
+$ keep.source : logi TRUE
+$ keep.source.pkgs : logi FALSE
+$ locatorBell : logi TRUE
+$ mailer : chr "mailto"
+$ matprod : chr "default"
+$ max.print : int 99999
+$ menu.graphics : logi TRUE
+$ na.action : chr "na.omit"
+$ nwarnings : int 50
+$ pager : chr "/usr/lib/R/bin/pager"
+$ papersize : chr "a4"
+$ pdfviewer : chr "/usr/bin/open"
+$ pkgType : chr "source"
+$ printcmd : chr "lpr"
+$ prompt : chr "> "
+$ repos : Named chr "@CRAN@"
+..- attr(*, "names")= chr "CRAN"
+$ scipen : num 0
+$ show.coef.Pvalues : logi TRUE
+$ show.error.messages : logi TRUE
+$ show.signif.stars : logi TRUE
+$ str :List of 7
+..$ strict.width : chr "wrap"
+..$ digits.d : int 3
+..$ vec.len : int 4
+..$ list.len : int 99
+..$ deparse.lines : NULL
+..$ drop.deparse.attr: logi TRUE
+..$ formatNum :function (x, ...)
+$ str.dendrogram.last : chr "`"
+$ stringsAsFactors : logi FALSE
+$ texi2dvi : chr "/usr/bin/texi2dvi"
+$ timeout : int 60
+$ ts.S.compat : logi FALSE
+$ ts.eps : num 1e-05
+$ unzip : chr "/usr/bin/unzip"
+$ useFancyQuotes : logi TRUE
+$ verbose : logi FALSE
+$ warn : int 1
+$ warning.length : int 1000
+$ width : int 60
+ int [1:20(1d)] 1 2 3 4 5 1 2 3 4 5 ...
+ Factor w/ 0 levels: 
+'data.frame':	0 obs. of  0 variables
+ language {  A + B; list(C, D) }
+ - attr(*, "srcref")=List of 3
+  ..$ : 'srcref' int [1:8] 1 12 1 12 12 12 1 1
+  ..$ : 'srcref' int [1:8] 1 14 1 16 14 16 1 1
+  ..$ : 'srcref' int [1:8] 1 19 1 28 19 28 1 1
+ - attr(*, "wholeSrcref")= 'srcref' int [1:8] 1 0 1 30 0 30 1 1
+Loading required package: stats4
+Warning in dpois(y, lambda = ymax/(1 + x/xh), log = TRUE) :
+  NaNs produced
+Formal class 'mle' [package "stats4"] with 10 slots
+  ..@ call     : language mle(minuslogl = ll)
+  ..@ coef     : Named num [1:2] 24.99 3.06
+  .. ..- attr(*, "names")= chr [1:2] "ymax" "xh"
+  ..@ fullcoef : Named num [1:2] 24.99 3.06
+  .. ..- attr(*, "names")= chr [1:2] "ymax" "xh"
+  ..@ fixed    : Named num [1:2] NA NA
+  .. ..- attr(*, "names")= chr [1:2] "ymax" "xh"
+  ..@ vcov     : num [1:2, 1:2] 17.85 -3.72 -3.72 1.07
+  .. ..- attr(*, "dimnames")=List of 2
+  .. .. ..$ : chr [1:2] "ymax" "xh"
+  .. .. ..$ : chr [1:2] "ymax" "xh"
+  ..@ min      : num 28.6
+  ..@ details  :List of 6
+  .. ..$ par        : Named num [1:2] 24.99 3.06
+  .. .. ..- attr(*, "names")= chr [1:2] "ymax" "xh"
+  .. ..$ value      : num 28.6
+  .. ..$ counts     : Named int [1:2] 25 18
+  .. .. ..- attr(*, "names")= chr [1:2] "function" "gradient"
+  .. ..$ convergence: int 0
+  .. ..$ message    : NULL
+  .. ..$ hessian    : num [1:2, 1:2] 0.203 0.706 0.706 3.388
+  .. .. ..- attr(*, "dimnames")=List of 2
+  .. .. .. ..$ : chr [1:2] "ymax" "xh"
+  .. .. .. ..$ : chr [1:2] "ymax" "xh"
+  ..@ minuslogl:function (ymax = 15, xh = 6)  
+  .. ..- attr(*, "srcref")= 'srcref' int [1:8] 1 7 2 52 7 52 1 2
+  ..@ nobs     : int NA
+  ..@ method   : chr "BFGS"
+   chr start  end
+1 chr1     1 1000
+[1] "numeric"
+[1] "integer"
+'data.frame':	32 obs. of  11 variables:
+ $ mpg : num  21 21 22.8 21.4 18.7 18.1 14.3 24.4 22.8 19.2 ...
+ $ cyl : num  6 6 4 6 8 6 8 4 4 6 ...
+ $ disp: num  160 160 108 258 360 ...
+ $ hp  : num  110 110 93 110 175 105 245 62 95 123 ...
+ $ drat: num  3.9 3.9 3.85 3.08 3.15 2.76 3.21 3.69 3.92 3.92 ...
+ $ wt  : num  2.62 2.88 2.32 3.21 3.44 ...
+ $ qsec: num  16.5 17 18.6 19.4 17 ...
+ $ vs  : num  0 0 1 1 0 1 0 1 1 1 ...
+ $ am  : num  1 1 1 0 0 0 0 0 0 0 ...
+ $ gear: num  4 4 4 3 3 3 3 4 4 4 ...
+ $ carb: num  4 4 1 1 2 1 4 2 2 4 ...
+'data.frame':	32 obs. of  11 variables:
+ $ mpg : num  21 21 22.8 21.4 18.7 18.1 14.3 24.4 22.8 19.2 ...
+ $ cyl : int  6 6 4 6 8 6 8 4 4 6 ...
+ $ disp: num  160 160 108 258 360 ...
+ $ hp  : int  110 110 93 110 175 105 245 62 95 123 ...
+ $ drat: num  3.9 3.9 3.85 3.08 3.15 2.76 3.21 3.69 3.92 3.92 ...
+ $ wt  : num  2.62 2.88 2.32 3.21 3.44 ...
+ $ qsec: num  16.5 17 18.6 19.4 17 ...
+ $ vs  : int  0 0 1 1 0 1 0 1 1 1 ...
+ $ am  : int  1 1 1 0 0 0 0 0 0 0 ...
+ $ gear: int  4 4 4 3 3 3 3 4 4 4 ...
+ $ carb: int  4 4 1 1 2 1 4 2 2 4 ...
+[1] "double"
+[1] "integer"
+[1] A B B A
+Levels: A B
+[1] A B B A
+Levels: A B
+[1] "A" "B" "B" "A"
+[1] "A" "B" "B" "A"

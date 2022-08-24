@@ -1,0 +1,708 @@
+Error in findFuncStrict("myFun") : No versions of myFun visible
+Error in findFuncStrict("lm") : lm is ambiguous: 2 versions
+function(fName) {
+  allF <- findFunction(fName)
+  if(length(allF) == 0)
+    stop("No versions of ",fName," visible")
+  else if(length(allF) > 1)
+    stop(fName," is ambiguous: ", length(allF), " versions")
+  else
+    get(fName, allF[[1]])
+}
+setMethod("plot", "A",
+function (x, y, ...) 
+{
+    cat("A meth\n")
+}
+)
+Virtual Class "language" [package "methods"]
+
+No Slots, prototype of class "name"
+
+Known Subclasses: 
+Class "name", directly
+Class "call", directly
+Class "{", directly
+Class "if", directly
+Class "<-", directly
+Class "for", directly
+Class "while", directly
+Class "repeat", directly
+Class "(", directly
+Class ".name", by class "name", distance 2, with explicit coerce
+[1] "call"     "language"
+if (NA) TRUE else FALSE
+[1] "if"       "language"
+for (NAME in logical()) NULL
+[1] "for"      "language"
+  x          y z
+1 1 -0.6264538 i
+2 2  0.1836433 o
+Object of class "myFrame"
+  x          y z
+1 1 -0.6264538 i
+2 2  0.1836433 o
+Slot "timestamps":
+
+[1] "Class numeric for f3"
+[1] "Class numeric for f3"
+[1] "Class classA for f3"
+[1] "Class classA for f3"
+Error in Math.data.frame(iris) : 
+  non-numeric-alike variable(s) in data frame: Species
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] 8.0 8.1 8.5 5.7 3.1
+[1] 14.00 17.60  4.39 11.32 15.72
+[1]  0.0 -1.7  5.3 -1.0 -5.8
+[1] "f"
+B0 method called with s0 = 1 
+Formal class 'B0' [package ".GlobalEnv"] with 1 slot
+  ..@ s0: num 1
+[1] "first test : B0"
+B0 method called with s0 = 1 
+Formal class 'B0' [package ".GlobalEnv"] with 1 slot
+  ..@ s0: num 1
+[1] "default : B0"
+B0 method called with s0 = 2 
+Formal class 'B1' [package ".GlobalEnv"] with 2 slots
+  ..@ s1: chr "Testing B1"
+  ..@ s0: num 2
+[1] "Testing B1 : B1"
+B0 method called with s0 = 2 
+Formal class 'B1' [package ".GlobalEnv"] with 2 slots
+  ..@ s1: chr "Testing B1"
+  ..@ s0: num 2
+[1] "default : B1"
+B0 method called with s0 = -10 
+Formal class 'B1' [package ".GlobalEnv"] with 2 slots
+  ..@ s1: chr "Modified x"
+  ..@ s0: num -10
+[1] "Testing B2 : B1"
+B0 method called with s0 = -10 
+Formal class 'B1' [package ".GlobalEnv"] with 2 slots
+  ..@ s1: chr "Modified x"
+  ..@ s0: num -10
+[1] "B1 method : B1"
+trying to get slot "s0" from an object of a basic class ("numeric") with no slots 
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "S4"
+Loading required package: stats4
+[[1]]
+[1] "Math"
+
+[[1]]
+[1] "Compare"
+
+[[2]]
+[1] "Ops"
+
+[1] "+"   "-"   "*"   "^"   "%%"  "%/%" "/"  
+ [1] "abs"      "sign"     "sqrt"     "ceiling"  "floor"    "trunc"   
+ [7] "cummax"   "cummin"   "cumprod"  "cumsum"   "exp"      "expm1"   
+[13] "log"      "log10"    "log2"     "log1p"    "cos"      "cosh"    
+[19] "sin"      "sinh"     "tan"      "tanh"     "acos"     "acosh"   
+[25] "asin"     "asinh"    "atan"     "atanh"    "cospi"    "sinpi"   
+[31] "tanpi"    "gamma"    "lgamma"   "digamma"  "trigamma"
+[1] "Arith"   "Compare" "Logic"  
+[1] "mlm" "lm" 
+Object of class "myReg"
+
+Call:
+lm(formula = sepal ~ Petal.Length + Petal.Width + Species, data = datasets::iris)
+
+Coefficients:
+                   Sepal.Width  Sepal.Length
+(Intercept)         3.048497     3.682982   
+Petal.Length        0.154676     0.905946   
+Petal.Width         0.623446    -0.005995   
+Speciesversicolor  -1.764104    -1.598362   
+Speciesvirginica   -2.196357    -2.112647   
+
+Slot "title":
+[1] "Sepal Regression for iris data"
+
+[1] TRUE
+[1] "mlm"
+[1] "mlm" "lm" 
+[1] "mlm" "lm" 
+[1] TRUE
+Warning in removeMethods("Complex") :
+  cannot remove methods for ‘Complex’ in locked environment/package ‘methods’
+[1] TRUE
+[1] TRUE
+Virtual Class "structure" [package "methods"]
+
+No Slots, prototype of class "array"
+
+Extends: 
+Class "vector", directly, with explicit coerce
+
+Known Subclasses: 
+Class "array", directly
+Class "matrix", by class "array", distance 2
+Class "ts", directly
+Class "mts", by class "matrix", distance 3
+Class "ts" [package "methods"]
+
+Slots:
+                                    
+Name:      .Data       tsp  .S3Class
+Class:    vector   numeric character
+
+Extends: 
+Class "structure", directly
+Class "oldClass", directly
+Class "vector", by class "structure", distance 2, with explicit coerce
+
+Known Subclasses: "mts"
+Object of class "ts"
+Time Series:
+Start = 1 
+End = 1 
+Frequency = 1 
+[1] NA
+Formal class 'ts' [package "methods"] with 3 slots
+  ..@ .Data   : logi NA
+  ..@ tsp     : num [1:3] 1 1 1
+  ..@ .S3Class: chr "ts"
+Function: Ops (package base)
+e1="array", e2="array"
+e1="array", e2="structure"
+e1="nonStructure", e2="nonStructure"
+e1="nonStructure", e2="vector"
+e1="structure", e2="array"
+e1="structure", e2="structure"
+e1="structure", e2="vector"
+e1="vector", e2="nonStructure"
+e1="vector", e2="structure"
+
+Function: coerce (package methods)
+from="ANY", to="NULL"
+from="ANY", to="S3"
+from="ANY", to="S4"
+from="ANY", to="array"
+from="ANY", to="call"
+from="ANY", to="character"
+from="ANY", to="complex"
+from="ANY", to="double"
+from="ANY", to="environment"
+from="ANY", to="expression"
+from="ANY", to="function"
+from="ANY", to="integer"
+from="ANY", to="list"
+from="ANY", to="logical"
+from="ANY", to="matrix"
+from="ANY", to="name"
+from="ANY", to="numeric"
+from="ANY", to="ts"
+from="ANY", to="vector"
+from="MethodDefinition", to="PossibleMethod"
+from="MethodWithNext", to="MethodDefinition"
+from="NULL", to="OptionalFunction"
+from="NULL", to="optionalMethod"
+from="POSIXct", to="POSIXt"
+from="character", to="SuperClassMethod"
+from="character", to="signature"
+from="derivedDefaultMethod", to="PossibleMethod"
+from="derivedDefaultMethod", to="function"
+from="function", to="OptionalFunction"
+from="function", to="PossibleMethod"
+from="function", to="classGeneratorFunction"
+from="groupGenericFunction", to="genericFunction"
+from="integer", to="numeric"
+from="myReg", to="S3"
+    (inherited from: from="oldClass", to="S3")
+from="oldClass", to="S3"
+from="standardGeneric", to="genericFunction"
+
+function (e1, e2)
+{
+    value <- callGeneric(e1@.Data, e2)
+    if (length(value) == length(e1)) {
+        e1@.Data <- value
+        e1
+    }
+    else value
+}
+[1] TRUE
+[1] TRUE
+     [,1] [,2]
+[1,]    1    4
+[2,]    2    4
+[3,]    3    4
+    A B C
+a 1 3 5 7
+b 2 4 6 8
+trace: cbind2(..1)
+Num-miss--meth
+     a
+[1,] 1
+[2,] 2
+[3,] 3
+trace: cbind2(argl[[i]], r)
+trace: cbind2(argl[[i]], r)
+Num-A.--method
+     a four  
+[1,] 1    4 7
+[2,] 2    4 8
+[3,] 3    4 9
+trace: cbind2(..1)
+Num-miss--meth
+trace: cbind2(argl[[i]], r)
+trace: cbind2(argl[[i]], r)
+Num-A.--method
+Warning in cbind(getDataPart(x), y, ...) :
+  number of rows of result is not a multiple of vector length (arg 1)
+trace: cbind2(argl[[i]], r)
+  A   B   C   a   ch     
+a "3" "5" "7" "1" "D" "3"
+b "4" "6" "8" "2" "E" "6"
+trace: cbind2(argl[[i]], r)
+Num-A.--method
+Warning in cbind(getDataPart(x), y, ...) :
+  number of rows of result is not a multiple of vector length (arg 1)
+trace: cbind2(argl[[i]], r)
+    a A B C
+a 1 1 3 5 7
+b 1 2 4 6 8
+                              stnG gnrF fnct OptF PssM optM sGWT drDM MthD inDM
+standardGeneric                  0    1    0    0    0    0    0    0    0    0
+genericFunction                  0    0    1    0    0    0    0    0    0    0
+function                         0    0    0    1    1    0    0    0    0    0
+OptionalFunction                 0    0    0    0    0    0    0    0    0    0
+PossibleMethod                   0    0    0    0    0    0    0    0    0    0
+optionalMethod                   0    0    0    0    0    0    0    0    0    0
+standardGenericWithTrace         1    0    0    0    0    0    0    0    0    0
+derivedDefaultMethod             0    0    0    0    0    0    0    0    1    0
+MethodDefinition                 0    0    1    0    1    0    0    0    0    0
+internalDispatchMethod           0    0    0    0    0    0    0    1    0    0
+derivedDefaultMethodWithTrace    0    0    0    0    0    0    0    1    0    0
+                              dDMW
+standardGeneric                  0
+genericFunction                  0
+function                         0
+OptionalFunction                 0
+PossibleMethod                   0
+optionalMethod                   0
+standardGenericWithTrace         0
+derivedDefaultMethod             0
+MethodDefinition                 0
+internalDispatchMethod           0
+derivedDefaultMethodWithTrace    0
+[1] "cc"
+[1] "numMax"
+Error in standardGeneric("numMax") : 
+  no method or default matching the "..." arguments in numMax(1:10, pi, TRUE)
+Creating a new generic function for ‘paste’ in the global environment
+[1] "paste"
+      e1             e2            
+ [1,] "array"        "array"       
+ [2,] "array"        "structure"   
+ [3,] "nonStructure" "nonStructure"
+ [4,] "nonStructure" "vector"      
+ [5,] "structure"    "array"       
+ [6,] "structure"    "structure"   
+ [7,] "structure"    "vector"      
+ [8,] "vector"       "nonStructure"
+ [9,] "vector"       "structure"   
+Class "numeric" [package "methods"]
+
+No Slots, prototype of class "numeric"
+
+Extends: "vector"
+
+Known Subclasses: 
+Class "integer", directly
+Class "double", directly
+Class "rnum", from data part
+Class "Num", from data part
+Class "factor", by class "integer", distance 2
+Class "ordered", by class "integer", distance 3
+Class "factor", by class "double", distance 3, with explicit coerce
+Class "ordered", by class "double", distance 4, with explicit coerce
+Virtual Class "thisIsAnUndefinedClass" [package "base"]
+
+No Slots, prototype of class "NULL"
+Formal class 'classRepresentation' [package "methods"] with 11 slots
+  ..@ slots     : list()
+  ..@ contains  : list()
+  ..@ virtual   : logi TRUE
+  ..@ prototype : NULL
+  ..@ validity  : NULL
+  ..@ access    : list()
+  ..@ className : chr "thisIsAnUndefinedClass"
+  .. ..- attr(*, "package")= chr "base"
+  ..@ package   : chr "base"
+  ..@ subclasses: list()
+  ..@ versionKey:<externalptr> 
+  ..@ sealed    : logi FALSE
+Error in getClass("thisIsAnUndefinedClass") : 
+  “thisIsAnUndefinedClass” is not a defined class
+NULL
+[1] "testFun"
+[1] TRUE
+[1] TRUE
+[1] FALSE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "base"
+[1] "base"
+[1] "base"
+[1] "base"
+[1]  TRUE FALSE
+[1]  TRUE FALSE
+[1] FALSE  TRUE
+[1] FALSE FALSE
+[1] TRUE TRUE
+standardGeneric for "with" defined from package "base"
+
+function (data, expr, ...) 
+standardGeneric("with")
+Methods may be defined for arguments: data
+Use  showMethods(with)  for currently available ones.
+NULL
+
+detaching ‘package:stats4’
+
+[1] TRUE
+[1] TRUE
+[1] FALSE
+[1] FALSE
+[1] FALSE
+[1] FALSE
+[1] TRUE
+Skeleton of method written to show_track.R
+Skeleton of method written to Ops_track_track.R
+Skeleton of method written to connection
+Skeleton of method written to connection
+Skeleton of method written to connection
+[1] TRUE
+ [1]  2  3  4  5  6  7  8  9 10 11
+ [1] 0.0000000 0.6931472 1.0986123 1.3862944 1.6094379 1.7917595 1.9459101
+ [8] 2.0794415 2.1972246 2.3025851
+ [1]  9  4  7  1  2  5  3 10  6  8
+[1] TRUE
+Warning in makeExtends(class1, coerce, test, replace, by, classDef1 = classDef,  :
+  there is no automatic definition for 'as(object, "trackCurve") <- value' when object has class “trackMultiCurve” and no 'replace' argument was supplied; replacement will be an error
+\name{trackMultiCurve-class}
+\Rdversion{1.1}
+\docType{class}
+\alias{trackMultiCurve-class}
+
+\title{Class \code{"trackMultiCurve"}}
+\description{
+%%  ~~ A concise (1-5 lines) description of what the class is. ~~
+}
+\section{Objects from the Class}{
+Objects can be created by calls of the form \code{new("trackMultiCurve", ...)}.
+%%  ~~ describe objects here ~~ 
+}
+\section{Slots}{
+  \describe{
+    \item{\code{x}:}{Object of class \code{"numeric"} ~~ }
+    \item{\code{y}:}{Object of class \code{"matrix"} ~~ }
+    \item{\code{smooth}:}{Object of class \code{"matrix"} ~~ }
+  }
+}
+\section{Extends}{
+Class \code{"\linkS4class{trackCurve}"}, directly, with explicit test and coerce.
+Class \code{"\linkS4class{track}"}, by class "trackCurve", distance 2, with explicit test and coerce.
+}
+\section{Methods}{
+No methods defined with class "trackMultiCurve" in the signature.
+}
+\references{
+%%  ~~put references to the literature/web site here~~
+}
+\author{
+%%  ~~who you are~~
+}
+\note{
+%%  ~~further notes~~
+}
+
+%% ~Make other sections like Warning with \section{Warning }{....} ~
+
+\seealso{
+%%  ~~objects to See Also as \code{\link{~~fun~~}}, ~~~
+%%  ~~or \code{\linkS4class{CLASSNAME}} for links to other classes ~~~
+}
+\examples{
+showClass("trackMultiCurve")
+}
+\keyword{classes}
+A shell of class documentation has been written to the connection
+‘stdout’.
+\name{track-class}
+\Rdversion{1.1}
+\docType{class}
+\alias{track-class}
+\alias{plot,track,ANY-method}
+
+\title{Class \code{"track"}}
+\description{
+%%  ~~ A concise (1-5 lines) description of what the class is. ~~
+}
+\section{Objects from the Class}{
+Objects can be created by calls of the form \code{new("track", ...)}.
+%%  ~~ describe objects here ~~ 
+}
+\section{Slots}{
+  \describe{
+    \item{\code{x}:}{Object of class \code{"numeric"} ~~ }
+    \item{\code{y}:}{Object of class \code{"numeric"} ~~ }
+  }
+}
+\section{Methods}{
+  \describe{
+    \item{plot}{\code{signature(x = "track", y = "ANY")}: ... }
+	 }
+}
+\references{
+%%  ~~put references to the literature/web site here~~
+}
+\author{
+%%  ~~who you are~~
+}
+\note{
+%%  ~~further notes~~
+}
+
+%% ~Make other sections like Warning with \section{Warning }{....} ~
+
+\seealso{
+%%  ~~objects to See Also as \code{\link{~~fun~~}}, ~~~
+%%  ~~or \code{\linkS4class{CLASSNAME}} for links to other classes ~~~
+}
+\examples{
+showClass("track")
+}
+\keyword{classes}
+A shell of class documentation has been written to the connection
+‘stdout’.
+[1] TRUE
+code for methods in class “mEdit” was not checked for suspicious field assignments (recommended package ‘codetools’ not available?)
+code for methods in class “mEdit” was not checked for suspicious field assignments (recommended package ‘codetools’ not available?)
+Reference matrix editor object of class "mEdit" 
+Data: 
+     [,1] [,2] [,3]
+[1,]    1    5    9
+[2,]    2    0   10
+[3,]    3    7   11
+[4,]    4    8   12
+Undo list is of length 1 
+Call:
+$undo()
+
+
+Undoes the last edit() operation
+        and update the edits field accordingly.
+        
+
+Reference class 'mEdit' [package ".GlobalEnv"] with 2 fields
+ $ data : num [1:4, 1:3] 1 2 3 4 5 6 7 8 9 10 ...
+ $ edits: list()
+ and 17 methods, of which 3 are  possibly relevant:
+   edit, show#envRefClass, undo
+code for methods in class “mEdit” was not checked for suspicious field assignments (recommended package ‘codetools’ not available?)
+[1] TRUE
+[1] "$"
+[1] "initialize"
+[[1]]
+[1] "track"
+
+$smooth
+[1] "numeric"
+
+Error in reconcilePropertiesAndPrototype(name, slots, prototype, superClasses,  : 
+  Definition of slot ‘b’, in class “class3”, as “character” conflicts with definition, inherited from class “class2”, as “numeric”
+[1] "C"    "A"    "B"    "Base" "Root"
+[1] "A" "B"
+[1] "A"    "B"    "Base" "Root"
+[1] "A"    "B"    "Base"
+ [1]   1   4   9  16  25  36  49  64  81 100 121 144 169 196 225 256 289 324 361
+[20] 400
+[1] 2
+Error in setAs("track", "numeric", function(x, y, z) x@y) : 
+  'as' method should have one argument, or match the arguments of coerce(): got  (x, y, z)
+Warning in removeClass("trackMultiCurve") :
+  class definition for “trackMultiCurve” not found (no action taken)
+[1] FALSE
+Warning in removeClass("trackCurve") :
+  class definition for “trackCurve” not found (no action taken)
+[1] FALSE
+Warning in removeClass("track") :
+  class definition for “track” not found (no action taken)
+[1] FALSE
+An object of class "numWithId"
+[1] 1 2 3
+Slot "id":
+[1] "An Example"
+
+[1] TRUE
+[1] TRUE
+[1] 0
+[1] 0
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "plot"
+[1] "props"
+[1] "authorNames"
+[1] "asRObject"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] TRUE
+[1] "e" "i" "k" "l" "m" "p" "q" "x"
+NULL
+[1] TRUE
+[1] 20
+ [1]  0.3735462  1.1836433  0.1643714  2.5952808  1.3295078  0.1795316
+ [7]  1.4874291  1.7383247  1.5757814  0.6946116  2.5117812  1.3898432
+[13]  0.3787594 -1.2146999  2.1249309  0.9550664  0.9838097  1.9438362
+[19]  1.8212212  1.5939013
+ [1]  -1.5962869   5.4453382  -1.1967039   0.6268489   3.0348298  -1.2188160
+ [7]   2.0515806   1.3544176   1.7367704  -3.2745188   0.6614714   2.5651336
+[13]  -1.6096824  -0.4515284   0.8889435 -22.2550563 -61.7655188   1.0595059
+[19]   1.2176987   1.6837814
+[1] TRUE
+[1] TRUE
+[1] TRUE
+ [1] "Date"           "POSIXct"        "POSIXlt"        "POSIXt"        
+ [5] "POSIXt"         "anova"          "anova.glm"      "anova.glm.null"
+ [9] "aov"            "data.frame"     "density"        "dump.frames"   
+[13] "glm"            "glm.null"       "hsearch"        "integrate"     
+[17] "libraryIQR"     "lm"             "lm"             "lm"            
+[21] "lm"             "logLik"         "maov"           "mlm"           
+[25] "mlm"            "mtable"         "packageIQR"     "packageIQR"    
+[29] "packageInfo"    "recordedplot"   "rle"            "socket"        
+[33] "summaryDefault" "table"         
+[1] "dfResidual"
+Class "data.frame" [package "methods"]
+
+Slots:
+                                                                  
+Name:                .Data               names           row.names
+Class:                list           character data.frameRowLabels
+                          
+Name:             .S3Class
+Class:           character
+
+Extends: 
+Class "list", from data part
+Class "oldClass", directly
+Class "vector", by class "list", distance 2
+
+Known Subclasses: "myFrame"
+[1] TRUE
+[1] TRUE
+[1] TRUE
+  [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11] [,12] [,13] [,14]
+x    1    2    3    4    5    6    7    8    9    10    11    12    13    14
+y    1    4    9   16   25   36   49   64   81   100   121   144   169   196
+  [,15] [,16] [,17] [,18] [,19] [,20]
+x    15    16    17    18    19    20
+y   225   256   289   324   361   400
+  [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11] [,12] [,13] [,14]
+x    1    2    3    4    5    6    7    8    9    10    11    12    13    14
+y    1    4    9   16   25   36   49   64   81   100   121   144   169   196
+  [,15] [,16] [,17] [,18] [,19] [,20]
+x    15    16    17    18    19    20
+y   225   256   289   324   361   400
+Function: plot (package base)
+x="ANY", y="track"
+x="numeric", y="track"
+x="track", y="ANY"
+x="track", y="missing"
+x="track", y="numeric"
+
+
+Function "AIC":
+ <not an S4 generic function>
+
+Function "BIC":
+ <not an S4 generic function>
+
+Function "coef":
+ <not an S4 generic function>
+
+Function "confint":
+ <not an S4 generic function>
+
+Function "logLik":
+ <not an S4 generic function>
+
+Function "nobs":
+ <not an S4 generic function>
+
+Function "profile":
+ <not an S4 generic function>
+Function: show (package methods)
+object="mle"
+
+
+Function "summary":
+ <not an S4 generic function>
+
+Function "update":
+ <not an S4 generic function>
+
+Function "vcov":
+ <not an S4 generic function>
+Warning in removeClass("track") :
+  class definition for “track” not found (no action taken)
+[1] FALSE
+[1] -4 -3 -2 -1  0  1  2  3  4
+Formal class 'track' [package ".GlobalEnv"] with 2 slots
+  ..@ x: int [1:9] -4 -3 -2 -1 0 1 2 3 4
+  ..@ y: num [1:9] -4 -3 -2 -1 0 1 2 3 4
+        x         y 
+"numeric" "numeric" 
+        x         y 
+"numeric" "numeric" 
+[1] "x" "y"
+[1] "x" "y"
+[1] TRUE
+Warning in testInheritedMethods("+") :
+  undefined classes ("trackData") will be ignored for argument 'e1'
+Warning in testInheritedMethods("+") :
+  undefined classes ("trackData") will be ignored for argument 'e2'
+Reported 0 ambiguous selections out of 16 for function +
+Class "track" [in ".GlobalEnv"]
+
+Slots:
+                      
+Name:        x       y
+Class: numeric numeric
+[1] TRUE
+Error in validObject(t2) : 
+  invalid class “track” object: Unequal x,y lengths: 20, 10
+Error in validObject(.Object) : 
+  invalid class “trackCurve” object: Unequal x,y lengths: 20, 10
+Error in validObject(tT, complete = TRUE) : 
+  invalid class “twoTrack” object: In slot "tr2" of class "track": Unequal x,y lengths: 20, 10
