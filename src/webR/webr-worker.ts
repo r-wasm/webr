@@ -91,6 +91,13 @@ function inputOrDispatch(chan: ChannelWorker): string {
             }
             continue;
           }
+          case 'installPackage':
+            write(
+              evalRCode(
+                `webr::install("${reqMsg.data.name as string}", repos="${_config.PKG_URL}")`
+              )
+            );
+            continue;
           default:
             throw new Error('Unknown event `' + reqMsg.type + '`');
         }
