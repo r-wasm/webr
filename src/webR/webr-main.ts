@@ -1,6 +1,6 @@
 import { ChannelMain } from './chan/channel';
 import { Message } from './chan/message';
-import { BASE_URL } from './config';
+import { BASE_URL, PKG_BASE_URL } from './config';
 
 export type FSNode = {
   id: number;
@@ -18,11 +18,25 @@ export interface WebROptions {
   homedir?: string;
 }
 
+const defaultEnv = {
+  R_HOME: '/usr/lib/R',
+  R_ENABLE_JIT: '0',
+};
+
+const defaultOptions = {
+  RArgs: [],
+  REnv: defaultEnv,
+  WEBR_URL: BASE_URL,
+  PKG_URL: PKG_BASE_URL,
+  homedir: '/home/web_user',
+};
+
 export class WebR {
   #chan;
 
   constructor(options: WebROptions = {}) {
-    this.#chan = new ChannelMain(`${BASE_URL}webr-worker.js`, options);
+    const config: Required<WebROptions> = Object.assign(defaultOptions, options);
+    this.#chan = new ChannelMain(`${config.WEBR_URL}webr-worker.js`, config);
   }
 
   async init() {

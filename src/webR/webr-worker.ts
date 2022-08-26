@@ -1,4 +1,3 @@
-import { BASE_URL, PKG_BASE_URL } from './config';
 import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
@@ -16,26 +15,13 @@ self.onmessage = function (ev: MessageEvent) {
     throw new Error("Can't initialise worker multiple times.");
   }
 
-  init(ev.data.data as WebROptions);
+  init(ev.data.data as Required<WebROptions>);
   initialised = true;
 };
 
 type XHRResponse = {
   status: number;
   response: string | ArrayBuffer;
-};
-
-const defaultEnv = {
-  R_HOME: '/usr/lib/R',
-  R_ENABLE_JIT: '0',
-};
-
-const defaultOptions = {
-  RArgs: [],
-  REnv: defaultEnv,
-  WEBR_URL: BASE_URL,
-  PKG_URL: PKG_BASE_URL,
-  homedir: '/home/web_user',
 };
 
 const Module = {} as Module;
@@ -166,8 +152,8 @@ function putFileData(name: string, data: Uint8Array) {
   Module.FS.createDataFile('/', name, data, true, true, true);
 }
 
-function init(options: WebROptions = {}) {
-  _config = Object.assign(defaultOptions, options);
+function init(config: Required<WebROptions>) {
+  _config = config;
 
   Module.preRun = [];
   Module.arguments = _config.RArgs;
