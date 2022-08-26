@@ -1,6 +1,22 @@
 import type { Module } from './module';
+import type { RProxy } from './proxy';
 
 declare let Module: Module;
+
+// RProxy<RObj> type aliases
+export type RNull = RProxy<RObjNull>;
+export type RSymbol = RProxy<RObjSymbol>;
+export type RPairlist = RProxy<RObjPairlist>;
+export type RFunction = RProxy<RObjFunction>;
+export type REnv = RProxy<RObjEnv>;
+export type RString = RProxy<RObjString>;
+export type RLogical = RProxy<RObjLogical>;
+export type RInt = RProxy<RObjInt>;
+export type RReal = RProxy<RObjReal>;
+export type RComplex = RProxy<RObjComplex>;
+export type RCharacter = RProxy<RObjCharacter>;
+export type RList = RProxy<RObjList>;
+export type RRawdata = RProxy<RObjRawdata>;
 
 export enum RType {
   Null = 0,
@@ -557,13 +573,13 @@ abstract class RObjAtomicVector extends RObj {
   }
 }
 
-type RLogical = boolean | 'NA' | undefined;
+type Logical = boolean | 'NA' | undefined;
 export class RObjLogical extends RObjAtomicVector {
-  getLogical(idx: number): RLogical {
+  getLogical(idx: number): Logical {
     return this.get(idx).toJs()[0];
   }
 
-  toLogical(): RLogical {
+  toLogical(): Logical {
     if (this.length !== 1) {
       throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
     }
@@ -577,7 +593,7 @@ export class RObjLogical extends RObjAtomicVector {
     );
   }
 
-  toJs(): RLogical[] {
+  toJs(): Logical[] {
     return Array.from({ length: this.length }, (_, idx) => {
       const elem = this.toArray()[idx];
       if (elem === 0 || elem === 1) {
