@@ -262,6 +262,30 @@ export class RObj {
     }
   }
 
+  set(prop: string | number, value: RObj | RawType) {
+    let idx: RPtr;
+    let char: RPtr = 0;
+    if (typeof prop === 'number') {
+      idx = Module._Rf_protect(Module._Rf_ScalarInteger(prop));
+    } else {
+      char = allocateUTF8(prop);
+      idx = Module._Rf_protect(Module._Rf_mkString(char));
+    }
+
+    const valueObj = isRObj(value) ? value : new RObj({ obj: value, type: RTargetType.RAW });
+
+    const assign = allocateUTF8('[[<-');
+    const call = Module._Rf_protect(
+      Module._Rf_lang4(Module._Rf_install(assign), this.ptr, idx, valueObj.ptr)
+    );
+    const val = RObj.wrap(Module._Rf_eval(call, RObj.globalEnv.ptr));
+
+    Module._Rf_unprotect(3);
+    if (char) Module._free(char);
+    Module._free(assign);
+    return val;
+  }
+
   static getMethods(obj: RObj) {
     const props = new Set<string>();
     let cur: unknown = obj;
