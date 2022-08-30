@@ -57,24 +57,27 @@ export function newRProxy(chan: ChannelMain, target: RTargetPtr): RProxy<RObjImp
         return target;
       } else if (target.methods.includes(prop.toString())) {
         return async (...args: unknown[]) => {
-          return chan
-            .request({
-              type: 'callRObjMethod',
-              data: {
-                target: target,
-                prop: prop.toString(),
-                args: Array.from({ length: args.length }, (_, idx) => {
-                  const arg = args[idx];
-                  return isRObject(arg) ? arg._target : { obj: arg, type: RTargetType.RAW };
-                }),
-              },
-            })
-            .then((r: RTargetObj) => {
-              if (r.obj instanceof Error) {
-                throw r.obj;
-              }
-              return r.type === RTargetType.PTR ? newRProxy(chan, r) : r.obj;
-            });
+          const argTargets = Array.from({ length: args.length }, (_, idx) => {
+            const arg = args[idx];
+            return isRObject(arg) ? arg._target : { obj: arg, type: RTargetType.RAW };
+          });
+
+          const reply = (await chan.request({
+            type: 'callRObjMethod',
+            data: {
+              target: target,
+              prop: prop.toString(),
+              args: argTargets,
+            },
+          })) as RTargetObj;
+
+          if (reply.obj instanceof Error) {
+            throw reply.obj;
+          }
+          if (reply.type === RTargetType.PTR) {
+            return newRProxy(chan, reply);
+          }
+          return reply.obj;
         };
       }
     },
