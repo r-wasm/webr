@@ -183,8 +183,9 @@ function callRObjMethod(obj: RObjImpl, prop: string, args: RTargetObj[]): RTarge
 
   if (isRObjImpl(res)) {
     return { obj: res.ptr, methods: RObjImpl.getMethods(res), type: RTargetType.PTR };
+  } else {
+    return { obj: res, type: RTargetType.RAW };
   }
-  return { obj: res, type: RTargetType.RAW };
 }
 
 /**
