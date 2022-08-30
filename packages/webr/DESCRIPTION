@@ -1,0 +1,13 @@
+Package: webr
+Type: Package
+Title: WebR Support Package
+Version: 0.1.0
+Authors@R: c(
+    person("George", "Stagg", , "george.stagg@rstudio.com", role = c("aut", "cre")),
+    person("Lionel", "Henry", , "lionel@rstudio.com", role = c("aut"))
+  )
+Description: An R package to act as an interface to webR and provide supporting functions.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.1

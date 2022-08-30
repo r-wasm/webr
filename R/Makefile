@@ -12,6 +12,8 @@ WASM = $(WEBR_ROOT)/wasm
 include $(TOOLS)/fortran.mk
 
 R_VERSION = 4.1.3
+export R_VERSION
+
 R_TARBALL = $(DOWNLOAD)/R-$(R_VERSION).tar.gz
 R_SOURCE = $(BUILD)/R-$(R_VERSION)
 R_URL = https://cran.r-project.org/src/base/R-4/R-$(R_VERSION).tar.gz
@@ -172,6 +174,8 @@ MAKE_WASM_BUILD += FORTRAN_WASM_LDADD="$(FORTRAN_WASM_LDADD)"
 MAKE_WASM_INSTALL := $(MAKE_WASM)
 
 $(BUILD)/state/r-stage2: $(BUILD)/state/r-stage1 $(BUILD)/state/r-stage2-configured
+	cd $(WEBR_ROOT)/packages && \
+	  $(MAKE_WASM) all
 	cd $(STAGE2_BUILD) && \
 	  $(MAKE_WASM_BUILD) R
 	touch $@
@@ -190,6 +194,14 @@ install: $(BUILD)/state/r-stage2 Rprofile
 	  $(MAKE_WASM_INSTALL) install-wasm
 	cp -r "$(R_WASM)/dist/." $(DIST)
 
+.PHONY: rebuild-extra-pkgs
+rebuild-extra-pkgs: $(BUILD)/state/r-stage2
+	rm -f $(BUILD)/state/r-stage2
+	cd $(WEBR_ROOT)/packages && \
+	  $(MAKE_WASM) all
+	cd $(STAGE2_BUILD)/src/main && \
+	  $(MAKE_WASM_INSTALL) install-wasm
+	cp -r "$(R_WASM)/dist/." $(DIST)
 
 .PHONY: rebuild-core
 rebuild-core: $(BUILD)/state/r-stage2

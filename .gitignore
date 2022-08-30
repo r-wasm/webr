@@ -10,6 +10,16 @@
 /R/download
 /R/build
 /src/webR/config.[jt]s
+/packages/**/*.so
+/packages/**/*.o
 node_modules
 .DS_Store
 .vscode
+.Rhistory
+.Rapp.history
+.RData
+.RDataTmp
+.Ruserdata
+.Rproj.user
+.Renviron
+*.Rcheck
