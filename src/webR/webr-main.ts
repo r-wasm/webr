@@ -1,8 +1,8 @@
 import { ChannelMain } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
-import { isRProxy, newRProxy, RProxy } from './proxy';
-import { RTargetObj, RTargetType, RObj } from './robj';
+import { newRProxy } from './proxy';
+import { RTargetObj, RTargetType, RObject, isRObject } from './robj';
 
 export type FSNode = {
   id: number;
@@ -67,8 +67,8 @@ export class WebR {
     return (await this.#chan.request({ type: 'getFSNode', data: { path: path } })) as FSNode;
   }
 
-  async evalRCode(code: string, env?: RProxy<RObj>): Promise<RProxy<RObj>> {
-    if (env && !isRProxy(env)) {
+  async evalRCode(code: string, env?: RObject): Promise<RObject> {
+    if (env && !isRObject(env)) {
       throw new Error('Attempted to evalRcode with invalid environment object');
     }
 

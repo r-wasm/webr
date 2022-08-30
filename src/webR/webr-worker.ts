@@ -3,7 +3,16 @@ import { ChannelWorker } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions } from './webr-main';
 import { Module } from './module';
-import { RObj, RPtr, RTargetObj, RTargetPtr, RTargetType, RType, isRObj, RawType } from './robj';
+import {
+  isRObjImpl,
+  RObjImpl,
+  RPtr,
+  RTargetObj,
+  RTargetPtr,
+  RTargetType,
+  RType,
+  RawType,
+} from './robj';
 
 let initialised = false;
 
@@ -76,7 +85,7 @@ function inputOrDispatch(chan: ChannelWorker): string {
               args: RTargetObj[];
             };
             try {
-              write(callRObjMethod(RObj.wrap(data.target.obj), data.prop, data.args));
+              write(callRObjMethod(RObjImpl.wrap(data.target.obj), data.prop, data.args));
             } catch (e) {
               write({ type: RTargetType.RAW, obj: e });
             }
@@ -143,18 +152,18 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
 }
 
 /**
- * For a given RObj object, call the given method with arguments
+ * For a given RObjImpl object, call the given method with arguments
  *
  * Returns a RTargetObj containing either a reference to the resulting SEXP
  * object in WASM memory, or the object represented in an equivalent raw
  * JS form.
  *
- * @param {RObj}  obj The R RObj object
+ * @param {RObjImpl}  obj The R RObj object
  * @param {string} [prop] RObj method to invoke
  * @param {RTargetObj[]} [args] List of arguments to call with
  * @return {RTargetObj} The resulting R object
  */
-function callRObjMethod(obj: RObj, prop: string, args: RTargetObj[]): RTargetObj {
+function callRObjMethod(obj: RObjImpl, prop: string, args: RTargetObj[]): RTargetObj {
   if (!(prop in obj)) {
     throw new ReferenceError(`${prop} is not defined`);
   }
@@ -168,12 +177,12 @@ function callRObjMethod(obj: RObj, prop: string, args: RTargetObj[]): RTargetObj
     obj,
     Array.from({ length: args.length }, (_, idx) => {
       const arg = args[idx];
-      return arg.type === RTargetType.PTR ? RObj.wrap(arg.obj) : arg.obj;
+      return arg.type === RTargetType.PTR ? RObjImpl.wrap(arg.obj) : arg.obj;
     })
-  ) as RawType | RObj;
+  ) as RawType | RObjImpl;
 
-  if (isRObj(res)) {
-    return { obj: res.ptr, methods: RObj.getMethods(res), type: RTargetType.PTR };
+  if (isRObjImpl(res)) {
+    return { obj: res.ptr, methods: RObjImpl.getMethods(res), type: RTargetType.PTR };
   }
   return { obj: res, type: RTargetType.RAW };
 }
@@ -191,15 +200,15 @@ function callRObjMethod(obj: RObj, prop: string, args: RTargetObj[]): RTargetObj
  */
 function evalRCode(code: string, env?: RPtr): RTargetObj {
   const str = allocateUTF8(`{${code}}`);
-  let envObj = RObj.globalEnv;
+  let envObj = RObjImpl.globalEnv;
   if (env) {
-    envObj = RObj.wrap(env);
+    envObj = RObjImpl.wrap(env);
     if (envObj.type !== RType.Environment) {
       throw new Error('Attempted to eval R code with an env argument with invalid SEXP type');
     }
   }
 
-  const evalResult = RObj.wrap(Module._evalRCode(str, envObj.ptr));
+  const evalResult = RObjImpl.wrap(Module._evalRCode(str, envObj.ptr));
   const result = evalResult.get(1);
   const error = evalResult.get(2);
 
@@ -207,7 +216,7 @@ function evalRCode(code: string, env?: RPtr): RTargetObj {
   if (!error.isNull()) {
     throw new Error(error.get(1).toJs()?.toString());
   }
-  return { obj: result.ptr, methods: RObj.getMethods(result), type: RTargetType.PTR };
+  return { obj: result.ptr, methods: RObjImpl.getMethods(result), type: RTargetType.PTR };
 }
 
 function getFileData(name: string): Uint8Array {

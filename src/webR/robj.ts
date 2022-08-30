@@ -3,7 +3,8 @@ import type { RProxy } from './proxy';
 
 declare let Module: Module;
 
-// RProxy<RObj> type aliases
+// RProxy<RObjImpl> type aliases
+export type RObject = RProxy<RObjImpl>;
 export type RNull = RProxy<RObjNull>;
 export type RSymbol = RProxy<RObjSymbol>;
 export type RPairlist = RProxy<RObjPairlist>;
@@ -73,10 +74,10 @@ type Complex = {
   im: number;
 };
 
-function newRObjFromTarget(target: RTargetObj): RObj {
+function newRObjFromTarget(target: RTargetObj): RObjImpl {
   const obj = target.obj;
   if (target.type === RTargetType.PTR) {
-    return RObj.wrap(target.obj);
+    return RObjImpl.wrap(target.obj);
   }
 
   if (typeof obj === 'number') {
@@ -113,7 +114,7 @@ function newRObjFromTarget(target: RTargetObj): RObj {
       Module._free(str);
     });
     Module._Rf_unprotect(1);
-    return RObj.wrap(robjVec);
+    return RObjImpl.wrap(robjVec);
   }
 
   if (Array.isArray(obj) && obj.some((el) => typeof el === 'number')) {
@@ -121,7 +122,7 @@ function newRObjFromTarget(target: RTargetObj): RObj {
     const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.Double, obj.length));
     obj.forEach((el, idx) => setValue(Module._REAL(robjVec) + 8 * idx, Number(el), 'double'));
     Module._Rf_unprotect(1);
-    return RObj.wrap(robjVec);
+    return RObjImpl.wrap(robjVec);
   }
 
   if (Array.isArray(obj)) {
@@ -129,7 +130,7 @@ function newRObjFromTarget(target: RTargetObj): RObj {
     const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.Logical, obj.length));
     obj.forEach((el, idx) => setValue(Module._LOGICAL(robjVec) + 4 * idx, el, 'i32'));
     Module._Rf_unprotect(1);
-    return RObj.wrap(robjVec);
+    return RObjImpl.wrap(robjVec);
   }
 
   throw new Error('Robj construction for this JS object is not yet supported');
@@ -150,13 +151,13 @@ export type RawType =
   | Set<RawType>
   | { [key: string]: RawType };
 
-export class RObj {
+export class RObjImpl {
   ptr: RPtr;
 
   constructor(target: RPtr | RTargetObj) {
     this.ptr = 0;
     if (typeof target === 'number') {
-      // We have a number, assume it is an RPtr to an RObj
+      // We have a number, assume it is an RPtr to an R object
       this.ptr = target;
       return this;
     }
@@ -194,11 +195,11 @@ export class RObj {
   }
 
   isUnbound(): boolean {
-    return this.ptr === RObj.unboundValue.ptr;
+    return this.ptr === RObjImpl.unboundValue.ptr;
   }
 
   attrs(): Nullable<RObjPairlist> {
-    return RObj.wrap(Module._ATTRIB(this.ptr)) as RObjPairlist;
+    return RObjImpl.wrap(Module._ATTRIB(this.ptr)) as RObjPairlist;
   }
 
   names(): string[] | undefined {
@@ -222,7 +223,7 @@ export class RObj {
     throw new Error('This R object cannot be converted to JS');
   }
 
-  subset(prop: number | string): RObj {
+  subset(prop: number | string): RObjImpl {
     let idx: RPtr;
     let char: RPtr = 0;
     if (typeof prop === 'number') {
@@ -231,14 +232,14 @@ export class RObj {
       char = allocateUTF8(prop);
       idx = Module._Rf_protect(Module._Rf_mkString(char));
     }
-    const call = Module._Rf_protect(Module._Rf_lang3(RObj.bracketSymbol.ptr, this.ptr, idx));
-    const sub = RObj.wrap(Module._Rf_eval(call, RObj.baseEnv.ptr));
+    const call = Module._Rf_protect(Module._Rf_lang3(RObjImpl.bracketSymbol.ptr, this.ptr, idx));
+    const sub = RObjImpl.wrap(Module._Rf_eval(call, RObjImpl.baseEnv.ptr));
     Module._Rf_unprotect(2);
     if (char) Module._free(char);
     return sub;
   }
 
-  get(prop: number | string): RObj {
+  get(prop: number | string): RObjImpl {
     let idx: RPtr;
     let char: RPtr = 0;
     if (typeof prop === 'number') {
@@ -247,26 +248,29 @@ export class RObj {
       char = allocateUTF8(prop);
       idx = Module._Rf_protect(Module._Rf_mkString(char));
     }
-    const call = Module._Rf_protect(Module._Rf_lang3(RObj.bracket2Symbol.ptr, this.ptr, idx));
-    const sub = RObj.wrap(Module._Rf_eval(call, RObj.baseEnv.ptr));
+    const call = Module._Rf_protect(Module._Rf_lang3(RObjImpl.bracket2Symbol.ptr, this.ptr, idx));
+    const sub = RObjImpl.wrap(Module._Rf_eval(call, RObjImpl.baseEnv.ptr));
     Module._Rf_unprotect(2);
     if (char) Module._free(char);
     return sub;
   }
 
-  getDollar(prop: string): RObj {
+  getDollar(prop: string): RObjImpl {
     const char = allocateUTF8(prop);
     const idx = Module._Rf_protect(Module._Rf_mkString(char));
-    const call = Module._Rf_protect(Module._Rf_lang3(RObj.dollarSymbol.ptr, this.ptr, idx));
-    const sub = RObj.wrap(Module._Rf_eval(call, RObj.baseEnv.ptr));
+    const call = Module._Rf_protect(Module._Rf_lang3(RObjImpl.dollarSymbol.ptr, this.ptr, idx));
+    const sub = RObjImpl.wrap(Module._Rf_eval(call, RObjImpl.baseEnv.ptr));
     Module._Rf_unprotect(2);
     Module._free(char);
     return sub;
   }
 
-  pluck(...path: (string | number)[]): RObj | undefined {
+  pluck(...path: (string | number)[]): RObjImpl | undefined {
     try {
-      const result = path.reduce((obj: RObj, prop: string | number): RObj => obj.get(prop), this);
+      const result = path.reduce(
+        (obj: RObjImpl, prop: string | number): RObjImpl => obj.get(prop),
+        this
+      );
       return result.isNull() ? undefined : result;
     } catch (err) {
       // Deal with subscript out of bounds error
@@ -277,7 +281,7 @@ export class RObj {
     }
   }
 
-  set(prop: string | number, value: RObj | RawType) {
+  set(prop: string | number, value: RObjImpl | RawType) {
     let idx: RPtr;
     let char: RPtr = 0;
     if (typeof prop === 'number') {
@@ -287,13 +291,15 @@ export class RObj {
       idx = Module._Rf_protect(Module._Rf_mkString(char));
     }
 
-    const valueObj = isRObj(value) ? value : new RObj({ obj: value, type: RTargetType.RAW });
+    const valueObj = isRObjImpl(value)
+      ? value
+      : new RObjImpl({ obj: value, type: RTargetType.RAW });
 
     const assign = allocateUTF8('[[<-');
     const call = Module._Rf_protect(
       Module._Rf_lang4(Module._Rf_install(assign), this.ptr, idx, valueObj.ptr)
     );
-    const val = RObj.wrap(Module._Rf_eval(call, RObj.globalEnv.ptr));
+    const val = RObjImpl.wrap(Module._Rf_eval(call, RObjImpl.globalEnv.ptr));
 
     Module._Rf_unprotect(3);
     if (char) Module._free(char);
@@ -301,7 +307,7 @@ export class RObj {
     return val;
   }
 
-  static getMethods(obj: RObj) {
+  static getMethods(obj: RObjImpl) {
     const props = new Set<string>();
     let cur: unknown = obj;
     do {
@@ -310,24 +316,24 @@ export class RObj {
     return [...props.keys()].filter((i) => typeof obj[i as keyof typeof obj] === 'function');
   }
 
-  static get globalEnv(): RObj {
-    return RObj.wrap(getValue(Module._R_GlobalEnv, '*'));
+  static get globalEnv(): RObjImpl {
+    return RObjImpl.wrap(getValue(Module._R_GlobalEnv, '*'));
   }
 
-  static get emptyEnv(): RObj {
-    return RObj.wrap(getValue(Module._R_EmptyEnv, '*'));
+  static get emptyEnv(): RObjImpl {
+    return RObjImpl.wrap(getValue(Module._R_EmptyEnv, '*'));
   }
 
-  static get baseEnv(): RObj {
-    return RObj.wrap(getValue(Module._R_BaseEnv, '*'));
+  static get baseEnv(): RObjImpl {
+    return RObjImpl.wrap(getValue(Module._R_BaseEnv, '*'));
   }
 
   static get null(): RObjNull {
     return new RObjNull(getValue(Module._R_NilValue, '*'));
   }
 
-  static get unboundValue(): RObj {
-    return RObj.wrap(getValue(Module._R_UnboundValue, '*'));
+  static get unboundValue(): RObjImpl {
+    return RObjImpl.wrap(getValue(Module._R_UnboundValue, '*'));
   }
 
   static get bracketSymbol(): RObjSymbol {
@@ -342,39 +348,39 @@ export class RObj {
     return new RObjSymbol(getValue(Module._R_DollarSymbol, '*'));
   }
 
-  static wrap(ptr: RPtr): RObj {
+  static wrap(ptr: RPtr): RObjImpl {
     const type = Module._TYPEOF(ptr);
     return new (getRObjClass(type))(ptr);
   }
 
-  static protect<T extends RObj>(obj: T): T {
-    return RObj.wrap(Module._Rf_protect(obj.ptr)) as T;
+  static protect<T extends RObjImpl>(obj: T): T {
+    return RObjImpl.wrap(Module._Rf_protect(obj.ptr)) as T;
   }
 
   static unprotect(n: number): void {
     Module._Rf_unprotect(n);
   }
 
-  static unprotectPtr(obj: RObj): void {
+  static unprotectPtr(obj: RObjImpl): void {
     Module._Rf_unprotect_ptr(obj.ptr);
   }
 
-  static preserveObject(obj: RObj): void {
+  static preserveObject(obj: RObjImpl): void {
     Module._R_PreserveObject(obj.ptr);
   }
 
-  static releaseObject(obj: RObj): void {
+  static releaseObject(obj: RObjImpl): void {
     Module._R_ReleaseObject(obj.ptr);
   }
 }
 
-export class RObjNull extends RObj {
+export class RObjNull extends RObjImpl {
   toJs(): null {
     return null;
   }
 }
 
-export class RObjSymbol extends RObj {
+export class RObjSymbol extends RObjImpl {
   toJs(): RawType {
     if (this.isUnbound()) {
       return undefined;
@@ -395,15 +401,15 @@ export class RObjSymbol extends RObj {
   printname(): RObjString {
     return new RObjString(Module._PRINTNAME(this.ptr));
   }
-  symvalue(): RObj {
-    return RObj.wrap(Module._SYMVALUE(this.ptr));
+  symvalue(): RObjImpl {
+    return RObjImpl.wrap(Module._SYMVALUE(this.ptr));
   }
-  internal(): RObj {
-    return RObj.wrap(Module._INTERNAL(this.ptr));
+  internal(): RObjImpl {
+    return RObjImpl.wrap(Module._INTERNAL(this.ptr));
   }
 }
 
-export class RObjPairlist extends RObj {
+export class RObjPairlist extends RObjImpl {
   toObject(): { [key: string]: RawType } {
     const d: { [key: string]: RawType } = {};
     for (let next = this as Nullable<RObjPairlist>; !next.isNull(); next = next.cdr()) {
@@ -421,20 +427,20 @@ export class RObjPairlist extends RObj {
     return name in this.toObject();
   }
 
-  setcar(obj: RObj): void {
+  setcar(obj: RObjImpl): void {
     Module._SETCAR(this.ptr, obj.ptr);
   }
 
-  car(): RObj {
-    return RObj.wrap(Module._CAR(this.ptr));
+  car(): RObjImpl {
+    return RObjImpl.wrap(Module._CAR(this.ptr));
   }
 
   cdr(): Nullable<RObjPairlist> {
-    return RObj.wrap(Module._CDR(this.ptr)) as Nullable<RObjPairlist>;
+    return RObjImpl.wrap(Module._CDR(this.ptr)) as Nullable<RObjPairlist>;
   }
 
   tag(): Nullable<RObjSymbol> {
-    return RObj.wrap(Module._TAG(this.ptr)) as Nullable<RObjSymbol>;
+    return RObjImpl.wrap(Module._TAG(this.ptr)) as Nullable<RObjSymbol>;
   }
 
   toJs(): RawType {
@@ -442,7 +448,7 @@ export class RObjPairlist extends RObj {
   }
 }
 
-export class RObjList extends RObj {
+export class RObjList extends RObjImpl {
   get length(): number {
     return Module._LENGTH(this.ptr);
   }
@@ -466,12 +472,12 @@ export class RObjList extends RObj {
   }
 }
 
-export class RObjFunction extends RObj {
-  exec(...args: (RawType | RObj)[]): RObj {
+export class RObjFunction extends RObjImpl {
+  exec(...args: (RawType | RObjImpl)[]): RObjImpl {
     const argObjs = args.map((arg) =>
-      isRObj(arg) ? arg : new RObj({ obj: arg, type: RTargetType.RAW })
+      isRObjImpl(arg) ? arg : new RObjImpl({ obj: arg, type: RTargetType.RAW })
     );
-    const call = RObj.protect(
+    const call = RObjImpl.protect(
       new RObjPairlist(Module._Rf_allocVector(RType.Call, args.length + 1))
     );
     call.setcar(this);
@@ -481,19 +487,19 @@ export class RObjFunction extends RObj {
       c.setcar(argObjs[i++]);
       c = c.cdr();
     }
-    const res = RObj.wrap(Module._Rf_eval(call.ptr, RObj.globalEnv.ptr));
-    RObj.unprotect(1);
+    const res = RObjImpl.wrap(Module._Rf_eval(call.ptr, RObjImpl.globalEnv.ptr));
+    RObjImpl.unprotect(1);
     return res;
   }
 }
 
-export class RObjString extends RObj {
+export class RObjString extends RObjImpl {
   toJs(): string {
     return UTF8ToString(Module._R_CHAR(this.ptr));
   }
 }
 
-export class RObjEnvironment extends RObj {
+export class RObjEnvironment extends RObjImpl {
   ls(all = false, sorted = true): string[] {
     return new RObjCharacter(Module._R_lsInternal3(this.ptr, all, sorted)).toJs();
   }
@@ -502,11 +508,11 @@ export class RObjEnvironment extends RObj {
     return this.ls(true, true);
   }
 
-  frame(): RObj {
-    return RObj.wrap(Module._FRAME(this.ptr));
+  frame(): RObjImpl {
+    return RObjImpl.wrap(Module._FRAME(this.ptr));
   }
 
-  subset(prop: number | string): RObj {
+  subset(prop: number | string): RObjImpl {
     if (typeof prop === 'number') {
       throw new Error('Object of type environment is not subsettable');
     }
@@ -538,7 +544,7 @@ type TypedArray =
   | Float64Array
   | Array<Complex>;
 
-abstract class RObjAtomicVector extends RObj {
+abstract class RObjAtomicVector extends RObjImpl {
   get length(): number {
     return Module._LENGTH(this.ptr);
   }
@@ -551,7 +557,7 @@ abstract class RObjAtomicVector extends RObj {
     return super.subset(prop) as typeof this;
   }
 
-  getDollar(prop: string): RObj {
+  getDollar(prop: string): RObjImpl {
     throw new Error('$ operator is invalid for atomic vectors');
   }
 
@@ -715,12 +721,40 @@ export class RObjRaw extends RObjAtomicVector {
   }
 }
 
-export function isRObj(value: any): value is RObj {
+/**
+ * Test for an RObjImpl instance
+ *
+ * RObjImpl is the internal interface to R objects, intended to be used
+ * on the worker thread.
+ *
+ * @private
+ * @param {any} value The object to test.
+ * @return {boolean} True if the object is an instance of an RObjImpl.
+ */
+export function isRObjImpl(value: any): value is RObjImpl {
   return value && typeof value === 'object' && 'type' in value && 'toJs' in value;
 }
 
-export function getRObjClass(type: RType): typeof RObj {
-  const typeClasses: { [key: number]: typeof RObj } = {
+/**
+ * Test for an RObject instance
+ *
+ * RObject is the user facing interface to R objects.
+ *
+ * @param {any} value The object to test.
+ * @return {boolean} True if the object is an instance of an RObject.
+ */
+export function isRObject(value: any): value is RObject {
+  return (
+    typeof value === 'object' &&
+    'type' in value &&
+    'obj' in value &&
+    'methods' in value &&
+    value._target.type === 'PTR'
+  );
+}
+
+export function getRObjClass(type: RType): typeof RObjImpl {
+  const typeClasses: { [key: number]: typeof RObjImpl } = {
     [RType.Null]: RObjNull,
     [RType.Symbol]: RObjSymbol,
     [RType.Pairlist]: RObjPairlist,
@@ -742,5 +776,5 @@ export function getRObjClass(type: RType): typeof RObj {
   if (type in typeClasses) {
     return typeClasses[type];
   }
-  return RObj;
+  return RObjImpl;
 }
