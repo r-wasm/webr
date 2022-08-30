@@ -109,11 +109,10 @@ function newRObjFromTarget(target: RTargetObj): RObj {
     const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.Character, obj.length));
     obj.forEach((el, idx) => {
       const str = allocateUTF8(String(el));
-      const ptr = Module._Rf_protect(Module._Rf_mkChar(str));
+      Module._SET_STRING_ELT(robjVec, idx, Module._Rf_mkChar(str));
       Module._free(str);
-      Module._SET_STRING_ELT(robjVec, idx, ptr);
     });
-    Module._Rf_unprotect(2);
+    Module._Rf_unprotect(1);
     return RObj.wrap(robjVec);
   }
 
