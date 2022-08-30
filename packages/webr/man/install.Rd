@@ -7,11 +7,11 @@
 install(packages, repos = NULL, lib = NULL)
 }
 \arguments{
-\item{packages}{character vector containing the names of packages to install}
+\item{packages}{Character vector containing the names of packages to install.}
 
-\item{repos}{character vector containing the URIs of the webR repos to use}
+\item{repos}{Character vector containing the URIs of the webR repos to use.}
 
-\item{lib}{the library directory where the packages will be installed}
+\item{lib}{The library directory where the packages will be installed.}
 }
 \description{
 Install one or more packages from a webR binary package repo

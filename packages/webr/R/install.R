@@ -2,9 +2,9 @@
 #'
 #' @export
 #'
-#' @param packages character vector containing the names of packages to install
-#' @param repos character vector containing the URIs of the webR repos to use
-#' @param lib the library directory where the packages will be installed
+#' @param packages Character vector containing the names of packages to install.
+#' @param repos Character vector containing the URIs of the webR repos to use.
+#' @param lib The library directory where the packages will be installed.
 install <- function(packages, repos = NULL, lib = NULL) {
   if (is.null(lib)) {
     lib <- .libPaths()[[1]]
