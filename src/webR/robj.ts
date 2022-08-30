@@ -299,7 +299,7 @@ export class RObjImpl {
     const call = Module._Rf_protect(
       Module._Rf_lang4(Module._Rf_install(assign), this.ptr, idx, valueObj.ptr)
     );
-    const val = RObjImpl.wrap(Module._Rf_eval(call, RObjImpl.globalEnv.ptr));
+    const val = RObjImpl.wrap(Module._Rf_eval(call, RObjImpl.baseEnv.ptr));
 
     Module._Rf_unprotect(3);
     if (char) Module._free(char);
@@ -487,7 +487,7 @@ export class RObjFunction extends RObjImpl {
       c.setcar(argObjs[i++]);
       c = c.cdr();
     }
-    const res = RObjImpl.wrap(Module._Rf_eval(call.ptr, RObjImpl.globalEnv.ptr));
+    const res = RObjImpl.wrap(Module._Rf_eval(call.ptr, RObjImpl.baseEnv.ptr));
     RObjImpl.unprotect(1);
     return res;
   }
