@@ -8,15 +8,15 @@ export type RNull = RProxy<RObjNull>;
 export type RSymbol = RProxy<RObjSymbol>;
 export type RPairlist = RProxy<RObjPairlist>;
 export type RFunction = RProxy<RObjFunction>;
-export type REnv = RProxy<RObjEnv>;
+export type REnvironment = RProxy<RObjEnvironment>;
 export type RString = RProxy<RObjString>;
 export type RLogical = RProxy<RObjLogical>;
-export type RInt = RProxy<RObjInt>;
-export type RReal = RProxy<RObjReal>;
+export type RInteger = RProxy<RObjInteger>;
+export type RDouble = RProxy<RObjDouble>;
 export type RComplex = RProxy<RObjComplex>;
 export type RCharacter = RProxy<RObjCharacter>;
 export type RList = RProxy<RObjList>;
-export type RRawdata = RProxy<RObjRawdata>;
+export type RRaw = RProxy<RObjRaw>;
 
 export enum RType {
   Null = 0,
@@ -81,7 +81,7 @@ function newRObjFromTarget(target: RTargetObj): RObj {
 
   if (typeof obj === 'number') {
     const ptr = Module._Rf_ScalarReal(obj);
-    return new RObjReal(ptr);
+    return new RObjDouble(ptr);
   }
 
   if (typeof obj === 'string') {
@@ -494,7 +494,7 @@ export class RObjString extends RObj {
   }
 }
 
-export class RObjEnv extends RObj {
+export class RObjEnvironment extends RObj {
   ls(all = false, sorted = true): string[] {
     return new RObjCharacter(Module._R_lsInternal3(this.ptr, all, sorted)).toJs();
   }
@@ -604,7 +604,7 @@ export class RObjLogical extends RObjAtomicVector {
   }
 }
 
-export class RObjInt extends RObjAtomicVector {
+export class RObjInteger extends RObjAtomicVector {
   getNumber(idx: number): number {
     return this.get(idx).toArray()[0];
   }
@@ -624,7 +624,7 @@ export class RObjInt extends RObjAtomicVector {
   }
 }
 
-export class RObjReal extends RObjAtomicVector {
+export class RObjDouble extends RObjAtomicVector {
   getNumber(idx: number): number {
     return this.get(idx).toArray()[0];
   }
@@ -699,7 +699,7 @@ export class RObjCharacter extends RObjAtomicVector {
   }
 }
 
-export class RObjRawdata extends RObjAtomicVector {
+export class RObjRaw extends RObjAtomicVector {
   getNumber(idx: number): number {
     return this.get(idx).toArray()[0];
   }
@@ -726,18 +726,18 @@ export function getRObjClass(type: RType): typeof RObj {
     [RType.Symbol]: RObjSymbol,
     [RType.Pairlist]: RObjPairlist,
     [RType.Closure]: RObjFunction,
-    [RType.Environment]: RObjEnv,
+    [RType.Environment]: RObjEnvironment,
     [RType.Call]: RObjPairlist,
     [RType.Special]: RObjFunction,
     [RType.Builtin]: RObjFunction,
     [RType.String]: RObjString,
     [RType.Logical]: RObjLogical,
-    [RType.Integer]: RObjInt,
-    [RType.Double]: RObjReal,
+    [RType.Integer]: RObjInteger,
+    [RType.Double]: RObjDouble,
     [RType.Complex]: RObjComplex,
     [RType.Character]: RObjCharacter,
     [RType.List]: RObjList,
-    [RType.Raw]: RObjRawdata,
+    [RType.Raw]: RObjRaw,
     [RType.Function]: RObjFunction,
   };
   if (type in typeClasses) {
