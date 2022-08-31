@@ -16,6 +16,7 @@
 global_prompt_install <- function() {
   globalCallingHandlers(
     packageNotFoundError = function(cnd) {
+      if (!interactive()) return()
       pkg <- cnd$package
       download <- utils::menu(
         c("Yes", "No"),
