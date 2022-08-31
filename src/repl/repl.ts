@@ -69,25 +69,8 @@ const webR = new WebR({
 (async () => {
   await webR.init();
 
-  webR.writeConsole(`
-    globalCallingHandlers(
-      packageNotFoundError = function(err) {
-        pkg <- err$package
-        download <- menu(
-          c("Yes", "No"),
-          title=paste(
-            'Failed to load package "', pkg,
-            '". Do you want to try downloading it from the webR binary repo?',
-            sep=''
-          )
-        )
-        if (download == 1) {
-          webr::install(pkg, repos="${PKG_BASE_URL}")
-          tryInvokeRestart("retry_loadNamespace")
-          invokeRestart("abort")
-        }
-      }
-    )\n`);
+  webR.evalRCode(`options(webr_pkg_repos="${PKG_BASE_URL}")`);
+  webR.evalRCode('webr::global_prompt_install()', { withHandlers: false });
 
   term.clear();
 
