@@ -73,14 +73,23 @@ export class WebR {
     return (await this.#chan.request({ type: 'getFSNode', data: { path: path } })) as FSNode;
   }
 
-  async evalRCode(code: string, env?: RObject): Promise<RObject> {
-    if (env && !isRObject(env)) {
+  async evalRCode(
+    code: string,
+    options: { env?: RObject; withHandlers?: boolean } = {}
+  ): Promise<RObject> {
+    if (options.env && !isRObject(options.env)) {
       throw new Error('Attempted to evalRcode with invalid environment object');
     }
 
     const target = (await this.#chan.request({
       type: 'evalRCode',
-      data: { code: code, env: env?._target.obj },
+      data: {
+        code: code,
+        options: {
+          env: options.env?._target.obj,
+          withHandlers: options.withHandlers,
+        },
+      },
     })) as RTargetObj;
 
     if (target.obj instanceof Error) {

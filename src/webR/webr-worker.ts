@@ -69,10 +69,13 @@ function inputOrDispatch(chan: ChannelWorker): string {
           case 'evalRCode': {
             const data = reqMsg.data as {
               code: string;
-              env: RPtr;
+              options: {
+                env?: RPtr;
+                withHandlers?: boolean;
+              };
             };
             try {
-              write(evalRCode(data.code, data.env));
+              write(evalRCode(data.code, data.options));
             } catch (e) {
               write({ type: RTargetType.RAW, obj: e });
             }
@@ -196,29 +199,46 @@ function callRObjMethod(obj: RObjImpl, prop: string, args: RTargetObj[]): RTarge
 }
 
 /**
- * Evaluate the given R code, within the given environment if provided.
+ * Evaluate the given R code
  *
- * Returns a RTargetObj containing either a reference to the resulting SEXP
- * object in WASM memory, or the object represented in an equivalent raw
- * JS form.
+ * Returns a RTargetObj containing a reference to the resulting SEXP object
+ * in WASM memory.
  *
- * @param {string}  code The R code to evaluate
- * @param {RPtr} env? An RPtr to the environment to evaluate within
- * @return {RTargetObj} The resulting R object
+ * @param {string}  code The R code to evaluate.
+ * @param {Object<string,any>} [options={}] Options for the execution environment.
+ * @param {RPtr} [options.env] An RPtr to the environment to evaluate within.
+ * @param {boolean} [options.withHandlers] Should the code be executed using a
+ * tryCatch with handlers in place, capturing conditions such as errors?
+ * @return {RTargetObj} The resulting R object.
  */
-function evalRCode(code: string, env?: RPtr): RTargetObj {
-  const str = allocateUTF8(`{${code}}`);
+function evalRCode(
+  code: string,
+  options: {
+    env?: RPtr;
+    withHandlers?: boolean;
+  } = {}
+): RTargetObj {
+  options = Object.assign({ withHandlers: true }, options);
+
   let envObj = RObjImpl.globalEnv;
-  if (env) {
-    envObj = RObjImpl.wrap(env);
+  if (options.env) {
+    envObj = RObjImpl.wrap(options.env);
     if (envObj.type !== RType.Environment) {
       throw new Error('Attempted to eval R code with an env argument with invalid SEXP type');
     }
   }
 
-  const evalResult = RObjImpl.wrap(Module._evalRCode(str, envObj.ptr));
-  const result = evalResult.get(1);
-  const error = evalResult.get(2);
+  const str = allocateUTF8(`{${code}}`);
+  let error: RObjImpl = RObjImpl.null;
+  let result: RObjImpl = RObjImpl.null;
+
+  if (options.withHandlers) {
+    const evalResult = RObjImpl.wrap(Module._evalRCode(str, envObj.ptr));
+    result = evalResult.get(1);
+    error = evalResult.get(2);
+  } else {
+    result = RObjImpl.wrap(Module._R_ParseEvalString(str, envObj.ptr));
+  }
 
   Module._free(str);
   if (!error.isNull()) {

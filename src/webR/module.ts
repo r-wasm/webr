@@ -46,6 +46,7 @@ export interface Module extends EmscriptenModule {
   _TYPEOF: (ptr: RPtr) => RPtr;
   _VECTOR_ELT: (ptr: RPtr, idx: number) => RPtr;
   _R_lsInternal3: (env: RPtr, all: boolean, sorted: boolean) => RPtr;
+  _R_ParseEvalString: (code: number, env: RPtr) => RPtr;
   _R_PreserveObject: (ptr: RPtr) => void;
   _R_ReleaseObject: (ptr: RPtr) => void;
   _Rf_ScalarReal: (n: number) => RPtr;
