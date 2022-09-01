@@ -69,13 +69,13 @@ function inputOrDispatch(chan: ChannelWorker): string {
           case 'evalRCode': {
             const data = reqMsg.data as {
               code: string;
+              env: RPtr;
               options: {
-                env?: RPtr;
                 withHandlers?: boolean;
               };
             };
             try {
-              write(evalRCode(data.code, data.options));
+              write(evalRCode(data.code, data.env, data.options));
             } catch (e) {
               write({ type: RTargetType.RAW, obj: e });
             }
@@ -205,24 +205,24 @@ function callRObjMethod(obj: RObjImpl, prop: string, args: RTargetObj[]): RTarge
  * in WASM memory.
  *
  * @param {string}  code The R code to evaluate.
+ * @param {RPtr} [env] An RPtr to the environment to evaluate within.
  * @param {Object<string,any>} [options={}] Options for the execution environment.
- * @param {RPtr} [options.env] An RPtr to the environment to evaluate within.
  * @param {boolean} [options.withHandlers] Should the code be executed using a
  * tryCatch with handlers in place, capturing conditions such as errors?
  * @return {RTargetObj} The resulting R object.
  */
 function evalRCode(
   code: string,
+  env?: RPtr,
   options: {
-    env?: RPtr;
     withHandlers?: boolean;
   } = {}
 ): RTargetObj {
   options = Object.assign({ withHandlers: true }, options);
 
   let envObj = RObjImpl.globalEnv;
-  if (options.env) {
-    envObj = RObjImpl.wrap(options.env);
+  if (env) {
+    envObj = RObjImpl.wrap(env);
     if (envObj.type !== RType.Environment) {
       throw new Error('Attempted to eval R code with an env argument with invalid SEXP type');
     }

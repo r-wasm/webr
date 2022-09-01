@@ -70,7 +70,7 @@ const webR = new WebR({
   await webR.init();
 
   webR.evalRCode(`options(webr_pkg_repos="${PKG_BASE_URL}")`);
-  webR.evalRCode('webr::global_prompt_install()', { withHandlers: false });
+  webR.evalRCode('webr::global_prompt_install()', undefined, { withHandlers: false });
 
   term.clear();
 

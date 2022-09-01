@@ -75,9 +75,10 @@ export class WebR {
 
   async evalRCode(
     code: string,
-    options: { env?: RObject; withHandlers?: boolean } = {}
+    env?: RObject,
+    options: { withHandlers?: boolean } = {}
   ): Promise<RObject> {
-    if (options.env && !isRObject(options.env)) {
+    if (env && !isRObject(env)) {
       throw new Error('Attempted to evalRcode with invalid environment object');
     }
 
@@ -85,10 +86,8 @@ export class WebR {
       type: 'evalRCode',
       data: {
         code: code,
-        options: {
-          env: options.env?._target.obj,
-          withHandlers: options.withHandlers,
-        },
+        env: env?._target.obj,
+        options: options,
       },
     })) as RTargetObj;
 
