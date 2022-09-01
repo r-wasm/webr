@@ -22,10 +22,9 @@ global_prompt_install <- function() {
       pkg <- cnd$package
       download <- utils::menu(
         c("Yes", "No"),
-        title = paste(
+        title = paste0(
           'Failed to load package "', pkg,
-          '". Do you want to try downloading it from the webR binary repo?',
-          sep = ""
+          '". Do you want to try downloading it from the webR binary repo?'
         )
       )
       if (download == 1) {
