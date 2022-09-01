@@ -56,6 +56,12 @@ export class WebR {
     this.write({ type: 'stdin', data: input });
   }
 
+  async installPackages(packages: string[]) {
+    for (const pkg of packages) {
+      const msg = { type: 'installPackage', data: { name: pkg } };
+      await this.#chan.request(msg);
+    }
+  }
   async putFileData(name: string, data: Uint8Array) {
     const msg = { type: 'putFileData', data: { name: name, data: data } };
     return await this.#chan.request(msg);
@@ -67,14 +73,22 @@ export class WebR {
     return (await this.#chan.request({ type: 'getFSNode', data: { path: path } })) as FSNode;
   }
 
-  async evalRCode(code: string, env?: RObject): Promise<RObject> {
+  async evalRCode(
+    code: string,
+    env?: RObject,
+    options: { withHandlers?: boolean } = {}
+  ): Promise<RObject> {
     if (env && !isRObject(env)) {
       throw new Error('Attempted to evalRcode with invalid environment object');
     }
 
     const target = (await this.#chan.request({
       type: 'evalRCode',
-      data: { code: code, env: env?._target.obj },
+      data: {
+        code: code,
+        env: env?._target.obj,
+        options: options,
+      },
     })) as RTargetObj;
 
     if (target.obj instanceof Error) {

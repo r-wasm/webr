@@ -9,6 +9,9 @@ install <- function(packages, repos = NULL, lib = NULL) {
   if (is.null(lib)) {
     lib <- .libPaths()[[1]]
   }
+  if (is.null(repos)) {
+    repos <- getOption("webr_pkg_repos")
+  }
   info <- utils::available.packages(repos = repos, type = "source")
   deps <- unlist(tools::package_dependencies(packages, info), use.names = FALSE)
   deps <- unique(deps)
