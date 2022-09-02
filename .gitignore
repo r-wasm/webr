@@ -9,6 +9,7 @@
 /tools/flang/f18-llvm-project
 /R/download
 /R/build
+/src/coverage
 /src/webR/config.[jt]s
 /packages/**/*.so
 /packages/**/*.o

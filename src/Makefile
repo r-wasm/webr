@@ -31,7 +31,7 @@ webR/config.ts: webR/config.ts.in
 check:
 	npx tsc
 	npx eslint $(TS_SOURCES)
-	node --experimental-wasm-bigint \
+	NODE_V8_COVERAGE=coverage npx c8 node --experimental-wasm-bigint \
 	  ./node_modules/jest/bin/jest.js --forceExit --config jest.config.js
 
 node_modules: package.json
