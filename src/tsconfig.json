@@ -9,7 +9,7 @@
     "noUnusedLocals": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "types": ["node", "emscripten", "jquery", "jquery.terminal", "jstree"],
+    "types": ["node", "emscripten", "jquery", "jquery.terminal", "jstree", "jest"],
     "noEmit": true,
   },
   "include": ["**/*.ts"],
