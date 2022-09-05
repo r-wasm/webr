@@ -228,7 +228,7 @@ function evalRCode(
     }
   }
 
-  const str = allocateUTF8(`{${code}}`);
+  const str = Module.allocateUTF8(`{${code}}`);
   let error: RObjImpl = RObjImpl.null;
   let result: RObjImpl = RObjImpl.null;
 
@@ -270,6 +270,9 @@ function init(config: Required<WebROptions>) {
   Module.noAudioDecoding = true;
 
   Module.preRun.push(() => {
+    if (IN_NODE) {
+      globalThis.FS = Module.FS;
+    }
     Module.FS.mkdirTree(_config.homedir);
     Module.ENV.HOME = _config.homedir;
     Module.FS.chdir(_config.homedir);

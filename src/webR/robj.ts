@@ -86,7 +86,7 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
   }
 
   if (typeof obj === 'string') {
-    const str = allocateUTF8(obj);
+    const str = Module.allocateUTF8(obj);
     const ptr = Module._Rf_mkString(str);
     Module._free(str);
     return new RObjCharacter(ptr);
@@ -99,8 +99,8 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
 
   if (typeof obj === 'object' && obj && 're' in obj && 'im' in obj) {
     const ptr = Module._Rf_protect(Module._Rf_allocVector(RType.Complex, 1));
-    setValue(Module._COMPLEX(ptr), obj.re, 'double');
-    setValue(Module._COMPLEX(ptr) + 8, obj.im, 'double');
+    Module.setValue(Module._COMPLEX(ptr), obj.re, 'double');
+    Module.setValue(Module._COMPLEX(ptr) + 8, obj.im, 'double');
     Module._Rf_unprotect(1);
     return new RObjComplex(ptr);
   }
@@ -109,7 +109,7 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
     // Create a vector of strings
     const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.Character, obj.length));
     obj.forEach((el, idx) => {
-      const str = allocateUTF8(String(el));
+      const str = Module.allocateUTF8(String(el));
       Module._SET_STRING_ELT(robjVec, idx, Module._Rf_mkChar(str));
       Module._free(str);
     });
@@ -120,7 +120,9 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
   if (Array.isArray(obj) && obj.some((el) => typeof el === 'number')) {
     // Create a vector of reals
     const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.Double, obj.length));
-    obj.forEach((el, idx) => setValue(Module._REAL(robjVec) + 8 * idx, Number(el), 'double'));
+    obj.forEach((el, idx) =>
+      Module.setValue(Module._REAL(robjVec) + 8 * idx, Number(el), 'double')
+    );
     Module._Rf_unprotect(1);
     return RObjImpl.wrap(robjVec);
   }
@@ -128,7 +130,7 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
   if (Array.isArray(obj)) {
     // Create a vector of logicals
     const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.Logical, obj.length));
-    obj.forEach((el, idx) => setValue(Module._LOGICAL(robjVec) + 4 * idx, el, 'i32'));
+    obj.forEach((el, idx) => Module.setValue(Module._LOGICAL(robjVec) + 4 * idx, el, 'i32'));
     Module._Rf_unprotect(1);
     return RObjImpl.wrap(robjVec);
   }
@@ -229,7 +231,7 @@ export class RObjImpl {
     if (typeof prop === 'number') {
       idx = Module._Rf_protect(Module._Rf_ScalarInteger(prop));
     } else {
-      char = allocateUTF8(prop);
+      char = Module.allocateUTF8(prop);
       idx = Module._Rf_protect(Module._Rf_mkString(char));
     }
     const call = Module._Rf_protect(Module._Rf_lang3(RObjImpl.bracketSymbol.ptr, this.ptr, idx));
@@ -245,7 +247,7 @@ export class RObjImpl {
     if (typeof prop === 'number') {
       idx = Module._Rf_protect(Module._Rf_ScalarInteger(prop));
     } else {
-      char = allocateUTF8(prop);
+      char = Module.allocateUTF8(prop);
       idx = Module._Rf_protect(Module._Rf_mkString(char));
     }
     const call = Module._Rf_protect(Module._Rf_lang3(RObjImpl.bracket2Symbol.ptr, this.ptr, idx));
@@ -256,7 +258,7 @@ export class RObjImpl {
   }
 
   getDollar(prop: string): RObjImpl {
-    const char = allocateUTF8(prop);
+    const char = Module.allocateUTF8(prop);
     const idx = Module._Rf_protect(Module._Rf_mkString(char));
     const call = Module._Rf_protect(Module._Rf_lang3(RObjImpl.dollarSymbol.ptr, this.ptr, idx));
     const sub = RObjImpl.wrap(Module._Rf_eval(call, RObjImpl.baseEnv.ptr));
@@ -287,7 +289,7 @@ export class RObjImpl {
     if (typeof prop === 'number') {
       idx = Module._Rf_protect(Module._Rf_ScalarInteger(prop));
     } else {
-      char = allocateUTF8(prop);
+      char = Module.allocateUTF8(prop);
       idx = Module._Rf_protect(Module._Rf_mkString(char));
     }
 
@@ -295,7 +297,7 @@ export class RObjImpl {
       ? value
       : new RObjImpl({ obj: value, type: RTargetType.RAW });
 
-    const assign = allocateUTF8('[[<-');
+    const assign = Module.allocateUTF8('[[<-');
     const call = Module._Rf_protect(
       Module._Rf_lang4(Module._Rf_install(assign), this.ptr, idx, valueObj.ptr)
     );
@@ -322,35 +324,35 @@ export class RObjImpl {
   }
 
   static get globalEnv(): RObjImpl {
-    return RObjImpl.wrap(getValue(Module._R_GlobalEnv, '*'));
+    return RObjImpl.wrap(Module.getValue(Module._R_GlobalEnv, '*'));
   }
 
   static get emptyEnv(): RObjImpl {
-    return RObjImpl.wrap(getValue(Module._R_EmptyEnv, '*'));
+    return RObjImpl.wrap(Module.getValue(Module._R_EmptyEnv, '*'));
   }
 
   static get baseEnv(): RObjImpl {
-    return RObjImpl.wrap(getValue(Module._R_BaseEnv, '*'));
+    return RObjImpl.wrap(Module.getValue(Module._R_BaseEnv, '*'));
   }
 
   static get null(): RObjNull {
-    return new RObjNull(getValue(Module._R_NilValue, '*'));
+    return new RObjNull(Module.getValue(Module._R_NilValue, '*'));
   }
 
   static get unboundValue(): RObjImpl {
-    return RObjImpl.wrap(getValue(Module._R_UnboundValue, '*'));
+    return RObjImpl.wrap(Module.getValue(Module._R_UnboundValue, '*'));
   }
 
   static get bracketSymbol(): RObjSymbol {
-    return new RObjSymbol(getValue(Module._R_BracketSymbol, '*'));
+    return new RObjSymbol(Module.getValue(Module._R_BracketSymbol, '*'));
   }
 
   static get bracket2Symbol(): RObjSymbol {
-    return new RObjSymbol(getValue(Module._R_Bracket2Symbol, '*'));
+    return new RObjSymbol(Module.getValue(Module._R_Bracket2Symbol, '*'));
   }
 
   static get dollarSymbol(): RObjSymbol {
-    return new RObjSymbol(getValue(Module._R_DollarSymbol, '*'));
+    return new RObjSymbol(Module.getValue(Module._R_DollarSymbol, '*'));
   }
 
   static wrap(ptr: RPtr): RObjImpl {
@@ -507,7 +509,7 @@ export class RObjFunction extends RObjImpl {
 
 export class RObjString extends RObjImpl {
   toJs(): string {
-    return UTF8ToString(Module._R_CHAR(this.ptr));
+    return Module.UTF8ToString(Module._R_CHAR(this.ptr));
   }
 }
 
