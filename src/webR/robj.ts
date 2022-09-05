@@ -606,9 +606,11 @@ export class RObjLogical extends RObjAtomicVector {
   }
 
   toArray(): Int32Array {
-    return Module.HEAP32.subarray(
-      Module._LOGICAL(this.ptr) / 4,
-      Module._LOGICAL(this.ptr) / 4 + this.length
+    return new Int32Array(
+      Module.HEAP32.subarray(
+        Module._LOGICAL(this.ptr) / 4,
+        Module._LOGICAL(this.ptr) / 4 + this.length
+      )
     );
   }
 
@@ -636,9 +638,11 @@ export class RObjInteger extends RObjAtomicVector {
   }
 
   toArray(): Int32Array {
-    return Module.HEAP32.subarray(
-      Module._INTEGER(this.ptr) / 4,
-      Module._INTEGER(this.ptr) / 4 + this.length
+    return new Int32Array(
+      Module.HEAP32.subarray(
+        Module._INTEGER(this.ptr) / 4,
+        Module._INTEGER(this.ptr) / 4 + this.length
+      )
     );
   }
 }
@@ -656,9 +660,8 @@ export class RObjDouble extends RObjAtomicVector {
   }
 
   toArray(): Float64Array {
-    return Module.HEAPF64.subarray(
-      Module._REAL(this.ptr) / 8,
-      Module._REAL(this.ptr) / 8 + this.length
+    return new Float64Array(
+      Module.HEAPF64.subarray(Module._REAL(this.ptr) / 8, Module._REAL(this.ptr) / 8 + this.length)
     );
   }
 }
@@ -676,9 +679,11 @@ export class RObjComplex extends RObjAtomicVector {
   }
 
   toArray(): Float64Array {
-    return Module.HEAPF64.subarray(
-      Module._COMPLEX(this.ptr) / 8,
-      Module._COMPLEX(this.ptr) / 8 + 2 * this.length
+    return new Float64Array(
+      Module.HEAPF64.subarray(
+        Module._COMPLEX(this.ptr) / 8,
+        Module._COMPLEX(this.ptr) / 8 + 2 * this.length
+      )
     );
   }
 
@@ -705,9 +710,11 @@ export class RObjCharacter extends RObjAtomicVector {
   }
 
   toArray(): Uint32Array {
-    return Module.HEAPU32.subarray(
-      Module._STRING_PTR(this.ptr) / 4,
-      Module._STRING_PTR(this.ptr) / 4 + this.length
+    return new Uint32Array(
+      Module.HEAPU32.subarray(
+        Module._STRING_PTR(this.ptr) / 4,
+        Module._STRING_PTR(this.ptr) / 4 + this.length
+      )
     );
   }
 
@@ -731,7 +738,9 @@ export class RObjRaw extends RObjAtomicVector {
   }
 
   toArray(): Uint8Array {
-    return Module.HEAPU8.subarray(Module._RAW(this.ptr), Module._RAW(this.ptr) + this.length);
+    return new Uint8Array(
+      Module.HEAPU8.subarray(Module._RAW(this.ptr), Module._RAW(this.ptr) + this.length)
+    );
   }
 }
 
