@@ -364,6 +364,26 @@ describe('Invoking RFunction objects', () => {
   });
 });
 
+describe('Garbage collection', () => {
+  test('Protect and release R objects', async () => {
+    const gc = (await webR.evalRCode('gc')) as RFunction;
+    await gc.exec(false, false, true);
+    const before = await ((await gc.exec(false, false, true)) as RDouble).toArray();
+
+    const mem = await webR.evalRCode('rnorm(10000,1,1)');
+    mem.preserve();
+    const during = await ((await gc.exec(false, false, true)) as RDouble).toArray();
+
+    mem.release();
+    const after = await ((await gc.exec(false, false, true)) as RDouble).toArray();
+
+    expect(during[0]).toBeGreaterThan(before[0]);
+    expect(during[1]).toBeGreaterThan(before[1]);
+    expect(after[0]).toBeLessThan(during[0]);
+    expect(after[1]).toBeLessThan(during[1]);
+  });
+});
+
 test('Utils sleep', async () => {
   await expect(sleep(100)).resolves.not.toThrow();
 });
