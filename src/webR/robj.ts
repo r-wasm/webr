@@ -304,6 +304,11 @@ export class RObjImpl {
     Module._Rf_unprotect(3);
     if (char) Module._free(char);
     Module._free(assign);
+
+    if (!isRObjImpl(value)) {
+      valueObj.release();
+    }
+
     return val;
   }
 
@@ -489,6 +494,13 @@ export class RObjFunction extends RObjImpl {
     }
     const res = RObjImpl.wrap(Module._Rf_eval(call.ptr, RObjImpl.baseEnv.ptr));
     RObjImpl.unprotect(1);
+
+    argObjs.forEach((argObj, idx) => {
+      if (!isRObjImpl(args[idx])) {
+        argObj.release();
+      }
+    });
+
     return res;
   }
 }
