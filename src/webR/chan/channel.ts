@@ -5,9 +5,9 @@ import { Endpoint } from './task-common';
 import { syncResponse } from './task-main';
 
 import { IN_NODE } from '../compat';
-import { Worker as NodeWorker } from 'worker_threads';
+import type { Worker as NodeWorker } from 'worker_threads';
 if (IN_NODE) {
-  (globalThis as any).Worker = NodeWorker;
+  (globalThis as any).Worker = require('worker_threads').Worker as NodeWorker;
 }
 
 // The channel structure is asymetric:
