@@ -4,6 +4,12 @@ import { Message, newRequest, Response, SyncRequest } from './message';
 import { Endpoint } from './task-common';
 import { syncResponse } from './task-main';
 
+import { IN_NODE } from '../compat';
+import { Worker as NodeWorker } from 'worker_threads';
+if (IN_NODE) {
+  (globalThis as any).Worker = NodeWorker;
+}
+
 // The channel structure is asymetric:
 //
 // - The main thread maintains the input and output queues. All
@@ -106,46 +112,55 @@ export class ChannelMain {
   }
 
   #handleEventsFromWorker(worker: Worker) {
-    worker.onmessage = async (ev: MessageEvent) => {
-      if (!ev || !ev.data || !ev.data.type) {
+    if (IN_NODE) {
+      (worker as unknown as NodeWorker).on('message', (message: Message) => {
+        this.#onMessageFromWorker(worker, message);
+      });
+    } else {
+      worker.onmessage = (ev: MessageEvent) =>
+        this.#onMessageFromWorker(worker, ev.data as Message);
+    }
+  }
+
+  #onMessageFromWorker = async (worker: Worker, message: Message) => {
+    if (!message || !message.type) {
+      return;
+    }
+
+    switch (message.type) {
+      case 'resolve':
+        this.resolve();
+        return;
+
+      case 'response':
+        this.#resolveResponse(message as Response);
+        return;
+
+      default:
+        this.outputQueue.put(message);
+        return;
+
+      case 'sync-request': {
+        const msg = message as SyncRequest;
+        const payload = msg.data.msg;
+        const reqData = msg.data.reqData;
+
+        if (payload.type !== 'read') {
+          throw new TypeError("Unsupported request type '$(payload.type)'.");
+        }
+
+        const response = await this.inputQueue.get();
+
+        // TODO: Pass a `replacer` function
+        await syncResponse(worker, reqData, response);
         return;
       }
-
-      switch (ev.data.type) {
-        case 'resolve':
-          this.resolve();
-          return;
-
-        case 'response':
-          this.#resolveResponse(ev.data as Response);
-          return;
-
-        default:
-          this.outputQueue.put(ev.data as Message);
-          return;
-
-        case 'sync-request': {
-          const msg = ev.data as SyncRequest;
-          const payload = msg.data.msg;
-          const reqData = msg.data.reqData;
-
-          if (payload.type !== 'read') {
-            throw new TypeError("Unsupported request type '$(payload.type)'.");
-          }
-
-          const response = await this.inputQueue.get();
-
-          // TODO: Pass a `replacer` function
-          await syncResponse(worker, reqData, response);
-          return;
-        }
-        case 'request':
-          throw new TypeError(
-            "Can't send messages of type 'request' from a worker. Please Use 'sync-request' instead."
-          );
-      }
-    };
-  }
+      case 'request':
+        throw new TypeError(
+          "Can't send messages of type 'request' from a worker. Please Use 'sync-request' instead."
+        );
+    }
+  };
 }
 
 // Worker --------------------------------------------------------------
@@ -153,7 +168,11 @@ export class ChannelMain {
 import { SyncTask } from './task-worker';
 
 export class ChannelWorker {
-  #ep = globalThis as Endpoint;
+  #ep: Endpoint;
+
+  constructor() {
+    this.#ep = (IN_NODE ? require('worker_threads').parentPort : globalThis) as Endpoint;
+  }
 
   resolve() {
     this.write({ type: 'resolve' });
