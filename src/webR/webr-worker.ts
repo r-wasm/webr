@@ -30,6 +30,7 @@ const onWorkerMessage = function (msg: Message) {
 
 if (IN_NODE) {
   require('worker_threads').parentPort.on('message', onWorkerMessage);
+  (globalThis as any).XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest as XMLHttpRequest;
 } else {
   globalThis.onmessage = (ev: MessageEvent) => onWorkerMessage(ev.data as Message);
 }

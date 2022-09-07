@@ -6,7 +6,8 @@
     "@types/emscripten": "^1.39.6",
     "jquery": "^3.6.0",
     "jquery.terminal": "^2.33.3",
-    "jstree": "^3.3.12"
+    "jstree": "^3.3.12",
+    "xmlhttprequest": "git+https://github.com/georgestagg/node-XMLHttpRequest.git#response-buffer"
   },
   "devDependencies": {
     "@types/jquery": "^3.5.14",
