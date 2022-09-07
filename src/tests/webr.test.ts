@@ -53,6 +53,20 @@ describe('Test webR simple console input/output', () => {
   });
 });
 
+describe('Download and install binary webR packages', () => {
+  test('Install packages via evalRCode', async () => {
+    await webR.evalRCode('webr::install("cli", repos="https://repo.webr.workers.dev/")');
+    const pkg = (await webR.evalRCode('"cli" %in% library(cli)')) as RLogical;
+    expect(await pkg.toLogical()).toEqual(true);
+  });
+
+  test('Install packages via API', async () => {
+    await webR.installPackages(['MASS']);
+    const pkg = (await webR.evalRCode('"MASS" %in% library(MASS)')) as RLogical;
+    expect(await pkg.toLogical()).toEqual(true);
+  });
+});
+
 describe('Test webR virtual filesystem', () => {
   const testFileContents = new Uint8Array([1, 2, 4, 7, 11, 16, 22, 29, 37, 46]);
   test('Upload a file to the VFS', async () => {

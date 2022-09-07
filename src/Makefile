@@ -28,7 +28,7 @@ webR/config.ts: webR/config.ts.in
 	sed -e "s|@@BASE_URL@@|$(BASE_URL)|" webR/config.ts.in > webR/config.ts
 
 .PHONY: check
-check:
+check: $(DIST)
 	npx tsc
 	npx eslint $(TS_SOURCES)
 	NODE_V8_COVERAGE=coverage npx c8 node --experimental-wasm-bigint \
