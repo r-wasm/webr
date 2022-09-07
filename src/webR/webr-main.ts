@@ -45,6 +45,10 @@ export class WebR {
     return await this.#chan.initialised;
   }
 
+  terminate() {
+    return this.#chan.terminate();
+  }
+
   async read(): Promise<Message> {
     return await this.#chan.read();
   }

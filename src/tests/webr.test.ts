@@ -401,3 +401,7 @@ describe('Garbage collection', () => {
 test('Utils sleep', async () => {
   await expect(sleep(100)).resolves.not.toThrow();
 });
+
+afterAll(() => {
+  return webR.terminate();
+});

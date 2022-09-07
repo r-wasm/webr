@@ -38,12 +38,14 @@ export class ChannelMain {
 
   initialised: Promise<unknown>;
   resolve: (_?: unknown) => void;
+  terminate = () => {};
 
   #parked = new Map<string, ResolveFn>();
 
   constructor(url: string, data: unknown) {
     const initWorker = (worker: Worker) => {
       this.#handleEventsFromWorker(worker);
+      this.terminate = () => worker.terminate();
       const msg = { type: 'init', data: data } as Message;
       worker.postMessage(msg);
     };
