@@ -45,8 +45,16 @@ export class WebR {
     return await this.#chan.initialised;
   }
 
+  close() {
+    return this.#chan.close();
+  }
+
   async read(): Promise<Message> {
     return await this.#chan.read();
+  }
+
+  async flush(): Promise<Message[]> {
+    return await this.#chan.flush();
   }
 
   write(msg: Message) {
@@ -91,13 +99,17 @@ export class WebR {
       },
     })) as RTargetObj;
 
-    if (target.obj instanceof Error) {
-      throw target.obj;
+    switch (target.type) {
+      case RTargetType.RAW:
+        throw new Error('Unexpected raw target type returned from evalRCode');
+      case RTargetType.ERR: {
+        const e = new Error(target.obj.message);
+        e.name = target.obj.name;
+        e.stack = target.obj.stack;
+        throw e;
+      }
+      default:
+        return newRProxy(this.#chan, target);
     }
-    if (target.type === RTargetType.RAW) {
-      throw new Error('Unexpected raw target type returned from evalRCode');
-    }
-
-    return newRProxy(this.#chan, target);
   }
 }

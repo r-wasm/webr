@@ -10,6 +10,7 @@ module.exports = {
     'plugin:@typescript-eslint/recommended-requiring-type-checking',
     'google',
     './node_modules/gts',
+    'plugin:jest/recommended',
   ],
   parser: '@typescript-eslint/parser',
     parserOptions: {
@@ -18,8 +19,8 @@ module.exports = {
       tsconfigRootDir: __dirname,
       project: ['./tsconfig.json'],
   },
-  ignorePatterns: ['.eslintrc.js', 'pre.js', 'esbuild.js'],
-  plugins: ['@typescript-eslint'],
+  ignorePatterns: ['.eslintrc.js', 'pre.js', 'esbuild.js', 'jest.config.js'],
+  plugins: ['@typescript-eslint', 'jest'],
   rules: {
      "@typescript-eslint/no-explicit-any": "off",
      "@typescript-eslint/no-unsafe-member-access": "off",

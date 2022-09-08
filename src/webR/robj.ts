@@ -54,6 +54,7 @@ export type RPtr = number;
 export enum RTargetType {
   RAW = 'RAW',
   PTR = 'PTR',
+  ERR = 'ERR',
 }
 
 export type RTargetPtr = {
@@ -65,7 +66,15 @@ export type RTargetRaw = {
   obj: RawType;
   type: RTargetType.RAW;
 };
-export type RTargetObj = RTargetRaw | RTargetPtr;
+export type RTargetError = {
+  obj: {
+    message: string;
+    name: string;
+    stack?: string;
+  };
+  type: RTargetType.ERR;
+};
+export type RTargetObj = RTargetRaw | RTargetPtr | RTargetError;
 
 type Nullable<T> = T | RObjNull;
 

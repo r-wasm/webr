@@ -1,0 +1,8 @@
+{
+  "reporter": [
+    "text",
+    "lcov"
+  ],
+  "exclude-after-remap": true,
+  "clean": true
+}

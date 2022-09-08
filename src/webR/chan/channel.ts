@@ -38,12 +38,14 @@ export class ChannelMain {
 
   initialised: Promise<unknown>;
   resolve: (_?: unknown) => void;
+  close = () => {};
 
   #parked = new Map<string, ResolveFn>();
 
   constructor(url: string, data: unknown) {
     const initWorker = (worker: Worker) => {
       this.#handleEventsFromWorker(worker);
+      this.close = () => worker.terminate();
       const msg = { type: 'init', data: data } as Message;
       worker.postMessage(msg);
     };
@@ -83,6 +85,14 @@ export class ChannelMain {
 
   async read() {
     return await this.outputQueue.get();
+  }
+
+  async flush() {
+    const msg: Message[] = [];
+    while (!this.outputQueue.isEmpty()) {
+      msg.push(await this.read());
+    }
+    return msg;
   }
 
   write(msg: Message) {
