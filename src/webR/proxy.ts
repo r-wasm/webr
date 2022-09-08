@@ -71,13 +71,18 @@ export function newRProxy(chan: ChannelMain, target: RTargetPtr): RProxy<RObjImp
             },
           })) as RTargetObj;
 
-          if (reply.obj instanceof Error) {
-            throw reply.obj;
+          switch (reply.type) {
+            case RTargetType.PTR:
+              return newRProxy(chan, reply);
+            case RTargetType.ERR: {
+              const e = new Error(reply.obj.message);
+              e.name = reply.obj.name;
+              e.stack = reply.obj.stack;
+              throw e;
+            }
+            default:
+              return reply.obj;
           }
-          if (reply.type === RTargetType.PTR) {
-            return newRProxy(chan, reply);
-          }
-          return reply.obj;
         };
       }
     },

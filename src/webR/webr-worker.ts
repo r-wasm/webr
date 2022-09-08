@@ -83,8 +83,12 @@ function inputOrDispatch(chan: ChannelWorker): string {
             };
             try {
               write(evalRCode(data.code, data.env, data.options));
-            } catch (e) {
-              write({ type: RTargetType.RAW, obj: e });
+            } catch (_e) {
+              const e = _e as Error;
+              write({
+                type: RTargetType.ERR,
+                obj: { name: e.name, message: e.message, stack: e.stack },
+              });
             }
             continue;
           }
@@ -96,8 +100,12 @@ function inputOrDispatch(chan: ChannelWorker): string {
             };
             try {
               write(callRObjMethod(RObjImpl.wrap(data.target.obj), data.prop, data.args));
-            } catch (e) {
-              write({ type: RTargetType.RAW, obj: e });
+            } catch (_e) {
+              const e = _e as Error;
+              write({
+                type: RTargetType.ERR,
+                obj: { name: e.name, message: e.message, stack: e.stack },
+              });
             }
             continue;
           }
