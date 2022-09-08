@@ -53,6 +53,10 @@ export class WebR {
     return await this.#chan.read();
   }
 
+  async flush(): Promise<Message[]> {
+    return await this.#chan.flush();
+  }
+
   write(msg: Message) {
     this.#chan.write(msg);
   }

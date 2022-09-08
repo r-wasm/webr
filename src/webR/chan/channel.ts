@@ -87,6 +87,14 @@ export class ChannelMain {
     return await this.outputQueue.get();
   }
 
+  async flush() {
+    const msg: Message[] = [];
+    while (!this.outputQueue.isEmpty()) {
+      msg.push(await this.read());
+    }
+    return msg;
+  }
+
   write(msg: Message) {
     this.inputQueue.put(msg);
   }
