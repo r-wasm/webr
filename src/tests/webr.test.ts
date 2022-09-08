@@ -26,7 +26,7 @@ const webR = new WebR({
 jest.setTimeout(10000);
 
 describe('Test webR instance startup', () => {
-  test('Constructs successsfully', () => {
+  test('Constructs successfully', () => {
     expect(webR).toBeDefined();
   });
 
@@ -78,13 +78,13 @@ describe('Test webR virtual filesystem', () => {
     expect(fileContents).toStrictEqual(testFileContents);
   });
 
-  test('Recieve information about a file on the VFS', async () => {
+  test('Receive information about a file on the VFS', async () => {
     const fileInfo = await webR.getFSNode('/tmp/testFile');
     expect(fileInfo).toHaveProperty('name', 'testFile');
     expect(fileInfo).toHaveProperty('isFolder', false);
   });
 
-  test('Recieve information about a directory on the VFS', async () => {
+  test('Receive information about a directory on the VFS', async () => {
     const fileInfo = await webR.getFSNode('/tmp');
     expect(fileInfo).toHaveProperty('name', 'tmp');
     expect(fileInfo).toHaveProperty('isFolder', true);
