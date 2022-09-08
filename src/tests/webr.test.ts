@@ -131,8 +131,10 @@ describe('Evaluate R code', () => {
   });
 
   test('Write to stderr while evaluating R code', async () => {
+    await webR.flush();
     const res = webR.evalRCode('message("Hello, stderr!")');
     await expect(res).resolves.not.toThrow();
+    expect((await webR.read()).data).toBe('Hello, stderr!');
   });
 });
 
