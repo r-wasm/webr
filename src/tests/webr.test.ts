@@ -117,17 +117,17 @@ describe('Evaluate R code', () => {
   test('Throw an error if passed an invalid environment', async () => {
     // @ts-expect-error Deliberate type error to test Error thrown
     const promise = webR.evalRCode('3.14159', { env: 42 });
-    await expect(promise).rejects.toThrowError();
+    await expect(promise).rejects.toThrow('invalid environment object');
   });
 
   test('Throw an error if passed an invalid environment object type', async () => {
     const euler = await webR.evalRCode('0.57722');
-    await expect(webR.evalRCode('x', euler)).rejects.toThrow();
+    await expect(webR.evalRCode('x', euler)).rejects.toThrow('env argument with invalid SEXP type');
   });
 
   test('Throw errors from R', async () => {
     const badSyntax = webR.evalRCode('42+');
-    await expect(badSyntax).rejects.toThrow();
+    await expect(badSyntax).rejects.toThrow('parse error');
   });
 
   test('Write to stderr while evaluating R code', async () => {
