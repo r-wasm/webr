@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/await-thenable */
-import { WebR } from '../webR/webr-main';
-import { Message } from '../webR/chan/message';
+import { WebR } from '../../webR/webr-main';
 import {
   RNull,
   RDouble,
@@ -13,129 +12,17 @@ import {
   RPairlist,
   RList,
   REnvironment,
-} from '../webR/robj';
-import { sleep } from '../webR/utils';
-
-import util from 'util';
+} from '../../webR/robj';
 
 const webR = new WebR({
   WEBR_URL: '../dist/',
   RArgs: ['--quiet'],
 });
 
-jest.setTimeout(10000);
+jest.setTimeout(25000);
 
-describe('Test webR instance startup', () => {
-  test('Constructs successfully', () => {
-    expect(webR).toBeDefined();
-  });
-
-  test('Initialises successfully', async () => {
-    await expect(webR.init()).resolves.not.toThrow();
-  });
-});
-
-describe('Test webR simple console input/output', () => {
-  test('Wait for a prompt', async () => {
-    let msg: Message = await webR.read();
-    while (msg.type !== 'prompt') {
-      msg = await webR.read();
-    }
-    expect(msg.data).toBe('> ');
-  });
-
-  test('Write an R command to the console', () => {
-    expect(() => webR.writeConsole('42\n')).not.toThrow();
-  });
-
-  test('Read result line from stdout', async () => {
-    expect((await webR.read()).data).toBe('[1] 42');
-  });
-});
-
-describe('Download and install binary webR packages', () => {
-  test('Install packages via evalRCode', async () => {
-    await webR.evalRCode('webr::install("cli", repos="https://repo.webr.workers.dev/")');
-    const pkg = (await webR.evalRCode('"cli" %in% library(cli)')) as RLogical;
-    expect(await pkg.toLogical()).toEqual(true);
-  });
-
-  test('Install packages via API', async () => {
-    await webR.installPackages(['MASS']);
-    const pkg = (await webR.evalRCode('"MASS" %in% library(MASS)')) as RLogical;
-    expect(await pkg.toLogical()).toEqual(true);
-  });
-});
-
-describe('Test webR virtual filesystem', () => {
-  const testFileContents = new Uint8Array([1, 2, 4, 7, 11, 16, 22, 29, 37, 46]);
-  test('Upload a file to the VFS', async () => {
-    await expect(webR.putFileData('/tmp/testFile', testFileContents)).resolves.not.toThrow();
-    const readFile = (await webR.evalRCode('readBin("/tmp/testFile", "raw", 10)')) as RRaw;
-    expect(Array.from(await readFile.toArray())).toEqual(Array.from(testFileContents));
-  });
-
-  test('Download a file from the VFS', async () => {
-    const fileContents = await webR.getFileData('/tmp/testFile');
-    expect(fileContents).toStrictEqual(testFileContents);
-  });
-
-  test('Receive information about a file on the VFS', async () => {
-    const fileInfo = await webR.getFSNode('/tmp/testFile');
-    expect(fileInfo).toHaveProperty('name', 'testFile');
-    expect(fileInfo).toHaveProperty('isFolder', false);
-  });
-
-  test('Receive information about a directory on the VFS', async () => {
-    const fileInfo = await webR.getFSNode('/tmp');
-    expect(fileInfo).toHaveProperty('name', 'tmp');
-    expect(fileInfo).toHaveProperty('isFolder', true);
-  });
-});
-
-describe('Evaluate R code', () => {
-  test('Evaluate code and return a proxy', async () => {
-    const result = await webR.evalRCode('42');
-    expect(util.types.isProxy(result)).toBe(true);
-  });
-
-  test('Evaluate R code without setting up error handlers', async () => {
-    const result = webR.evalRCode('webr::global_prompt_install()', undefined, {
-      withHandlers: false,
-    });
-    await expect(result).resolves.not.toThrow();
-  });
-
-  test('RProxy _target property', async () => {
-    const result = await webR.evalRCode('42');
-    expect(result._target).toHaveProperty('type', 'PTR');
-    expect(result._target).toHaveProperty('methods');
-    expect(result._target).toHaveProperty('obj');
-    expect(result._target.obj).toEqual(expect.any(Number));
-  });
-
-  test('Throw an error if passed an invalid environment', async () => {
-    // @ts-expect-error Deliberate type error to test Error thrown
-    const promise = webR.evalRCode('3.14159', { env: 42 });
-    await expect(promise).rejects.toThrow('invalid environment object');
-  });
-
-  test('Throw an error if passed an invalid environment object type', async () => {
-    const euler = await webR.evalRCode('0.57722');
-    await expect(webR.evalRCode('x', euler)).rejects.toThrow('env argument with invalid SEXP type');
-  });
-
-  test('Throw errors from R', async () => {
-    const badSyntax = webR.evalRCode('42+');
-    await expect(badSyntax).rejects.toThrow('parse error');
-  });
-
-  test('Write to stderr while evaluating R code', async () => {
-    await webR.flush();
-    const res = webR.evalRCode('message("Hello, stderr!")');
-    await expect(res).resolves.not.toThrow();
-    expect((await webR.read()).data).toBe('Hello, stderr!');
-  });
+beforeAll(async () => {
+  await webR.init();
 });
 
 test('Convert an RNull value to JS', async () => {
@@ -400,10 +287,6 @@ describe('Garbage collection', () => {
     expect(after[0]).toBeLessThan(during[0]);
     expect(after[1]).toBeLessThan(during[1]);
   });
-});
-
-test('Utils sleep', async () => {
-  await expect(sleep(100)).resolves.not.toThrow();
 });
 
 afterAll(() => {
