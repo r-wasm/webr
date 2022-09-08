@@ -22,7 +22,10 @@ export interface Module extends EmscriptenModule {
   };
   _evalRCode: (code: number, env: number) => number;
   // Exported Emscripten JS API
-  allocateUTF8: (str: string) => number;
+  allocateUTF8: typeof allocateUTF8;
+  getValue: typeof getValue;
+  setValue: typeof setValue;
+  UTF8ToString: typeof UTF8ToString;
   // R symbols from Rinternals.h
   _ATTRIB: (ptr: RPtr) => RPtr;
   _CAR: (ptr: RPtr) => RPtr;

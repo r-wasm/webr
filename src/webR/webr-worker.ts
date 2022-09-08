@@ -3,6 +3,7 @@ import { ChannelWorker } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions } from './webr-main';
 import { Module } from './module';
+import { IN_NODE } from './compat';
 import {
   isRObjImpl,
   RObjImpl,
@@ -16,17 +17,23 @@ import {
 
 let initialised = false;
 
-self.onmessage = function (ev: MessageEvent) {
-  if (!ev || !ev.data || !ev.data.type || ev.data.type !== 'init') {
+const onWorkerMessage = function (msg: Message) {
+  if (!msg || !msg.type || msg.type !== 'init') {
     return;
   }
   if (initialised) {
     throw new Error("Can't initialise worker multiple times.");
   }
-
-  init(ev.data.data as Required<WebROptions>);
+  init(msg.data as Required<WebROptions>);
   initialised = true;
 };
+
+if (IN_NODE) {
+  require('worker_threads').parentPort.on('message', onWorkerMessage);
+  (globalThis as any).XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest as XMLHttpRequest;
+} else {
+  globalThis.onmessage = (ev: MessageEvent) => onWorkerMessage(ev.data as Message);
+}
 
 type XHRResponse = {
   status: number;
@@ -228,7 +235,7 @@ function evalRCode(
     }
   }
 
-  const str = allocateUTF8(`{${code}}`);
+  const str = Module.allocateUTF8(`{${code}}`);
   let error: RObjImpl = RObjImpl.null;
   let result: RObjImpl = RObjImpl.null;
 
@@ -270,6 +277,9 @@ function init(config: Required<WebROptions>) {
   Module.noAudioDecoding = true;
 
   Module.preRun.push(() => {
+    if (IN_NODE) {
+      globalThis.FS = Module.FS;
+    }
     Module.FS.mkdirTree(_config.homedir);
     Module.ENV.HOME = _config.homedir;
     Module.FS.chdir(_config.homedir);
