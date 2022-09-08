@@ -71,6 +71,8 @@ describe('Test webR virtual filesystem', () => {
   const testFileContents = new Uint8Array([1, 2, 4, 7, 11, 16, 22, 29, 37, 46]);
   test('Upload a file to the VFS', async () => {
     await expect(webR.putFileData('/tmp/testFile', testFileContents)).resolves.not.toThrow();
+    const readFile = (await webR.evalRCode('readBin("/tmp/testFile", "raw", 10)')) as RRaw;
+    expect(Array.from(await readFile.toArray())).toEqual(Array.from(testFileContents));
   });
 
   test('Download a file from the VFS', async () => {
