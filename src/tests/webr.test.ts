@@ -403,5 +403,5 @@ test('Utils sleep', async () => {
 });
 
 afterAll(() => {
-  return webR.terminate();
+  return webR.close();
 });
