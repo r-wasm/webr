@@ -7,8 +7,6 @@ const webR = new WebR({
   RArgs: ['--quiet'],
 });
 
-jest.setTimeout(25000);
-
 beforeAll(async () => {
   await webR.init();
 });
