@@ -316,6 +316,7 @@ function init(config: Required<WebROptions>) {
   Module.webr = {
     resolveInit: () => {
       chan.resolve();
+      Module.setValue(Module._R_Interactive, _config.interactive, '*');
     },
 
     // C code must call `free()` on the result

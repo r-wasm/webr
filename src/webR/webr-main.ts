@@ -20,6 +20,7 @@ export interface WebROptions {
   WEBR_URL?: string;
   PKG_URL?: string;
   homedir?: string;
+  interactive?: boolean;
 }
 
 const defaultEnv = {
@@ -33,6 +34,7 @@ const defaultOptions = {
   WEBR_URL: BASE_URL,
   PKG_URL: PKG_BASE_URL,
   homedir: '/home/web_user',
+  interactive: true,
 };
 
 export class WebR {

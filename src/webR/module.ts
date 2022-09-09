@@ -76,6 +76,7 @@ export interface Module extends EmscriptenModule {
   _R_DollarSymbol: RPtr;
   _R_EmptyEnv: RPtr;
   _R_GlobalEnv: RPtr;
+  _R_Interactive: RPtr;
   _R_NilValue: RPtr;
   _R_UnboundValue: RPtr;
   _SET_STRING_ELT: (ptr: RPtr, idx: number, val: RPtr) => void;
