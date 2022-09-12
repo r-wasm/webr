@@ -4,6 +4,8 @@ import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy } from './proxy';
 import { RTargetObj, RTargetType, RObject, isRObject } from './robj';
 
+export { Console } from '../console/console';
+
 export type FSNode = {
   id: number;
   name: string;

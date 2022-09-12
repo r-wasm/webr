@@ -46,10 +46,4 @@ function build({ input, output, platform, minify }) {
     platform: 'neutral',
     minify: true,
   },
-  {
-    input: "console/console.ts",
-    output: "../dist/console.mjs",
-    platform: 'neutral',
-    minify: true,
-  },
 ].map(build);
