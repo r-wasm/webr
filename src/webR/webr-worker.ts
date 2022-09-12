@@ -1,7 +1,7 @@
 import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
-import { FSNode, WebROptions } from './webr-main';
+import { FSNode, WebROptions, EvalRCodeOptions } from './webr-main';
 import { Module } from './module';
 import { IN_NODE } from './compat';
 import {
@@ -78,9 +78,7 @@ function inputOrDispatch(chan: ChannelWorker): string {
             const data = reqMsg.data as {
               code: string;
               env: RPtr;
-              options: {
-                withHandlers?: boolean;
-              };
+              options: EvalRCodeOptions;
             };
             try {
               write(evalRCode(data.code, data.env, data.options));
@@ -243,14 +241,8 @@ function callRObjMethod(obj: RObjImpl, prop: string, args: RTargetObj[]): RTarge
  * tryCatch with handlers in place, capturing conditions such as errors?
  * @return {RTargetObj} The resulting R object.
  */
-function evalRCode(
-  code: string,
-  env?: RPtr,
-  options: {
-    withHandlers?: boolean;
-  } = {}
-): RTargetObj {
-  options = Object.assign({ withHandlers: true }, options);
+function evalRCode(code: string, env?: RPtr, options: EvalRCodeOptions = {}): RTargetObj {
+  const _options: Required<EvalRCodeOptions> = Object.assign({ withHandlers: true }, options);
 
   let envObj = RObjImpl.globalEnv;
   if (env) {
@@ -260,23 +252,16 @@ function evalRCode(
     }
   }
 
-  const str = Module.allocateUTF8(`{${code}}`);
-  let error: RObjImpl = RObjImpl.null;
-  let result: RObjImpl = RObjImpl.null;
-
-  if (options.withHandlers) {
-    const evalResult = RObjImpl.wrap(Module._evalRCode(str, envObj.ptr));
-    result = evalResult.get(1);
-    error = evalResult.get(2);
-  } else {
-    result = RObjImpl.wrap(Module._R_ParseEvalString(str, envObj.ptr));
-  }
-
+  const str = Module.allocateUTF8(`withAutoprint({${code}}, echo = FALSE)$value`);
+  const evalResult = RObjImpl.wrap(Module._evalRCode(str, envObj.ptr, _options.withHandlers));
   Module._free(str);
+
+  const error = evalResult.get(3);
   if (!error.isNull()) {
     throw new Error(error.get(1).toJs()?.toString());
   }
-  return { obj: result.ptr, methods: RObjImpl.getMethods(result), type: RTargetType.PTR };
+
+  return { obj: evalResult.ptr, methods: RObjImpl.getMethods(evalResult), type: RTargetType.PTR };
 }
 
 function getFileData(name: string): Uint8Array {

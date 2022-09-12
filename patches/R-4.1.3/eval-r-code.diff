@@ -2,7 +2,7 @@ Index: R-4.1.3/src/main/main.c
 ===================================================================
 --- R-4.1.3.orig/src/main/main.c
 +++ R-4.1.3/src/main/main.c
-@@ -1139,6 +1139,59 @@ void mainloop(void)
+@@ -1139,6 +1139,78 @@ void mainloop(void)
      run_Rmainloop();
  }
  
@@ -30,8 +30,9 @@ Index: R-4.1.3/src/main/main.c
 +
 +void eval_tryCatch_finally(void *fdata) {}
 +
-+SEXP EMSCRIPTEN_KEEPALIVE evalRCode(const char *str, SEXP env) {
++SEXP EMSCRIPTEN_KEEPALIVE evalRCode(const char *str, SEXP env, int withHandlers) {
 +    if (!env) env = R_GlobalEnv;
++    int old_outcon = R_OutputCon;
 +
 +    SEXP ret = PROTECT(allocVector(VECSXP, 3));
 +    SEXP hdata = R_NilValue;
@@ -41,20 +42,38 @@ Index: R-4.1.3/src/main/main.c
 +    SEXP conds = PROTECT(allocVector(STRSXP, 1));
 +    SET_STRING_ELT(conds, 0, mkChar("error"));
 +
-+    SEXP result = PROTECT(R_tryCatch(
-+        &eval_tryCatch_body,
-+        &data,
-+        conds,
-+        &eval_tryCatch_handler,
-+        &hdata,
-+        &eval_tryCatch_finally,
-+        &fdata
++    SEXP out_con = PROTECT(eval(
++        lang3(install("textConnection"), R_NilValue, mkString("w")),
++        R_BaseEnv
++    ));
++    R_OutputCon = asInteger(out_con);
++
++    SEXP result;
++    if (withHandlers) {
++        result = PROTECT(R_tryCatch(
++            &eval_tryCatch_body,
++            &data,
++            conds,
++            &eval_tryCatch_handler,
++            &hdata,
++            &eval_tryCatch_finally,
++            &fdata
++        ));
++    } else {
++        result = eval_tryCatch_body(&data);
++    }
++
++    R_OutputCon = old_outcon;
++    SEXP stdout = PROTECT(eval(
++        lang2(install("textConnectionValue"), out_con),
++        R_BaseEnv
 +    ));
 +
 +    SET_VECTOR_ELT(ret, 0, result);
-+    SET_VECTOR_ELT(ret, 1, hdata);
-+    SET_VECTOR_ELT(ret, 2, fdata);
-+    UNPROTECT(3);
++    SET_VECTOR_ELT(ret, 1, stdout);
++    SET_VECTOR_ELT(ret, 2, hdata);
++    UNPROTECT(5);
++
 +    return ret;
 +}
 +#endif

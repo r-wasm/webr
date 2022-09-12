@@ -2,7 +2,11 @@ import { ChannelMain } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy } from './proxy';
-import { RTargetObj, RTargetType, RObject, isRObject, RawType } from './robj';
+import { RTargetObj, RTargetType, RObject, isRObject, RCharacter, RawType } from './robj';
+
+export type EvalRCodeOptions = {
+  withHandlers?: boolean;
+};
 
 export { Console, ConsoleCallbacks } from '../console/console';
 
@@ -88,8 +92,11 @@ export class WebR {
   async evalRCode(
     code: string,
     env?: RObject,
-    options: { withHandlers?: boolean } = {}
-  ): Promise<RObject> {
+    options: EvalRCodeOptions = {}
+  ): Promise<{
+    result: RObject;
+    stdout: string[];
+  }> {
     if (env && !isRObject(env)) {
       throw new Error('Attempted to evalRcode with invalid environment object');
     }
@@ -112,8 +119,12 @@ export class WebR {
         e.stack = target.obj.stack;
         throw e;
       }
-      default:
-        return newRProxy(this.#chan, target);
+      default: {
+        const obj = newRProxy(this.#chan, target);
+        const result = await obj.get(1);
+        const stdout = (await obj.get(2)) as RCharacter;
+        return { result: result, stdout: await stdout.toJs() };
+      }
     }
   }
 
