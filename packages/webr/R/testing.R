@@ -1,18 +1,18 @@
 # Run a R script within in this instance of R, capturing output to a file.
-sink_source_to_file <- function(sourcefile, outfile) {
+sink_source_to_file <- function(src_file, out_file) {
   r <- 0L
-  con <- file(outfile, open = "wt")
+  con <- file(out_file, open = "wt")
   sink(con)
   sink(con, type = "message")
   tryCatch({
-    source(sourcefile, spaced = FALSE, echo = TRUE, max.deparse.length = Inf)
+    source(src_file, spaced = FALSE, echo = TRUE, max.deparse.length = Inf)
   }, error = function(con) {
     r <<- 1L
   }, finally = {
     sink(type = "message")
     sink()
   })
-  return(invisible(r))
+  invisible(r)
 }
 
 # Remove lines from a file on disk. We use this to remove calls to quit(),
@@ -37,7 +37,7 @@ remove_lines_in_file <- function(sourcefile, lines) {
 #' @param pkg Name of the package to test.
 #' @returns 0 if the test was successful, otherwise 1.
 test_package <- function(pkg) {
-    owd <- getwd()
+    old_wd <- getwd()
     pkgdir <- find.package(pkg)
 
     message(gettextf("Testing examples for package %s", sQuote(pkg)),
@@ -64,13 +64,15 @@ test_package <- function(pkg) {
         call. = FALSE, domain = NA)
     }
 
-    if (dir.exists(d <- file.path(pkgdir, "tests"))) {
+    testdir <- file.path(pkgdir, "tests")
+    if (dir.exists(testdir)) {
       this <- paste0(pkg, "-tests")
       unlink(this, recursive = TRUE)
       dir.create(this)
 
-      file.copy(Sys.glob(file.path(d, "*")), this, recursive = TRUE)
+      file.copy(Sys.glob(file.path(testdir, "*")), this, recursive = TRUE)
       setwd(this)
+      on.exit(setwd(old_wd), add = TRUE)
       message(gettextf("Running specific tests for package %s",
         sQuote(pkg)), domain = NA)
       rfiles <- dir(".", pattern = "\\.[rR]$")
@@ -85,6 +87,5 @@ test_package <- function(pkg) {
         }
       }
     }
-    setwd(owd)
-    return(invisible(0L))
+    invisible(0L)
 }
