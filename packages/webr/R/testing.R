@@ -17,14 +17,10 @@ sink_source_to_file <- function(src_file, out_file) {
 
 # Remove lines from a file on disk. We use this to remove calls to quit(),
 # since we are running examples within the current R session.
-remove_lines_in_file <- function(sourcefile, lines) {
-    con <- file(sourcefile)
-    source <- readLines(con)
-    for (line in lines) {
-      source <- source[source != line]
-    }
-    writeLines(source, con)
-    close(con)
+remove_lines_in_file <- function(src_file, lines) {
+    source <- readLines(src_file)
+    source <- source[!source %in% lines]
+    writeLines(source, src_file)
 }
 
 #' Test an installed R package by running the package examples and tests
