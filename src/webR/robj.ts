@@ -8,7 +8,6 @@ export type RObject = RProxy<RObjImpl>;
 export type RNull = RProxy<RObjNull>;
 export type RSymbol = RProxy<RObjSymbol>;
 export type RPairlist = RProxy<RObjPairlist>;
-export type RFunction = RProxy<RObjFunction>;
 export type REnvironment = RProxy<RObjEnvironment>;
 export type RString = RProxy<RObjString>;
 export type RLogical = RProxy<RObjLogical>;
@@ -18,6 +17,8 @@ export type RComplex = RProxy<RObjComplex>;
 export type RCharacter = RProxy<RObjCharacter>;
 export type RList = RProxy<RObjList>;
 export type RRaw = RProxy<RObjRaw>;
+// RFunction proxies are callable
+export type RFunction = RProxy<RObjFunction> & ((...args: unknown[]) => Promise<unknown>);
 
 export enum RType {
   Null = 0,
@@ -777,7 +778,7 @@ export function isRObjImpl(value: any): value is RObjImpl {
  */
 export function isRObject(value: any): value is RObject {
   return (
-    typeof value === 'object' &&
+    (typeof value === 'object' || typeof value === 'function') &&
     'type' in value &&
     'obj' in value &&
     'methods' in value &&
