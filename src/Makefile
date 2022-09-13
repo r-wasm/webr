@@ -32,7 +32,8 @@ check: $(DIST)
 	npx tsc
 	npx eslint $(TS_SOURCES)
 	NODE_V8_COVERAGE=coverage npx c8 node --experimental-wasm-bigint \
-	  ./node_modules/jest/bin/jest.js --verbose --config jest.config.js
+	  ./node_modules/jest/bin/jest.js --verbose --testTimeout=360000 \
+	  --config jest.config.js
 
 node_modules: package.json
 	npm ci
