@@ -12,12 +12,12 @@ beforeAll(async () => {
 });
 
 test('Evaluate code and return a proxy', async () => {
-  const result = await webR.evalRCode('42');
+  const result = (await webR.evalRCode('42')).result;
   expect(util.types.isProxy(result)).toBe(true);
 });
 
 test('RProxy _target property', async () => {
-  const result = await webR.evalRCode('42');
+  const result = (await webR.evalRCode('42')).result;
   expect(result._target).toHaveProperty('type', 'PTR');
   expect(result._target).toHaveProperty('methods');
   expect(result._target).toHaveProperty('obj');
