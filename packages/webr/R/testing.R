@@ -1,18 +1,14 @@
 # Run a R script within in this instance of R, capturing output to a file.
 sink_source_to_file <- function(src_file, out_file) {
-  r <- 0L
   con <- file(out_file, open = "wt")
   sink(con)
   sink(con, type = "message")
-  tryCatch({
-    source(src_file, spaced = FALSE, echo = TRUE, max.deparse.length = Inf)
-  }, error = function(con) {
-    r <<- 1L
-  }, finally = {
+  on.exit({
     sink(type = "message")
     sink()
-  })
-  invisible(r)
+  }, add = TRUE)
+  source(src_file, spaced = FALSE, echo = TRUE, max.deparse.length = Inf)
+  invisible(0L)
 }
 
 # Remove lines from a file on disk. We use this to remove calls to quit(),
@@ -48,13 +44,15 @@ test_package <- function(pkg) {
       unlink(failfile)
 
       remove_lines_in_file(rfile, c("quit('no')", "q()"))
-      res <- sink_source_to_file(rfile, failfile)
-
+      res <- tryCatch({
+        sink_source_to_file(rfile, failfile)
+      }, error = function() {
+        invisible(1L)
+      })
       if (res) {
         return(invisible(1L))
-      } else {
-        file.rename(failfile, outfile)
       }
+      file.rename(failfile, outfile)
     } else {
       warning(gettextf("no examples found for package %s", sQuote(pkg)),
         call. = FALSE, domain = NA)
@@ -76,9 +74,13 @@ test_package <- function(pkg) {
         remove_lines_in_file(f, c("quit('no')", "q()"))
         message(gettextf("  Running %s", sQuote(f)), domain = NA)
         outfile <- sub("rout$", "Rout", paste0(f, "out"))
-        res <- sink_source_to_file(f, outfile)
-        if (res) {
+        res <- tryCatch({
+          sink_source_to_file(f, outfile)
+        }, error = function() {
           file.rename(outfile, paste0(outfile, ".fail"))
+          invisible(1L)
+        })
+        if (res) {
           return(invisible(1L))
         }
       }
