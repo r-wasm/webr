@@ -59,6 +59,11 @@ describe('Evaluate R code', () => {
     await expect(badSyntax).rejects.toThrow('parse error');
   });
 
+  test('Capture stdout while evaluating R code', async () => {
+    const composite = (await webR.evalRCode('c(1, 2, 4, 6, 12, 24, 36, 48)')).stdout;
+    expect(composite).toEqual(['[1]  1  2  4  6 12 24 36 48']);
+  });
+
   test('Write to stderr while evaluating R code', async () => {
     await webR.flush();
     const res = webR.evalRCode('message("Hello, stderr!")');
