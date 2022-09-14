@@ -2,7 +2,7 @@ Index: R-4.1.3/src/main/main.c
 ===================================================================
 --- R-4.1.3.orig/src/main/main.c
 +++ R-4.1.3/src/main/main.c
-@@ -1139,6 +1139,121 @@ void mainloop(void)
+@@ -1139,6 +1139,216 @@ void mainloop(void)
      run_Rmainloop();
  }
  
@@ -18,16 +18,58 @@ Index: R-4.1.3/src/main/main.c
 +    SEXP env;
 +};
 +
++struct tryCatch_args {
++    SEXP (*body)(void *);
++    void *bdata;
++    SEXP (*handler)(SEXP, void *);
++    void *hdata;
++};
++
++SEXP eval_withHandlers_body(void *data) {
++    struct tryCatch_args *args = (struct tryCatch_args*) data;
++    return R_tryCatchError(
++        args->body, args->bdata, args->handler, args->hdata
++    );
++}
++
 +SEXP eval_tryCatch_body(void *data) {
 +    struct eval_args *args = (struct eval_args*) data;
 +    return R_ParseEvalString(args->str, args->env);
 +}
 +
++/* Handler for capturing error conditions
++ * The condition is stored to be sent back to webR
++ */
 +SEXP eval_tryCatch_capture(SEXP cond, void *hdata) {
-+    *((SEXP *)hdata) = cond;
++    *((SEXP *)hdata) = listAppend(*((SEXP *)hdata), list1(cond));
 +    return R_NilValue;
 +}
 +
++/* Handler for capturing warning and message conditions
++ * The condition is stored to be sent back to webR, and then muffled.
++ */
++SEXP NORET eval_withHandlers_capture(SEXP cond, void *hdata) {
++    *((SEXP *)hdata) = listAppend(*((SEXP *)hdata), list1(cond));
++    for (; R_RestartStack != R_NilValue; R_RestartStack = CDR(R_RestartStack)){
++        const char *name = CHAR(
++            STRING_ELT(VECTOR_ELT(CAR(R_RestartStack), 0), 0)
++        );
++        SEXP exit = VECTOR_ELT(CAR(R_RestartStack), 1);
++        if (strcmp(name, "muffleWarning") == 0 ||
++            strcmp(name, "muffleMessage") == 0 ) {
++            findcontext(CTXT_FUNCTION, exit, R_NilValue);
++        }
++    }
++    error(_("muffle restart not on stack"));
++}
++
++
++/* Handler for when we are using tryCatch but are not capturing error
++ * conditions to be sent back to webR. In that situation we still handle
++ * errors for evalRCode, so that can we recover if there is some error during
++ * evaluation without jumping away to the top level. Here an error message is
++ * constructed and written to stderr, before returning NULL.
++ */
 +#define BUFSIZE 8192
 +SEXP eval_tryCatch_stderr(SEXP cond, void *hdata) {
 +    char errbuf[BUFSIZE];
@@ -39,26 +81,75 @@ Index: R-4.1.3/src/main/main.c
 +    return R_NilValue;
 +}
 +
-+void eval_tryCatch_finally(void *fdata) {}
++/* The following trick is largely based on R_tryCatch in errors.c
++ * This is a similar construction targeting withCallingHandlers so that we can
++ * capture multiple conditions using calling handlers rather than using exit
++ * handlers with tryCatch.
++ */
++typedef struct {
++    SEXP (*body)(void *);
++    void *bdata;
++    SEXP (*handler)(SEXP, void *);
++    void *hdata;
++    int suspended;
++} withHandlerData_t;
++static SEXP withhandlers_callback = NULL;
++static const char* withhandlers_callback_source =
++    "function(addr, classes) {\n"
++    "    handler <- function(cond)\n"
++    "        .Internal(C_tryCatchHelper(addr, 1L, cond))\n"
++    "    handlers <- rep_len(alist(handler), length(classes))\n"
++    "    names(handlers) <- classes\n"
++    "    args <- c(alist(.Internal(C_tryCatchHelper(addr, 0L))), handlers)\n"
++    "    do.call('withCallingHandlers', args)\n"
++    "}";
++SEXP R_withHandlers(SEXP (*body)(void *), void *bdata,
++    SEXP conds, SEXP (*handler)(SEXP, void *), void *hdata
++) {
++    if (withhandlers_callback == NULL) {
++        withhandlers_callback = R_ParseEvalString(
++            withhandlers_callback_source, R_BaseNamespace
++        );
++        R_PreserveObject(withhandlers_callback);
++    }
 +
-+SEXP EMSCRIPTEN_KEEPALIVE evalRCode(
-+    const char *str,
-+    SEXP env,
-+    int handlers,
-+    int conditions,
-+    int streams
++    withHandlerData_t tcd = {
++        .body = body,
++        .bdata = bdata,
++        .handler = handler,
++        .hdata = hdata,
++        .suspended = R_interrupts_suspended
++    };
++
++    R_interrupts_suspended = TRUE;
++
++    if (conds == NULL) conds = allocVector(STRSXP, 0);
++    PROTECT(conds);
++    SEXP tcdptr = R_MakeExternalPtr(&tcd, R_NilValue, R_NilValue);
++    SEXP expr = lang3(withhandlers_callback, tcdptr, conds);
++    PROTECT(expr);
++    int oldvis = R_Visible;
++    SEXP val = eval(expr, R_GlobalEnv);
++    R_Visible = oldvis;
++    UNPROTECT(2); /* conds, expr */
++    R_interrupts_suspended = tcd.suspended;
++    return val;
++}
++
++/* The evalRCode entrypoint from webR */
++SEXP EMSCRIPTEN_KEEPALIVE evalRCode(const char *str, SEXP env, int handlers,
++    int conditions, int streams
 +) {
 +    if (!env) env = R_GlobalEnv;
 +    int old_out_con = R_OutputCon;
 +    int old_err_con = R_ErrorCon;
 +
 +    SEXP ret = PROTECT(allocVector(VECSXP, 4));
-+    SEXP hdata, fdata, out, err, out_con, err_con;
-+    hdata = fdata = out = err = R_NilValue;
-+    SEXP (*tryCatch_handler)(SEXP, void *);
-+
++    SEXP hdata, out, err, out_con, err_con;
++    hdata = out = err = R_NilValue;
 +
 +    if (streams) {
++        // Redirect stdout and stderr streams using sink
 +        out_con = PROTECT(eval(
 +            lang3(install("textConnection"), R_NilValue, mkString("w")),
 +            R_BaseEnv
@@ -74,30 +165,34 @@ Index: R-4.1.3/src/main/main.c
 +
 +    struct eval_args data = { str, env };
 +    if (handlers) {
-+        SEXP conds;
-+        conds = PROTECT(mkString("error"));
 +        if (conditions) {
-+            tryCatch_handler = &eval_tryCatch_capture;
++            // Capture errors, warnings and messages
++            struct tryCatch_args bdata = {
++                &eval_tryCatch_body,
++                &data,
++                &eval_tryCatch_capture,
++                &hdata
++            };
++            SEXP cond = PROTECT(allocVector(STRSXP, 2));
++            SET_STRING_ELT(cond, 0, mkChar("warning"));
++            SET_STRING_ELT(cond, 1, mkChar("message"));
++            SET_VECTOR_ELT(ret, 0, R_withHandlers(&eval_withHandlers_body,
++                &bdata, cond, &eval_withHandlers_capture, &hdata));
++            UNPROTECT(1); //cond
 +        } else {
-+            tryCatch_handler = &eval_tryCatch_stderr;
++            // Do not capture warnings or messages, errors written to stderr
++            SET_VECTOR_ELT(ret, 0, R_tryCatchError(&eval_tryCatch_body,
++                &data, &eval_tryCatch_stderr, &hdata));
 +        }
-+        SET_VECTOR_ELT(ret, 0, R_tryCatch(
-+            &eval_tryCatch_body,
-+            &data,
-+            conds,
-+            tryCatch_handler,
-+            &hdata,
-+            NULL,
-+            NULL
-+        ));
-+        UNPROTECT(1); // conds
 +    } else {
++        // Do not install any handlers, parse and eval the code directly
 +        SET_VECTOR_ELT(ret, 0, eval_tryCatch_body(&data));
 +    }
 +
 +    PrintWarnings();
 +
 +    if (streams) {
++        // Restore stdout and stderr streams using sink
 +        eval(lang4(install("sink"), R_NilValue, R_FalseValue,
 +            mkString("message")), R_BaseEnv);
 +        eval(lang2(install("sink"), R_NilValue), R_BaseEnv);
