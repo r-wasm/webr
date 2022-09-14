@@ -5,6 +5,9 @@ import { newRProxy } from './proxy';
 import { RTargetObj, RTargetType, RObject, isRObject, RCharacter, RawType } from './robj';
 
 export type EvalRCodeOptions = {
+  captureStreams?: boolean;
+  captureConditions?: boolean;
+  withAutoprint?: boolean;
   withHandlers?: boolean;
 };
 
@@ -96,6 +99,8 @@ export class WebR {
   ): Promise<{
     result: RObject;
     stdout: string[];
+    stderr: string[];
+    conditions: unknown;
   }> {
     if (env && !isRObject(env)) {
       throw new Error('Attempted to evalRcode with invalid environment object');
@@ -123,7 +128,14 @@ export class WebR {
         const obj = newRProxy(this.#chan, target);
         const result = await obj.get(1);
         const stdout = (await obj.get(2)) as RCharacter;
-        return { result: result, stdout: await stdout.toJs() };
+        const stderr = (await obj.get(3)) as RCharacter;
+        const conditions = await obj.get(4);
+        return {
+          result: result,
+          stdout: await stdout.toJs(),
+          stderr: await stderr.toJs(),
+          conditions: await conditions.toJs(),
+        };
       }
     }
   }

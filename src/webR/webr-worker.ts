@@ -237,12 +237,27 @@ function callRObjMethod(obj: RObjImpl, prop: string, args: RTargetObj[]): RTarge
  * @param {string}  code The R code to evaluate.
  * @param {RPtr} [env] An RPtr to the environment to evaluate within.
  * @param {Object<string,any>} [options={}] Options for the execution environment.
+ * @param {boolean} [options.captureStreams] Should the stdout and stderr
+ * output streams be captured and returned?
+ * @param {boolean} [options.captureConditions] Should conditions raised during
+ * execution be captured and returned?
+ * @param {boolean} [options.withAutoprint] Should the code automatically print
+ * output as if it were written at an R console?
  * @param {boolean} [options.withHandlers] Should the code be executed using a
- * tryCatch with handlers in place, capturing conditions such as errors?
- * @return {RTargetObj} The resulting R object.
+ * tryCatch with handlers in place.
+ * @return {RTargetObj} An R object containing the result of the computation
+ * along with any other objects captured during execution.
  */
 function evalRCode(code: string, env?: RPtr, options: EvalRCodeOptions = {}): RTargetObj {
-  const _options: Required<EvalRCodeOptions> = Object.assign({ withHandlers: true }, options);
+  const _options: Required<EvalRCodeOptions> = Object.assign(
+    {
+      captureStreams: false,
+      captureConditions: true,
+      withAutoprint: false,
+      withHandlers: true,
+    },
+    options
+  );
 
   let envObj = RObjImpl.globalEnv;
   if (env) {
@@ -252,14 +267,19 @@ function evalRCode(code: string, env?: RPtr, options: EvalRCodeOptions = {}): RT
     }
   }
 
-  const str = Module.allocateUTF8(`withAutoprint({${code}}, echo = FALSE)$value`);
-  const evalResult = RObjImpl.wrap(Module._evalRCode(str, envObj.ptr, _options.withHandlers));
+  const str = Module.allocateUTF8(
+    _options.withAutoprint ? `withAutoprint({${code}}, echo = FALSE)$value` : `{${code}}`
+  );
+  const evalResult = RObjImpl.wrap(
+    Module._evalRCode(
+      str,
+      envObj.ptr,
+      _options.withHandlers,
+      _options.captureConditions,
+      _options.captureStreams
+    )
+  );
   Module._free(str);
-
-  const error = evalResult.get(3);
-  if (!error.isNull()) {
-    throw new Error(error.get(1).toJs()?.toString());
-  }
 
   return { obj: evalResult.ptr, methods: RObjImpl.getMethods(evalResult), type: RTargetType.PTR };
 }

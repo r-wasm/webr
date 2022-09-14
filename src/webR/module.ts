@@ -20,7 +20,13 @@ export interface Module extends EmscriptenModule {
     status: number;
     response: string | ArrayBuffer;
   };
-  _evalRCode: (code: number, env: number, withHandlers: boolean) => number;
+  _evalRCode: (
+    code: number,
+    env: number,
+    handlers: boolean,
+    conditions: boolean,
+    streams: boolean
+  ) => number;
   // Exported Emscripten JS API
   allocateUTF8: typeof allocateUTF8;
   getValue: typeof getValue;
