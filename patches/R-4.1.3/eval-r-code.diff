@@ -2,7 +2,7 @@ Index: R-4.1.3/src/main/main.c
 ===================================================================
 --- R-4.1.3.orig/src/main/main.c
 +++ R-4.1.3/src/main/main.c
-@@ -1139,6 +1139,216 @@ void mainloop(void)
+@@ -1139,6 +1139,214 @@ void mainloop(void)
      run_Rmainloop();
  }
  
@@ -22,13 +22,13 @@ Index: R-4.1.3/src/main/main.c
 +    SEXP (*body)(void *);
 +    void *bdata;
 +    SEXP (*handler)(SEXP, void *);
-+    void *hdata;
++    void *edata;
 +};
 +
 +SEXP eval_withHandlers_body(void *data) {
 +    struct tryCatch_args *args = (struct tryCatch_args*) data;
 +    return R_tryCatchError(
-+        args->body, args->bdata, args->handler, args->hdata
++        args->body, args->bdata, args->handler, args->edata
 +    );
 +}
 +
@@ -40,8 +40,8 @@ Index: R-4.1.3/src/main/main.c
 +/* Handler for capturing error conditions
 + * The condition is stored to be sent back to webR
 + */
-+SEXP eval_tryCatch_capture(SEXP cond, void *hdata) {
-+    *((SEXP *)hdata) = listAppend(*((SEXP *)hdata), list1(cond));
++SEXP eval_tryCatch_capture(SEXP cond, void *edata) {
++    *((SEXP *)edata) = cond;
 +    return R_NilValue;
 +}
 +
@@ -71,7 +71,7 @@ Index: R-4.1.3/src/main/main.c
 + * constructed and written to stderr, before returning NULL.
 + */
 +#define BUFSIZE 8192
-+SEXP eval_tryCatch_stderr(SEXP cond, void *hdata) {
++SEXP eval_tryCatch_stderr(SEXP cond, void *edata) {
 +    char errbuf[BUFSIZE];
 +    Rsnprintf_mbcs(errbuf, BUFSIZE, _("Error: "));
 +    char *p = errbuf + strlen(errbuf);
@@ -141,12 +141,9 @@ Index: R-4.1.3/src/main/main.c
 +    int conditions, int streams
 +) {
 +    if (!env) env = R_GlobalEnv;
-+    int old_out_con = R_OutputCon;
-+    int old_err_con = R_ErrorCon;
-+
-+    SEXP ret = PROTECT(allocVector(VECSXP, 4));
-+    SEXP hdata, out, err, out_con, err_con;
-+    hdata = out = err = R_NilValue;
++    SEXP ret = PROTECT(allocVector(VECSXP, 5));
++    SEXP hdata, edata, out, err, out_con, err_con;
++    hdata = edata = out = err = R_NilValue;
 +
 +    if (streams) {
 +        // Redirect stdout and stderr streams using sink
@@ -171,7 +168,7 @@ Index: R-4.1.3/src/main/main.c
 +                &eval_tryCatch_body,
 +                &data,
 +                &eval_tryCatch_capture,
-+                &hdata
++                &edata
 +            };
 +            SEXP cond = PROTECT(allocVector(STRSXP, 2));
 +            SET_STRING_ELT(cond, 0, mkChar("warning"));
@@ -182,7 +179,7 @@ Index: R-4.1.3/src/main/main.c
 +        } else {
 +            // Do not capture warnings or messages, errors written to stderr
 +            SET_VECTOR_ELT(ret, 0, R_tryCatchError(&eval_tryCatch_body,
-+                &data, &eval_tryCatch_stderr, &hdata));
++                &data, &eval_tryCatch_stderr, &edata));
 +        }
 +    } else {
 +        // Do not install any handlers, parse and eval the code directly
@@ -210,6 +207,7 @@ Index: R-4.1.3/src/main/main.c
 +    SET_VECTOR_ELT(ret, 1, out);
 +    SET_VECTOR_ELT(ret, 2, err);
 +    SET_VECTOR_ELT(ret, 3, hdata);
++    SET_VECTOR_ELT(ret, 4, edata);
 +    UNPROTECT(1); // ret
 +
 +    return ret;

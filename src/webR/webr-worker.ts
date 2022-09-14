@@ -281,6 +281,11 @@ function evalRCode(code: string, env?: RPtr, options: EvalRCodeOptions = {}): RT
   );
   Module._free(str);
 
+  const error = evalResult.get(5);
+  if (!error.isNull()) {
+    throw new Error(error.get(1).toJs()?.toString());
+  }
+
   return { obj: evalResult.ptr, methods: RObjImpl.getMethods(evalResult), type: RTargetType.PTR };
 }
 
