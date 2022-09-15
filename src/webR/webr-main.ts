@@ -100,7 +100,8 @@ export class WebR {
     result: RObject;
     stdout: string[];
     stderr: string[];
-    conditions: unknown;
+    messages: unknown;
+    warnings: unknown;
   }> {
     if (env && !isRObject(env)) {
       throw new Error('Attempted to evalRcode with invalid environment object');
@@ -129,12 +130,14 @@ export class WebR {
         const result = await obj.get(1);
         const stdout = (await obj.get(2)) as RCharacter;
         const stderr = (await obj.get(3)) as RCharacter;
-        const conditions = await obj.get(4);
+        const messages = await obj.get(4);
+        const warnings = await obj.get(5);
         return {
           result: result,
           stdout: await stdout.toJs(),
           stderr: await stderr.toJs(),
-          conditions: await conditions.toJs(),
+          messages: await messages.toJs(),
+          warnings: await warnings.toJs(),
         };
       }
     }

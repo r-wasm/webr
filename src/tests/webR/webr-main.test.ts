@@ -56,7 +56,7 @@ describe('Evaluate R code', () => {
 
   test('Throw errors from R', async () => {
     const badSyntax = webR.evalRCode('42+');
-    await expect(badSyntax).rejects.toThrow('parse error');
+    await expect(badSyntax).rejects.toThrow('unexpected end of input');
   });
 
   test('Write to stdout while evaluating R code', async () => {

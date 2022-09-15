@@ -267,25 +267,32 @@ function evalRCode(code: string, env?: RPtr, options: EvalRCodeOptions = {}): RT
     }
   }
 
-  const str = Module.allocateUTF8(
-    _options.withAutoprint ? `withAutoprint({${code}}, echo = FALSE)$value` : `{${code}}`
+  const tPtr = Module.getValue(Module._R_TrueValue, '*');
+  const fPtr = Module.getValue(Module._R_FalseValue, '*');
+  const codeStr = Module.allocateUTF8(code);
+  const evalStr = Module.allocateUTF8('webr:::evalRCode');
+  const codeObj = new RObjImpl({ type: RTargetType.RAW, obj: code });
+  codeObj.preserve();
+  const expr = Module._Rf_lang6(
+    Module._R_ParseEvalString(evalStr, RObjImpl.baseEnv.ptr),
+    codeObj.ptr,
+    _options.captureConditions ? tPtr : fPtr,
+    _options.captureStreams ? tPtr : fPtr,
+    _options.withAutoprint ? tPtr : fPtr,
+    _options.withHandlers ? tPtr : fPtr
   );
-  const evalResult = RObjImpl.wrap(
-    Module._evalRCode(
-      str,
-      envObj.ptr,
-      _options.withHandlers,
-      _options.captureConditions,
-      _options.captureStreams
-    )
-  );
-  Module._free(str);
+  const evalResult = RObjImpl.wrap(Module._Rf_eval(expr, envObj.ptr));
+  evalResult.preserve();
+  codeObj.release();
+  Module._free(codeStr);
+  Module._free(evalStr);
 
-  const error = evalResult.get(5);
+  const error = evalResult.get(6);
   if (!error.isNull()) {
     throw new Error(error.get(1).toJs()?.toString());
   }
 
+  evalResult.release();
   return { obj: evalResult.ptr, methods: RObjImpl.getMethods(evalResult), type: RTargetType.PTR };
 }
 
