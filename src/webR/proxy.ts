@@ -1,4 +1,5 @@
-import { RTargetObj, RTargetPtr, RObjImpl, RTargetType, isRObject } from './robj';
+import { RTargetType, RTargetPtr, isRObject, RTargetObj } from './robj';
+import { RObjImpl, RObjFunction, RawType } from './robj';
 import { ChannelMain } from './chan/channel';
 
 /** Obtain a union of the keys corresponding to methods of a given class T
@@ -50,9 +51,15 @@ export type RProxy<T extends RObjImpl> = { [P in Methods<T>]: RProxify<T[P]> } &
   _target: RTargetObj;
 };
 
+/* The empty function is used as base when we are proxying RFunction objects.
+ * This enables function call semantics on the proxy using the apply hook.
+ */
+function empty() {}
+
 export function newRProxy(chan: ChannelMain, target: RTargetPtr): RProxy<RObjImpl> {
-  return new Proxy(target, {
-    get: (_target: RTargetObj, prop: string | number | symbol) => {
+  // Assume we are proxying an RFunction if the methods list contains 'exec'.
+  return new Proxy(target.methods.includes('exec') ? Object.assign(empty, { ...target }) : target, {
+    get: (_: RTargetObj, prop: string | number | symbol) => {
       if (prop === '_target') {
         return target;
       } else if (target.methods.includes(prop.toString())) {
@@ -86,5 +93,7 @@ export function newRProxy(chan: ChannelMain, target: RTargetPtr): RProxy<RObjImp
         };
       }
     },
+    apply: async (_: RTargetObj, _thisArg, args: (RawType | RProxy<RObjImpl>)[]) =>
+      (newRProxy(chan, target) as RProxy<RObjFunction>).exec(...args),
   }) as unknown as RProxy<RObjImpl>;
 }
