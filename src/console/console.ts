@@ -1,3 +1,4 @@
+import { IN_NODE } from '../webR/compat';
 import { WebR, WebROptions } from '../webR/webr-main';
 
 /**
@@ -45,7 +46,7 @@ import { WebR, WebROptions } from '../webR/webr-main';
  */
 export class Console {
   webR: WebR;
-  canvas: HTMLCanvasElement;
+  canvas: HTMLCanvasElement | undefined;
   #stdout;
   #stderr;
   #prompt;
@@ -80,9 +81,11 @@ export class Console {
     }
   ) {
     this.webR = new WebR(options);
-    this.canvas = document.createElement('canvas');
-    this.canvas.setAttribute('width', '1008');
-    this.canvas.setAttribute('height', '1008');
+    if (!IN_NODE) {
+      this.canvas = document.createElement('canvas');
+      this.canvas.setAttribute('width', '1008');
+      this.canvas.setAttribute('height', '1008');
+    }
     this.#stdout = callbacks.stdout || this.#defaultStdout;
     this.#stderr = callbacks.stderr || this.#defaultStderr;
     this.#prompt = callbacks.prompt || this.#defaultPrompt;
@@ -127,6 +130,9 @@ export class Console {
    * @param {string} exec - The canvas API command as a text string
    */
   #defaultCanvasExec = (exec: string) => {
+    if (IN_NODE) {
+      throw new Error('Plotting with HTML canvas is not yet supported under Node');
+    }
     Function(`this.getContext('2d').${exec}`).bind(this.canvas)();
   };
 
