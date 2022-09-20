@@ -33,3 +33,7 @@ test('Generate an error message and write to stdout', async () => {
   await sleep(500);
   expect(stderr).toHaveBeenCalledWith('Error: unexpected \';\' in ";"');
 });
+
+afterAll(() => {
+  return con.webR.close();
+});
