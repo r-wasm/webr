@@ -2,7 +2,7 @@ import { ChannelMain } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy } from './proxy';
-import { RTargetObj, RTargetType, RObject, isRObject } from './robj';
+import { RTargetObj, RTargetType, RObject, isRObject, RawType } from './robj';
 
 export type FSNode = {
   id: number;
@@ -102,6 +102,27 @@ export class WebR {
     switch (target.type) {
       case RTargetType.RAW:
         throw new Error('Unexpected raw target type returned from evalRCode');
+      case RTargetType.ERR: {
+        const e = new Error(target.obj.message);
+        e.name = target.obj.name;
+        e.stack = target.obj.stack;
+        throw e;
+      }
+      default:
+        return newRProxy(this.#chan, target);
+    }
+  }
+
+  async newRObject(jsObj: RawType): Promise<RObject> {
+    const target = (await this.#chan.request({
+      type: 'newRObject',
+      data: {
+        obj: { type: RTargetType.RAW, obj: jsObj },
+      },
+    })) as RTargetObj;
+    switch (target.type) {
+      case RTargetType.RAW:
+        throw new Error('Unexpected raw target type returned from newRObject');
       case RTargetType.ERR: {
         const e = new Error(target.obj.message);
         e.name = target.obj.name;

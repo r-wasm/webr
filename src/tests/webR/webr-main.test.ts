@@ -1,5 +1,6 @@
 import { WebR } from '../../webR/webr-main';
 import { Message } from '../../webR/chan/message';
+import { RDouble } from '../../webR/robj';
 
 const webR = new WebR({
   WEBR_URL: '../dist/',
@@ -66,6 +67,12 @@ describe('Evaluate R code', () => {
     await expect(res).resolves.not.toThrow();
     expect((await webR.read()).data).toBe('Hello, stderr!');
   });
+});
+
+test('Create simple R object from the main thread', async () => {
+  const jsObj = [1, 2, 3, 6, 11, 23, 47, 106, 235];
+  const rObj = (await webR.newRObject(jsObj)) as RDouble;
+  expect(Array.from(await rObj.toArray())).toEqual(jsObj);
 });
 
 afterAll(() => {
