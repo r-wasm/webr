@@ -13,6 +13,7 @@ import {
   RTargetType,
   RType,
   RawType,
+  RTargetRaw,
 } from './robj';
 
 let initialised = false;
@@ -83,6 +84,22 @@ function inputOrDispatch(chan: ChannelWorker): string {
             };
             try {
               write(evalRCode(data.code, data.env, data.options));
+            } catch (_e) {
+              const e = _e as Error;
+              write({
+                type: RTargetType.ERR,
+                obj: { name: e.name, message: e.message, stack: e.stack },
+              });
+            }
+            continue;
+          }
+          case 'newRObject': {
+            const data = reqMsg.data as {
+              obj: RTargetRaw;
+            };
+            try {
+              const res = new RObjImpl(data.obj);
+              write({ obj: res.ptr, methods: RObjImpl.getMethods(res), type: RTargetType.PTR });
             } catch (_e) {
               const e = _e as Error;
               write({
