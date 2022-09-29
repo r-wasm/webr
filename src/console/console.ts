@@ -1,11 +1,12 @@
 import { IN_NODE } from '../webR/compat';
 import { WebR, WebROptions } from '../webR/webr-main';
 
-/**
- * @callback ConsoleCallback
- * @param {string} text
- * @return {void}
- */
+export interface ConsoleCallbacks {
+  stdout?: (line: string) => void;
+  stderr?: (line: string) => void;
+  prompt?: (line: string) => void;
+  canvasExec?: (line: string) => void;
+}
 
 /**
  * Text-based Interactive Console for WebR
@@ -17,8 +18,8 @@ import { WebR, WebROptions } from '../webR/webr-main';
  * of output as the first argument. The default implementation of `stdout` and
  * `stderr` writes to the console using `console.log` and `console.error`.
  *
- * R code should input by calling the ``stdin`` method with a single line of
- * textual input.
+ * R code can be sent as input by calling the ``stdin`` method with a single
+ * line of textual input.
  *
  * The ``prompt`` callback function is called when webR produces a prompt at
  * the REPL console and is therefore awaiting user input. The prompt character
@@ -29,49 +30,36 @@ import { WebR, WebROptions } from '../webR/webr-main';
  * The ``canvasExec`` callback function is called when webR writes plots to
  * the built-in HTML canvas graphics device.
  *
- * Once constructed, start the Console using the ``run`` method. This method
- * returns a promise than never resolves. The `run` method consists of an
- * asynchronous infinite loop that waits for output from the webR worker and
- * then calls the relevant callbacks.
- *
- * @class
- * @property {WebR} webR The supporting instance of webR.
- * @property {ConsoleCallback} stdout Called when webR outputs to ``stdout``.
- * @property {ConsoleCallback} stderr Called when webR outputs to ``stderr``.
- * @property {ConsoleCallback} prompt Called when webR prompts for input.
- * @property {ConsoleCallback} canvasExec Called when webR writes to the HTML
- * canvas element.
- * @property {HTMLCanvasElement} canvas The HTML canvas element written to
- * by default.
+ * Once constructed, start the Console using the ``run`` method. The `run`
+ * method starts an asynchronous infinite loop that waits for output from the
+ * webR worker and then calls the relevant callbacks.
  */
 export class Console {
+  /** The supporting instance of webR */
   webR: WebR;
+  /** A HTML canvas element
+   *
+   * The canvas graphics device writes to this element by default. Undefined
+   * when HTML canvas is unsupported.
+   */
   canvas: HTMLCanvasElement | undefined;
-  #stdout;
-  #stderr;
-  #prompt;
-  #canvasExec;
+  /** Called when webR outputs to ``stdout`` */
+  #stdout: (line: string) => void;
+  /** Called when webR outputs to ``stderr`` */
+  #stderr: (line: string) => void;
+  /** Called when webR prompts for input */
+  #prompt: (line: string) => void;
+  /** Called when webR writes to the HTML canvas element */
+  #canvasExec: (line: string) => void;
 
   /**
-   * @constructor
-   * @param {Object} callbacks
-   * @param {ConsoleCallback} callbacks.stdout Called when webR outputs
-   * to stdout.
-   * @param {ConsoleCallback} callbacks.stderr Called when webR outputs
-   * to stderr.
-   * @param {ConsoleCallback} callbacks.prompt Called when webR prompts
-   * for input.
-   * @param {ConsoleCallback} callbacks.canvasExec Called when webR writes
-   * to HTML canvas.
-   * @param {WebROptions} options The options for the new webR instance.
+   * @param {ConsoleCallbacks} callbacks A list of webR Console callbacks to
+   * be used for this console.
+   * @param {WebROptions} options The options to use for the new instance of
+   * webR started to support this console.
    */
   constructor(
-    callbacks: {
-      stdout?: (text: string) => void;
-      stderr?: (text: string) => void;
-      prompt?: (text: string) => void;
-      canvasExec?: (text: string) => void;
-    } = {},
+    callbacks: ConsoleCallbacks = {},
     options: WebROptions = {
       REnv: {
         R_HOME: '/usr/lib/R',
@@ -94,7 +82,7 @@ export class Console {
 
   /**
    * Write a line of input to webR's REPL through ``stdin``
-   * @param {string} input - A line of input text
+   * @param {string} input A line of input text.
    */
   stdin(input: string) {
     this.webR.writeConsole(input + '\n');
@@ -102,7 +90,7 @@ export class Console {
 
   /**
    * The default function called when webR outputs to ``stdout``
-   * @param {string} text - The line sent to stdout by webR
+   * @param {string} text The line sent to stdout by webR.
    */
   #defaultStdout = (text: string) => {
     console.log(text);
@@ -110,7 +98,7 @@ export class Console {
 
   /**
    * The default function called when webR outputs to ``stderr``
-   * @param {string} text - The line sent to stderr by webR
+   * @param {string} text The line sent to stderr by webR.
    */
   #defaultStderr = (text: string) => {
     console.error(text);
@@ -118,7 +106,7 @@ export class Console {
 
   /**
    * The default function called when webR writes out a prompt
-   * @param {string} text - The text content of the prompt
+   * @param {string} text The text content of the prompt.
    */
   #defaultPrompt = (text: string) => {
     const input = prompt(text);
@@ -127,7 +115,7 @@ export class Console {
 
   /**
    * The default function called when webR writes to HTML canvas
-   * @param {string} exec - The canvas API command as a text string
+   * @param {string} exec The canvas API command as a text string.
    */
   #defaultCanvasExec = (exec: string) => {
     if (IN_NODE) {
@@ -138,13 +126,20 @@ export class Console {
 
   /**
    * Start the webR console
+   */
+  run() {
+    this.#run();
+  }
+
+  /*
+   * Start the asynchronous infinite loop
    *
-   * Start the infinite loop waiting for output from webR and dispatching
-   * callbacks based on the message recieved.
+   * This loop waits for output from webR and dispatches callbacks based on the
+   * message recieved.
    *
    * The promise returned by this asynchronous function never resolves.
    */
-  async run() {
+  async #run() {
     for (;;) {
       const output = await this.webR.read();
       switch (output.type) {
