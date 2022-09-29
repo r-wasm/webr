@@ -1,14 +1,16 @@
 import { Console } from '../../webR/webr-main';
-import { sleep } from '../../webR/utils';
+import { promiseHandles } from '../../webR/utils';
 
 const stdout = jest.fn();
 const stderr = jest.fn();
 const prompt = jest.fn();
+
+let waitForPrompt = promiseHandles();
 const con = new Console(
   {
     stdout: stdout,
     stderr: stderr,
-    prompt: prompt,
+    prompt: (line: string) => waitForPrompt.resolve(prompt(line)),
   },
   {
     WEBR_URL: '../dist/',
@@ -23,14 +25,16 @@ test('Start up the REPL and wait for user input prompt', async () => {
 });
 
 test('Take input and write to stdout', async () => {
+  waitForPrompt = promiseHandles();
   con.stdin('42');
-  await sleep(500);
+  await waitForPrompt.promise;
   expect(stdout).toHaveBeenCalledWith('[1] 42');
 });
 
 test('Generate an error message and write to stdout', async () => {
+  waitForPrompt = promiseHandles();
   con.stdin(';');
-  await sleep(500);
+  await waitForPrompt.promise;
   expect(stderr).toHaveBeenCalledWith('Error: unexpected \';\' in ";"');
 });
 
