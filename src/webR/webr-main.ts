@@ -61,7 +61,7 @@ export class WebR {
     this.#chan.write(msg);
   }
   writeConsole(input: string) {
-    this.write({ type: 'stdin', data: input });
+    this.write({ type: 'stdin', data: input + '\n' });
   }
 
   async installPackages(packages: string[]) {

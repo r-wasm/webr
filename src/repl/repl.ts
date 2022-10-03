@@ -19,7 +19,7 @@ let FSTree: FSTreeInterface;
 const term = $('#term').terminal(
   (command) => {
     term.pause();
-    webR.writeConsole(command + '\n');
+    webR.writeConsole(command);
   },
   {
     prompt: '',
