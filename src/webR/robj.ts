@@ -313,7 +313,7 @@ export class RObjImpl {
     );
     const val = RObjImpl.wrap(Module._Rf_eval(call, RObjImpl.baseEnv.ptr));
 
-    Module._Rf_unprotect(3);
+    Module._Rf_unprotect(2);
     if (char) Module._free(char);
     Module._free(assign);
 
