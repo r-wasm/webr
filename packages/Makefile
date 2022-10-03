@@ -23,7 +23,7 @@ $(R_WASM_LIB)/%: $(PKG_SRCS)
 	@mkdir -p $(R_WASM_LIB)
 	WASM_TOOLS="$(TOOLS)" \
 	R_SOURCE="$(R_SOURCE)" \
-	R_MAKEVARS_USER="$(ROOT)/webr-vars.mk" \
+	R_MAKEVARS_USER="$(WEBR_ROOT)/packages/webr-vars.mk" \
 	$(R_HOST_EXE) CMD INSTALL --library="$(R_WASM_LIB)" $(notdir $@) \
 	  --no-docs \
 	  --no-test-load \

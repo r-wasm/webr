@@ -175,7 +175,7 @@ MAKE_WASM_INSTALL := $(MAKE_WASM)
 
 $(BUILD)/state/r-stage2: $(BUILD)/state/r-stage1 $(BUILD)/state/r-stage2-configured
 	cd $(WEBR_ROOT)/packages && \
-	  $(MAKE_WASM) all
+	  $(MAKE_WASM) clean && $(MAKE_WASM) all
 	cd $(STAGE2_BUILD) && \
 	  $(MAKE_WASM_BUILD) R
 	touch $@
@@ -198,7 +198,7 @@ install: $(BUILD)/state/r-stage2 Rprofile
 rebuild-extra-pkgs: $(BUILD)/state/r-stage2
 	rm -f $(BUILD)/state/r-stage2
 	cd $(WEBR_ROOT)/packages && \
-	  $(MAKE_WASM) all
+	  $(MAKE_WASM) clean && $(MAKE_WASM) all
 	cd $(STAGE2_BUILD)/src/main && \
 	  $(MAKE_WASM_INSTALL) install-wasm
 	cp -r "$(R_WASM)/dist/." $(DIST)
