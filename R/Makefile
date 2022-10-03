@@ -186,13 +186,19 @@ Rprofile: $(BUILD)/state/r-stage2
 	echo "options(expressions=400)" > "$(R_WASM)/lib/R/etc/Rprofile.site"
 
 .PHONY: install
-install: $(BUILD)/state/r-stage2 Rprofile
+install: install-tests Rprofile
 	mkdir -p $(R_SOURCE)/build/doc
 	cd $(R_SOURCE)/build/doc && \
 	  touch NEWS NEWS.pdf NEWS.rds NEWS.2.rds NEWS.3.rds
 	cd $(R_SOURCE)/build && \
 	  $(MAKE_WASM_INSTALL) install-wasm
 	cp -r "$(R_WASM)/dist/." $(DIST)
+
+.PHONY: install-tests
+install-tests: $(BUILD)/state/r-stage2
+	cd $(R_SOURCE)/build && \
+	  $(MAKE_WASM_BUILD) docs && \
+	  $(MAKE_WASM_INSTALL) install-tests
 
 .PHONY: rebuild-extra-pkgs
 rebuild-extra-pkgs: $(BUILD)/state/r-stage2

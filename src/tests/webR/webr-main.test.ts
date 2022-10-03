@@ -7,8 +7,6 @@ const webR = new WebR({
   RArgs: ['--quiet'],
 });
 
-jest.setTimeout(25000);
-
 describe('Test webR instance startup', () => {
   test('Constructs successfully', () => {
     expect(webR).toBeDefined();

@@ -2,3 +2,4 @@
 
 export(global_prompt_install)
 export(install)
+export(test_package)

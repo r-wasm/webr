@@ -37,7 +37,7 @@ docker-container-%:
 
 .PHONY: check
 check:
-	cd src && $(MAKE) check
+	cd src && $(MAKE) check && $(MAKE) check-packages
 
 .PHONY: clean
 clean: clean-webr
