@@ -2,7 +2,7 @@ import { ChannelMain } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy } from './proxy';
-import { RTargetObj, RTargetType, RObject, isRObject, RCharacter, RawType } from './robj';
+import { RTargetObj, RTargetType, RObject, isRObject, RawType, RList } from './robj';
 
 export type EvalRCodeOptions = {
   captureStreams?: boolean;
@@ -98,10 +98,7 @@ export class WebR {
     options: EvalRCodeOptions = {}
   ): Promise<{
     result: RObject;
-    stdout: string[];
-    stderr: string[];
-    messages: unknown;
-    warnings: unknown;
+    output: unknown[];
   }> {
     if (env && !isRObject(env)) {
       throw new Error('Attempted to evalRcode with invalid environment object');
@@ -128,17 +125,13 @@ export class WebR {
       default: {
         const obj = newRProxy(this.#chan, target);
         const result = await obj.get(1);
-        const stdout = (await obj.get(2)) as RCharacter;
-        const stderr = (await obj.get(3)) as RCharacter;
-        const messages = await obj.get(4);
-        const warnings = await obj.get(5);
-        return {
-          result: result,
-          stdout: await stdout.toJs(),
-          stderr: await stderr.toJs(),
-          messages: await messages.toJs(),
-          warnings: await warnings.toJs(),
-        };
+        const outList = (await obj.get(2)) as RList;
+        const output = ((await outList.toArray()) as { type: string[]; data: unknown }[]).map(
+          (elem) => {
+            return { type: elem.type[0], data: elem.data };
+          }
+        );
+        return { result, output };
       }
     }
   }

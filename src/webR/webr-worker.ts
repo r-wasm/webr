@@ -251,7 +251,7 @@ function callRObjMethod(obj: RObjImpl, prop: string, args: RTargetObj[]): RTarge
 function evalRCode(code: string, env?: RPtr, options: EvalRCodeOptions = {}): RTargetObj {
   const _options: Required<EvalRCodeOptions> = Object.assign(
     {
-      captureStreams: false,
+      captureStreams: true,
       captureConditions: true,
       withAutoprint: false,
       withHandlers: true,
@@ -282,17 +282,10 @@ function evalRCode(code: string, env?: RPtr, options: EvalRCodeOptions = {}): RT
     _options.withHandlers ? tPtr : fPtr
   );
   const evalResult = RObjImpl.wrap(Module._Rf_eval(expr, envObj.ptr));
-  evalResult.preserve();
   codeObj.release();
   Module._free(codeStr);
   Module._free(evalStr);
 
-  const error = evalResult.get(6);
-  if (!error.isNull()) {
-    throw new Error(error.get(1).toJs()?.toString());
-  }
-
-  evalResult.release();
   return { obj: evalResult.ptr, methods: RObjImpl.getMethods(evalResult), type: RTargetType.PTR };
 }
 

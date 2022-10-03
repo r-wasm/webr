@@ -21,6 +21,9 @@ execution.}
 \item{streams}{If `TRUE`, capture and return the `stdout` and `stderr`
 streams.}
 
+\item{autoprint}{If `TRUE`, code automatically prints as if it were
+written at an R console.}
+
 \item{handlers}{If `TRUE`, execute the R code using a [tryCatch], with
 handlers in place.}
 }

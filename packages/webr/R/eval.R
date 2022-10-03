@@ -15,15 +15,12 @@
 #' @param handlers If `TRUE`, execute the R code using a [tryCatch], with
 #' handlers in place.
 #'
+#' @useDynLib webr
 evalRCode <- function(code, conditions = TRUE, streams = FALSE,
   autoprint = FALSE, handlers = TRUE
 ) {
   res <- NULL
-  errors <- NULL
-  warnings <- NULL
-  messages <- NULL
-  stderr <- NULL
-  stdout <- NULL
+  out <- .Call("new_output_connections")
 
   # Print warnings as they are raised
   old_warn <- getOption("warn")
@@ -31,10 +28,10 @@ evalRCode <- function(code, conditions = TRUE, streams = FALSE,
 
   if (streams) {
     # Redirect stdout and stderr streams using sink
-    out_con <- textConnection(NULL, "w")
-    err_con <- textConnection(NULL, "w")
-    sink(out_con)
-    sink(err_con, type = "message")
+    open(out$stdout)
+    open(out$stderr)
+    sink(out$stdout)
+    sink(out$stderr, type = "message")
   }
 
   # Create a function that executes the code. Wrap the code in `withAutoprint`
@@ -55,14 +52,16 @@ evalRCode <- function(code, conditions = TRUE, streams = FALSE,
       res <- withCallingHandlers(
         tryCatch(
           efun(code),
-          error = function(cnd) errors <<- append(errors, cnd)
+          error = function(cnd) {
+            out$vec[[length(out$vec) + 1]] <<- list(type = "error", data = cnd)
+          }
         ),
         warning = function(cnd) {
-          warnings <<- append(warnings, cnd)
+          out$vec[[length(out$vec) + 1]] <<- list(type = "warning", data = cnd)
           tryInvokeRestart("muffleWarning")
         },
         message = function(cnd) {
-          messages <<- append(messages, cnd)
+          out$vec[[length(out$vec) + 1]] <<- list(type = "message", data = cnd)
           tryInvokeRestart("muffleMessage")
         }
       )
@@ -82,19 +81,17 @@ evalRCode <- function(code, conditions = TRUE, streams = FALSE,
     res <- efun(code)
   }
 
-
   if (streams) {
     # Restore stdout and stderr streams using sink
     sink(type = "message")
     sink()
-    stdout <- textConnectionValue(out_con)
-    stderr <- textConnectionValue(err_con)
+    close(out$stdout)
+    close(out$stderr)
   }
 
   # Flush any further warnings and restore original warn option
   warnings()
   options(warn = old_warn)
 
-  list(result = res, stdout = stdout, stderr = stderr, messages = messages,
-       warnings = warnings, errors = errors)
+  list(result = res, output = out$vec)
 }
