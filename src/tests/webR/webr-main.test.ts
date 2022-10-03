@@ -54,14 +54,18 @@ describe('Evaluate R code', () => {
     await expect(webR.evalRCode('x', euler)).rejects.toThrow('env argument with invalid SEXP type');
   });
 
-  test('Throw errors from R', async () => {
-    const badSyntax = webR.evalRCode('42+');
-    await expect(badSyntax).rejects.toThrow('unexpected end of input');
+  test('Handle syntax errors in evalRCode', async () => {
+    const badSyntax = await webR.evalRCode('42+');
+    const cond = badSyntax.output[0] as { type: string; data: { message: string[] } };
+    expect(cond.type).toEqual('error');
+    expect(cond.data.message[0]).toEqual(expect.stringContaining('unexpected end of input'));
   });
 
   test('Write to stdout while evaluating R code', async () => {
     await webR.flush();
-    const res = webR.evalRCode('print("Hello, stdout!")');
+    const res = webR.evalRCode('print("Hello, stdout!")', undefined, {
+      captureStreams: false,
+    });
     await expect(res).resolves.not.toThrow();
     expect((await webR.read()).data).toBe('[1] "Hello, stdout!"');
   });
@@ -69,6 +73,7 @@ describe('Evaluate R code', () => {
   test('Write to stderr while evaluating R code', async () => {
     await webR.flush();
     const res = webR.evalRCode('message("Hello, stderr!")', undefined, {
+      captureStreams: false,
       captureConditions: false,
     });
     await expect(res).resolves.not.toThrow();
@@ -80,7 +85,24 @@ describe('Evaluate R code', () => {
       withAutoprint: true,
       captureStreams: true,
     });
-    expect(composite.stdout).toEqual(['[1]  1  2  4  6 12 24 36 48']);
+    expect(composite.output).toEqual([{ type: 'stdout', data: '[1]  1  2  4  6 12 24 36 48' }]);
+  });
+
+  test('Capture stderr while evaluating R code', async () => {
+    const res = await webR.evalRCode('message("Hello, stderr!")', undefined, {
+      captureStreams: true,
+      captureConditions: false,
+    });
+    expect(res.output).toEqual([{ type: 'stderr', data: 'Hello, stderr!' }]);
+  });
+
+  test('Capture condition while evaluating R code', async () => {
+    const res = await webR.evalRCode('warning("This is a warning message")', undefined, {
+      captureConditions: true,
+    });
+    const cond = res.output[0] as { type: string; data: { message: string[] } };
+    expect(cond.type).toEqual('warning');
+    expect(cond.data.message[0]).toEqual('This is a warning message');
   });
 });
 
