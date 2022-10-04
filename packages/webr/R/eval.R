@@ -60,15 +60,18 @@ evalRCode <- function(code, conditions = TRUE, streams = FALSE,
         tryCatch(
           efun(code),
           error = function(cnd) {
-            out$vec[[length(out$vec) + 1]] <<- list(type = "error", data = cnd)
+            out$n <<- out$n + 1L
+            out$vec[[out$n]] <<- list(type = "error", data = cnd)
           }
         ),
         warning = function(cnd) {
-          out$vec[[length(out$vec) + 1]] <<- list(type = "warning", data = cnd)
+          out$n <<- out$n + 1L
+          out$vec[[out$n]] <<- list(type = "warning", data = cnd)
           tryInvokeRestart("muffleWarning")
         },
         message = function(cnd) {
-          out$vec[[length(out$vec) + 1]] <<- list(type = "message", data = cnd)
+          out$n <<- out$n + 1L
+          out$vec[[out$n]] <<- list(type = "message", data = cnd)
           tryInvokeRestart("muffleMessage")
         }
       )
@@ -100,5 +103,6 @@ evalRCode <- function(code, conditions = TRUE, streams = FALSE,
   warnings()
   options(warn = old_warn)
 
-  list(result = res, output = out$vec)
+  # Output vector out$vec expands exponentially, return only the valid subset
+  list(result = res, output = head(out$vec, out$n))
 }

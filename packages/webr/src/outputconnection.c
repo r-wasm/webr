@@ -25,7 +25,7 @@ SEXP ffi_new_output_connections() {
   Rconnection out_con_stdout;
   Rconnection out_con_stderr;
 
-  const char *names[] = { "stdout", "stderr", "vec", "" };
+  const char *names[] = { "stdout", "stderr", "vec", "n", "" };
   SEXP out = PROTECT(Rf_mkNamed(VECSXP, names));
   SET_VECTOR_ELT(
     out, 0, R_new_custom_connection("stdout", "w", "outputConnection", &out_con_stdout)
@@ -34,6 +34,7 @@ SEXP ffi_new_output_connections() {
     out, 1, R_new_custom_connection("stderr", "w", "outputConnection", &out_con_stderr)
   );
   SET_VECTOR_ELT(out, 2, Rf_allocVector(VECSXP, 0));
+  SET_VECTOR_ELT(out, 3, Rf_ScalarInteger(0));
 
   init_output_connection(out_con_stdout, out);
   init_output_connection(out_con_stderr, out);
@@ -110,11 +111,14 @@ int output_vfprintf(Rconnection con, const char *format, va_list ap) {
 
       SEXP vec = VECTOR_ELT(data->output, 2);
       int len = Rf_length(vec);
-      vec = PROTECT(Rf_lengthgets(vec, len + 1));
-      SET_VECTOR_ELT(vec, len, elt);
-      SET_VECTOR_ELT(data->output, 2, vec);
-
-      UNPROTECT(2);
+      int n = INTEGER_ELT(VECTOR_ELT(data->output, 3), 0);
+      if (n >= len) {
+        vec = Rf_lengthgets(vec, 2 * len + 1);
+        SET_VECTOR_ELT(data->output, 2, vec);
+      }
+      SET_VECTOR_ELT(vec, n, elt);
+      SET_INTEGER_ELT(VECTOR_ELT(data->output, 3), 0, n + 1);
+      UNPROTECT(1);
       data->line = p + 1;
     }
   }
