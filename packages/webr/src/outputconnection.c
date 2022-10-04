@@ -19,6 +19,28 @@
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/Connections.h>
+#include "decl/outputconnection-decl.h"
+
+SEXP new_output_connections() {
+  Rconnection out_con_stdout;
+  Rconnection out_con_stderr;
+
+  const char *names[] = { "stdout", "stderr", "vec", "" };
+  SEXP out = PROTECT(Rf_mkNamed(VECSXP, names));
+  SET_VECTOR_ELT(
+    out, 0, R_new_custom_connection("stdout", "w", "outputConnection", &out_con_stdout)
+  );
+  SET_VECTOR_ELT(
+    out, 1, R_new_custom_connection("stderr", "w", "outputConnection", &out_con_stderr)
+  );
+  SET_VECTOR_ELT(out, 2, Rf_allocVector(VECSXP, 0));
+
+  init_output_connection(out_con_stdout, out);
+  init_output_connection(out_con_stderr, out);
+
+  UNPROTECT(1);
+  return out;
+}
 
 #define BUFSIZE 10000
 struct output_con_data {
@@ -26,6 +48,19 @@ struct output_con_data {
   char buf[BUFSIZE];
   char *line, *cur;
 };
+
+static
+void init_output_connection(Rconnection con, SEXP out) {
+  con->open = &output_open;
+  con->close = &output_close;
+  con->vfprintf = &output_vfprintf;
+  con->destroy = &output_destroy;
+
+  struct output_con_data *data = malloc(sizeof(struct output_con_data));
+  data->output = out;
+  data->cur = data->line = data->buf;
+  con->private = data;
+}
 
 static
 Rboolean output_open(Rconnection con) {
@@ -89,38 +124,4 @@ int output_vfprintf(Rconnection con, const char *format, va_list ap) {
     data->cur = data->line = data->buf;
   }
   return res;
-}
-
-static
-void init_output_connection(Rconnection con, SEXP out) {
-  con->open = &output_open;
-  con->close = &output_close;
-  con->vfprintf = &output_vfprintf;
-  con->destroy = &output_destroy;
-
-  struct output_con_data *data = malloc(sizeof(struct output_con_data));
-  data->output = out;
-  data->cur = data->line = data->buf;
-  con->private = data;
-}
-
-SEXP new_output_connections() {
-  Rconnection out_con_stdout;
-  Rconnection out_con_stderr;
-
-  const char *names[] = { "stdout", "stderr", "vec", "" };
-  SEXP out = PROTECT(Rf_mkNamed(VECSXP, names));
-  SET_VECTOR_ELT(
-    out, 0, R_new_custom_connection("stdout", "w", "outputConnection", &out_con_stdout)
-  );
-  SET_VECTOR_ELT(
-    out, 1, R_new_custom_connection("stderr", "w", "outputConnection", &out_con_stderr)
-  );
-  SET_VECTOR_ELT(out, 2, Rf_allocVector(VECSXP, 0));
-
-  init_output_connection(out_con_stdout, out);
-  init_output_connection(out_con_stderr, out);
-
-  UNPROTECT(1);
-  return out;
 }
