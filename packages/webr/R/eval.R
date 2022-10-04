@@ -15,12 +15,12 @@
 #' @param handlers If `TRUE`, execute the R code using a [tryCatch], with
 #' handlers in place.
 #'
-#' @useDynLib webr
+#' @useDynLib webr, .registration = TRUE
 evalRCode <- function(code, conditions = TRUE, streams = FALSE,
   autoprint = FALSE, handlers = TRUE
 ) {
   res <- NULL
-  out <- .Call("new_output_connections")
+  out <- .Call(ffi_new_output_connections)
 
   # Print warnings as they are raised
   old_warn <- getOption("warn")

@@ -3,6 +3,6 @@
 
 #include <Rinternals.h>
 
-SEXP new_output_connections();
+SEXP ffi_new_output_connections();
 
 #endif
