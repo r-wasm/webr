@@ -68,7 +68,7 @@ int output_vfprintf(Rconnection con, const char *format, va_list ap) {
   for (char *p = data->line; p < data->cur; p++) {
     if (*p == '\n') {
       *p = '\0';
-      const char *names[] = {"type", "data"};
+      const char *names[] = { "type", "data", "" };
       SEXP elt = PROTECT(Rf_mkNamed(VECSXP, names));
       SET_VECTOR_ELT(elt, 0, Rf_mkString(con->description));
       SET_VECTOR_ELT(elt, 1, Rf_mkChar(data->line));
@@ -108,7 +108,7 @@ SEXP new_output_connections() {
   Rconnection out_con_stdout;
   Rconnection out_con_stderr;
 
-  const char *names[] = {"stdout", "stderr", "vec"};
+  const char *names[] = { "stdout", "stderr", "vec", "" };
   SEXP out = PROTECT(Rf_mkNamed(VECSXP, names));
   SET_VECTOR_ELT(
     out, 0, R_new_custom_connection("stdout", "w", "outputConnection", &out_con_stdout)
