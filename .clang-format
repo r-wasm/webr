@@ -1,0 +1,13 @@
+BasedOnStyle: Google
+IndentWidth: 2
+ColumnLimit: 100
+AllowShortFunctionsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortBlocksOnASingleLine: false
+UseTab: Never
+AlignAfterOpenBracket: BlockIndent
+ContinuationIndentWidth: 2
+SortIncludes: false
+Cpp11BracedListStyle: false
+AlignArrayOfStructures: Left
+SpaceAfterCStyleCast: true
