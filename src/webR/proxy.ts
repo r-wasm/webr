@@ -26,7 +26,7 @@ type DistProxy<U> = U extends RObjImpl ? RProxy<U> : U;
  * Any other types are wrapped in a Promise.
  */
 type RProxify<T> = T extends RObjImpl
-  ? Promise<RProxy<RObjImpl>>
+  ? Promise<RProxy<T>>
   : T extends (...args: infer U) => any
   ? (
       ...args: {

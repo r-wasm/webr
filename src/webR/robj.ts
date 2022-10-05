@@ -573,12 +573,12 @@ abstract class RObjAtomicVector extends RObjImpl {
     return Module._LENGTH(this.ptr);
   }
 
-  get(prop: number | string): typeof this {
-    return super.get(prop) as typeof this;
+  get(prop: number | string): this {
+    return super.get(prop) as this;
   }
 
-  subset(prop: number | string): typeof this {
-    return super.subset(prop) as typeof this;
+  subset(prop: number | string): this {
+    return super.subset(prop) as this;
   }
 
   getDollar(prop: string): RObjImpl {
