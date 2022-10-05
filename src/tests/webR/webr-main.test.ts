@@ -58,7 +58,7 @@ describe('Evaluate R code', () => {
     const badSyntax = await webR.evalRCode('42+');
     const cond = badSyntax.output[0] as { type: string; data: { message: string[] } };
     expect(cond.type).toEqual('error');
-    expect(cond.data.message[0]).toEqual(expect.stringContaining('unexpected end of input'));
+    expect(cond.data.message).toEqual(expect.stringContaining('unexpected end of input'));
   });
 
   test('Write to stdout while evaluating R code', async () => {
@@ -102,7 +102,7 @@ describe('Evaluate R code', () => {
     });
     const cond = res.output[0] as { type: string; data: { message: string[] } };
     expect(cond.type).toEqual('warning');
-    expect(cond.data.message[0]).toEqual('This is a warning message');
+    expect(cond.data.message).toEqual('This is a warning message');
   });
 });
 

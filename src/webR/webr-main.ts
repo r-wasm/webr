@@ -2,6 +2,7 @@ import { ChannelMain } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy } from './proxy';
+import { unpackScalarArrays } from './utils';
 import { RTargetObj, RTargetType, RObject, isRObject, RawType, RList } from './robj';
 
 export type EvalRCodeOptions = {
@@ -124,13 +125,11 @@ export class WebR {
       }
       default: {
         const obj = newRProxy(this.#chan, target);
+        obj.preserve();
         const result = await obj.get(1);
         const outList = (await obj.get(2)) as RList;
-        const output = ((await outList.toArray()) as { type: string[]; data: unknown }[]).map(
-          (elem) => {
-            return { type: elem.type[0], data: elem.data };
-          }
-        );
+        const output = (await outList.toArray()).map((v) => unpackScalarArrays(v));
+        obj.release();
         return { result, output };
       }
     }
