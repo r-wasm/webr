@@ -33,8 +33,6 @@ evalRCode <- function(code, conditions = TRUE, streams = FALSE,
 
   if (streams) {
     # Redirect stdout and stderr streams using sink
-    open(out$stdout)
-    open(out$stderr)
     sink(out$stdout)
     sink(out$stderr, type = "message")
   }
@@ -95,9 +93,11 @@ evalRCode <- function(code, conditions = TRUE, streams = FALSE,
     # Restore stdout and stderr streams using sink
     sink(type = "message")
     sink()
-    close(out$stdout)
-    close(out$stderr)
   }
+
+  # Close connections opened by ffi_new_output_connections
+  close(out$stdout)
+  close(out$stderr)
 
   # Flush any further warnings and restore original warn option
   warnings()

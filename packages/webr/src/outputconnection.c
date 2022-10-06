@@ -56,6 +56,9 @@ void init_output_connection(Rconnection con, SEXP out) {
   con->close = &output_close;
   con->vfprintf = &output_vfprintf;
   con->destroy = &output_destroy;
+  con->canread = FALSE;
+  con->canwrite = TRUE;
+  con->isopen = TRUE;
 
   struct output_con_data *data = malloc(sizeof(struct output_con_data));
   data->output = out;
