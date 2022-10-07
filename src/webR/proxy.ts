@@ -1,5 +1,5 @@
 import { RTargetType, RTargetPtr, isRObject, RTargetObj } from './robj';
-import { RObjImpl, RObjFunction, RawType } from './robj';
+import { RObjImpl, RObjFunction, RawType, isRFunction } from './robj';
 import { ChannelMain } from './chan/channel';
 
 /** Obtain a union of the keys corresponding to methods of a given class T
@@ -93,7 +93,9 @@ export function newRProxy(chan: ChannelMain, target: RTargetPtr): RProxy<RObjImp
         };
       }
     },
-    apply: async (_: RTargetObj, _thisArg, args: (RawType | RProxy<RObjImpl>)[]) =>
-      (newRProxy(chan, target) as RProxy<RObjFunction>).exec(...args),
+    apply: async (_: RTargetObj, _thisArg, args: (RawType | RProxy<RObjImpl>)[]) => {
+      const res = await (newRProxy(chan, target) as RProxy<RObjFunction>).exec(...args);
+      return isRFunction(res) ? res : res.toJs();
+    },
   }) as unknown as RProxy<RObjImpl>;
 }

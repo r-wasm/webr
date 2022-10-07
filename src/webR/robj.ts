@@ -786,6 +786,16 @@ export function isRObject(value: any): value is RObject {
   );
 }
 
+/**
+ * Test for an RFunction instance
+ *
+ * @param {any} value The object to test.
+ * @return {boolean} True if the object is an instance of an RFunction.
+ */
+export function isRFunction(value: any): value is RFunction {
+  return isRObject(value) && 'methods' in value._target && value._target.methods.includes('exec');
+}
+
 export function getRObjClass(type: RType): typeof RObjImpl {
   const typeClasses: { [key: number]: typeof RObjImpl } = {
     [RType.Null]: RObjNull,
