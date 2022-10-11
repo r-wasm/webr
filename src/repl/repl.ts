@@ -2,31 +2,30 @@ import { initFSTree, FSTreeInterface, JSTreeNode } from './fstree';
 import { WebR, FSNode } from '../webR/webr-main';
 import { PKG_BASE_URL } from '../webR/config';
 
-import $ from 'jquery';
-import 'jquery.terminal/css/jquery.terminal.css';
+import 'xterm/css/xterm.css';
+import { Terminal } from 'xterm';
+import { Readline } from 'xterm-readline';
+import { FitAddon } from 'xterm-addon-fit';
 
-/* eslint-disable */
-// @ts-ignore
-import jQueryTerminal from 'jquery.terminal';
-jQueryTerminal($);
-// @ts-ignore
-import unixFormatting from 'jquery.terminal/js/unix_formatting.js';
-unixFormatting();
-/* eslint-enable */
+const term = new Terminal({
+  theme: {
+    background: '#191919',
+    foreground: '#F0F0F0',
+  },
+});
+const fitAddon = new FitAddon();
+const readline = new Readline();
+
+term.write('webR is downloading, please wait...');
+
+term.loadAddon(fitAddon);
+term.loadAddon(readline);
+term.open(document.getElementById('term') as HTMLElement);
+fitAddon.fit();
+window.addEventListener('resize', () => fitAddon.fit());
+term.focus();
 
 let FSTree: FSTreeInterface;
-
-const term = $('#term').terminal(
-  (command) => {
-    term.pause();
-    webR.writeConsole(command);
-  },
-  {
-    prompt: '',
-    greetings: 'R is downloading, please wait...',
-    history: true,
-  }
-);
 
 function onFSTreeChange(event: Event, data: { node: JSTreeNode }) {
   if (data.node && data.node.original) {
@@ -72,7 +71,8 @@ const webR = new WebR({
   webR.evalRCode(`options(webr_pkg_repos="${PKG_BASE_URL}")`);
   webR.evalRCode('webr::global_prompt_install()', undefined, { withHandlers: false });
 
-  term.clear();
+  // Clear the loading message
+  term.write('\x1b[2K\r');
 
   FSTree = initFSTree({
     selector: '#jstree_fs',
@@ -154,15 +154,14 @@ const webR = new WebR({
 
     switch (output.type) {
       case 'stdout':
-        term.echo(output.data, { exec: false });
+        readline.println(output.data as string);
         break;
       case 'stderr':
-        term.error(output.data as string);
+        readline.println(`\x1b[1;31m${output.data as string}\x1b[m`);
         break;
       case 'prompt':
-        term.set_prompt(output.data as string);
+        readline.read(output.data as string).then((command) => webR.writeConsole(command));
         FSTree.refresh();
-        term.resume();
         break;
       case 'packageLoading':
         console.log(`Loading package: ${output.data as string}`);
