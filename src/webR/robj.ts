@@ -426,15 +426,26 @@ export class RObjSymbol extends RObjImpl {
   }
 }
 
+export type NamedObject<T> = { [key: string]: T };
+export type NamedArray<T> = NamedObject<T>[];
+
 export class RObjPairlist extends RObjImpl {
-  toObject(): { [key: string]: RawType } {
-    const d: { [key: string]: RawType } = {};
+  values(): RawType[] {
+    return this.toArray().map((obj) => obj[Object.keys(obj)[0]]);
+  }
+
+  toObject(): NamedObject<RawType> {
+    return this.toArray().reduce((prev, cur) => Object.assign(prev, cur), {});
+  }
+
+  toArray(): NamedArray<RawType> {
+    const d: NamedArray<RawType> = [];
     for (let next = this as Nullable<RObjPairlist>; !next.isNull(); next = next.cdr()) {
       const symbol = next.tag();
       if (!symbol.isNull()) {
-        d[symbol.printname().toJs()] = next.car().toJs();
+        d.push({ [symbol.printname().toJs()]: next.car().toJs() });
       } else {
-        d[Object.keys(d).length + 1] = next.car().toJs();
+        d.push({ [Object.keys(d).length + 1]: next.car().toJs() });
       }
     }
     return d;
@@ -460,8 +471,8 @@ export class RObjPairlist extends RObjImpl {
     return RObjImpl.wrap(Module._TAG(this.ptr)) as Nullable<RObjSymbol>;
   }
 
-  toJs(): RawType {
-    return this.toObject();
+  toJs() {
+    return this.toArray();
   }
 }
 
@@ -470,22 +481,27 @@ export class RObjList extends RObjImpl {
     return Module._LENGTH(this.ptr);
   }
 
-  toObject(): { [key: string | number]: RawType } {
+  values(): RawType[] {
+    return this.toArray().map((obj) => obj[Object.keys(obj)[0]]);
+  }
+
+  toObject(): NamedObject<RawType> {
+    return this.toArray().reduce((prev, cur) => Object.assign(prev, cur), {});
+  }
+
+  toArray(): NamedArray<RawType> {
     const names = this.names();
-    return Object.fromEntries(
-      [...Array(this.length).keys()].map((i) => {
-        const idx = names && names[i] !== '' ? names[i] : i + 1;
-        return [idx, this.get(idx).toJs()];
-      })
-    );
+    return [...Array(this.length).keys()].map((i) => {
+      if (names && names[i]) {
+        return { [names[i]]: this.get(names[i]).toJs() };
+      } else {
+        return { [i + 1]: this.get(i + 1).toJs() };
+      }
+    });
   }
 
-  toJs(): RawType {
-    return this.toObject();
-  }
-
-  toArray(): RawType[] {
-    return [...Array(this.length).keys()].map((i) => this.get(i + 1).toJs());
+  toJs(): RawType[] {
+    return this.toArray();
   }
 }
 

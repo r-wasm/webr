@@ -1,4 +1,4 @@
-import { RawType } from './robj';
+import { NamedArray, NamedObject, RawType } from './robj';
 
 export type ResolveFn = (_value?: unknown) => void;
 export type RejectFn = (_reason?: any) => void;
@@ -37,4 +37,8 @@ export function unpackScalarArrays(obj: RawType): RawType {
   return Object.fromEntries(
     Object.entries(obj).map(([k, v]: [string, RawType]) => [k, unpackScalarArrays(v)])
   );
+}
+
+export function mergeListObjects(obj: NamedArray<RawType>): NamedObject<RawType> {
+  return obj.reduce((prev, cur) => Object.assign(prev, cur), {});
 }

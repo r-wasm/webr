@@ -2,8 +2,8 @@ import { ChannelMain } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy } from './proxy';
-import { unpackScalarArrays } from './utils';
-import { RTargetObj, RTargetType, RObject, isRObject, RawType, RList } from './robj';
+import { unpackScalarArrays, mergeListObjects } from './utils';
+import { RTargetObj, RTargetType, RObject, isRObject, RawType, RList, NamedArray } from './robj';
 
 export type EvalRCodeOptions = {
   captureStreams?: boolean;
@@ -128,7 +128,9 @@ export class WebR {
         obj.preserve();
         const result = await obj.get(1);
         const outList = (await obj.get(2)) as RList;
-        const output = (await outList.toArray()).map((v) => unpackScalarArrays(v));
+        const output = (await outList.values()).map((v) =>
+          mergeListObjects(unpackScalarArrays(v) as NamedArray<RawType>)
+        );
         obj.release();
         return { result, output };
       }
