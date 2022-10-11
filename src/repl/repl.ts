@@ -17,13 +17,21 @@ const fitAddon = new FitAddon();
 const readline = new Readline();
 
 term.write('webR is downloading, please wait...');
-
 term.loadAddon(fitAddon);
 term.loadAddon(readline);
 term.open(document.getElementById('term') as HTMLElement);
-fitAddon.fit();
-window.addEventListener('resize', () => fitAddon.fit());
 term.focus();
+fitAddon.fit();
+
+function resizeTerm() {
+  (async () => {
+    await webR.init();
+    const dims = fitAddon.proposeDimensions();
+    webR.evalRCode(`options(width=${dims ? dims.cols : 80})`);
+  })();
+  fitAddon.fit();
+}
+window.addEventListener('resize', resizeTerm);
 
 let FSTree: FSTreeInterface;
 
@@ -73,6 +81,7 @@ const webR = new WebR({
 
   // Clear the loading message
   term.write('\x1b[2K\r');
+  resizeTerm();
 
   FSTree = initFSTree({
     selector: '#jstree_fs',
