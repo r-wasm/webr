@@ -43,8 +43,9 @@ test('Get RObject type as a string', async () => {
 describe('Working with R lists and vectors', () => {
   test('Get R object attributes', async () => {
     const vector = (await webR.evalRCode('c(a=1, b=2, c=3)')).result;
-    const value = await vector.attrs();
-    expect(await value.toJs()).toEqual({ names: ['a', 'b', 'c'] });
+    const value = (await vector.attrs()) as RList;
+    const attrs = await value.toArray();
+    expect(attrs[0]).toEqual({ names: ['a', 'b', 'c'] });
   });
 
   test('Get R object names', async () => {
@@ -68,9 +69,9 @@ describe('Working with R lists and vectors', () => {
   test('Get an item with [ operator', async () => {
     const vector = (await webR.evalRCode('list(a=1+4i, b=2-5i, c=3+6i)')).result;
     let value = await vector.subset('b');
-    expect(await value.toJs()).toEqual({ b: [{ re: 2, im: -5 }] });
+    expect(await value.toJs()).toEqual([{ b: [{ re: 2, im: -5 }] }]);
     value = await vector.subset(3);
-    expect(await value.toJs()).toEqual({ c: [{ re: 3, im: 6 }] });
+    expect(await value.toJs()).toEqual([{ c: [{ re: 3, im: 6 }] }]);
   });
 
   test('Get an item with $ operator', async () => {
@@ -109,7 +110,9 @@ describe('Working with R lists and vectors', () => {
   test('Convert an R pairlist to JS', async () => {
     const result = (await webR.evalRCode('as.pairlist(list(x="a", y="b", z="c"))'))
       .result as RPairlist;
-    expect(await result.toJs()).toEqual({ x: ['a'], y: ['b'], z: ['c'] });
+    expect(await result.toJs()).toEqual([{ x: ['a'] }, { y: ['b'] }, { z: ['c'] }]);
+    expect(await result.toObject()).toEqual({ x: ['a'], y: ['b'], z: ['c'] });
+    expect(await result.values()).toEqual([['a'], ['b'], ['c']]);
   });
 
   test('R list includes method', async () => {
@@ -119,8 +122,9 @@ describe('Working with R lists and vectors', () => {
 
   test('Convert an R list to JS', async () => {
     const result = (await webR.evalRCode('list(x="a", y="b", z="c")')).result as RList;
-    expect(await result.toJs()).toEqual({ x: ['a'], y: ['b'], z: ['c'] });
-    expect(await result.toArray()).toEqual([['a'], ['b'], ['c']]);
+    expect(await result.toJs()).toEqual([{ x: ['a'] }, { y: ['b'] }, { z: ['c'] }]);
+    expect(await result.toObject()).toEqual({ x: ['a'], y: ['b'], z: ['c'] });
+    expect(await result.values()).toEqual([['a'], ['b'], ['c']]);
   });
 
   test('Convert an R double atomic vector to JS', async () => {
