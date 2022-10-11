@@ -1,5 +1,5 @@
 import { WebR } from '../../webR/webr-main';
-import { RDouble, RFunction } from '../../webR/robj';
+import { RFunction } from '../../webR/robj';
 import util from 'util';
 
 const webR = new WebR({
@@ -26,15 +26,15 @@ test('RProxy _target property', async () => {
 
 test('RFunctions can be invoked via the proxy apply hook', async () => {
   const fn = (await webR.evalRCode('factorial')).result as RFunction;
-  const result = (await fn(8)) as RDouble;
-  expect(await result.toNumber()).toEqual(40320);
+  const result = (await fn(8)) as number[];
+  expect(result[0]).toEqual(40320);
 });
 
 test('RFunctions can be returned by R functions and invoked via the apply hook', async () => {
   const fn = (await webR.evalRCode('function(x) function (y) {x*y}')).result as RFunction;
   const invoke = (await fn(5)) as RFunction;
-  const result = (await invoke(7)) as RDouble;
-  expect(await result.toNumber()).toEqual(35);
+  const result = (await invoke(7)) as number[];
+  expect(result[0]).toEqual(35);
 });
 
 test('Other R objects cannot use the apply hook', async () => {
