@@ -180,14 +180,16 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
 
   try {
     request.send(null);
-    const status = JSON.parse(String(request.status)) as { data: { statusCode: number } };
-    const statusCode = status.data.statusCode;
-    if (statusCode >= 200 && statusCode < 300) {
-      return { status: statusCode, response: request.response as ArrayBuffer };
+    const status = IN_NODE
+      ? (JSON.parse(String(request.status)) as { data: { statusCode: number } }).data.statusCode
+      : request.status;
+
+    if (status >= 200 && status < 300) {
+      return { status: status, response: request.response as ArrayBuffer };
     } else {
       const responseText = new TextDecoder().decode(request.response as ArrayBuffer);
       console.error(`Error fetching ${URL} - ${responseText}`);
-      return { status: statusCode, response: responseText };
+      return { status: status, response: responseText };
     }
   } catch {
     return { status: 400, response: 'An error occured in XMLHttpRequest' };
