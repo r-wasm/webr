@@ -7,7 +7,7 @@
     "jquery": "^3.6.0",
     "jquery.terminal": "^2.33.3",
     "jstree": "^3.3.12",
-    "xmlhttprequest": "git+https://github.com/georgestagg/node-XMLHttpRequest.git#response-buffer"
+    "xmlhttprequest-ssl": "^2.1.0"
   },
   "devDependencies": {
     "@types/jest": "^28.1.8",
