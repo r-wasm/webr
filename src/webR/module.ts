@@ -20,7 +20,13 @@ export interface Module extends EmscriptenModule {
     status: number;
     response: string | ArrayBuffer;
   };
-  _evalRCode: (code: number, env: number) => number;
+  _evalRCode: (
+    code: number,
+    env: number,
+    handlers: boolean,
+    conditions: boolean,
+    streams: boolean
+  ) => number;
   // Exported Emscripten JS API
   allocateUTF8: typeof allocateUTF8;
   getValue: typeof getValue;
@@ -49,6 +55,7 @@ export interface Module extends EmscriptenModule {
   _TYPEOF: (ptr: RPtr) => RPtr;
   _VECTOR_ELT: (ptr: RPtr, idx: number) => RPtr;
   _R_lsInternal3: (env: RPtr, all: boolean, sorted: boolean) => RPtr;
+  _R_MakeExternalPtr: (p: number, tag: RPtr, prot: RPtr) => RPtr;
   _R_ParseEvalString: (code: number, env: RPtr) => RPtr;
   _R_PreserveObject: (ptr: RPtr) => void;
   _R_ReleaseObject: (ptr: RPtr) => void;
@@ -65,6 +72,8 @@ export interface Module extends EmscriptenModule {
   _Rf_lang2: (ptr1: RPtr, ptr2: RPtr) => RPtr;
   _Rf_lang3: (ptr1: RPtr, ptr2: RPtr, ptr3: RPtr) => RPtr;
   _Rf_lang4: (ptr1: RPtr, ptr2: RPtr, ptr3: RPtr, ptr4: RPtr) => RPtr;
+  _Rf_lang5: (ptr1: RPtr, ptr2: RPtr, ptr3: RPtr, ptr4: RPtr, ptr5: RPtr) => RPtr;
+  _Rf_lang6: (ptr1: RPtr, ptr2: RPtr, ptr3: RPtr, ptr4: RPtr, ptr5: RPtr, ptr6: RPtr) => RPtr;
   _Rf_mkChar: (ptr: number) => RPtr;
   _Rf_mkString: (ptr: number) => RPtr;
   _Rf_protect: (ptr: RPtr) => RPtr;
@@ -75,9 +84,11 @@ export interface Module extends EmscriptenModule {
   _R_Bracket2Symbol: RPtr;
   _R_DollarSymbol: RPtr;
   _R_EmptyEnv: RPtr;
+  _R_FalseValue: RPtr;
   _R_GlobalEnv: RPtr;
   _R_Interactive: RPtr;
   _R_NilValue: RPtr;
+  _R_TrueValue: RPtr;
   _R_UnboundValue: RPtr;
   _SET_STRING_ELT: (ptr: RPtr, idx: number, val: RPtr) => void;
   _SET_VECTOR_ELT: (ptr: RPtr, idx: number, val: RPtr) => void;

@@ -12,12 +12,12 @@ beforeAll(async () => {
 });
 
 test('Evaluate code and return a proxy', async () => {
-  const result = await webR.evalRCode('42');
+  const result = (await webR.evalRCode('42')).result;
   expect(util.types.isProxy(result)).toBe(true);
 });
 
 test('RProxy _target property', async () => {
-  const result = await webR.evalRCode('42');
+  const result = (await webR.evalRCode('42')).result;
   expect(result._target).toHaveProperty('type', 'PTR');
   expect(result._target).toHaveProperty('methods');
   expect(result._target).toHaveProperty('obj');
@@ -25,13 +25,13 @@ test('RProxy _target property', async () => {
 });
 
 test('RFunctions can be invoked via the proxy apply hook', async () => {
-  const fn = (await webR.evalRCode('factorial')) as RFunction;
+  const fn = (await webR.evalRCode('factorial')).result as RFunction;
   const result = (await fn(8)) as RDouble;
   expect(await result.toNumber()).toEqual(40320);
 });
 
 test('RFunctions can be returned by R functions and invoked via the apply hook', async () => {
-  const fn = (await webR.evalRCode('function(x) function (y) {x*y}')) as RFunction;
+  const fn = (await webR.evalRCode('function(x) function (y) {x*y}')).result as RFunction;
   const invoke = (await fn(5)) as RFunction;
   const result = (await invoke(7)) as RDouble;
   expect(await result.toNumber()).toEqual(35);

@@ -1,7 +1,7 @@
 import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
-import { FSNode, WebROptions } from './webr-main';
+import { FSNode, WebROptions, EvalRCodeOptions } from './webr-main';
 import { Module } from './module';
 import { IN_NODE } from './compat';
 import {
@@ -78,9 +78,7 @@ function inputOrDispatch(chan: ChannelWorker): string {
             const data = reqMsg.data as {
               code: string;
               env: RPtr;
-              options: {
-                withHandlers?: boolean;
-              };
+              options: EvalRCodeOptions;
             };
             try {
               write(evalRCode(data.code, data.env, data.options));
@@ -239,18 +237,27 @@ function callRObjMethod(obj: RObjImpl, prop: string, args: RTargetObj[]): RTarge
  * @param {string}  code The R code to evaluate.
  * @param {RPtr} [env] An RPtr to the environment to evaluate within.
  * @param {Object<string,any>} [options={}] Options for the execution environment.
+ * @param {boolean} [options.captureStreams] Should the stdout and stderr
+ * output streams be captured and returned?
+ * @param {boolean} [options.captureConditions] Should conditions raised during
+ * execution be captured and returned?
+ * @param {boolean} [options.withAutoprint] Should the code automatically print
+ * output as if it were written at an R console?
  * @param {boolean} [options.withHandlers] Should the code be executed using a
- * tryCatch with handlers in place, capturing conditions such as errors?
- * @return {RTargetObj} The resulting R object.
+ * tryCatch with handlers in place.
+ * @return {RTargetObj} An R object containing the result of the computation
+ * along with any other objects captured during execution.
  */
-function evalRCode(
-  code: string,
-  env?: RPtr,
-  options: {
-    withHandlers?: boolean;
-  } = {}
-): RTargetObj {
-  options = Object.assign({ withHandlers: true }, options);
+function evalRCode(code: string, env?: RPtr, options: EvalRCodeOptions = {}): RTargetObj {
+  const _options: Required<EvalRCodeOptions> = Object.assign(
+    {
+      captureStreams: true,
+      captureConditions: true,
+      withAutoprint: false,
+      withHandlers: true,
+    },
+    options
+  );
 
   let envObj = RObjImpl.globalEnv;
   if (env) {
@@ -260,23 +267,26 @@ function evalRCode(
     }
   }
 
-  const str = Module.allocateUTF8(`{${code}}`);
-  let error: RObjImpl = RObjImpl.null;
-  let result: RObjImpl = RObjImpl.null;
+  const tPtr = Module.getValue(Module._R_TrueValue, '*');
+  const fPtr = Module.getValue(Module._R_FalseValue, '*');
+  const codeStr = Module.allocateUTF8(code);
+  const evalStr = Module.allocateUTF8('webr:::evalRCode');
+  const codeObj = new RObjImpl({ type: RTargetType.RAW, obj: code });
+  codeObj.preserve();
+  const expr = Module._Rf_lang6(
+    Module._R_ParseEvalString(evalStr, RObjImpl.baseEnv.ptr),
+    codeObj.ptr,
+    _options.captureConditions ? tPtr : fPtr,
+    _options.captureStreams ? tPtr : fPtr,
+    _options.withAutoprint ? tPtr : fPtr,
+    _options.withHandlers ? tPtr : fPtr
+  );
+  const evalResult = RObjImpl.wrap(Module._Rf_eval(expr, envObj.ptr));
+  codeObj.release();
+  Module._free(codeStr);
+  Module._free(evalStr);
 
-  if (options.withHandlers) {
-    const evalResult = RObjImpl.wrap(Module._evalRCode(str, envObj.ptr));
-    result = evalResult.get(1);
-    error = evalResult.get(2);
-  } else {
-    result = RObjImpl.wrap(Module._R_ParseEvalString(str, envObj.ptr));
-  }
-
-  Module._free(str);
-  if (!error.isNull()) {
-    throw new Error(error.get(1).toJs()?.toString());
-  }
-  return { obj: result.ptr, methods: RObjImpl.getMethods(result), type: RTargetType.PTR };
+  return { obj: evalResult.ptr, methods: RObjImpl.getMethods(evalResult), type: RTargetType.PTR };
 }
 
 function getFileData(name: string): Uint8Array {
