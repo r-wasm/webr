@@ -6,10 +6,10 @@
     "@types/emscripten": "^1.39.6",
     "jquery": "^3.6.0",
     "jstree": "^3.3.12",
-    "xmlhttprequest": "git+https://github.com/georgestagg/node-XMLHttpRequest.git#response-buffer",
     "xterm": "^4.19.0",
     "xterm-addon-fit": "^0.5.0",
-    "xterm-readline": "^1.0.7"
+    "xterm-readline": "^1.0.7",
+    "xmlhttprequest-ssl": "^2.1.0"
   },
   "devDependencies": {
     "@types/jest": "^28.1.8",

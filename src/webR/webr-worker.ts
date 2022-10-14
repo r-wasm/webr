@@ -31,7 +31,8 @@ const onWorkerMessage = function (msg: Message) {
 
 if (IN_NODE) {
   require('worker_threads').parentPort.on('message', onWorkerMessage);
-  (globalThis as any).XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest as XMLHttpRequest;
+  (globalThis as any).XMLHttpRequest = require('xmlhttprequest-ssl')
+    .XMLHttpRequest as XMLHttpRequest;
 } else {
   globalThis.onmessage = (ev: MessageEvent) => onWorkerMessage(ev.data as Message);
 }
@@ -179,12 +180,16 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
 
   try {
     request.send(null);
-    if (request.status >= 200 && request.status < 300) {
-      return { status: request.status, response: request.response as ArrayBuffer };
+    const status = IN_NODE
+      ? (JSON.parse(String(request.status)) as { data: { statusCode: number } }).data.statusCode
+      : request.status;
+
+    if (status >= 200 && status < 300) {
+      return { status: status, response: request.response as ArrayBuffer };
     } else {
       const responseText = new TextDecoder().decode(request.response as ArrayBuffer);
       console.error(`Error fetching ${URL} - ${responseText}`);
-      return { status: request.status, response: responseText };
+      return { status: status, response: responseText };
     }
   } catch {
     return { status: 400, response: 'An error occured in XMLHttpRequest' };
