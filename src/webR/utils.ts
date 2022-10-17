@@ -24,17 +24,20 @@ export function sleep(ms: number) {
 }
 
 export function unpackScalarVectors(obj: RawType): RawType {
-  if (obj === null || typeof obj !== 'object' || !('values' in obj)) {
+  if (obj === null || typeof obj !== 'object') {
     return obj;
   }
-  if (Array.isArray(obj.values)) {
+  if ('values' in obj && Array.isArray(obj.values)) {
     if (obj.values.length === 1) {
       obj = unpackScalarVectors(obj.values[0]);
     } else {
       obj.values = obj.values.map((v: RawType) => unpackScalarVectors(v));
     }
+    return obj;
   }
-  return obj;
+  return Object.fromEntries(
+    Object.entries(obj).map(([k, v]: [string, RawType]) => [k, unpackScalarVectors(v)])
+  );
 }
 
 export function mergeListArrays(obj: NamedArrays<RawType[]>): NamedObject<RawType> {
