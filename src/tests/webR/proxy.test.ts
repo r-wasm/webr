@@ -1,5 +1,5 @@
 import { WebR } from '../../webR/webr-main';
-import { RFunction } from '../../webR/robj';
+import { RDouble, RFunction, RList } from '../../webR/robj';
 import util from 'util';
 
 const webR = new WebR({
@@ -35,6 +35,41 @@ test('RFunctions can be returned by R functions and invoked via the apply hook',
   const invoke = (await fn(5)) as RFunction;
   const result = await invoke(7);
   expect(result).toEqual(expect.objectContaining({ names: null, values: [35] }));
+});
+
+test('R list objects can be iterated over with `for await`', async () => {
+  const list = (await webR.evalRCode('list(1+2i, "b", TRUE)')).result as RList;
+  const result: any[] = [];
+  for await (const elem of list) {
+    result.push(await elem.toJs());
+  }
+  expect(result).toEqual([
+    expect.objectContaining({ values: [{ re: 1, im: 2 }] }),
+    expect.objectContaining({ values: ['b'] }),
+    expect.objectContaining({ values: [true] }),
+  ]);
+});
+
+test('Attempting to iterate over unsupported R objects throws an error', async () => {
+  const shouldThrow = async () => {
+    const notalist = (await webR.evalRCode('as.symbol("notalist")')).result;
+    const result: any[] = [];
+    for await (const elem of notalist) {
+      result.push(await elem.toJs());
+    }
+    return result;
+  };
+  await expect(shouldThrow()).rejects.toThrow('Cannot iterate over object');
+});
+
+test('R atomic vector objects can be iterated over with `for await`', async () => {
+  const vec = (await webR.evalRCode('c(3, 5, 6, 7, 9, 10, 11, 12, 13)')).result as RList;
+  const result: any[] = [];
+  for await (const elem of vec) {
+    const val = await (elem as RDouble).toNumber();
+    result.push(2 * (val || 0));
+  }
+  expect(result).toEqual([6, 10, 12, 14, 18, 20, 22, 24, 26]);
 });
 
 test('Other R objects cannot use the apply hook', async () => {
