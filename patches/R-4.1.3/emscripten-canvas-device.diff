@@ -22,7 +22,7 @@ Index: R-4.1.3/src/library/grDevices/src/devCanvas.c
 ===================================================================
 --- /dev/null
 +++ R-4.1.3/src/library/grDevices/src/devCanvas.c
-@@ -0,0 +1,488 @@
+@@ -0,0 +1,494 @@
 +/*
 +R graphics device targeting the HTML canvas element
 +Author: George Stagg, based on the canvas package created by Jeffrey Horner (http://www.rforge.net/canvas/)
@@ -357,22 +357,28 @@ Index: R-4.1.3/src/library/grDevices/src/devCanvas.c
 +	canvasContextExec(cGD, ("font = %f+'px sans-serif'"), 2*gc->ps);
 +	double wi = canvasTextWidthEstimate(str, gc->ps);
 +
++	char *enc = malloc(3 * strlen(str) + 1);
++	for (int n = 0; n < strlen(str); n++) {
++		sprintf(enc + 3 * n, "%%%02X", str[n]);
++	}
++
 +	if (hadj!=0. || rot != 0.){
 +		if (rot!=0.){
 +			canvasContextExec(cGD, ("save()"));
 +			canvasColor(fillStyle,gc->col);
 +			canvasContextExec(cGD, ("translate(%f,%f)"), 2*x, 2*y);
 +			canvasContextExec(cGD, ("rotate(-%f / 180 * Math.PI)"), rot);
-+			canvasContextExec(cGD, ("fillText('%s',-%f*%f,0)"), str, 2*wi, hadj);
++			canvasContextExec(cGD, ("fillText(decodeURIComponent(\\`%s\\`),-%f*%f,0)"), enc, 2*wi, hadj);
 +			canvasContextExec(cGD, ("restore()"));
 +		} else {
 +			canvasColor(fillStyle,gc->col);
-+			canvasContextExec(cGD, ("fillText('%s',%f-%f*%f,%f)"), str, 2*x, 2*wi, hadj, 2*y);
++			canvasContextExec(cGD, ("fillText(decodeURIComponent(\\`%s\\`),%f-%f*%f,%f)"), enc, 2*x, 2*wi, hadj, 2*y);
 +		}
 +	} else {
 +		canvasColor(fillStyle,gc->col);
-+		canvasContextExec(cGD, ("fillText('%s',%f,%f)"), str, 2*x, 2*y);
++		canvasContextExec(cGD, ("fillText(decodeURIComponent(\\`%s\\`),%f,%f)"), enc, 2*x, 2*y);
 +	}
++	free(enc);
 +}
 +
 +SEXP void_setPattern(SEXP pattern, pDevDesc RGD) {
