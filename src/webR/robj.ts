@@ -428,7 +428,7 @@ export class RObjSymbol extends RObjImpl {
 
 export type NamedEntries<T> = [string | number, T][];
 export type NamedArrays<T> = {
-  names?: (string | number | undefined)[];
+  names?: (string | undefined)[];
   values: T;
   missing?: boolean[];
 };
@@ -443,7 +443,7 @@ export class RObjPairlist extends RObjImpl {
     return this.toArrays().values;
   }
 
-  toObject({ throwOnDuplicateKey = false } = {}): { [key: string]: RawType } {
+  toObject({ throwOnDuplicateKey = false } = {}): NamedObject<RawType> {
     const entries = this.entries();
     const keys = entries.map(([k, v]) => k);
     if (throwOnDuplicateKey && new Set(keys).size !== keys.length) {
@@ -463,7 +463,7 @@ export class RObjPairlist extends RObjImpl {
   }
 
   toArrays(): NamedArrays<RawType[]> {
-    const names: (string | number | undefined)[] = [];
+    const names: (string | undefined)[] = [];
     const values: RawType[] = [];
     for (let next = this as Nullable<RObjPairlist>; !next.isNull(); next = next.cdr()) {
       const symbol = next.tag();
@@ -595,7 +595,7 @@ export class RObjEnvironment extends RObjImpl {
     return this.getDollar(prop);
   }
 
-  toObject(): { [key: string | number]: RawType } {
+  toObject(): NamedObject<RawType> {
     const symbols = this.names();
     return Object.fromEntries(
       [...Array(symbols.length).keys()].map((i) => {
