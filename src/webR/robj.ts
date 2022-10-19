@@ -745,6 +745,11 @@ export class RObjInteger extends RObjAtomicVector {
       )
     );
   }
+
+  toArray(): number[] {
+    const arr = this.toTypedArray();
+    return this.missing().map((m, idx) => (m ? NaN : arr[idx]));
+  }
 }
 
 export class RObjDouble extends RObjAtomicVector {
