@@ -200,12 +200,20 @@ export class RObjImpl {
     return RObjImpl.wrap(Module._ATTRIB(this.ptr)) as RObjPairlist;
   }
 
-  names(): (string | null)[] | null {
+  names(values?: (string | null)[] | null): (string | null)[] | null {
+    if (values) {
+      const namesChr = new RObjCharacter(values);
+      RObjImpl.protect(namesChr);
+      Module._Rf_setAttrib(this.ptr, RObjImpl.namesSymbol.ptr, namesChr.ptr);
+      RObjImpl.unprotect(1);
+    }
     const attrs = this.attrs();
     if (attrs.isNull()) {
       return null;
     }
-    const names = attrs.get('names') as Nullable<RObjCharacter>;
+    const names = RObjImpl.wrap(
+      Module._Rf_protect(Module._Rf_getAttrib(this.ptr, RObjImpl.namesSymbol.ptr))
+    ) as RObjCharacter;
     if (names.isNull()) {
       return null;
     }
@@ -367,6 +375,10 @@ export class RObjImpl {
     return RObjImpl.wrap(Module.getValue(Module._R_DollarSymbol, '*')) as RObjSymbol;
   }
 
+  static get namesSymbol(): RObjSymbol {
+    return RObjImpl.wrap(Module.getValue(Module._R_NamesSymbol, '*')) as RObjSymbol;
+  }
+
   static wrap(ptr: RPtr): RObjImpl {
     const type = Module._TYPEOF(ptr);
     return new (getRObjClass(type))({ type: RTargetType.PTR, obj: ptr });
@@ -447,6 +459,7 @@ export class RObjPairlist extends RObjImpl {
     ) {
       next.setcar(new RObjImpl(values[i]));
     }
+    list.names(isRObjectTree(val) ? val.names : null);
     super({ type: RTargetType.PTR, obj: list.ptr });
   }
 
@@ -536,6 +549,7 @@ export class RObjList extends RObjImpl {
     values.forEach((v, i) => {
       Module._SET_VECTOR_ELT(ptr, i, new RObjImpl(v).ptr);
     });
+    RObjImpl.wrap(ptr).names(isRObjectTree(val) ? val.names : null);
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
     super({ type: RTargetType.PTR, obj: ptr });
@@ -769,6 +783,7 @@ export class RObjLogical extends RObjAtomicVector<boolean> {
     values.forEach((v, i) =>
       Module.setValue(Module._LOGICAL(ptr) + 4 * i, v === null ? RObjImpl.naInt : Boolean(v), 'i32')
     );
+    RObjImpl.wrap(ptr).names(isRObjectTree(val) ? val.names : null);
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
     super({ type: RTargetType.PTR, obj: ptr });
@@ -815,6 +830,7 @@ export class RObjInteger extends RObjAtomicVector<number> {
         'i32'
       )
     );
+    RObjImpl.wrap(ptr).names(isRObjectTree(val) ? val.names : null);
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
     super({ type: RTargetType.PTR, obj: ptr });
@@ -852,6 +868,7 @@ export class RObjDouble extends RObjAtomicVector<number> {
     values.forEach((v, i) =>
       Module.setValue(Module._REAL(ptr) + 8 * i, v === null ? RObjImpl.naReal : v, 'double')
     );
+    RObjImpl.wrap(ptr).names(isRObjectTree(val) ? val.names : null);
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
     super({ type: RTargetType.PTR, obj: ptr });
@@ -897,6 +914,7 @@ export class RObjComplex extends RObjAtomicVector<Complex> {
         'double'
       )
     );
+    RObjImpl.wrap(ptr).names(isRObjectTree(val) ? val.names : null);
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
     super({ type: RTargetType.PTR, obj: ptr });
@@ -947,6 +965,7 @@ export class RObjCharacter extends RObjAtomicVector<string> {
         Module._free(str);
       }
     });
+    RObjImpl.wrap(ptr).names(isRObjectTree(val) ? val.names : null);
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
     super({ type: RTargetType.PTR, obj: ptr });
@@ -991,6 +1010,7 @@ export class RObjRaw extends RObjAtomicVector<number> {
     }
     const ptr = Module._Rf_protect(Module._Rf_allocVector(RType.Raw, values.length));
     values.forEach((v, i) => Module.setValue(Module._RAW(ptr) + i, Number(v), 'i8'));
+    RObjImpl.wrap(ptr).names(isRObjectTree(val) ? val.names : null);
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
     super({ type: RTargetType.PTR, obj: ptr });
