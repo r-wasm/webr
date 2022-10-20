@@ -35,6 +35,7 @@ if (IN_NODE) {
 export class ChannelMain {
   inputQueue = new AsyncQueue<Message>();
   outputQueue = new AsyncQueue<Message>();
+  userBreakSignal = 0;
 
   initialised: Promise<unknown>;
   resolve: (_?: unknown) => void;
@@ -155,14 +156,21 @@ export class ChannelMain {
         const payload = msg.data.msg;
         const reqData = msg.data.reqData;
 
-        if (payload.type !== 'read') {
-          throw new TypeError("Unsupported request type '$(payload.type)'.");
+        switch (payload.type) {
+          case 'read': {
+            const response = await this.inputQueue.get();
+            // TODO: Pass a `replacer` function
+            await syncResponse(worker, reqData, response);
+            break;
+          }
+          case 'userBreakSignal': {
+            await syncResponse(worker, reqData, this.userBreakSignal);
+            this.userBreakSignal = 0;
+            break;
+          }
+          default:
+            throw new TypeError(`Unsupported request type '${payload.type}'.`);
         }
-
-        const response = await this.inputQueue.get();
-
-        // TODO: Pass a `replacer` function
-        await syncResponse(worker, reqData, response);
         return;
       }
       case 'request':
@@ -196,5 +204,10 @@ export class ChannelWorker {
     const msg = { type: 'read' } as Message;
     const task = new SyncTask(this.#ep, msg);
     return task.syncify() as Message;
+  }
+
+  userBreakSignal(): number {
+    const task = new SyncTask(this.#ep, { type: 'userBreakSignal' });
+    return task.syncify() as number;
   }
 }

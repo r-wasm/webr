@@ -341,6 +341,8 @@ function init(config: Required<WebROptions>) {
     },
 
     handleEvents: () => {
+      if (chan.userBreakSignal()) {
+        Module._Rf_onintr();
       }
     },
   };

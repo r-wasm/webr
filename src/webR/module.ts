@@ -76,6 +76,7 @@ export interface Module extends EmscriptenModule {
   _Rf_lang6: (ptr1: RPtr, ptr2: RPtr, ptr3: RPtr, ptr4: RPtr, ptr5: RPtr, ptr6: RPtr) => RPtr;
   _Rf_mkChar: (ptr: number) => RPtr;
   _Rf_mkString: (ptr: number) => RPtr;
+  _Rf_onintr: () => RPtr;
   _Rf_protect: (ptr: RPtr) => RPtr;
   _Rf_unprotect: (n: number) => void;
   _Rf_unprotect_ptr: (ptr: RPtr) => void;
