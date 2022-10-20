@@ -38,6 +38,15 @@ test('Generate an error message and write to stdout', async () => {
   expect(stderr).toHaveBeenCalledWith('Error: unexpected \';\' in ";"');
 });
 
+test('Interrupt a long running R computation', async () => {
+  waitForPrompt = promiseHandles();
+  con.stdin('while(TRUE){}');
+  con.interrupt();
+  // A new prompt will appear only if the infinite loop is successfully interrupted
+  await waitForPrompt.promise;
+  expect(prompt).toHaveBeenCalledWith('> ');
+});
+
 afterAll(() => {
   return con.webR.close();
 });
