@@ -339,6 +339,10 @@ function init(config: Required<WebROptions>) {
       const input = inputOrDispatch(chan);
       return Module.allocateUTF8(input);
     },
+
+    handleEvents: () => {
+      }
+    },
   };
 
   Module.locateFile = (path: string) => _config.WEBR_URL + path;

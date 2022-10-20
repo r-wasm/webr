@@ -96,5 +96,6 @@ export interface Module extends EmscriptenModule {
   webr: {
     readConsole: () => number;
     resolveInit: () => void;
+    handleEvents: () => void;
   };
 }
