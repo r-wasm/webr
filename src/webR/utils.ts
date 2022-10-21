@@ -1,4 +1,4 @@
-import { RawType, NamedArrays, NamedObject } from './robj';
+import { RawType, RObjectTree, NamedObject } from './robj';
 
 export type ResolveFn = (_value?: unknown) => void;
 export type RejectFn = (_reason?: any) => void;
@@ -40,7 +40,7 @@ export function unpackScalarVectors(obj: RawType): RawType {
   );
 }
 
-export function mergeListArrays(obj: NamedArrays<RawType[]>): NamedObject<RawType> {
+export function mergeListArrays(obj: RObjectTree<RawType[]>): NamedObject<RawType> {
   const names = obj.names as string[];
   if (!names || names.some((name) => typeof name === 'undefined')) {
     throw new Error('Attempted to merge unnamed list array');

@@ -3,7 +3,7 @@ import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy } from './proxy';
 import { unpackScalarVectors, mergeListArrays } from './utils';
-import { RTargetObj, RTargetType, RObject, isRObject, RawType, RList, NamedArrays } from './robj';
+import { RTargetObj, RTargetType, RObject, isRObject, RawType, RList, RObjectTree } from './robj';
 
 export type EvalRCodeOptions = {
   captureStreams?: boolean;
@@ -129,7 +129,7 @@ export class WebR {
         const result = await obj.get(1);
         const outList = (await obj.get(2)) as RList;
         const output = (await outList.toArray())
-          .map((v) => unpackScalarVectors(v) as NamedArrays<RawType[]>)
+          .map((v) => unpackScalarVectors(v) as RObjectTree<RawType[]>)
           .map((v) => mergeListArrays(v));
         obj.release();
         return { result, output };
