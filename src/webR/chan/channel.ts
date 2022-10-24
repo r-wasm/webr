@@ -35,7 +35,7 @@ if (IN_NODE) {
 export class ChannelMain {
   inputQueue = new AsyncQueue<Message>();
   outputQueue = new AsyncQueue<Message>();
-  userBreakSignal = 0;
+  #interruptBuffer?: Int32Array;
 
   initialised: Promise<unknown>;
   resolve: (_?: unknown) => void;
@@ -96,6 +96,13 @@ export class ChannelMain {
     return msg;
   }
 
+  interrupt() {
+    if (!this.#interruptBuffer) {
+      throw new Error('Failed attempt to interrupt before initialising interruptBuffer');
+    }
+    this.#interruptBuffer[0] = 1;
+  }
+
   write(msg: Message) {
     this.inputQueue.put(msg);
   }
@@ -140,6 +147,7 @@ export class ChannelMain {
 
     switch (message.type) {
       case 'resolve':
+        this.#interruptBuffer = new Int32Array(message.data as SharedArrayBuffer);
         this.resolve();
         return;
 
@@ -163,11 +171,6 @@ export class ChannelMain {
             await syncResponse(worker, reqData, response);
             break;
           }
-          case 'userBreakSignal': {
-            await syncResponse(worker, reqData, this.userBreakSignal);
-            this.userBreakSignal = 0;
-            break;
-          }
           default:
             throw new TypeError(`Unsupported request type '${payload.type}'.`);
         }
@@ -183,7 +186,7 @@ export class ChannelMain {
 
 // Worker --------------------------------------------------------------
 
-import { SyncTask } from './task-worker';
+import { SyncTask, interruptBuffer } from './task-worker';
 
 export class ChannelWorker {
   #ep: Endpoint;
@@ -193,7 +196,7 @@ export class ChannelWorker {
   }
 
   resolve() {
-    this.write({ type: 'resolve' });
+    this.write({ type: 'resolve', data: interruptBuffer.buffer });
   }
 
   write(msg: Message, transfer?: [Transferable]) {
@@ -204,10 +207,5 @@ export class ChannelWorker {
     const msg = { type: 'read' } as Message;
     const task = new SyncTask(this.#ep, msg);
     return task.syncify() as Message;
-  }
-
-  userBreakSignal(): number {
-    const task = new SyncTask(this.#ep, { type: 'userBreakSignal' });
-    return task.syncify() as number;
   }
 }

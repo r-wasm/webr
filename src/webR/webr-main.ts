@@ -77,7 +77,7 @@ export class WebR {
   }
 
   interrupt() {
-    this.#chan.userBreakSignal = 1;
+    this.#chan.interrupt();
   }
 
   async installPackages(packages: string[]) {

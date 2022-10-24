@@ -1,5 +1,6 @@
 import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
+import { setInterruptHandler, interruptBuffer } from './chan/task-worker';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions, EvalRCodeOptions } from './webr-main';
 import { Module } from './module';
@@ -307,6 +308,13 @@ function putFileData(name: string, data: Uint8Array) {
   Module.FS.createDataFile('/', name, data, true, true, true);
 }
 
+function interruptHandler() {
+  if (interruptBuffer[0] !== 0) {
+    interruptBuffer[0] = 0;
+    Module._Rf_onintr();
+  }
+}
+
 function init(config: Required<WebROptions>) {
   _config = config;
 
@@ -341,11 +349,11 @@ function init(config: Required<WebROptions>) {
     },
 
     handleEvents: () => {
-      if (chan.userBreakSignal()) {
-        Module._Rf_onintr();
-      }
+      interruptHandler();
     },
   };
+
+  setInterruptHandler(interruptHandler);
 
   Module.locateFile = (path: string) => _config.WEBR_URL + path;
   Module.downloadFileContent = downloadFileContent;
