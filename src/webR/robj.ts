@@ -214,16 +214,16 @@ export class RObjImpl {
     return RObjImpl.wrap(Module._ATTRIB(this.ptr)) as RObjPairlist;
   }
 
-  names(): string[] | undefined {
+  names(): (string | null)[] | null {
     const attrs = this.attrs();
     if (attrs.isNull()) {
-      return undefined;
+      return null;
     }
     const names = attrs.get('names') as Nullable<RObjCharacter>;
     if (names.isNull()) {
-      return undefined;
+      return null;
     }
-    return names.toJs();
+    return names.toArray();
   }
 
   includes(name: string) {
@@ -231,8 +231,12 @@ export class RObjImpl {
     return names && names.includes(name);
   }
 
-  toJs(): RawType {
+  toTree(): RawType {
     throw new Error('This R object cannot be converted to JS');
+  }
+
+  toJs() {
+    return this.toTree() as ReturnType<this['toTree']>;
   }
 
   subset(prop: number | string): RObjImpl {
@@ -392,29 +396,32 @@ export class RObjImpl {
 }
 
 export class RObjNull extends RObjImpl {
-  toJs(): null {
+  toTree(): null {
     return null;
   }
 }
 
 export class RObjSymbol extends RObjImpl {
-  toJs(): RawType {
-    if (this.isUnbound()) {
-      return undefined;
-    }
-    return this.toObject();
-  }
-  toObject(): {
-    printname: string | undefined;
-    symvalue: RPtr | undefined;
-    internal: RPtr | undefined;
-  } {
+  toTree(): RObjectTree<RawType> {
     return {
-      printname: this.printname().isUnbound() ? undefined : this.printname().toJs(),
-      symvalue: this.symvalue().isUnbound() ? undefined : this.symvalue().ptr,
-      internal: this.internal().isNull() ? undefined : this.internal().ptr,
+      type: this.type,
+      values: this.isUnbound() ? null : this.toObject(),
+      names: null,
     };
   }
+
+  toObject(): {
+    printname: string | null;
+    symvalue: RPtr | null;
+    internal: RPtr | null;
+  } {
+    return {
+      printname: this.printname().isUnbound() ? null : this.printname().toString(),
+      symvalue: this.symvalue().isUnbound() ? null : this.symvalue().ptr,
+      internal: this.internal().isNull() ? null : this.internal().ptr,
+    };
+  }
+
   printname(): RObjString {
     return new RObjString(Module._PRINTNAME(this.ptr));
   }
@@ -426,18 +433,59 @@ export class RObjSymbol extends RObjImpl {
   }
 }
 
+export type NamedEntries<T> = [string | null, T][];
+export type NamedObject<T> = { [key: string]: T };
+export type RObjectTree<T> = {
+  type: RType;
+  names: (string | null)[] | null;
+  values: T;
+  missing?: boolean[];
+};
+
 export class RObjPairlist extends RObjImpl {
-  toObject(): { [key: string]: RawType } {
-    const d: { [key: string]: RawType } = {};
+  get length(): number {
+    return this.toArray().length;
+  }
+
+  toArray(): RawType[] {
+    return this.toTree().values;
+  }
+
+  toObject({ allowDuplicateKey = true, allowEmptyKey = false } = {}): NamedObject<RawType> {
+    const entries = this.entries();
+    const keys = entries.map(([k, v]) => k);
+    if (!allowDuplicateKey && new Set(keys).size !== keys.length) {
+      throw new Error('Duplicate key when converting pairlist without allowDuplicateKey enabled');
+    }
+    if (!allowEmptyKey && keys.some((k) => !k)) {
+      throw new Error('Empty or null key when converting pairlist without allowEmptyKey enabled');
+    }
+    return Object.fromEntries(
+      entries.filter((u, idx) => entries.findIndex((v) => v[0] === u[0]) === idx)
+    );
+  }
+
+  entries(): NamedEntries<RawType> {
+    const obj = this.toTree();
+    return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
+  }
+
+  toTree(): RObjectTree<RawType[]> {
+    const namesArray: string[] = [];
+    let hasNames = false;
+    const values: RawType[] = [];
     for (let next = this as Nullable<RObjPairlist>; !next.isNull(); next = next.cdr()) {
       const symbol = next.tag();
-      if (!symbol.isNull()) {
-        d[symbol.printname().toJs()] = next.car().toJs();
+      if (symbol.isNull()) {
+        namesArray.push('');
       } else {
-        d[Object.keys(d).length + 1] = next.car().toJs();
+        hasNames = true;
+        namesArray.push(symbol.printname().toString());
       }
+      values.push(next.car().toTree());
     }
-    return d;
+    const names = hasNames ? namesArray : null;
+    return { type: this.type, names, values };
   }
 
   includes(name: string): boolean {
@@ -459,10 +507,6 @@ export class RObjPairlist extends RObjImpl {
   tag(): Nullable<RObjSymbol> {
     return RObjImpl.wrap(Module._TAG(this.ptr)) as Nullable<RObjSymbol>;
   }
-
-  toJs(): RawType {
-    return this.toObject();
-  }
 }
 
 export class RObjList extends RObjImpl {
@@ -470,22 +514,35 @@ export class RObjList extends RObjImpl {
     return Module._LENGTH(this.ptr);
   }
 
-  toObject(): { [key: string | number]: RawType } {
-    const names = this.names();
+  toArray(): RawType[] {
+    return this.toTree().values;
+  }
+
+  toObject({ allowDuplicateKey = true, allowEmptyKey = false } = {}): NamedObject<RawType> {
+    const entries = this.entries();
+    const keys = entries.map(([k, v]) => k);
+    if (!allowDuplicateKey && new Set(keys).size !== keys.length) {
+      throw new Error('Duplicate key when converting list without allowDuplicateKey enabled');
+    }
+    if (!allowEmptyKey && keys.some((k) => !k)) {
+      throw new Error('Empty or null key when converting list without allowEmptyKey enabled');
+    }
     return Object.fromEntries(
-      [...Array(this.length).keys()].map((i) => {
-        const idx = names && names[i] !== '' ? names[i] : i + 1;
-        return [idx, this.get(idx).toJs()];
-      })
+      entries.filter((u, idx) => entries.findIndex((v) => v[0] === u[0]) === idx)
     );
   }
 
-  toJs(): RawType {
-    return this.toObject();
+  entries(): NamedEntries<RawType> {
+    const obj = this.toTree();
+    return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
   }
 
-  toArray(): RawType[] {
-    return [...Array(this.length).keys()].map((i) => this.get(i + 1).toJs());
+  toTree(): RObjectTree<RawType[]> {
+    return {
+      type: this.type,
+      names: this.names(),
+      values: [...Array(this.length).keys()].map((i) => this.get(i + 1).toTree()),
+    };
   }
 }
 
@@ -518,14 +575,18 @@ export class RObjFunction extends RObjImpl {
 }
 
 export class RObjString extends RObjImpl {
-  toJs(): string {
+  toString(): string {
     return Module.UTF8ToString(Module._R_CHAR(this.ptr));
+  }
+
+  toTree(): string {
+    return this.toString();
   }
 }
 
 export class RObjEnvironment extends RObjImpl {
   ls(all = false, sorted = true): string[] {
-    return new RObjCharacter(Module._R_lsInternal3(this.ptr, all, sorted)).toJs();
+    return new RObjCharacter(Module._R_lsInternal3(this.ptr, all, sorted)).toArray() as string[];
   }
 
   names(): string[] {
@@ -543,17 +604,22 @@ export class RObjEnvironment extends RObjImpl {
     return this.getDollar(prop);
   }
 
-  toObject(): { [key: string | number]: RawType } {
+  toObject(): NamedObject<RawType> {
     const symbols = this.names();
     return Object.fromEntries(
       [...Array(symbols.length).keys()].map((i) => {
-        return [symbols[i], this.getDollar(symbols[i]).toJs()];
+        return [symbols[i], this.getDollar(symbols[i]).toTree()];
       })
     );
   }
 
-  toJs(): RawType {
-    return this.toObject();
+  toTree(): RObjectTree<RawType[]> {
+    const symbols = this.names();
+    return {
+      type: this.type,
+      names: symbols,
+      values: [...Array(symbols.length).keys()].map((i) => this.getDollar(symbols[i]).toTree()),
+    };
   }
 }
 
@@ -565,10 +631,11 @@ type TypedArray =
   | Int32Array
   | Uint32Array
   | Float32Array
-  | Float64Array
-  | Array<Complex>;
+  | Float64Array;
 
-abstract class RObjAtomicVector extends RObjImpl {
+type atomicType = number | boolean | Complex | string;
+
+abstract class RObjAtomicVector<T extends atomicType> extends RObjImpl {
   get length(): number {
     return Module._LENGTH(this.ptr);
   }
@@ -585,37 +652,72 @@ abstract class RObjAtomicVector extends RObjImpl {
     throw new Error('$ operator is invalid for atomic vectors');
   }
 
-  abstract toArray(): TypedArray;
+  detectMissing(): boolean[] {
+    const isna = Module.allocateUTF8('is.na');
+    const call = Module._Rf_protect(Module._Rf_lang2(Module._Rf_install(isna), this.ptr));
+    const val = RObjImpl.wrap(
+      Module._Rf_protect(Module._Rf_eval(call, RObjImpl.baseEnv.ptr))
+    ) as RObjLogical;
+    const ret = val.toTypedArray();
+    RObjImpl.unprotect(2);
+    Module._free(isna);
+    return Array.from(ret).map((elt) => Boolean(elt));
+  }
 
-  toObject(): { [key: string | number]: RawType } {
-    const names = this.names();
+  abstract toTypedArray(): TypedArray;
+
+  toArray(): (T | null)[] {
+    const arr = this.toTypedArray();
+    return this.detectMissing().map((m, idx) => (m ? null : (arr[idx] as T)));
+  }
+
+  toObject({ allowDuplicateKey = true, allowEmptyKey = false } = {}): NamedObject<T | null> {
+    const entries = this.entries();
+    const keys = entries.map(([k, v]) => k);
+    if (!allowDuplicateKey && new Set(keys).size !== keys.length) {
+      throw new Error(
+        'Duplicate key when converting atomic vector without allowDuplicateKey enabled'
+      );
+    }
+    if (!allowEmptyKey && keys.some((k) => !k)) {
+      throw new Error(
+        'Empty or null key when converting atomic vector without allowEmptyKey enabled'
+      );
+    }
     return Object.fromEntries(
-      [...Array(this.length).keys()].map((i) => {
-        const idx = names && names[i] !== '' ? names[i] : i + 1;
-        return [idx, this.get(idx).toJs()];
-      })
+      entries.filter((u, idx) => entries.findIndex((v) => v[0] === u[0]) === idx)
     );
   }
 
-  toJs(): RawType {
-    return this.toArray();
+  entries(): NamedEntries<T | null> {
+    const values = this.toArray();
+    const names = this.names();
+    return values.map((v, i) => [names ? names[i] : null, v]);
+  }
+
+  toTree(): RObjectTree<(T | null)[]> {
+    return {
+      type: this.type,
+      names: this.names(),
+      values: this.toArray(),
+      missing: this.detectMissing(),
+    };
   }
 }
 
-type Logical = boolean | 'NA' | undefined;
-export class RObjLogical extends RObjAtomicVector {
-  getLogical(idx: number): Logical {
-    return this.get(idx).toJs()[0];
+export class RObjLogical extends RObjAtomicVector<boolean> {
+  getLogical(idx: number): boolean | null {
+    return this.get(idx).toArray()[0];
   }
 
-  toLogical(): Logical {
+  toLogical(): boolean | null {
     if (this.length !== 1) {
       throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
     }
     return this.getLogical(1);
   }
 
-  toArray(): Int32Array {
+  toTypedArray(): Int32Array {
     return new Int32Array(
       Module.HEAP32.subarray(
         Module._LOGICAL(this.ptr) / 4,
@@ -624,30 +726,25 @@ export class RObjLogical extends RObjAtomicVector {
     );
   }
 
-  toJs(): Logical[] {
-    return Array.from({ length: this.length }, (_, idx) => {
-      const elem = this.toArray()[idx];
-      if (elem === 0 || elem === 1) {
-        return elem === 1;
-      }
-      return 'NA';
-    });
+  toArray(): (boolean | null)[] {
+    const arr = this.toTypedArray();
+    return this.detectMissing().map((m, idx) => (m ? null : Boolean(arr[idx])));
   }
 }
 
-export class RObjInteger extends RObjAtomicVector {
-  getNumber(idx: number): number {
+export class RObjInteger extends RObjAtomicVector<number> {
+  getNumber(idx: number): number | null {
     return this.get(idx).toArray()[0];
   }
 
-  toNumber(): number {
+  toNumber(): number | null {
     if (this.length !== 1) {
       throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
     }
     return this.getNumber(1);
   }
 
-  toArray(): Int32Array {
+  toTypedArray(): Int32Array {
     return new Int32Array(
       Module.HEAP32.subarray(
         Module._INTEGER(this.ptr) / 4,
@@ -657,38 +754,38 @@ export class RObjInteger extends RObjAtomicVector {
   }
 }
 
-export class RObjDouble extends RObjAtomicVector {
-  getNumber(idx: number): number {
-    return this.get(idx).toArray()[0];
+export class RObjDouble extends RObjAtomicVector<number> {
+  getNumber(idx: number): number | null {
+    return this.get(idx).toTypedArray()[0];
   }
 
-  toNumber(): number {
+  toNumber(): number | null {
     if (this.length !== 1) {
       throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
     }
     return this.getNumber(1);
   }
 
-  toArray(): Float64Array {
+  toTypedArray(): Float64Array {
     return new Float64Array(
       Module.HEAPF64.subarray(Module._REAL(this.ptr) / 8, Module._REAL(this.ptr) / 8 + this.length)
     );
   }
 }
 
-export class RObjComplex extends RObjAtomicVector {
-  getComplex(idx: number): Complex {
-    return this.get(idx).toJs()[0];
+export class RObjComplex extends RObjAtomicVector<Complex> {
+  getComplex(idx: number): Complex | null {
+    return this.get(idx).toArray()[0];
   }
 
-  toComplex(): Complex {
+  toComplex(): Complex | null {
     if (this.length !== 1) {
       throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
     }
     return this.getComplex(1);
   }
 
-  toArray(): Float64Array {
+  toTypedArray(): Float64Array {
     return new Float64Array(
       Module.HEAPF64.subarray(
         Module._COMPLEX(this.ptr) / 8,
@@ -697,29 +794,27 @@ export class RObjComplex extends RObjAtomicVector {
     );
   }
 
-  toJs(): Complex[] {
-    return Array.from({ length: this.length }, (_, idx) => {
-      return {
-        re: this.toArray()[2 * idx],
-        im: this.toArray()[2 * idx + 1],
-      };
-    });
+  toArray(): (Complex | null)[] {
+    const arr = this.toTypedArray();
+    return this.detectMissing().map((m, idx) =>
+      m ? null : { re: arr[2 * idx], im: arr[2 * idx + 1] }
+    );
   }
 }
 
-export class RObjCharacter extends RObjAtomicVector {
-  getString(idx: number): string {
-    return this.get(idx).toJs()[0];
+export class RObjCharacter extends RObjAtomicVector<string> {
+  getString(idx: number): string | null {
+    return this.get(idx).toArray()[0];
   }
 
-  toString(): string {
+  toString(): string | null {
     if (this.length !== 1) {
       throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
     }
     return this.getString(1);
   }
 
-  toArray(): Uint32Array {
+  toTypedArray(): Uint32Array {
     return new Uint32Array(
       Module.HEAPU32.subarray(
         Module._STRING_PTR(this.ptr) / 4,
@@ -728,26 +823,26 @@ export class RObjCharacter extends RObjAtomicVector {
     );
   }
 
-  toJs(): string[] {
-    return Array.from({ length: this.length }, (_, idx) =>
-      new RObjString(Module._STRING_ELT(this.ptr, idx)).toJs()
+  toArray(): (string | null)[] {
+    return this.detectMissing().map((m, idx) =>
+      m ? null : Module.UTF8ToString(Module._R_CHAR(Module._STRING_ELT(this.ptr, idx)))
     );
   }
 }
 
-export class RObjRaw extends RObjAtomicVector {
-  getNumber(idx: number): number {
+export class RObjRaw extends RObjAtomicVector<number> {
+  getNumber(idx: number): number | null {
     return this.get(idx).toArray()[0];
   }
 
-  toNumber(): number {
+  toNumber(): number | null {
     if (this.length !== 1) {
       throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
     }
     return this.getNumber(1);
   }
 
-  toArray(): Uint8Array {
+  toTypedArray(): Uint8Array {
     return new Uint8Array(
       Module.HEAPU8.subarray(Module._RAW(this.ptr), Module._RAW(this.ptr) + this.length)
     );

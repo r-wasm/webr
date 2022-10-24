@@ -12,6 +12,7 @@ import {
   RPairlist,
   RList,
   REnvironment,
+  RCharacter,
 } from '../../webR/robj';
 
 const webR = new WebR({
@@ -43,8 +44,9 @@ test('Get RObject type as a string', async () => {
 describe('Working with R lists and vectors', () => {
   test('Get R object attributes', async () => {
     const vector = (await webR.evalRCode('c(a=1, b=2, c=3)')).result;
-    const value = await vector.attrs();
-    expect(await value.toJs()).toEqual({ names: ['a', 'b', 'c'] });
+    const value = (await vector.attrs()) as RList;
+    const attrs = await value.toObject();
+    expect(attrs.names).toEqual(expect.objectContaining({ names: null, values: ['a', 'b', 'c'] }));
   });
 
   test('Get R object names', async () => {
@@ -54,7 +56,7 @@ describe('Working with R lists and vectors', () => {
 
     vector = (await webR.evalRCode('c(1, 2, 3)')).result;
     value = await vector.names();
-    expect(await value).toBeUndefined();
+    expect(await value).toEqual(null);
   });
 
   test('Get an item with [[ operator', async () => {
@@ -67,16 +69,19 @@ describe('Working with R lists and vectors', () => {
 
   test('Get an item with [ operator', async () => {
     const vector = (await webR.evalRCode('list(a=1+4i, b=2-5i, c=3+6i)')).result;
-    let value = await vector.subset('b');
-    expect(await value.toJs()).toEqual({ b: [{ re: 2, im: -5 }] });
-    value = await vector.subset(3);
-    expect(await value.toJs()).toEqual({ c: [{ re: 3, im: 6 }] });
+    const val1 = (await vector.subset('b')) as RList;
+    const obj1 = await val1.toObject();
+    expect(obj1.b).toEqual(expect.objectContaining({ names: null, values: [{ re: 2, im: -5 }] }));
+
+    const val2 = (await vector.subset(3)) as RList;
+    const obj2 = await val2.toObject();
+    expect(obj2.c).toEqual(expect.objectContaining({ names: null, values: [{ re: 3, im: 6 }] }));
   });
 
   test('Get an item with $ operator', async () => {
     const vector = (await webR.evalRCode('list(a="x", b="y", c="z")')).result;
-    const value = await vector.getDollar('b');
-    expect(await value.toJs()).toEqual(['y']);
+    const value = (await vector.getDollar('b')) as RCharacter;
+    expect(await value.toArray()).toEqual(['y']);
   });
 
   test('Get an item using the pluck method', async () => {
@@ -95,7 +100,7 @@ describe('Working with R lists and vectors', () => {
     vector = await vector.set(1, value);
     vector = await vector.set(2, 5);
     vector = await vector.set('c', 6);
-    const result = (await vector.toJs()) as Float64Array;
+    const result = await (vector as RDouble).toTypedArray();
     expect(Array.from(result)).toEqual([4, 5, 6]);
   });
 
@@ -109,7 +114,19 @@ describe('Working with R lists and vectors', () => {
   test('Convert an R pairlist to JS', async () => {
     const result = (await webR.evalRCode('as.pairlist(list(x="a", y="b", z="c"))'))
       .result as RPairlist;
-    expect(await result.toJs()).toEqual({ x: ['a'], y: ['b'], z: ['c'] });
+    const arr = await result.toArray();
+    expect(arr[0]).toEqual(expect.objectContaining({ names: null, values: ['a'] }));
+    expect(arr[1]).toEqual(expect.objectContaining({ names: null, values: ['b'] }));
+    expect(arr[2]).toEqual(expect.objectContaining({ names: null, values: ['c'] }));
+    const obj = await result.toObject();
+    expect(obj.x).toEqual(expect.objectContaining({ names: null, values: ['a'] }));
+    expect(obj.y).toEqual(expect.objectContaining({ names: null, values: ['b'] }));
+    expect(obj.z).toEqual(expect.objectContaining({ names: null, values: ['c'] }));
+    const resJs = await result.toTree();
+    expect(resJs.names).toEqual(['x', 'y', 'z']);
+    expect(resJs.values[0]).toEqual(expect.objectContaining({ names: null, values: ['a'] }));
+    expect(resJs.values[1]).toEqual(expect.objectContaining({ names: null, values: ['b'] }));
+    expect(resJs.values[2]).toEqual(expect.objectContaining({ names: null, values: ['c'] }));
   });
 
   test('R list includes method', async () => {
@@ -119,35 +136,129 @@ describe('Working with R lists and vectors', () => {
 
   test('Convert an R list to JS', async () => {
     const result = (await webR.evalRCode('list(x="a", y="b", z="c")')).result as RList;
-    expect(await result.toJs()).toEqual({ x: ['a'], y: ['b'], z: ['c'] });
-    expect(await result.toArray()).toEqual([['a'], ['b'], ['c']]);
+    const arr = await result.toArray();
+    expect(arr[0]).toEqual(expect.objectContaining({ names: null, values: ['a'] }));
+    expect(arr[1]).toEqual(expect.objectContaining({ names: null, values: ['b'] }));
+    expect(arr[2]).toEqual(expect.objectContaining({ names: null, values: ['c'] }));
+    const obj = await result.toObject();
+    expect(obj.x).toEqual(expect.objectContaining({ names: null, values: ['a'] }));
+    expect(obj.y).toEqual(expect.objectContaining({ names: null, values: ['b'] }));
+    expect(obj.z).toEqual(expect.objectContaining({ names: null, values: ['c'] }));
+    const resJs = await result.toJs();
+    expect(resJs.names).toEqual(['x', 'y', 'z']);
+    expect(resJs.values[0]).toEqual(expect.objectContaining({ names: null, values: ['a'] }));
+    expect(resJs.values[1]).toEqual(expect.objectContaining({ names: null, values: ['b'] }));
+    expect(resJs.values[2]).toEqual(expect.objectContaining({ names: null, values: ['c'] }));
+  });
+
+  test('Fully undefined names attribute', async () => {
+    const list = (await webR.evalRCode('list("a", "b", "c")')).result as RList;
+    const pairlist = (await webR.evalRCode('pairlist("a", "b", "c")')).result as RPairlist;
+    const atomic = (await webR.evalRCode('c("a", "b", "c")')).result as RCharacter;
+    const listJs = await list.toTree();
+    const pairlistJs = await pairlist.toTree();
+    const atomicJs = await atomic.toTree();
+    expect(listJs.names).toEqual(null);
+    expect(pairlistJs.names).toEqual(null);
+    expect(atomicJs.names).toEqual(null);
+  });
+
+  test('Partially undefined names attribute', async () => {
+    const list = (await webR.evalRCode('list(x="a", y="b", "c")')).result as RList;
+    const pairlist = (await webR.evalRCode('pairlist(x="a", y="b", "c")')).result as RPairlist;
+    const atomic = (await webR.evalRCode('c(x="a", y="b", "c")')).result as RCharacter;
+    const listJs = await list.toTree();
+    const pairlistJs = await pairlist.toTree();
+    const atomicJs = await atomic.toTree();
+    expect(listJs.names).toEqual(['x', 'y', '']);
+    expect(pairlistJs.names).toEqual(['x', 'y', '']);
+    expect(atomicJs.names).toEqual(['x', 'y', '']);
+  });
+
+  test('Missing values in names attribute', async () => {
+    const list = (await webR.evalRCode('test = list(1,2); attr(test,"names") <- c("a", NA); test'))
+      .result as RList;
+    const listJs = await list.toTree();
+    expect(listJs.names).toEqual(['a', null]);
+    await expect(list.toObject()).rejects.toThrow('Empty or null key when converting');
+  });
+
+  test('First key wins when converting R objects to JS objects', async () => {
+    const list = (await webR.evalRCode('list(x="a", x="b")')).result as RList;
+    const listObj = await list.toObject();
+    expect(listObj.x).toEqual(expect.objectContaining({ names: null, values: ['a'] }));
+    const pairlist = (await webR.evalRCode('pairlist(x="a", x="b")')).result as RPairlist;
+    const pairlistObj = await pairlist.toObject();
+    expect(pairlistObj.x).toEqual(expect.objectContaining({ names: null, values: ['a'] }));
+    const atomic = (await webR.evalRCode('c(x="a", x="b")')).result as RCharacter;
+    const atomicObj = await atomic.toObject();
+    expect(atomicObj.x).toEqual('a');
+  });
+
+  test('Empty key when converting to JS object', async () => {
+    const list = (await webR.evalRCode('list(x="a", y="b", "c")')).result as RList;
+    const pairlist = (await webR.evalRCode('pairlist(x="a", y="b", "c")')).result as RPairlist;
+    const atomic = (await webR.evalRCode('c(x="a", y="b", "c")')).result as RCharacter;
+    await expect(list.toObject()).rejects.toThrow('Empty or null key when converting');
+    await expect(pairlist.toObject()).rejects.toThrow('Empty or null key when converting');
+    await expect(atomic.toObject()).rejects.toThrow('Empty or null key when converting');
+
+    const listJs = await pairlist.toObject({ allowEmptyKey: true });
+    const pairlistJs = await pairlist.toObject({ allowEmptyKey: true });
+    const atomicJs = await atomic.toObject({ allowEmptyKey: true });
+    expect(Object.keys(listJs)).toEqual(expect.arrayContaining(['']));
+    expect(Object.keys(pairlistJs)).toEqual(expect.arrayContaining(['']));
+    expect(Object.keys(atomicJs)).toEqual(expect.arrayContaining(['']));
+    expect(listJs['']).toEqual(expect.objectContaining({ names: null, values: ['c'] }));
+    expect(pairlistJs['']).toEqual(expect.objectContaining({ names: null, values: ['c'] }));
+    expect(atomicJs['']).toEqual('c');
+  });
+
+  test('Throw on duplicate keys when converting R objects to JS objects', async () => {
+    const list = (await webR.evalRCode('list(x="a", x="b")')).result as RList;
+    const listObj = list.toObject({ allowDuplicateKey: false });
+    await expect(listObj).rejects.toThrow('Duplicate key when converting');
+    const pairlist = (await webR.evalRCode('pairlist(x="a", x="b")')).result as RPairlist;
+    const pairlistObj = pairlist.toObject({ allowDuplicateKey: false });
+    await expect(pairlistObj).rejects.toThrow('Duplicate key when converting');
+    const atomic = (await webR.evalRCode('c(x="a", x="b")')).result as RCharacter;
+    const atomicObj = atomic.toObject({ allowDuplicateKey: false });
+    await expect(atomicObj).rejects.toThrow('Duplicate key when converting');
   });
 
   test('Convert an R double atomic vector to JS', async () => {
     const polytree = [1, 1, 3, 8, 27, 91, 350, 1376];
-    const result = (await webR.evalRCode('c(1, 1, 3, 8, 27, 91, 350, 1376)')).result;
-    const values = (await result.toJs()) as Float64Array;
-    expect(Array.from(values)).toStrictEqual(polytree);
+    const result = (await webR.evalRCode('c(1, 1, 3, 8, 27, 91, 350, 1376)')).result as RDouble;
+    const resJs = await result.toJs();
+    expect(resJs.values).toEqual(polytree);
+    const resArray = await result.toArray();
+    expect(resArray).toEqual(polytree);
   });
 
   test('Convert an R integer atomic vector to JS', async () => {
     const polytree = [1, 1, 3, 8, 27, 91, 350, 1376];
-    const result = (await webR.evalRCode('as.integer(c(1, 1, 3, 8, 27, 91, 350, 1376))')).result;
-    const values = (await result.toJs()) as Int32Array;
-    expect(Array.from(values)).toStrictEqual(polytree);
+    const result = (await webR.evalRCode('as.integer(c(1, 1, 3, 8, 27, 91, 350, 1376))'))
+      .result as RInteger;
+    const resJs = await result.toJs();
+    expect(resJs.values).toEqual(polytree);
+    const resArray = await result.toArray();
+    expect(resArray).toEqual(polytree);
   });
 
   test('Convert an R logical atomic vector to JS', async () => {
-    const logical = [true, false, 'NA'];
-    const result = (await webR.evalRCode('c(TRUE,FALSE,NA)')).result;
-    expect(await result.toJs()).toEqual(logical);
+    const logical = [true, false, null];
+    const result = (await webR.evalRCode('c(TRUE, FALSE, NA)')).result as RLogical;
+    const resJs = await result.toJs();
+    expect(resJs.values).toEqual(logical);
+    const resArray = await result.toArray();
+    expect(resArray).toEqual(logical);
   });
 
   test('Convert an R raw atomic vector to JS', async () => {
     const arr = [2, 4, 6];
-    const result = (await webR.evalRCode('as.raw(c(2, 4, 6))')).result;
-    const values = (await result.toJs()) as Uint8Array;
-    expect(Array.from(values)).toStrictEqual(arr);
+    const result = (await webR.evalRCode('as.raw(c(2, 4, 6))')).result as RRaw;
+    const resJs = await result.toJs();
+    expect(resJs.values).toEqual(arr);
   });
 
   test('Convert an R complex atomic vector to JS', async () => {
@@ -155,18 +266,19 @@ describe('Working with R lists and vectors', () => {
       { re: 2, im: -7 },
       { re: 1, im: -8 },
     ];
-    const result = (await webR.evalRCode('c(2-7i, 1-8i)')).result;
-    expect(await result.toJs()).toEqual(cmplx);
+    const result = (await webR.evalRCode('c(2-7i, 1-8i)')).result as RComplex;
+    const resJs = await result.toJs();
+    expect(resJs.values).toEqual(cmplx);
   });
 
   test('Convert an R scalar double to JS number', async () => {
     const result = (await webR.evalRCode('1234')).result as RDouble;
-    expect(await result.toNumber()).toStrictEqual(1234);
+    expect(await result.toNumber()).toEqual(1234);
   });
 
   test('Convert an R scalar integer to JS number', async () => {
     const result = (await webR.evalRCode('as.integer(5678)')).result as RInteger;
-    expect(await result.toNumber()).toStrictEqual(5678);
+    expect(await result.toNumber()).toEqual(5678);
   });
 
   test('Convert an R scalar logical to JS', async () => {
@@ -175,7 +287,7 @@ describe('Working with R lists and vectors', () => {
     result = (await webR.evalRCode('FALSE')).result as RLogical;
     expect(await result.toLogical()).toEqual(false);
     result = (await webR.evalRCode('NA')).result as RLogical;
-    expect(await result.toLogical()).toEqual('NA');
+    expect(await result.toLogical()).toEqual(null);
   });
 
   test('Convert an R scalar raw to JS number', async () => {
@@ -218,7 +330,15 @@ describe('Working with R environments', () => {
   test('Convert an R environment to JS', async () => {
     const env = (await webR.evalRCode('x<-new.env();x$a=TRUE;x$b=FALSE;x$.c=NA;x'))
       .result as REnvironment;
-    expect(await env.toJs()).toEqual({ '.c': ['NA'], a: [true], b: [false] });
+    const envJs = await env.toJs();
+    expect(envJs.names).toEqual(['.c', 'a', 'b']);
+    expect(envJs.values[0]).toEqual(expect.objectContaining({ names: null, values: [null] }));
+    expect(envJs.values[1]).toEqual(expect.objectContaining({ names: null, values: [true] }));
+    expect(envJs.values[2]).toEqual(expect.objectContaining({ names: null, values: [false] }));
+    const envObj = await env.toObject();
+    expect(envObj['.c']).toEqual(expect.objectContaining({ names: null, values: [null] }));
+    expect(envObj['a']).toEqual(expect.objectContaining({ names: null, values: [true] }));
+    expect(envObj['b']).toEqual(expect.objectContaining({ names: null, values: [false] }));
   });
 
   test('Evaluating R code in an environment', async () => {
@@ -245,19 +365,19 @@ describe('Invoking RFunction objects', () => {
   test('Pass JS booleans as R logical arguments', async () => {
     const c = (await webR.evalRCode('c')).result as RFunction;
     const logical = (await c.exec(true, [true, false])) as RLogical;
-    expect(Array.from(await logical.toJs())).toStrictEqual([true, true, false]);
+    expect(await logical.toArray()).toEqual([true, true, false]);
   });
 
   test('Pass JS number as R double arguments', async () => {
     const c = (await webR.evalRCode('c')).result as RFunction;
     const double = (await c.exec(3.0, [3.1, 3.14])) as RDouble;
-    expect(Array.from(await double.toArray())).toStrictEqual([3.0, 3.1, 3.14]);
+    expect(await double.toArray()).toEqual([3.0, 3.1, 3.14]);
   });
 
   test('Pass JS object as R complex arguments', async () => {
     const c = (await webR.evalRCode('c')).result as RFunction;
     const cmplx = (await c.exec({ re: 1, im: 2 }, { re: -3, im: -4 })) as RComplex;
-    expect(Array.from(await cmplx.toJs())).toEqual([
+    expect(await cmplx.toArray()).toEqual([
       { re: 1, im: 2 },
       { re: -3, im: -4 },
     ]);
@@ -266,7 +386,7 @@ describe('Invoking RFunction objects', () => {
   test('Pass JS string as R character arguments', async () => {
     const c = (await webR.evalRCode('c')).result as RFunction;
     const cmplx = (await c.exec('Hello', ['World', '!'])) as RComplex;
-    expect(Array.from(await cmplx.toJs())).toEqual(['Hello', 'World', '!']);
+    expect(await cmplx.toArray()).toEqual(['Hello', 'World', '!']);
   });
 });
 
@@ -274,14 +394,14 @@ describe('Garbage collection', () => {
   test('Protect and release R objects', async () => {
     const gc = (await webR.evalRCode('gc')).result as RFunction;
     await gc.exec(false, false, true);
-    const before = await ((await gc.exec(false, false, true)) as RDouble).toArray();
+    const before = await ((await gc.exec(false, false, true)) as RDouble).toTypedArray();
 
     const mem = (await webR.evalRCode('rnorm(10000,1,1)')).result;
     mem.preserve();
-    const during = await ((await gc.exec(false, false, true)) as RDouble).toArray();
+    const during = await ((await gc.exec(false, false, true)) as RDouble).toTypedArray();
 
     mem.release();
-    const after = await ((await gc.exec(false, false, true)) as RDouble).toArray();
+    const after = await ((await gc.exec(false, false, true)) as RDouble).toTypedArray();
 
     expect(during[0]).toBeGreaterThan(before[0]);
     expect(during[1]).toBeGreaterThan(before[1]);

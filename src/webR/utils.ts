@@ -1,4 +1,4 @@
-import { RawType } from './robj';
+import { RawType, RObjectTree, NamedObject } from './robj';
 
 export type ResolveFn = (_value?: unknown) => void;
 export type RejectFn = (_reason?: any) => void;
@@ -23,18 +23,31 @@ export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function unpackScalarArrays(obj: RawType): RawType {
+export function unpackScalarVectors(obj: RawType): RawType {
   if (obj === null || typeof obj !== 'object') {
     return obj;
   }
-  if (Array.isArray(obj)) {
-    if (obj.length === 1) {
-      return unpackScalarArrays(obj[0]);
+  if ('values' in obj && Array.isArray(obj.values)) {
+    if (obj.values.length === 1) {
+      obj = unpackScalarVectors(obj.values[0]);
     } else {
-      return obj.map((v: RawType) => unpackScalarArrays(v));
+      obj.values = obj.values.map((v: RawType) => unpackScalarVectors(v));
     }
+    return obj;
   }
   return Object.fromEntries(
-    Object.entries(obj).map(([k, v]: [string, RawType]) => [k, unpackScalarArrays(v)])
+    Object.entries(obj).map(([k, v]: [string, RawType]) => [k, unpackScalarVectors(v)])
   );
+}
+
+export function mergeListArrays(obj: RObjectTree<RawType[]>): NamedObject<RawType> {
+  const names = obj.names as string[];
+  if (!names || names.some((name) => typeof name === 'undefined')) {
+    throw new Error('Attempted to merge unnamed list array');
+  }
+  return obj.values
+    .map((v, idx) => {
+      return { [names[idx]]: v };
+    })
+    .reduce((prev, cur) => Object.assign(prev, cur), {});
 }
