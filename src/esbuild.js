@@ -30,7 +30,7 @@ function build({ input, output, platform, minify }) {
 [
   {
     input: "webR/webr-worker.ts",
-    output: "../dist/webr-worker.js",
+    output: "webr-worker.js",
     platform: 'node',
     minify: false,
   },
@@ -48,7 +48,13 @@ function build({ input, output, platform, minify }) {
   },
   {
     input: "repl/repl.ts",
-    output: "../dist/repl.mjs",
+    output: "repl.mjs",
+    platform: 'neutral',
+    minify: true,
+  },
+  {
+    input: "console/console.ts",
+    output: "console.mjs",
     platform: 'neutral',
     minify: true,
   },

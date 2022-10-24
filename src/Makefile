@@ -7,7 +7,10 @@ HTML_TEMPLATES = console.html repl.html
 ENTRY_POINTS = console/console.ts repl/repl.ts webR/webr-worker.ts
 HTML_INDEX = repl.html
 
-TS_SOURCES = $(shell find . -name '*.ts' -not -path './node_modules/*')
+TS_SOURCES = $(shell find $(ROOT) \
+  -not \( -path '$(ROOT)/node_modules' -prune \) \
+  -not \( -path '$(PKG_DIST)' -prune \) \
+  -name '*.ts')
 
 # Configure your local environment in this file
 -include ~/.webr-config.mk
@@ -52,5 +55,13 @@ node_modules: package.json
 serve:
 	cd $(DIST) && $(ROOT)/serve.py
 
+package:
+	npm run build
+	npm pack
+
 clean:
 	rm -f webR/config.ts
+
+# Print Makefile variable
+.PHONY: print-%
+print-%  : ; @echo $* = $($*)

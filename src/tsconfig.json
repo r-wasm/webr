@@ -9,9 +9,10 @@
     "noUnusedLocals": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "declaration": true,
     "types": ["node", "emscripten", "jquery", "xterm", "jstree", "jest"],
-    "noEmit": true,
     "lib": ["dom", "webworker"],
+    "emitDeclarationOnly": true
   },
   "typedocOptions": {
     "entryPointStrategy": "expand",
