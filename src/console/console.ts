@@ -21,6 +21,9 @@ export interface ConsoleCallbacks {
  * R code can be sent as input by calling the ``stdin`` method with a single
  * line of textual input.
  *
+ * A long running R computation can be interrupted by calling the `interrupt`
+ * method.
+ *
  * The ``prompt`` callback function is called when webR produces a prompt at
  * the REPL console and is therefore awaiting user input. The prompt character
  * (usually ``>`` or ``+``) is given as the first argument to the callback
@@ -86,6 +89,13 @@ export class Console {
    */
   stdin(input: string) {
     this.webR.writeConsole(input + '\n');
+  }
+
+  /**
+   * Interrupt a long running R computation and return to the prompt
+   */
+  interrupt() {
+    this.webR.interrupt();
   }
 
   /**

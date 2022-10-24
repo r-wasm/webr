@@ -76,6 +76,8 @@ const webR = new WebR({
 (async () => {
   await webR.init();
 
+  readline.setCtrlCHandler(() => webR.interrupt());
+
   webR.evalRCode(`options(webr_pkg_repos="${PKG_BASE_URL}")`);
   webR.evalRCode('webr::global_prompt_install()', undefined, { withHandlers: false });
 

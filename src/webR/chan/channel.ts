@@ -35,6 +35,7 @@ if (IN_NODE) {
 export class ChannelMain {
   inputQueue = new AsyncQueue<Message>();
   outputQueue = new AsyncQueue<Message>();
+  #interruptBuffer?: Int32Array;
 
   initialised: Promise<unknown>;
   resolve: (_?: unknown) => void;
@@ -95,6 +96,13 @@ export class ChannelMain {
     return msg;
   }
 
+  interrupt() {
+    if (!this.#interruptBuffer) {
+      throw new Error('Failed attempt to interrupt before initialising interruptBuffer');
+    }
+    this.#interruptBuffer[0] = 1;
+  }
+
   write(msg: Message) {
     this.inputQueue.put(msg);
   }
@@ -139,6 +147,7 @@ export class ChannelMain {
 
     switch (message.type) {
       case 'resolve':
+        this.#interruptBuffer = new Int32Array(message.data as SharedArrayBuffer);
         this.resolve();
         return;
 
@@ -155,14 +164,16 @@ export class ChannelMain {
         const payload = msg.data.msg;
         const reqData = msg.data.reqData;
 
-        if (payload.type !== 'read') {
-          throw new TypeError("Unsupported request type '$(payload.type)'.");
+        switch (payload.type) {
+          case 'read': {
+            const response = await this.inputQueue.get();
+            // TODO: Pass a `replacer` function
+            await syncResponse(worker, reqData, response);
+            break;
+          }
+          default:
+            throw new TypeError(`Unsupported request type '${payload.type}'.`);
         }
-
-        const response = await this.inputQueue.get();
-
-        // TODO: Pass a `replacer` function
-        await syncResponse(worker, reqData, response);
         return;
       }
       case 'request':
@@ -175,7 +186,7 @@ export class ChannelMain {
 
 // Worker --------------------------------------------------------------
 
-import { SyncTask } from './task-worker';
+import { SyncTask, interruptBuffer } from './task-worker';
 
 export class ChannelWorker {
   #ep: Endpoint;
@@ -185,7 +196,7 @@ export class ChannelWorker {
   }
 
   resolve() {
-    this.write({ type: 'resolve' });
+    this.write({ type: 'resolve', data: interruptBuffer.buffer });
   }
 
   write(msg: Message, transfer?: [Transferable]) {

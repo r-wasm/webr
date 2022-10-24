@@ -76,6 +76,10 @@ export class WebR {
     this.write({ type: 'stdin', data: input + '\n' });
   }
 
+  interrupt() {
+    this.#chan.interrupt();
+  }
+
   async installPackages(packages: string[]) {
     for (const pkg of packages) {
       const msg = { type: 'installPackage', data: { name: pkg } };

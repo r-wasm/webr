@@ -222,7 +222,7 @@ function releaseDataBuffer(buffer: Uint8Array) {
 
 export const interruptBuffer = new Int32Array(new SharedArrayBuffer(4));
 
-let handleInterrupt = () => {
+let handleInterrupt = (): void => {
   interruptBuffer[0] = 0;
   throw new Error('Interrupted!');
 };
@@ -233,6 +233,6 @@ let handleInterrupt = () => {
  * @function handler
  * @param {handler} handler
  */
-export function setInterruptHandler(handler: () => never) {
+export function setInterruptHandler(handler: () => void) {
   handleInterrupt = handler;
 }

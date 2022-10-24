@@ -29,17 +29,33 @@ Index: R-4.1.3/src/unix/sys-std.c
  #endif
  
  extern SA_TYPE SaveAction;
-@@ -949,6 +950,9 @@ handleInterrupt(void)
- }
- #endif /* HAVE_LIBREADLINE */
+@@ -325,8 +326,17 @@ getInputHandler(InputHandler *handlers, 
+ 
+ static void nop(void){}
  
 +#ifdef __EMSCRIPTEN__
 +#include <emscripten.h>
++static void handleEvents(void){
++	EM_ASM(globalThis.Module.webr.handleEvents());
++}
++void (* R_PolledEvents)(void) = handleEvents;
++int R_wait_usec = 100000;
++#else
+ void (* R_PolledEvents)(void) = nop;
+ int R_wait_usec = 0; /* 0 means no timeout */
 +#endif
  
+ /* For X11 devices */
+ void (* Rg_PolledEvents)(void) = nop;
+@@ -949,7 +959,6 @@ handleInterrupt(void)
+ }
+ #endif /* HAVE_LIBREADLINE */
+ 
+-
  /* Fill a text buffer from stdin or with user typed console input. */
  static void *cd = NULL;
-@@ -1030,8 +1034,12 @@ Rstd_ReadConsole(const char *prompt, uns
+ 
+@@ -1030,8 +1039,12 @@ Rstd_ReadConsole(const char *prompt, uns
  	else
  #endif /* HAVE_LIBREADLINE */
  	{
@@ -52,7 +68,7 @@ Index: R-4.1.3/src/unix/sys-std.c
  	}
  
  	if(R_InputHandlers == NULL)
-@@ -1089,10 +1097,24 @@ Rstd_ReadConsole(const char *prompt, uns
+@@ -1089,10 +1102,24 @@ Rstd_ReadConsole(const char *prompt, uns
  		else
  #endif /* HAVE_LIBREADLINE */
  		{
