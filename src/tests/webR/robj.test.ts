@@ -183,6 +183,18 @@ describe('Working with R lists and vectors', () => {
     await expect(list.toObject()).rejects.toThrow('Empty or null key when converting');
   });
 
+  test('Converted object has type property', async () => {
+    const list = (await webR.evalRCode('list(1,2,3)')).result as RList;
+    const listJs = await list.toJs();
+    expect(listJs.type).toEqual('List');
+    const logical = (await webR.evalRCode('TRUE')).result as RLogical;
+    const logicalJs = await logical.toJs();
+    expect(logicalJs.type).toEqual('Logical');
+    const double = (await webR.evalRCode('c(1,2,3)')).result as RDouble;
+    const doubleJs = await double.toJs();
+    expect(doubleJs.type).toEqual('Double');
+  });
+
   test('First key wins when converting R objects to JS objects', async () => {
     const list = (await webR.evalRCode('list(x="a", x="b")')).result as RList;
     const listObj = await list.toObject();

@@ -404,7 +404,7 @@ export class RObjNull extends RObjImpl {
 export class RObjSymbol extends RObjImpl {
   toTree(): RObjectTree<RawType> {
     return {
-      type: this.type,
+      type: RType[this.type],
       values: this.isUnbound() ? null : this.toObject(),
       names: null,
     };
@@ -436,7 +436,7 @@ export class RObjSymbol extends RObjImpl {
 export type NamedEntries<T> = [string | null, T][];
 export type NamedObject<T> = { [key: string]: T };
 export type RObjectTree<T> = {
-  type: RType;
+  type: string;
   names: (string | null)[] | null;
   values: T;
   missing?: boolean[];
@@ -485,7 +485,7 @@ export class RObjPairlist extends RObjImpl {
       values.push(next.car().toTree());
     }
     const names = hasNames ? namesArray : null;
-    return { type: this.type, names, values };
+    return { type: RType[this.type], names, values };
   }
 
   includes(name: string): boolean {
@@ -539,7 +539,7 @@ export class RObjList extends RObjImpl {
 
   toTree(): RObjectTree<RawType[]> {
     return {
-      type: this.type,
+      type: RType[this.type],
       names: this.names(),
       values: [...Array(this.length).keys()].map((i) => this.get(i + 1).toTree()),
     };
@@ -616,7 +616,7 @@ export class RObjEnvironment extends RObjImpl {
   toTree(): RObjectTree<RawType[]> {
     const symbols = this.names();
     return {
-      type: this.type,
+      type: RType[this.type],
       names: symbols,
       values: [...Array(symbols.length).keys()].map((i) => this.getDollar(symbols[i]).toTree()),
     };
@@ -697,7 +697,7 @@ abstract class RObjAtomicVector<T extends atomicType> extends RObjImpl {
 
   toTree(): RObjectTree<(T | null)[]> {
     return {
-      type: this.type,
+      type: RType[this.type],
       names: this.names(),
       values: this.toArray(),
       missing: this.detectMissing(),
