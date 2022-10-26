@@ -138,7 +138,7 @@ export class WebR {
         const outList = (await obj.get(2)) as RList;
         const output: RawType[] = [];
         for await (const out of outList) {
-          const obj = await (out as RList).toObject();
+          const obj = (await (out as RList).toObject({ depth: 0 })) as RawType;
           output.push(unpackScalarVectors(obj));
         }
         obj.release();

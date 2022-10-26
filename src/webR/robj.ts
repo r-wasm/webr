@@ -882,6 +882,23 @@ export function isRObject(value: any): value is RObject {
 }
 
 /**
+ * Test for an RTargetPtr instance
+ *
+ * @param {any} value The object to test.
+ * @return {boolean} True if the object is an instance of an RTargetPtr.
+ */
+export function isRTargetPtr(value: any): value is RTargetPtr {
+  return (
+    value &&
+    typeof value === 'object' &&
+    'type' in value &&
+    'obj' in value &&
+    'methods' in value &&
+    value.type === 'PTR'
+  );
+}
+
+/**
  * Test for an RFunction instance
  *
  * @param {any} value The object to test.

@@ -1,6 +1,7 @@
 import { RTargetType, RTargetPtr, isRObject, RTargetObj } from './robj';
-import { RObjImpl, RObjFunction, RawType, isRFunction } from './robj';
+import { RObjImpl, RObjFunction, RawType, isRFunction, isRTargetPtr } from './robj';
 import { ChannelMain } from './chan/channel';
+import { replaceInObject } from './utils';
 
 /** Obtain a union of the keys corresponding to methods of a given class T
  */
@@ -25,15 +26,15 @@ type DistProxy<U> = U extends RObjImpl ? RProxy<U> : U;
  *
  * Any other types are wrapped in a Promise.
  */
-type RProxify<T> = T extends RObjImpl
-  ? Promise<RProxy<T>>
+type RProxify<T> = T extends Array<any>
+  ? Promise<DistProxy<T[0]>[]>
   : T extends (...args: infer U) => any
   ? (
       ...args: {
         [V in keyof U]: DistProxy<U[V]>;
       }
     ) => RProxify<ReturnType<T>>
-  : Promise<T>;
+  : Promise<DistProxy<T>>;
 
 /** Create an RProxy type based on an RObjImpl type parameter
  *
@@ -112,8 +113,15 @@ function targetMethod(chan: ChannelMain, target: RTargetPtr, prop: string) {
         e.stack = reply.obj.stack;
         throw e;
       }
-      default:
-        return reply.obj;
+      default: {
+        const proxyReply = replaceInObject(
+          reply,
+          isRTargetPtr,
+          (obj: RTargetPtr, chan: ChannelMain) => newRProxy(chan, obj),
+          chan
+        ) as RTargetObj;
+        return proxyReply.obj;
+      }
     }
   };
 }

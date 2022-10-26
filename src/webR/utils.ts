@@ -1,5 +1,5 @@
 import { IN_NODE } from './compat';
-import { RawType, RObjectTree, NamedObject } from './robj';
+import { RawType } from './robj';
 
 export type ResolveFn = (_value?: unknown) => void;
 export type RejectFn = (_reason?: any) => void;
@@ -24,33 +24,35 @@ export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function unpackScalarVectors(obj: RawType): RawType {
+export function replaceInObject(
+  obj: unknown,
+  test: (obj: any) => boolean,
+  replacer: (obj: any, ...replacerArgs: any[]) => unknown,
+  ...replacerArgs: unknown[]
+): unknown {
   if (obj === null || typeof obj !== 'object') {
     return obj;
   }
-  if ('values' in obj && Array.isArray(obj.values)) {
-    if (obj.values.length === 1) {
-      obj = unpackScalarVectors(obj.values[0]);
-    } else {
-      obj.values = obj.values.map((v: RawType) => unpackScalarVectors(v));
-    }
-    return obj;
+  if (test(obj)) {
+    return replacer(obj, ...replacerArgs);
+  }
+  if (Array.isArray(obj) || ArrayBuffer.isView(obj)) {
+    return (obj as unknown[]).map((v) => replaceInObject(v, test, replacer, ...replacerArgs));
   }
   return Object.fromEntries(
-    Object.entries(obj).map(([k, v]: [string, RawType]) => [k, unpackScalarVectors(v)])
+    Object.entries(obj).map(([k, v], i) => [k, replaceInObject(v, test, replacer, ...replacerArgs)])
   );
 }
 
-export function mergeListArrays(obj: RObjectTree<RawType[]>): NamedObject<RawType> {
-  const names = obj.names as string[];
-  if (!names || names.some((name) => typeof name === 'undefined')) {
-    throw new Error('Attempted to merge unnamed list array');
-  }
-  return obj.values
-    .map((v, idx) => {
-      return { [names[idx]]: v };
-    })
-    .reduce((prev, cur) => Object.assign(prev, cur), {});
+export function unpackScalarVectors(obj: RawType) {
+  return replaceInObject(
+    obj,
+    (obj: any) =>
+      'values' in obj &&
+      (Array.isArray(obj.values) || ArrayBuffer.isView(obj)) &&
+      obj.values.length === 1,
+    (obj: any) => obj.values[0]
+  ) as RawType;
 }
 
 /* Workaround for loading a cross-origin script.
