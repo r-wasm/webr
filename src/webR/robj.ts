@@ -3,6 +3,10 @@ import type { RProxy } from './proxy';
 
 declare let Module: Module;
 
+export interface ToTreeOptions {
+  depth: number;
+}
+
 // RProxy<RObjImpl> type aliases
 export type RObject = RProxy<RObjImpl>;
 export type RNull = RProxy<RObjNull>;
@@ -163,6 +167,15 @@ export type RawType =
   | Set<RawType>
   | { [key: string]: RawType };
 
+export type NamedEntries<T> = [string | null, T][];
+export type NamedObject<T> = { [key: string]: T };
+export type RObjectTree<T = void> = {
+  type: string;
+  names: (string | null)[] | null;
+  values: T extends void ? (RawType | RObjImpl | RObjectTree)[] : T;
+  missing?: boolean[];
+};
+
 export class RObjImpl {
   ptr: RPtr;
 
@@ -231,7 +244,7 @@ export class RObjImpl {
     return names && names.includes(name);
   }
 
-  toTree(): RawType {
+  toTree(options: ToTreeOptions = { depth: 0 }, depth = 1): RawType | RObjectTree {
     throw new Error('This R object cannot be converted to JS');
   }
 
@@ -402,12 +415,8 @@ export class RObjNull extends RObjImpl {
 }
 
 export class RObjSymbol extends RObjImpl {
-  toTree(): RObjectTree<RawType> {
-    return {
-      type: RType[this.type],
-      values: this.isUnbound() ? null : this.toObject(),
-      names: null,
-    };
+  toTree(): RawType {
+    return this.isUnbound() ? null : this.toObject();
   }
 
   toObject(): {
@@ -433,26 +442,19 @@ export class RObjSymbol extends RObjImpl {
   }
 }
 
-export type NamedEntries<T> = [string | null, T][];
-export type NamedObject<T> = { [key: string]: T };
-export type RObjectTree<T> = {
-  type: string;
-  names: (string | null)[] | null;
-  values: T;
-  missing?: boolean[];
-};
-
 export class RObjPairlist extends RObjImpl {
   get length(): number {
     return this.toArray().length;
   }
 
-  toArray(): RawType[] {
-    return this.toTree().values;
+  toArray(options: ToTreeOptions = { depth: 1 }): (RObjImpl | RawType | RObjectTree)[] {
+    return this.toTree(options).values;
   }
 
-  toObject({ allowDuplicateKey = true, allowEmptyKey = false } = {}): NamedObject<RawType> {
-    const entries = this.entries();
+  toObject({ allowDuplicateKey = true, allowEmptyKey = false, depth = 1 } = {}): NamedObject<
+    RObjImpl | RawType | RObjectTree
+  > {
+    const entries = this.entries({ depth });
     const keys = entries.map(([k, v]) => k);
     if (!allowDuplicateKey && new Set(keys).size !== keys.length) {
       throw new Error('Duplicate key when converting pairlist without allowDuplicateKey enabled');
@@ -465,15 +467,16 @@ export class RObjPairlist extends RObjImpl {
     );
   }
 
-  entries(): NamedEntries<RawType> {
-    const obj = this.toTree();
+  entries(options: ToTreeOptions = { depth: 1 }): NamedEntries<RObjImpl | RawType | RObjectTree> {
+    const obj = this.toTree(options);
     return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
   }
 
-  toTree(): RObjectTree<RawType[]> {
+  toTree(options: ToTreeOptions = { depth: 0 }, depth = 1): RObjectTree {
     const namesArray: string[] = [];
     let hasNames = false;
-    const values: RawType[] = [];
+    const values: (RawType | RObjImpl | RObjectTree)[] = [];
+
     for (let next = this as Nullable<RObjPairlist>; !next.isNull(); next = next.cdr()) {
       const symbol = next.tag();
       if (symbol.isNull()) {
@@ -482,7 +485,11 @@ export class RObjPairlist extends RObjImpl {
         hasNames = true;
         namesArray.push(symbol.printname().toString());
       }
-      values.push(next.car().toTree());
+      if (options.depth && depth >= options.depth) {
+        values.push(next.car());
+      } else {
+        values.push(next.car().toTree(options, depth + 1));
+      }
     }
     const names = hasNames ? namesArray : null;
     return { type: RType[this.type], names, values };
@@ -514,12 +521,14 @@ export class RObjList extends RObjImpl {
     return Module._LENGTH(this.ptr);
   }
 
-  toArray(): RawType[] {
-    return this.toTree().values;
+  toArray(options: { depth: number } = { depth: 1 }): (RObjImpl | RawType | RObjectTree)[] {
+    return this.toTree(options).values;
   }
 
-  toObject({ allowDuplicateKey = true, allowEmptyKey = false } = {}): NamedObject<RawType> {
-    const entries = this.entries();
+  toObject({ allowDuplicateKey = true, allowEmptyKey = false, depth = 1 } = {}): NamedObject<
+    RObjImpl | RawType | RObjectTree
+  > {
+    const entries = this.entries({ depth });
     const keys = entries.map(([k, v]) => k);
     if (!allowDuplicateKey && new Set(keys).size !== keys.length) {
       throw new Error('Duplicate key when converting list without allowDuplicateKey enabled');
@@ -532,16 +541,24 @@ export class RObjList extends RObjImpl {
     );
   }
 
-  entries(): NamedEntries<RawType> {
-    const obj = this.toTree();
+  entries(
+    options: { depth: number } = { depth: 1 }
+  ): NamedEntries<RObjImpl | RawType | RObjectTree> {
+    const obj = this.toTree(options);
     return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
   }
 
-  toTree(): RObjectTree<RawType[]> {
+  toTree(options: { depth: number } = { depth: 0 }, depth = 1): RObjectTree {
     return {
       type: RType[this.type],
       names: this.names(),
-      values: [...Array(this.length).keys()].map((i) => this.get(i + 1).toTree()),
+      values: [...Array(this.length).keys()].map((i) => {
+        if (options.depth && depth >= options.depth) {
+          return this.get(i + 1);
+        } else {
+          return this.get(i + 1).toTree(options, depth + 1);
+        }
+      }),
     };
   }
 }
@@ -604,21 +621,29 @@ export class RObjEnvironment extends RObjImpl {
     return this.getDollar(prop);
   }
 
-  toObject(): NamedObject<RawType> {
+  toObject({ depth = 0 } = {}): NamedObject<RawType | RObjImpl | RObjectTree> {
     const symbols = this.names();
     return Object.fromEntries(
       [...Array(symbols.length).keys()].map((i) => {
-        return [symbols[i], this.getDollar(symbols[i]).toTree()];
+        return [symbols[i], this.getDollar(symbols[i]).toTree({ depth })];
       })
     );
   }
 
-  toTree(): RObjectTree<RawType[]> {
-    const symbols = this.names();
+  toTree(options: { depth: number } = { depth: 0 }, depth = 1): RObjectTree {
+    const names = this.names();
+    const values = [...Array(names.length).keys()].map((i) => {
+      if (options.depth && depth >= options.depth) {
+        return this.getDollar(names[i]);
+      } else {
+        return this.getDollar(names[i]).toTree(options, depth + 1);
+      }
+    });
+
     return {
       type: RType[this.type],
-      names: symbols,
-      values: [...Array(symbols.length).keys()].map((i) => this.getDollar(symbols[i]).toTree()),
+      names,
+      values,
     };
   }
 }
