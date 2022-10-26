@@ -27,3 +27,4 @@ jobs:
           name: codecov-webr
           fail_ci_if_error: true
           verbose: true
+          token: ${{ secrets.CC_TOKEN }}

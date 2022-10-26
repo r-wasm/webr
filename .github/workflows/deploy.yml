@@ -32,6 +32,7 @@ jobs:
           name: codecov-webr
           fail_ci_if_error: true
           verbose: true
+          token: ${{ secrets.CC_TOKEN }}
       - name: Archive webR build artifacts
         uses: actions/upload-artifact@v3
         with:
