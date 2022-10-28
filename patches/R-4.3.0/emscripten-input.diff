@@ -1,7 +1,7 @@
-Index: R-4.2.2/src/unix/sys-std.c
+Index: R-4.3.0/src/unix/sys-std.c
 ===================================================================
---- R-4.2.2.orig/src/unix/sys-std.c
-+++ R-4.2.2/src/unix/sys-std.c
+--- R-4.3.0.orig/src/unix/sys-std.c
++++ R-4.3.0/src/unix/sys-std.c
 @@ -61,6 +61,7 @@
  
  #ifdef __EMSCRIPTEN__
@@ -10,7 +10,7 @@ Index: R-4.2.2/src/unix/sys-std.c
  #endif
  
  extern SA_TYPE SaveAction;
-@@ -325,8 +326,17 @@ static void nop(void){}
+@@ -325,8 +326,17 @@ void (* R_PolledEvents)(void) = nop;
  
  static void nop(void){}
  
@@ -28,7 +28,7 @@ Index: R-4.2.2/src/unix/sys-std.c
  
  /* For X11 devices */
  void (* Rg_PolledEvents)(void) = nop;
-@@ -1043,8 +1052,12 @@ Rstd_ReadConsole(const char *prompt, unsigned char *bu
+@@ -1043,8 +1053,12 @@ Rstd_ReadConsole(const char *prompt, unsigned char *bu
  	else
  #endif /* HAVE_LIBREADLINE */
  	{
@@ -41,7 +41,7 @@ Index: R-4.2.2/src/unix/sys-std.c
  	}
  
  	if(R_InputHandlers == NULL)
-@@ -1102,10 +1115,24 @@ Rstd_ReadConsole(const char *prompt, unsigned char *bu
+@@ -1102,10 +1116,25 @@ Rstd_ReadConsole(const char *prompt, unsigned char *bu
  		else
  #endif /* HAVE_LIBREADLINE */
  		{
@@ -52,11 +52,12 @@ Index: R-4.2.2/src/unix/sys-std.c
 +			initialised = 1;
 +		    }
 +		    const char* input = (const char*) EM_ASM_INT(return globalThis.Module.webr.readConsole());
-+
-+		    strncpy((char*) buf, input, len);
-+		    free((void*) input);
-+
-+		    return 1;
++		    if (input) {
++ 		        strncpy((char*) buf, input, len);
++		        free((void*) input);
++		        return 1;
++		    }
++		    return 0;
 +#else
  		    if(fgets((char *)buf, len, stdin) == NULL)
  			return 0;
@@ -66,3 +67,16 @@ Index: R-4.2.2/src/unix/sys-std.c
  		}
  	    }
  	}
+Index: R-4.3.0/src/main/main.c
+===================================================================
+--- R-4.3.0.orig/src/main/main.c
++++ R-4.3.0/src/main/main.c
+@@ -321,7 +321,7 @@ static unsigned char DLLbuf[CONSOLE_BUFFER_SIZE+1], *D
+ }
+ 
+ 
+-static unsigned char DLLbuf[CONSOLE_BUFFER_SIZE+1], *DLLbufp;
++unsigned char DLLbuf[CONSOLE_BUFFER_SIZE+1], *DLLbufp;
+ 
+ static void check_session_exit(void)
+ {
