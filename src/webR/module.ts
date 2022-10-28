@@ -60,6 +60,8 @@ export interface Module extends EmscriptenModule {
   _R_ParseEvalString: (code: number, env: RPtr) => RPtr;
   _R_PreserveObject: (ptr: RPtr) => void;
   _R_ReleaseObject: (ptr: RPtr) => void;
+  _R_ReplDLLinit: () => void;
+  _R_ReplDLLdo1: () => number;
   _Rf_ScalarReal: (n: number) => RPtr;
   _Rf_ScalarLogical: (l: boolean) => RPtr;
   _Rf_ScalarInteger: (n: number) => RPtr;
@@ -67,6 +69,7 @@ export interface Module extends EmscriptenModule {
   _Rf_allocVector: (type: RType, len: number) => RPtr;
   _Rf_eval: (call: RPtr, env: RPtr) => RPtr;
   _Rf_findVarInFrame: (rho: RPtr, symbol: RPtr) => RPtr;
+  _Rf_initialize_R: (argc: number, argv: RPtr) => void;
   _Rf_install: (ptr: number) => RPtr;
   _Rf_installTrChar: (name: RPtr) => RPtr;
   _Rf_lang1: (ptr1: RPtr) => RPtr;
@@ -81,6 +84,8 @@ export interface Module extends EmscriptenModule {
   _Rf_protect: (ptr: RPtr) => RPtr;
   _Rf_unprotect: (n: number) => void;
   _Rf_unprotect_ptr: (ptr: RPtr) => void;
+  _DLLbuf: RPtr;
+  _DLLbufp: RPtr;
   _R_BaseEnv: RPtr;
   _R_BracketSymbol: RPtr;
   _R_Bracket2Symbol: RPtr;
@@ -94,6 +99,8 @@ export interface Module extends EmscriptenModule {
   _R_UnboundValue: RPtr;
   _SET_STRING_ELT: (ptr: RPtr, idx: number, val: RPtr) => void;
   _SET_VECTOR_ELT: (ptr: RPtr, idx: number, val: RPtr) => void;
+  _setup_Rmainloop: () => void;
+  _strcpy: (dest: RPtr, src: RPtr) => number;
   // TODO: Namespace all webR properties
   webr: {
     readConsole: () => number;

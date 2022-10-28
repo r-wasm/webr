@@ -159,6 +159,7 @@ export class SharedBufferChannelWorker {
   #dispatch: (msg: Message) => void = () => 0;
   #interruptBuffer = new Int32Array(new SharedArrayBuffer(4));
   #interrupt = () => {};
+  onMessageFromMainThread: (msg: Message) => void = () => {};
 
   constructor() {
     this.#ep = (IN_NODE ? require('worker_threads').parentPort : globalThis) as Endpoint;

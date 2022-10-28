@@ -1,6 +1,7 @@
 import { Message } from './message';
 import { SharedBufferChannelMain, SharedBufferChannelWorker } from './channel-sharedbuffer';
 import { ServiceWorkerChannelMain, ServiceWorkerChannelWorker } from './channel-serviceworker';
+import { PostMessageChannelMain, PostMessageChannelWorker } from './channel-postmessage';
 import { WebROptions } from '../webr-main';
 import { isCrossOrigin } from '../utils';
 import { IN_NODE } from '../compat';
@@ -16,10 +17,18 @@ import { IN_NODE } from '../compat';
 //   main thread asynchronously reads from this queue, typically in an
 //   async infloop.
 //
-// - The worker synchronously reads from the input queue. Reading a
-//   message blocks until an input is available. Writing a message to
-//   the output queue is equivalent to calling `postMessage()` and
-//   returns immediately.
+// - The worker synchronously reads from the input queue, if supported by
+//   SharedArrayBuffer or synchronous XHR + service Worker. When supported,
+//   reading a message blocks until an input is available.
+//
+//   Writing a message to the output queue is equivalent to calling
+//   `postMessage()` and returns immediately.
+//
+//   If synchonrous reads are not possible, an alternative asynchonous
+//   REPL is used as a fallback, and messages are instead sent using async
+//   `postMessage()`. The fallback mode currently has some limitations: the
+//   user cannot interrupt long running computations, and nested REPLs do
+//   not work.
 //
 //   Note that the messages sent from main to worker need to be
 //   serialised. There is no structured cloning involved, and
@@ -44,6 +53,7 @@ export interface ChannelWorker {
   run(args: string[]): void;
   inputOrDispatch: () => number;
   setDispatchHandler: (dispatch: (msg: Message) => void) => void;
+  onMessageFromMainThread: (msg: Message) => void;
 }
 
 export enum ChannelType {
@@ -68,6 +78,8 @@ export function newChannelMain(url: string, data: Required<WebROptions>) {
       return new SharedBufferChannelMain(url, data);
     case ChannelType.ServiceWorker:
       return new ServiceWorkerChannelMain(url, data);
+    case ChannelType.PostMessage:
+      return new PostMessageChannelMain(url, data);
     case ChannelType.Automatic:
     default:
       if (IN_NODE || crossOriginIsolated) {
@@ -75,6 +87,9 @@ export function newChannelMain(url: string, data: Required<WebROptions>) {
       }
       if ('serviceWorker' in navigator && !isCrossOrigin(url)) {
         return new ServiceWorkerChannelMain(url, data);
+      }
+      if (window.Worker) {
+        return new PostMessageChannelMain(url, data);
       }
       throw new Error('Unable to initialise main thread communication channel');
   }
@@ -86,6 +101,8 @@ export function newChannelWorker(msg: ChannelInitMessage) {
       return new SharedBufferChannelWorker();
     case ChannelType.ServiceWorker:
       return new ServiceWorkerChannelWorker(msg.data.clientId);
+    case ChannelType.PostMessage:
+      return new PostMessageChannelWorker();
     default:
       throw new Error('Unknown worker channel type recieved');
   }
