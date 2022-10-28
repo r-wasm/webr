@@ -1,6 +1,8 @@
 import { Message } from './message';
 import { SharedBufferChannelMain, SharedBufferChannelWorker } from './channel-sharedbuffer';
+import { ServiceWorkerChannelMain, ServiceWorkerChannelWorker } from './channel-serviceworker';
 import { WebROptions } from '../webr-main';
+import { isCrossOrigin } from '../utils';
 import { IN_NODE } from '../compat';
 
 // The channel structure is asymetric:
@@ -54,6 +56,9 @@ export function newChannelMain(url: string, data: Required<WebROptions>) {
   if (IN_NODE || crossOriginIsolated) {
     return new SharedBufferChannelMain(url, data);
   }
+  if ('serviceWorker' in navigator && !isCrossOrigin(url)) {
+    return new ServiceWorkerChannelMain(url, data);
+  }
   throw new Error('Unable to initialise main thread communication channel');
 }
 
@@ -61,6 +66,8 @@ export function newChannelWorker(channelType: ChannelType) {
   switch (channelType) {
     case ChannelType.SharedArrayBuffer:
       return new SharedBufferChannelWorker();
+    case ChannelType.ServiceWorker:
+      return new ServiceWorkerChannelWorker();
     default:
       throw new Error('Unknown worker channel type recieved');
   }
