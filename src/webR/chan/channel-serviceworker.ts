@@ -23,6 +23,7 @@ export class ServiceWorkerChannelMain {
 
   #parked = new Map<string, ResolveFn>();
   #registration?: ServiceWorkerRegistration;
+  #interrupted = false;
 
   constructor(url: string, config: Required<WebROptions>) {
     const worker = new Worker(url);
@@ -51,7 +52,9 @@ export class ServiceWorkerChannelMain {
     return msg;
   }
 
-  interrupt() {}
+  interrupt() {
+    this.#interrupted = true;
+  }
 
   write(msg: Message) {
     this.inputQueue.put(msg);
@@ -118,6 +121,16 @@ export class ServiceWorkerChannelMain {
             uuid: event.data.uuid,
             response: newResponse(event.data.uuid, response),
           });
+          break;
+        }
+        case 'interrupt': {
+          const response = this.#interrupted;
+          this.#registration?.active.postMessage({
+            type: 'wasm-webr-fetch-response',
+            uuid: event.data.uuid,
+            response: newResponse(event.data.uuid, response),
+          });
+          this.#interrupted = false;
           break;
         }
         default:
@@ -194,6 +207,7 @@ declare let callMain: (args: string[]) => void;
 export class ServiceWorkerChannelWorker {
   #ep: Endpoint;
   #dispatch: (msg: Message) => void = () => 0;
+  #interrupt = () => {};
   onMessageFromMainThread: (msg: Message) => void = () => {};
 
   constructor() {
@@ -231,8 +245,28 @@ export class ServiceWorkerChannelWorker {
     Module.callMain(args);
   }
 
-  setInterrupt(_: () => void) {}
-  handleInterrupt() {}
+  setInterrupt(interrupt: () => void) {
+    this.#interrupt = interrupt;
+  }
+
+  handleInterrupt() {
+    /* During R computation we have no way to directly interrupt the worker
+     * thread. Instead, we hook into R's PolledEvents. Since we are not using
+     * SharedArrayBuffer as a signal method, we instead send a message to the
+     * main thread to ask if we should interrupt R.
+     */
+    const msg = newRequest({ type: 'interrupt' });
+    const request = new XMLHttpRequest();
+    request.open('POST', './__wasm__/webr-fetch-request/', false);
+    request.send(JSON.stringify(msg));
+    const response = JSON.parse(request.responseText) as Response;
+
+    const interrupted = response.data.resp as boolean;
+    if (interrupted) {
+      this.#interrupt();
+    }
+  }
+
   setDispatchHandler(dispatch: (msg: Message) => void) {
     this.#dispatch = dispatch;
   }
