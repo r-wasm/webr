@@ -1,4 +1,4 @@
-import { newChannelMain, ChannelMain } from './chan/channel';
+import { newChannelMain, ChannelMain, ChannelType } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy } from './proxy';
@@ -29,6 +29,7 @@ export interface WebROptions {
   PKG_URL?: string;
   homedir?: string;
   interactive?: boolean;
+  channelType?: ChannelType;
 }
 
 const defaultEnv = {
@@ -43,6 +44,7 @@ const defaultOptions = {
   PKG_URL: PKG_BASE_URL,
   homedir: '/home/web_user',
   interactive: true,
+  channelType: ChannelType.Automatic,
 };
 
 export class WebR {
