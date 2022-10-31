@@ -47,19 +47,28 @@ export interface ChannelWorker {
 }
 
 export enum ChannelType {
+  Automatic,
   SharedArrayBuffer,
   ServiceWorker,
   PostMessage,
 }
 
 export function newChannelMain(url: string, data: Required<WebROptions>) {
-  if (IN_NODE || crossOriginIsolated) {
-    return new SharedBufferChannelMain(url, data);
+  switch (data.channelType) {
+    case ChannelType.SharedArrayBuffer:
+      return new SharedBufferChannelMain(url, data);
+    case ChannelType.ServiceWorker:
+      return new ServiceWorkerChannelMain(url, data);
+    case ChannelType.Automatic:
+    default:
+      if (IN_NODE || crossOriginIsolated) {
+        return new SharedBufferChannelMain(url, data);
+      }
+      if ('serviceWorker' in navigator && !isCrossOrigin(url)) {
+        return new ServiceWorkerChannelMain(url, data);
+      }
+      throw new Error('Unable to initialise main thread communication channel');
   }
-  if ('serviceWorker' in navigator && !isCrossOrigin(url)) {
-    return new ServiceWorkerChannelMain(url, data);
-  }
-  throw new Error('Unable to initialise main thread communication channel');
 }
 
 export function newChannelWorker(channelType: ChannelType) {
