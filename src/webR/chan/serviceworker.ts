@@ -35,12 +35,14 @@ const handleFetch = (event: FetchEvent) => {
     }
 
     const message = (await event.request.json()) as MessageRequest;
-    requests[message.data.uuid] = promiseHandles();
-    client.postMessage({
-      type: 'wasm-webr-fetch-request',
-      uuid: message.data.uuid,
-      msg: message.data.msg,
-    });
+    if (!(message.data.uuid in requests)) {
+      requests[message.data.uuid] = promiseHandles();
+      client.postMessage({
+        type: 'wasm-webr-fetch-request',
+        uuid: message.data.uuid,
+        msg: message.data.msg,
+      });
+    }
 
     const response = await requests[message.data.uuid].promise;
     const headers = { 'Cross-Origin-Embedder-Policy': 'require-corp' };
@@ -70,8 +72,10 @@ function handleMessage(event: ExtendableMessageEvent) {
       break;
     }
     case 'wasm-webr-fetch-response': {
-      requests[event.data.uuid].resolve(event.data.response);
-      delete requests[event.data.uuid];
+      if (event.data.uuid in requests) {
+        requests[event.data.uuid].resolve(event.data.response);
+        delete requests[event.data.uuid];
+      }
       break;
     }
     default:

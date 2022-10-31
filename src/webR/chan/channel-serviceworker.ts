@@ -222,12 +222,32 @@ export class ServiceWorkerChannelWorker {
     this.#ep.postMessage(msg, transfer);
   }
 
+  request(requestMsg: Message): Response {
+    /*
+     * Browsers timeout service workers after about 5 minutes on inactivity.
+     * See e.g. service_worker_version.cc in Chromium.
+     *
+     * To avoid the service worker being shut down, we timeout our XHR after
+     * 1 minute and then resend the request as a keep-alive. The service worker
+     * uses the message UUID to identify the request and continue waiting for a
+     * response from where it left off.
+     */
+    const msg = newRequest(requestMsg);
+    for (;;) {
+      try {
+        const request = new XMLHttpRequest();
+        request.timeout = 60000;
+        request.open('POST', './__wasm__/webr-fetch-request/', false);
+        request.send(JSON.stringify(msg));
+        return JSON.parse(request.responseText) as Response;
+      } catch (e: unknown) {
+        console.log('Service worker request failed - resending request');
+      }
+    }
+  }
+
   read(): Message {
-    const msg = newRequest({ type: 'read' });
-    const request = new XMLHttpRequest();
-    request.open('POST', './__wasm__/webr-fetch-request/', false);
-    request.send(JSON.stringify(msg));
-    const response = JSON.parse(request.responseText) as Response;
+    const response = this.request({ type: 'read' });
     return response.data.resp as Message;
   }
 
@@ -255,12 +275,7 @@ export class ServiceWorkerChannelWorker {
      * SharedArrayBuffer as a signal method, we instead send a message to the
      * main thread to ask if we should interrupt R.
      */
-    const msg = newRequest({ type: 'interrupt' });
-    const request = new XMLHttpRequest();
-    request.open('POST', './__wasm__/webr-fetch-request/', false);
-    request.send(JSON.stringify(msg));
-    const response = JSON.parse(request.responseText) as Response;
-
+    const response = this.request({ type: 'interrupt' });
     const interrupted = response.data.resp as boolean;
     if (interrupted) {
       this.#interrupt();
