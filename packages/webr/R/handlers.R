@@ -13,20 +13,24 @@
 #' interrupting the current program.
 #'
 #' @export
-global_prompt_install <- function() {
+global_prompt_install <- function(show_menu = TRUE) {
   globalCallingHandlers(
     packageNotFoundError = function(cnd) {
       if (!interactive()) {
         return()
       }
       pkg <- cnd$package
-      download <- utils::menu(
-        c("Yes", "No"),
-        title = paste0(
-          'Failed to load package "', pkg,
-          '". Do you want to try downloading it from the webR binary repo?'
+      if (!show_menu) {
+        download <- 1
+      } else {
+        download <- utils::menu(
+          c("Yes", "No"),
+          title = paste0(
+            'Failed to load package "', pkg,
+            '". Do you want to try downloading it from the webR binary repo?'
+          )
         )
-      )
+      }
       if (download == 1) {
         webr::install(pkg)
         tryInvokeRestart("retry_loadNamespace")

@@ -79,7 +79,15 @@ const webR = new WebR({
   readline.setCtrlCHandler(() => webR.interrupt());
 
   webR.evalRCode(`options(webr_pkg_repos="${PKG_BASE_URL}")`);
-  webR.evalRCode('webr::global_prompt_install()', undefined, { withHandlers: false });
+  if (crossOriginIsolated) {
+    webR.evalRCode('webr::global_prompt_install(show_menu=TRUE)', undefined, {
+      withHandlers: false,
+    });
+  } else {
+    webR.evalRCode('webr::global_prompt_install(show_menu=FALSE)', undefined, {
+      withHandlers: false,
+    });
+  }
 
   // Clear the loading message
   term.write('\x1b[2K\r');
