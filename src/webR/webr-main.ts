@@ -1,4 +1,4 @@
-import { ChannelMain } from './chan/channel';
+import { newChannelMain, ChannelMain } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy } from './proxy';
@@ -46,11 +46,11 @@ const defaultOptions = {
 };
 
 export class WebR {
-  #chan;
+  #chan: ChannelMain;
 
   constructor(options: WebROptions = {}) {
     const config: Required<WebROptions> = Object.assign(defaultOptions, options);
-    this.#chan = new ChannelMain(`${config.WEBR_URL}webr-worker.js`, config);
+    this.#chan = newChannelMain(`${config.WEBR_URL}webr-worker.js`, config);
   }
 
   async init() {

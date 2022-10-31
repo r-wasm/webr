@@ -1,5 +1,5 @@
 import { Message } from './message';
-import { SharedBufferChannelMain, SharedBufferChannelWorker } from './channel-sab';
+import { SharedBufferChannelMain, SharedBufferChannelWorker } from './channel-sharedbuffer';
 import { WebROptions } from '../webr-main';
 import { IN_NODE } from '../compat';
 
