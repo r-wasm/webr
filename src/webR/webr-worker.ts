@@ -1,6 +1,5 @@
 import { loadScript } from './compat';
-import { ChannelWorker } from './chan/channel-sharedbuffer';
-import { setInterruptHandler, interruptBuffer } from './chan/task-worker';
+import { newChannelWorker, ChannelWorker, ChannelType } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions, EvalRCodeOptions } from './webr-main';
 import { Module } from './module';
@@ -18,6 +17,7 @@ import {
 } from './robj';
 
 let initialised = false;
+let chan: ChannelWorker | undefined;
 
 const onWorkerMessage = function (msg: Message) {
   if (!msg || !msg.type || msg.type !== 'init') {
@@ -26,7 +26,8 @@ const onWorkerMessage = function (msg: Message) {
   if (initialised) {
     throw new Error("Can't initialise worker multiple times.");
   }
-  init(msg.data as Required<WebROptions>);
+  chan = newChannelWorker(msg.data.channelType as ChannelType);
+  init(msg.data.config as Required<WebROptions>);
   initialised = true;
 };
 
@@ -46,101 +47,91 @@ type XHRResponse = {
 const Module = {} as Module;
 let _config: Required<WebROptions>;
 
-function inputOrDispatch(chan: ChannelWorker): string {
-  for (;;) {
-    // This blocks the thread until a response
-    const msg: Message = chan.read();
+function dispatch(msg: Message): void {
+  switch (msg.type) {
+    case 'request': {
+      const req = msg as Request;
+      const reqMsg = req.data.msg;
 
-    switch (msg.type) {
-      case 'stdin':
-        return msg.data as string;
-
-      case 'request': {
-        const req = msg as Request;
-        const reqMsg = req.data.msg;
-
-        const write = (resp: any, transferables?: [Transferable]) =>
-          chan.write(newResponse(req.data.uuid, resp, transferables));
-        switch (reqMsg.type) {
-          case 'putFileData': {
-            // FIXME: Use a replacer + reviver to transfer Uint8Array
-            const data = Uint8Array.from(Object.values(reqMsg.data.data as ArrayLike<number>));
-            write(putFileData(reqMsg.data.name as string, data));
-            continue;
-          }
-          case 'getFileData': {
-            const out = getFileData(reqMsg.data.name as string);
-            write(out, [out.buffer]);
-            continue;
-          }
-          case 'getFSNode':
-            write(getFSNode(reqMsg.data.path as string));
-            continue;
-          case 'evalRCode': {
-            const data = reqMsg.data as {
-              code: string;
-              env: RPtr;
-              options: EvalRCodeOptions;
-            };
-            try {
-              write(evalRCode(data.code, data.env, data.options));
-            } catch (_e) {
-              const e = _e as Error;
-              write({
-                type: RTargetType.ERR,
-                obj: { name: e.name, message: e.message, stack: e.stack },
-              });
-            }
-            continue;
-          }
-          case 'newRObject': {
-            const data = reqMsg.data as {
-              obj: RTargetRaw;
-            };
-            try {
-              const res = new RObjImpl(data.obj);
-              write({ obj: res.ptr, methods: RObjImpl.getMethods(res), type: RTargetType.PTR });
-            } catch (_e) {
-              const e = _e as Error;
-              write({
-                type: RTargetType.ERR,
-                obj: { name: e.name, message: e.message, stack: e.stack },
-              });
-            }
-            continue;
-          }
-          case 'callRObjMethod': {
-            const data = reqMsg.data as {
-              target: RTargetPtr;
-              prop: string;
-              args: RTargetObj[];
-            };
-            try {
-              write(callRObjMethod(RObjImpl.wrap(data.target.obj), data.prop, data.args));
-            } catch (_e) {
-              const e = _e as Error;
-              write({
-                type: RTargetType.ERR,
-                obj: { name: e.name, message: e.message, stack: e.stack },
-              });
-            }
-            continue;
-          }
-          case 'installPackage':
-            write(
-              evalRCode(
-                `webr::install("${reqMsg.data.name as string}", repos="${_config.PKG_URL}")`
-              )
-            );
-            continue;
-          default:
-            throw new Error('Unknown event `' + reqMsg.type + '`');
+      const write = (resp: any, transferables?: [Transferable]) =>
+        chan?.write(newResponse(req.data.uuid, resp, transferables));
+      switch (reqMsg.type) {
+        case 'putFileData': {
+          // FIXME: Use a replacer + reviver to transfer Uint8Array
+          const data = Uint8Array.from(Object.values(reqMsg.data.data as ArrayLike<number>));
+          write(putFileData(reqMsg.data.name as string, data));
+          break;
         }
+        case 'getFileData': {
+          const out = getFileData(reqMsg.data.name as string);
+          write(out, [out.buffer]);
+          break;
+        }
+        case 'getFSNode':
+          write(getFSNode(reqMsg.data.path as string));
+          break;
+        case 'evalRCode': {
+          const data = reqMsg.data as {
+            code: string;
+            env: RPtr;
+            options: EvalRCodeOptions;
+          };
+          try {
+            write(evalRCode(data.code, data.env, data.options));
+          } catch (_e) {
+            const e = _e as Error;
+            write({
+              type: RTargetType.ERR,
+              obj: { name: e.name, message: e.message, stack: e.stack },
+            });
+          }
+          break;
+        }
+        case 'newRObject': {
+          const data = reqMsg.data as {
+            obj: RTargetRaw;
+          };
+          try {
+            const res = new RObjImpl(data.obj);
+            write({ obj: res.ptr, methods: RObjImpl.getMethods(res), type: RTargetType.PTR });
+          } catch (_e) {
+            const e = _e as Error;
+            write({
+              type: RTargetType.ERR,
+              obj: { name: e.name, message: e.message, stack: e.stack },
+            });
+          }
+          break;
+        }
+        case 'callRObjMethod': {
+          const data = reqMsg.data as {
+            target: RTargetPtr;
+            prop: string;
+            args: RTargetObj[];
+          };
+          try {
+            write(callRObjMethod(RObjImpl.wrap(data.target.obj), data.prop, data.args));
+          } catch (_e) {
+            const e = _e as Error;
+            write({
+              type: RTargetType.ERR,
+              obj: { name: e.name, message: e.message, stack: e.stack },
+            });
+          }
+          break;
+        }
+        case 'installPackage':
+          write(
+            evalRCode(`webr::install("${reqMsg.data.name as string}", repos="${_config.PKG_URL}")`)
+          );
+          break;
+        default:
+          throw new Error('Unknown event `' + reqMsg.type + '`');
       }
-
-      default:
-        throw new Error('Unknown event `' + msg.type + '`');
+      break;
     }
+    default:
+      throw new Error('Unknown event `' + msg.type + '`');
   }
 }
 
@@ -308,13 +299,6 @@ function putFileData(name: string, data: Uint8Array) {
   Module.FS.createDataFile('/', name, data, true, true, true);
 }
 
-function interruptHandler() {
-  if (interruptBuffer[0] !== 0) {
-    interruptBuffer[0] = 0;
-    Module._Rf_onintr();
-  }
-}
-
 function init(config: Required<WebROptions>) {
   _config = config;
 
@@ -323,6 +307,7 @@ function init(config: Required<WebROptions>) {
   Module.noExitRuntime = true;
   Module.noImageDecoding = true;
   Module.noAudioDecoding = true;
+  Module.noInitialRun = true;
 
   Module.preRun.push(() => {
     if (IN_NODE) {
@@ -334,41 +319,45 @@ function init(config: Required<WebROptions>) {
     Module.ENV = Object.assign(Module.ENV, _config.REnv);
   });
 
-  const chan = new ChannelWorker();
+  chan?.setDispatchHandler(dispatch);
+
+  Module.onRuntimeInitialized = () => {
+    chan?.run(_config.RArgs);
+  };
 
   Module.webr = {
     resolveInit: () => {
-      chan.resolve();
+      chan?.setInterrupt(Module._Rf_onintr);
       Module.setValue(Module._R_Interactive, _config.interactive, '*');
+      chan?.resolve();
     },
 
-    // C code must call `free()` on the result
     readConsole: () => {
-      const input = inputOrDispatch(chan);
-      return Module.allocateUTF8(input);
+      if (!chan) {
+        throw new Error('Unable to read console input without a communication channel');
+      }
+      return chan.inputOrDispatch();
     },
 
     handleEvents: () => {
-      interruptHandler();
+      chan?.handleInterrupt();
     },
   };
-
-  setInterruptHandler(interruptHandler);
 
   Module.locateFile = (path: string) => _config.WEBR_URL + path;
   Module.downloadFileContent = downloadFileContent;
 
   Module.print = (text: string) => {
-    chan.write({ type: 'stdout', data: text });
+    chan?.write({ type: 'stdout', data: text });
   };
   Module.printErr = (text: string) => {
-    chan.write({ type: 'stderr', data: text });
+    chan?.write({ type: 'stderr', data: text });
   };
   Module.setPrompt = (prompt: string) => {
-    chan.write({ type: 'prompt', data: prompt });
+    chan?.write({ type: 'prompt', data: prompt });
   };
   Module.canvasExec = (op: string) => {
-    chan.write({ type: 'canvasExec', data: op });
+    chan?.write({ type: 'canvasExec', data: op });
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access

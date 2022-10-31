@@ -1,67 +1,211 @@
-import { Message } from './message';
-import { SharedBufferChannelMain, SharedBufferChannelWorker } from './channel-sab';
-import { WebROptions } from '../webr-main';
+import { AsyncQueue } from './queue';
+import { promiseHandles, ResolveFn, newCrossOriginWorker, isCrossOrigin } from '../utils';
+import { Message, newRequest, Response, SyncRequest } from './message';
+import { Endpoint } from './task-common';
+import { syncResponse } from './task-main';
+import { ChannelType } from './channel';
+
 import { IN_NODE } from '../compat';
+import type { Worker as NodeWorker } from 'worker_threads';
+if (IN_NODE) {
+  (globalThis as any).Worker = require('worker_threads').Worker as NodeWorker;
+}
 
-// The channel structure is asymetric:
-//
-// - The main thread maintains the input and output queues. All
-//   messages sent from main are stored in the input queue. The input
-//   queue is pull-based, it's the worker that initiates a transfer
-//   via a sync-request.
-//
-//   The output queue is filled at the initiative of the worker. The
-//   main thread asynchronously reads from this queue, typically in an
-//   async infloop.
-//
-// - The worker synchronously reads from the input queue. Reading a
-//   message blocks until an input is available. Writing a message to
-//   the output queue is equivalent to calling `postMessage()` and
-//   returns immediately.
-//
-//   Note that the messages sent from main to worker need to be
-//   serialised. There is no structured cloning involved, and
-//   ArrayBuffers can't be transferred, only copied.
+// Main ----------------------------------------------------------------
 
-export interface ChannelMain {
+export class SharedBufferChannelMain {
+  inputQueue = new AsyncQueue<Message>();
+  outputQueue = new AsyncQueue<Message>();
+  #interruptBuffer?: Int32Array;
+
   initialised: Promise<unknown>;
-  close(): void;
-  read(): Promise<Message>;
-  flush(): Promise<Message[]>;
-  write(msg: Message): void;
-  request(msg: Message, transferables?: [Transferable]): Promise<any>;
-  interrupt(): void;
-}
+  resolve: (_?: unknown) => void;
+  close = () => {};
 
-export interface ChannelWorker {
-  resolve(): void;
-  write(msg: Message, transfer?: [Transferable]): void;
-  read(): Message;
-  handleInterrupt(): void;
-  setInterrupt(interrupt: () => void): void;
-  run(args: string[]): void;
-  inputOrDispatch: () => number;
-  setDispatchHandler: (dispatch: (msg: Message) => void) => void;
-}
+  #parked = new Map<string, ResolveFn>();
 
-export enum ChannelType {
-  SharedArrayBuffer,
-  ServiceWorker,
-  PostMessage,
-}
+  constructor(url: string, config: unknown) {
+    const initWorker = (worker: Worker) => {
+      this.#handleEventsFromWorker(worker);
+      this.close = () => worker.terminate();
+      const msg = {
+        type: 'init',
+        data: { config, channelType: ChannelType.SharedArrayBuffer },
+      } as Message;
+      worker.postMessage(msg);
+    };
 
-export function newChannelMain(url: string, data: Required<WebROptions>) {
-  if (IN_NODE || crossOriginIsolated) {
-    return new SharedBufferChannelMain(url, data);
+    if (isCrossOrigin(url)) {
+      newCrossOriginWorker(url, (worker: Worker) => initWorker(worker));
+    } else {
+      const worker = new Worker(url);
+      initWorker(worker);
+    }
+
+    ({ resolve: this.resolve, promise: this.initialised } = promiseHandles());
   }
-  throw new Error('Unable to initialise main thread communication channel');
+
+  async read() {
+    return await this.outputQueue.get();
+  }
+
+  async flush() {
+    const msg: Message[] = [];
+    while (!this.outputQueue.isEmpty()) {
+      msg.push(await this.read());
+    }
+    return msg;
+  }
+
+  interrupt() {
+    if (!this.#interruptBuffer) {
+      throw new Error('Failed attempt to interrupt before initialising interruptBuffer');
+    }
+    this.#interruptBuffer[0] = 1;
+  }
+
+  write(msg: Message) {
+    this.inputQueue.put(msg);
+  }
+
+  async request(msg: Message, transferables?: [Transferable]): Promise<any> {
+    const req = newRequest(msg, transferables);
+
+    const { resolve: resolve, promise: prom } = promiseHandles();
+    this.#parked.set(req.data.uuid, resolve);
+
+    this.write(req);
+    return prom;
+  }
+
+  #resolveResponse(msg: Response) {
+    const uuid = msg.data.uuid;
+    const resolve = this.#parked.get(uuid);
+
+    if (resolve) {
+      this.#parked.delete(uuid);
+      resolve(msg.data.resp);
+    } else {
+      console.warn("Can't find request.");
+    }
+  }
+
+  #handleEventsFromWorker(worker: Worker) {
+    if (IN_NODE) {
+      (worker as unknown as NodeWorker).on('message', (message: Message) => {
+        this.#onMessageFromWorker(worker, message);
+      });
+    } else {
+      worker.onmessage = (ev: MessageEvent) =>
+        this.#onMessageFromWorker(worker, ev.data as Message);
+    }
+  }
+
+  #onMessageFromWorker = async (worker: Worker, message: Message) => {
+    if (!message || !message.type) {
+      return;
+    }
+
+    switch (message.type) {
+      case 'resolve':
+        this.#interruptBuffer = new Int32Array(message.data as SharedArrayBuffer);
+        this.resolve();
+        return;
+
+      case 'response':
+        this.#resolveResponse(message as Response);
+        return;
+
+      default:
+        this.outputQueue.put(message);
+        return;
+
+      case 'sync-request': {
+        const msg = message as SyncRequest;
+        const payload = msg.data.msg;
+        const reqData = msg.data.reqData;
+
+        switch (payload.type) {
+          case 'read': {
+            const response = await this.inputQueue.get();
+            // TODO: Pass a `replacer` function
+            await syncResponse(worker, reqData, response);
+            break;
+          }
+          default:
+            throw new TypeError(`Unsupported request type '${payload.type}'.`);
+        }
+        return;
+      }
+      case 'request':
+        throw new TypeError(
+          "Can't send messages of type 'request' from a worker. Please Use 'sync-request' instead."
+        );
+    }
+  };
 }
 
-export function newChannelWorker(channelType: ChannelType) {
-  switch (channelType) {
-    case ChannelType.SharedArrayBuffer:
-      return new SharedBufferChannelWorker();
-    default:
-      throw new Error('Unknown worker channel type recieved');
+// Worker --------------------------------------------------------------
+
+import { SyncTask, setInterruptHandler, setInterruptBuffer } from './task-worker';
+import { Module as _Module } from '../module';
+
+declare let Module: _Module;
+// callMain function readied by Emscripten
+declare let callMain: (args: string[]) => void;
+
+export class SharedBufferChannelWorker {
+  #ep: Endpoint;
+  #dispatch: (msg: Message) => void = () => 0;
+  #interruptBuffer = new Int32Array(new SharedArrayBuffer(4));
+  #interrupt = () => {};
+
+  constructor() {
+    this.#ep = (IN_NODE ? require('worker_threads').parentPort : globalThis) as Endpoint;
+    setInterruptBuffer(this.#interruptBuffer.buffer);
+    setInterruptHandler(() => this.handleInterrupt());
+  }
+
+  resolve() {
+    this.write({ type: 'resolve', data: this.#interruptBuffer.buffer });
+  }
+
+  write(msg: Message, transfer?: [Transferable]) {
+    this.#ep.postMessage(msg, transfer);
+  }
+
+  read(): Message {
+    const msg = { type: 'read' } as Message;
+    const task = new SyncTask(this.#ep, msg);
+    return task.syncify() as Message;
+  }
+
+  inputOrDispatch(): number {
+    for (;;) {
+      const msg = this.read();
+      if (msg.type === 'stdin') {
+        return Module.allocateUTF8(msg.data as string);
+      }
+      this.#dispatch(msg);
+    }
+  }
+
+  run(args: string[]) {
+    Module.callMain(args);
+  }
+
+  setInterrupt(interrupt: () => void) {
+    this.#interrupt = interrupt;
+  }
+
+  handleInterrupt() {
+    if (this.#interruptBuffer[0] !== 0) {
+      this.#interruptBuffer[0] = 0;
+      this.#interrupt();
+    }
+  }
+
+  setDispatchHandler(dispatch: (msg: Message) => void) {
+    this.#dispatch = dispatch;
   }
 }
