@@ -300,7 +300,7 @@ function evalRCode(code: string, env?: RPtr, options: EvalRCodeOptions = {}): RT
   let envObj = RObjImpl.globalEnv;
   if (env) {
     envObj = RObjImpl.wrap(env);
-    if (envObj.type !== RType.Environment) {
+    if (envObj.type() !== RType.Environment) {
       throw new Error('Attempted to eval R code with an env argument with invalid SEXP type');
     }
   }

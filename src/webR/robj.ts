@@ -195,10 +195,10 @@ export class RObjImpl {
   }
 
   get [Symbol.toStringTag](): string {
-    return `RObj:${RType[this.type]}`;
+    return `RObj:${RType[this.type()]}`;
   }
 
-  get type(): RType {
+  type(): RType {
     return Module._TYPEOF(this.ptr);
   }
 
@@ -497,7 +497,7 @@ export class RObjPairlist extends RObjImpl {
       }
     }
     const names = hasNames ? namesArray : null;
-    return { type: RType[this.type], names, values };
+    return { type: RType[this.type()], names, values };
   }
 
   includes(name: string): boolean {
@@ -557,7 +557,7 @@ export class RObjList extends RObjImpl {
 
   toTree(options: { depth: number } = { depth: 0 }, depth = 1): RObjectTree<RObjImpl> {
     return {
-      type: RType[this.type],
+      type: RType[this.type()],
       names: this.names(),
       values: [...Array(this.length).keys()].map((i) => {
         if (options.depth && depth >= options.depth) {
@@ -648,7 +648,7 @@ export class RObjEnvironment extends RObjImpl {
     });
 
     return {
-      type: RType[this.type],
+      type: RType[this.type()],
       names,
       values,
     };
@@ -729,7 +729,7 @@ abstract class RObjAtomicVector<T extends atomicType> extends RObjImpl {
 
   toTree(): RObjectTreeAtomic<T> {
     return {
-      type: RType[this.type],
+      type: RType[this.type()],
       names: this.names(),
       values: this.toArray(),
       missing: this.detectMissing(),
