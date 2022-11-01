@@ -120,68 +120,40 @@ type RObjectTreeImpl<T> = {
 };
 
 function newRObjFromTarget(target: RTargetObj): RObjImpl {
-  const obj = target.obj as
-    | RawType
-    | RawType[]
-    | RObjectTree<RTargetObj>
-    | NamedObject<RawType | RTargetObj>;
-
+  const obj = target.obj;
   if (obj === null) {
     return RObjImpl.null;
   }
 
-  if (typeof obj === 'number') {
-    return RObjImpl.wrap(Module._Rf_ScalarReal(obj));
+  if (isRObjectTree(obj)) {
+    return new (getRObjClass(RTypeMap[obj.type]))(obj);
   }
 
-  if (typeof obj === 'string') {
-    const str = Module.allocateUTF8(obj);
-    const ptr = Module._Rf_mkString(str);
-    Module._free(str);
-    return RObjImpl.wrap(ptr);
+  const values = Array.isArray(obj) ? obj : [obj];
+  if (values.every((el) => typeof el === 'boolean' || el === null)) {
+    return new RObjLogical(obj as RObjAtomicData<boolean>);
   }
-
-  if (typeof obj === 'boolean') {
-    const ptr = Module._Rf_ScalarLogical(Number(obj));
-    return RObjImpl.wrap(ptr);
+  if (values.every((el) => typeof el === 'number' || el === null)) {
+    return new RObjDouble(obj as RObjAtomicData<number>);
   }
-
-  if (typeof obj === 'object' && obj && 're' in obj && 'im' in obj) {
-    const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.complex, 1));
-    Module.setValue(Module._COMPLEX(ptr), obj.re, 'double');
-    Module.setValue(Module._COMPLEX(ptr) + 8, obj.im, 'double');
-    Module._Rf_unprotect(1);
-    return RObjImpl.wrap(ptr);
+  if (values.every((el) => el === null || (typeof el === 'object' && 're' in el && 'im' in el))) {
+    return new RObjComplex(obj as RObjAtomicData<Complex>);
   }
-
-  if (Array.isArray(obj) && obj.some((el) => typeof el === 'string')) {
-    // Create a vector of strings
-    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.character, obj.length));
-    obj.forEach((el, idx) => {
-      const str = Module.allocateUTF8(String(el));
-      Module._SET_STRING_ELT(robjVec, idx, Module._Rf_mkChar(str));
-      Module._free(str);
-    });
-    Module._Rf_unprotect(1);
-    return RObjImpl.wrap(robjVec);
-  }
-
-  if (Array.isArray(obj) && obj.some((el) => typeof el === 'number')) {
-    // Create a vector of reals
-    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.double, obj.length));
-    obj.forEach((el, idx) =>
-      Module.setValue(Module._REAL(robjVec) + 8 * idx, Number(el), 'double')
-    );
-    Module._Rf_unprotect(1);
-    return RObjImpl.wrap(robjVec);
+  if (values.every((el) => typeof el === 'string' || el === null)) {
+    return new RObjCharacter(obj as RObjAtomicData<string>);
   }
 
   if (Array.isArray(obj)) {
-    // Create a vector of logicals
-    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.logical, obj.length));
-    obj.forEach((el, idx) => Module.setValue(Module._LOGICAL(robjVec) + 4 * idx, el, 'i32'));
-    Module._Rf_unprotect(1);
-    return RObjImpl.wrap(robjVec);
+    return new RObjList(obj as RawType[]);
+  }
+
+  if (typeof obj === 'object') {
+    const tree = {
+      type: 'list',
+      names: Object.keys(obj),
+      values: Object.values(obj),
+    };
+    return new RObjList(tree);
   }
 
   throw new Error('Robj construction for this JS object is not yet supported');
@@ -588,14 +560,14 @@ export class RObjList extends RObjImpl {
       return this;
     }
     const values = isRObjectTree(val) ? val.values : Array.isArray(val) ? val : [val];
-    const ptr = Module._Rf_protect(Module._Rf_allocVector(RType.list, values.length));
+    const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.list, values.length));
     values.forEach((v, i) => {
       Module._SET_VECTOR_ELT(ptr, i, new RObjImpl(v).ptr);
     });
     RObjImpl.wrap(ptr).setNames(isRObjectTree(val) ? val.names : null);
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
-    super({ targetType: RTargetType.ptr, obj: { ptr } });
+    super({ targetType: 'ptr', obj: { ptr } });
   }
 
   get length(): number {
@@ -700,7 +672,7 @@ export class RObjEnvironment extends RObjImpl {
     });
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
-    super({ targetType: RTargetType.ptr, obj: { ptr } });
+    super({ targetType: 'ptr', obj: { ptr } });
   }
 
   ls(all = false, sorted = true): string[] {
