@@ -61,7 +61,7 @@ export interface Module extends EmscriptenModule {
   _R_PreserveObject: (ptr: RPtr) => void;
   _R_ReleaseObject: (ptr: RPtr) => void;
   _Rf_ScalarReal: (n: number) => RPtr;
-  _Rf_ScalarLogical: (l: boolean) => RPtr;
+  _Rf_ScalarLogical: (l: number) => RPtr;
   _Rf_ScalarInteger: (n: number) => RPtr;
   _Rf_ScalarString: (s: string) => RPtr;
   _Rf_allocVector: (type: RType, len: number) => RPtr;
@@ -89,6 +89,9 @@ export interface Module extends EmscriptenModule {
   _R_FalseValue: RPtr;
   _R_GlobalEnv: RPtr;
   _R_Interactive: RPtr;
+  _R_NaInt: RPtr;
+  _R_NaReal: RPtr;
+  _R_NaString: RPtr;
   _R_NilValue: RPtr;
   _R_TrueValue: RPtr;
   _R_UnboundValue: RPtr;
