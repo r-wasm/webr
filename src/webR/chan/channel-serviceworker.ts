@@ -240,8 +240,12 @@ export class ServiceWorkerChannelWorker {
         request.open('POST', './__wasm__/webr-fetch-request/', false);
         request.send(JSON.stringify(msg));
         return JSON.parse(request.responseText) as Response;
-      } catch (e: unknown) {
-        console.log('Service worker request failed - resending request');
+      } catch (e: any) {
+        if (e instanceof DOMException) {
+          console.log('Service worker request failed - resending request');
+        } else {
+          throw e;
+        }
       }
     }
   }
