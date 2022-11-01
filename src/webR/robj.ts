@@ -109,6 +109,7 @@ export type NamedEntries<T> = [string | null, T][];
 export type NamedObject<T> = { [key: string]: T };
 
 export type RObjData = RObjImpl | RawType | RObjectTree<RObjImpl>;
+export type RObjAtomicData<T> = T | (T | null)[] | RObjectTreeAtomic<T>;
 export type RObjectTree<T> = RObjectTreeImpl<(RObjectTree<T> | RawType | T)[]>;
 export type RObjectTreeAtomic<T> = RObjectTreeImpl<(T | null)[]>;
 type RObjectTreeImpl<T> = {
@@ -136,7 +137,7 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
   }
 
   if (typeof obj === 'boolean') {
-    const ptr = Module._Rf_ScalarLogical(obj);
+    const ptr = Module._Rf_ScalarLogical(Number(obj));
     return RObjImpl.wrap(ptr);
   }
 
@@ -244,17 +245,7 @@ export class RObjImpl {
       namesObj = RObjImpl.null;
       RObjImpl.protect(namesObj);
     } else if (Array.isArray(values) && values.every((v) => typeof v === 'string' || v === null)) {
-      const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.character, values.length));
-      values.forEach((v, i) => {
-        if (v === null) {
-          Module._SET_STRING_ELT(ptr, i, Module.getValue(Module._R_NaString, '*'));
-        } else {
-          const str = Module.allocateUTF8(String(v));
-          Module._SET_STRING_ELT(ptr, i, Module._Rf_mkChar(str));
-          Module._free(str);
-        }
-      });
-      namesObj = RObjImpl.wrap(ptr);
+      namesObj = new RObjCharacter(values);
     } else {
       throw new Error('Argument to setNames must be null or an Array of strings or null');
     }
@@ -396,6 +387,18 @@ export class RObjImpl {
 
   static get null(): RObjNull {
     return RObjImpl.wrap(Module.getValue(Module._R_NilValue, '*')) as RObjNull;
+  }
+
+  static get naInt(): number {
+    return Module.getValue(Module._R_NaInt, 'i32');
+  }
+
+  static get naReal(): number {
+    return Module.getValue(Module._R_NaReal, 'double');
+  }
+
+  static get naString(): RObjImpl {
+    return RObjImpl.wrap(Module.getValue(Module._R_NaString, '*'));
   }
 
   static get unboundValue(): RObjImpl {
@@ -641,7 +644,9 @@ export class RObjString extends RObjImpl {
 
 export class RObjEnvironment extends RObjImpl {
   ls(all = false, sorted = true): string[] {
-    const ls = RObjImpl.wrap(Module._R_lsInternal3(this.ptr, all, sorted)) as RObjCharacter;
+    const ls = RObjImpl.wrap(
+      Module._R_lsInternal3(this.ptr, Number(all), Number(sorted))
+    ) as RObjCharacter;
     return ls.toArray() as string[];
   }
 
@@ -769,6 +774,22 @@ abstract class RObjAtomicVector<T extends atomicType> extends RObjImpl {
 }
 
 export class RObjLogical extends RObjAtomicVector<boolean> {
+  constructor(val: RTargetObj | RObjAtomicData<boolean>) {
+    if (isRTargetObj(val)) {
+      super(val);
+      return this;
+    }
+    const values = isRObjectTree(val) ? val.values : Array.isArray(val) ? val : [val];
+    const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.logical, values.length));
+    values.forEach((v, i) =>
+      Module.setValue(Module._LOGICAL(ptr) + 4 * i, v === null ? RObjImpl.naInt : Boolean(v), 'i32')
+    );
+    RObjImpl.wrap(ptr).setNames(isRObjectTree(val) ? val.names : null);
+    Module._Rf_unprotect(1);
+    Module._R_PreserveObject(ptr);
+    super({ targetType: 'ptr', obj: { ptr } });
+  }
+
   getLogical(idx: number): boolean | null {
     return this.get(idx).toArray()[0];
   }
@@ -796,6 +817,26 @@ export class RObjLogical extends RObjAtomicVector<boolean> {
 }
 
 export class RObjInteger extends RObjAtomicVector<number> {
+  constructor(val: RTargetObj | RObjAtomicData<number>) {
+    if (isRTargetObj(val)) {
+      super(val);
+      return this;
+    }
+    const values = isRObjectTree(val) ? val.values : Array.isArray(val) ? val : [val];
+    const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.integer, values.length));
+    values.forEach((v, i) =>
+      Module.setValue(
+        Module._INTEGER(ptr) + 4 * i,
+        v === null ? RObjImpl.naInt : Math.round(Number(v)),
+        'i32'
+      )
+    );
+    RObjImpl.wrap(ptr).setNames(isRObjectTree(val) ? val.names : null);
+    Module._Rf_unprotect(1);
+    Module._R_PreserveObject(ptr);
+    super({ targetType: 'ptr', obj: { ptr } });
+  }
+
   getNumber(idx: number): number | null {
     return this.get(idx).toArray()[0];
   }
@@ -818,6 +859,22 @@ export class RObjInteger extends RObjAtomicVector<number> {
 }
 
 export class RObjDouble extends RObjAtomicVector<number> {
+  constructor(val: RTargetObj | RObjAtomicData<number>) {
+    if (isRTargetObj(val)) {
+      super(val);
+      return this;
+    }
+    const values = isRObjectTree(val) ? val.values : Array.isArray(val) ? val : [val];
+    const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.double, values.length));
+    values.forEach((v, i) =>
+      Module.setValue(Module._REAL(ptr) + 8 * i, v === null ? RObjImpl.naReal : v, 'double')
+    );
+    RObjImpl.wrap(ptr).setNames(isRObjectTree(val) ? val.names : null);
+    Module._Rf_unprotect(1);
+    Module._R_PreserveObject(ptr);
+    super({ targetType: 'ptr', obj: { ptr } });
+  }
+
   getNumber(idx: number): number | null {
     return this.get(idx).toTypedArray()[0];
   }
@@ -837,6 +894,33 @@ export class RObjDouble extends RObjAtomicVector<number> {
 }
 
 export class RObjComplex extends RObjAtomicVector<Complex> {
+  constructor(val: RTargetObj | RObjAtomicData<Complex>) {
+    if (isRTargetObj(val)) {
+      super(val);
+      return this;
+    }
+    const values = isRObjectTree(val) ? val.values : Array.isArray(val) ? val : [val];
+    const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.complex, values.length));
+    values.forEach((v, i) =>
+      Module.setValue(
+        Module._COMPLEX(ptr) + 8 * (2 * i),
+        v === null ? RObjImpl.naReal : v.re,
+        'double'
+      )
+    );
+    values.forEach((v, i) =>
+      Module.setValue(
+        Module._COMPLEX(ptr) + 8 * (2 * i + 1),
+        v === null ? RObjImpl.naReal : v.im,
+        'double'
+      )
+    );
+    RObjImpl.wrap(ptr).setNames(isRObjectTree(val) ? val.names : null);
+    Module._Rf_unprotect(1);
+    Module._R_PreserveObject(ptr);
+    super({ targetType: 'ptr', obj: { ptr } });
+  }
+
   getComplex(idx: number): Complex | null {
     return this.get(idx).toArray()[0];
   }
@@ -866,6 +950,28 @@ export class RObjComplex extends RObjAtomicVector<Complex> {
 }
 
 export class RObjCharacter extends RObjAtomicVector<string> {
+  constructor(val: RTargetObj | RObjAtomicData<string>) {
+    if (isRTargetObj(val)) {
+      super(val);
+      return this;
+    }
+    const values = isRObjectTree(val) ? val.values : Array.isArray(val) ? val : [val];
+    const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.character, values.length));
+    values.forEach((v, i) => {
+      if (v === null) {
+        Module._SET_STRING_ELT(ptr, i, RObjImpl.naString.ptr);
+      } else {
+        const str = Module.allocateUTF8(String(v));
+        Module._SET_STRING_ELT(ptr, i, Module._Rf_mkChar(str));
+        Module._free(str);
+      }
+    });
+    RObjImpl.wrap(ptr).setNames(isRObjectTree(val) ? val.names : null);
+    Module._Rf_unprotect(1);
+    Module._R_PreserveObject(ptr);
+    super({ targetType: 'ptr', obj: { ptr } });
+  }
+
   getString(idx: number): string | null {
     return this.get(idx).toArray()[0];
   }
@@ -894,6 +1000,23 @@ export class RObjCharacter extends RObjAtomicVector<string> {
 }
 
 export class RObjRaw extends RObjAtomicVector<number> {
+  constructor(val: RTargetObj | RObjAtomicData<number>) {
+    if (isRTargetObj(val)) {
+      super(val);
+      return this;
+    }
+    const values = isRObjectTree(val) ? val.values : Array.isArray(val) ? val : [val];
+    if (values.some((v) => v === null || v > 255 || v < 0)) {
+      throw new Error('Cannot create new RRaw object');
+    }
+    const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.raw, values.length));
+    values.forEach((v, i) => Module.setValue(Module._RAW(ptr) + i, Number(v), 'i8'));
+    RObjImpl.wrap(ptr).setNames(isRObjectTree(val) ? val.names : null);
+    Module._Rf_unprotect(1);
+    Module._R_PreserveObject(ptr);
+    super({ targetType: 'ptr', obj: { ptr } });
+  }
+
   getNumber(idx: number): number | null {
     return this.get(idx).toArray()[0];
   }
@@ -979,7 +1102,7 @@ export function isRFunction(value: any): value is RFunction {
  * @param {any} value The object to test.
  * @return {boolean} True if the object is an instance of an RObjectTree.
  */
-export function isRObjectTree(value: any): value is RObjectTree<any> {
+export function isRObjectTree(value: any): value is RObjectTree<void> {
   return (
     typeof value === 'object' &&
     (Array.isArray(value.names) || value.names === null) &&

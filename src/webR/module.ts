@@ -55,13 +55,13 @@ export interface Module extends EmscriptenModule {
   _TAG: (ptr: RPtr) => RPtr;
   _TYPEOF: (ptr: RPtr) => RPtr;
   _VECTOR_ELT: (ptr: RPtr, idx: number) => RPtr;
-  _R_lsInternal3: (env: RPtr, all: boolean, sorted: boolean) => RPtr;
+  _R_lsInternal3: (env: RPtr, all: number, sorted: number) => RPtr;
   _R_MakeExternalPtr: (p: number, tag: RPtr, prot: RPtr) => RPtr;
   _R_ParseEvalString: (code: number, env: RPtr) => RPtr;
   _R_PreserveObject: (ptr: RPtr) => void;
   _R_ReleaseObject: (ptr: RPtr) => void;
   _Rf_ScalarReal: (n: number) => RPtr;
-  _Rf_ScalarLogical: (l: boolean) => RPtr;
+  _Rf_ScalarLogical: (l: number) => RPtr;
   _Rf_ScalarInteger: (n: number) => RPtr;
   _Rf_ScalarString: (s: string) => RPtr;
   _Rf_allocVector: (type: RTypeNumber, len: number) => RPtr;
@@ -91,6 +91,8 @@ export interface Module extends EmscriptenModule {
   _R_FalseValue: RPtr;
   _R_GlobalEnv: RPtr;
   _R_Interactive: RPtr;
+  _R_NaInt: RPtr;
+  _R_NaReal: RPtr;
   _R_NaString: RPtr;
   _R_NilValue: RPtr;
   _R_TrueValue: RPtr;
