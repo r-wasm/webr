@@ -116,9 +116,14 @@ type RObjectTreeImpl<T> = {
 };
 
 function newRObjFromTarget(target: RTargetObj): RObjImpl {
-  const obj = target.obj;
-  if (target.type === RTargetType.PTR) {
-    return RObjImpl.wrap(target.obj);
+  const obj = target.obj as
+    | RawType
+    | RawType[]
+    | RObjectTree<RTargetObj>
+    | NamedObject<RawType | RTargetObj>;
+
+  if (obj === null) {
+    return new RObjNull();
   }
 
   if (typeof obj === 'number') {
@@ -464,6 +469,24 @@ export class RObjSymbol extends RObjImpl {
 }
 
 export class RObjPairlist extends RObjImpl {
+  constructor(val: RawType | (RawType | null)[] | RTargetPtr | RObjectTree<RTargetObj>) {
+    if (isRTargetObj(val)) {
+      super(val);
+      return this;
+    }
+    const values = isRObjectTree(val) ? val.values : Array.isArray(val) ? val : [val];
+    const list = RObjImpl.wrap(Module._Rf_allocList(values.length)) as RObjPairlist;
+    list.preserve();
+    for (
+      let [i, next] = [0, list as Nullable<RObjPairlist>];
+      !next.isNull();
+      [i, next] = [i + 1, next.cdr()]
+    ) {
+      next.setcar(new RObjImpl(values[i]));
+    }
+    super({ type: RTargetType.PTR, obj: list.ptr });
+  }
+
   get length(): number {
     return this.toArray().length;
   }
@@ -540,6 +563,21 @@ export class RObjPairlist extends RObjImpl {
 }
 
 export class RObjList extends RObjImpl {
+  constructor(val: RawType | (RawType | null)[] | RTargetPtr | RObjectTree<RTargetObj>) {
+    if (isRTargetObj(val)) {
+      super(val);
+      return this;
+    }
+    const values = isRObjectTree(val) ? val.values : Array.isArray(val) ? val : [val];
+    const ptr = Module._Rf_protect(Module._Rf_allocVector(RType.List, values.length));
+    values.forEach((v, i) => {
+      Module._SET_VECTOR_ELT(ptr, i, new RObjImpl(v).ptr);
+    });
+    Module._Rf_unprotect(1);
+    Module._R_PreserveObject(ptr);
+    super({ type: RTargetType.PTR, obj: ptr });
+  }
+
   get length(): number {
     return Module._LENGTH(this.ptr);
   }
@@ -685,7 +723,7 @@ type TypedArray =
   | Float64Array;
 
 type atomicType = number | boolean | Complex | string;
-type atomicTarget<T extends atomicType> = T | (T | null)[] | RTargetPtr | RObjectTree<(T | null)[]>;
+type atomicTarget<T extends atomicType> = T | (T | null)[] | RObjectTreeAtomic<T> | RTargetPtr;
 
 abstract class RObjAtomicVector<T extends atomicType> extends RObjImpl {
   get length(): number {
@@ -1087,7 +1125,7 @@ export function isRFunction(value: any): value is RFunction {
  * @param {any} value The object to test.
  * @return {boolean} True if the object is an instance of an RObjectTree.
  */
-export function isRObjectTree(value: any): value is RObjectTree<void> {
+export function isRObjectTree(value: any): value is RObjectTree<any> {
   return (
     value &&
     typeof value === 'object' &&
