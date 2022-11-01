@@ -116,69 +116,32 @@ type RObjectTreeImpl<T> = {
 };
 
 function newRObjFromTarget(target: RTargetObj): RObjImpl {
-  const obj = target.obj as
-    | RawType
-    | RawType[]
-    | RObjectTree<RTargetObj>
-    | NamedObject<RawType | RTargetObj>;
-
+  const obj = target.obj;
   if (obj === null) {
     return new RObjNull();
   }
 
-  if (typeof obj === 'number') {
-    const ptr = Module._Rf_ScalarReal(obj);
-    return new RObjDouble(ptr);
+  if (isRObjectTree(obj)) {
+    const typeNumber: RType = (RType as any)[obj.type] as RType;
+    return new (getRObjClass(typeNumber))(obj);
   }
 
-  if (typeof obj === 'string') {
-    const str = Module.allocateUTF8(obj);
-    const ptr = Module._Rf_mkString(str);
-    Module._free(str);
-    return new RObjCharacter(ptr);
+  const values = Array.isArray(obj) ? obj : [obj];
+  if (values.every((el) => typeof el === 'boolean' || el === null)) {
+    return new RObjLogical(obj as atomicTarget<boolean>);
   }
-
-  if (typeof obj === 'boolean') {
-    const ptr = Module._Rf_ScalarLogical(obj);
-    return new RObjLogical(ptr);
+  if (values.every((el) => typeof el === 'number' || el === null)) {
+    return new RObjDouble(obj as atomicTarget<number>);
   }
-
-  if (typeof obj === 'object' && obj && 're' in obj && 'im' in obj) {
-    const ptr = Module._Rf_protect(Module._Rf_allocVector(RType.Complex, 1));
-    Module.setValue(Module._COMPLEX(ptr), obj.re, 'double');
-    Module.setValue(Module._COMPLEX(ptr) + 8, obj.im, 'double');
-    Module._Rf_unprotect(1);
-    return new RObjComplex(ptr);
+  if (values.every((el) => el === null || (typeof el === 'object' && 're' in el && 'im' in el))) {
+    return new RObjComplex(obj as atomicTarget<Complex>);
   }
-
-  if (Array.isArray(obj) && obj.some((el) => typeof el === 'string')) {
-    // Create a vector of strings
-    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.Character, obj.length));
-    obj.forEach((el, idx) => {
-      const str = Module.allocateUTF8(String(el));
-      Module._SET_STRING_ELT(robjVec, idx, Module._Rf_mkChar(str));
-      Module._free(str);
-    });
-    Module._Rf_unprotect(1);
-    return RObjImpl.wrap(robjVec);
-  }
-
-  if (Array.isArray(obj) && obj.some((el) => typeof el === 'number')) {
-    // Create a vector of reals
-    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.Double, obj.length));
-    obj.forEach((el, idx) =>
-      Module.setValue(Module._REAL(robjVec) + 8 * idx, Number(el), 'double')
-    );
-    Module._Rf_unprotect(1);
-    return RObjImpl.wrap(robjVec);
+  if (values.every((el) => typeof el === 'string' || el === null)) {
+    return new RObjCharacter(obj as atomicTarget<string>);
   }
 
   if (Array.isArray(obj)) {
-    // Create a vector of logicals
-    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.Logical, obj.length));
-    obj.forEach((el, idx) => Module.setValue(Module._LOGICAL(robjVec) + 4 * idx, el, 'i32'));
-    Module._Rf_unprotect(1);
-    return RObjImpl.wrap(robjVec);
+    return new RObjList(obj as RawType[]);
   }
 
   throw new Error('Robj construction for this JS object is not yet supported');
