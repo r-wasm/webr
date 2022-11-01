@@ -162,9 +162,7 @@ export class WebR {
     const targetObj = replaceInObject(jsObj, isRObject, (obj: RObject) => obj._target);
     const target = (await this.#chan.request({
       type: 'newRObject',
-      data: {
-        obj: { type: RTargetType.RAW, obj: targetObj },
-      },
+      data: { type: RTargetType.RAW, obj: targetObj },
     })) as RTargetObj;
     switch (target.type) {
       case RTargetType.RAW:

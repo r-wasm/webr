@@ -90,11 +90,9 @@ function dispatch(msg: Message): void {
           break;
         }
         case 'newRObject': {
-          const data = reqMsg.data as {
-            obj: RTargetRaw;
-          };
+          const data = reqMsg.data as RTargetRaw;
           try {
-            const res = new RObjImpl(data.obj);
+            const res = new RObjImpl(data);
             write({ obj: res.ptr, methods: RObjImpl.getMethods(res), type: RTargetType.PTR });
           } catch (_e) {
             const e = _e as Error;

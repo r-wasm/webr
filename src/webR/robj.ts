@@ -182,16 +182,18 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
 export class RObjImpl {
   ptr: RPtr;
 
-  constructor(target: RPtr | RTargetObj) {
+  constructor(target: RTargetObj | RawType) {
     this.ptr = 0;
-    if (typeof target === 'number') {
-      // We have a number, assume it is an RPtr to an R object
-      this.ptr = target;
-      return this;
+    if (isRTargetObj(target)) {
+      if (target.type === RTargetType.PTR) {
+        this.ptr = target.obj;
+        return this;
+      }
+      if (target.type === RTargetType.RAW) {
+        return newRObjFromTarget(target);
+      }
     }
-    const obj = newRObjFromTarget(target);
-    obj.preserve();
-    return obj;
+    return newRObjFromTarget({ type: RTargetType.RAW, obj: target });
   }
 
   get [Symbol.toStringTag](): string {
@@ -366,7 +368,7 @@ export class RObjImpl {
   }
 
   static get null(): RObjNull {
-    return new RObjNull(Module.getValue(Module._R_NilValue, '*'));
+    return new RObjNull();
   }
 
   static get naInt(): number {
@@ -386,20 +388,20 @@ export class RObjImpl {
   }
 
   static get bracketSymbol(): RObjSymbol {
-    return new RObjSymbol(Module.getValue(Module._R_BracketSymbol, '*'));
+    return RObjImpl.wrap(Module.getValue(Module._R_BracketSymbol, '*')) as RObjSymbol;
   }
 
   static get bracket2Symbol(): RObjSymbol {
-    return new RObjSymbol(Module.getValue(Module._R_Bracket2Symbol, '*'));
+    return RObjImpl.wrap(Module.getValue(Module._R_Bracket2Symbol, '*')) as RObjSymbol;
   }
 
   static get dollarSymbol(): RObjSymbol {
-    return new RObjSymbol(Module.getValue(Module._R_DollarSymbol, '*'));
+    return RObjImpl.wrap(Module.getValue(Module._R_DollarSymbol, '*')) as RObjSymbol;
   }
 
   static wrap(ptr: RPtr): RObjImpl {
     const type = Module._TYPEOF(ptr);
-    return new (getRObjClass(type))(ptr);
+    return new (getRObjClass(type))({ type: RTargetType.PTR, obj: ptr });
   }
 
   static protect<T extends RObjImpl>(obj: T): T {
@@ -424,6 +426,10 @@ export class RObjImpl {
 }
 
 export class RObjNull extends RObjImpl {
+  constructor() {
+    super({ type: RTargetType.PTR, obj: Module.getValue(Module._R_NilValue, '*') });
+  }
+
   toTree(): null {
     return null;
   }
@@ -447,7 +453,7 @@ export class RObjSymbol extends RObjImpl {
   }
 
   printname(): RObjString {
-    return new RObjString(Module._PRINTNAME(this.ptr));
+    return RObjImpl.wrap(Module._PRINTNAME(this.ptr)) as RObjString;
   }
   symvalue(): RObjImpl {
     return RObjImpl.wrap(Module._SYMVALUE(this.ptr));
@@ -588,7 +594,7 @@ export class RObjFunction extends RObjImpl {
       isRObjImpl(arg) ? arg : new RObjImpl({ obj: arg, type: RTargetType.RAW })
     );
     const call = RObjImpl.protect(
-      new RObjPairlist(Module._Rf_allocVector(RType.Call, args.length + 1))
+      RObjImpl.wrap(Module._Rf_allocVector(RType.Call, args.length + 1)) as RObjPairlist
     );
     call.setcar(this);
     let c = call.cdr();
@@ -622,7 +628,8 @@ export class RObjString extends RObjImpl {
 
 export class RObjEnvironment extends RObjImpl {
   ls(all = false, sorted = true): string[] {
-    return new RObjCharacter(Module._R_lsInternal3(this.ptr, all, sorted)).toArray() as string[];
+    const ls = RObjImpl.wrap(Module._R_lsInternal3(this.ptr, all, sorted)) as RObjCharacter;
+    return ls.toArray() as string[];
   }
 
   names(): string[] {
