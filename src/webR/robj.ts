@@ -482,6 +482,25 @@ export class RObjSymbol extends RObjImpl {
 }
 
 export class RObjPairlist extends RObjImpl {
+  constructor(val: RawType | (RawType | null)[] | RTargetPtr | RObjectTree<RTargetObj>) {
+    if (isRTargetObj(val)) {
+      super(val);
+      return this;
+    }
+    const values = isRObjectTree(val) ? val.values : Array.isArray(val) ? val : [val];
+    const list = RObjImpl.wrap(Module._Rf_allocList(values.length)) as RObjPairlist;
+    list.preserve();
+    for (
+      let [i, next] = [0, list as Nullable<RObjPairlist>];
+      !next.isNull();
+      [i, next] = [i + 1, next.cdr()]
+    ) {
+      next.setcar(new RObjImpl(values[i]));
+    }
+    list.setNames(isRObjectTree(val) ? val.names : null);
+    super({ targetType: 'ptr', obj: { ptr: list.ptr } });
+  }
+
   get length(): number {
     return this.toArray().length;
   }
@@ -558,6 +577,22 @@ export class RObjPairlist extends RObjImpl {
 }
 
 export class RObjList extends RObjImpl {
+  constructor(val: RawType | (RawType | null)[] | RTargetPtr | RObjectTree<RTargetObj>) {
+    if (isRTargetObj(val)) {
+      super(val);
+      return this;
+    }
+    const values = isRObjectTree(val) ? val.values : Array.isArray(val) ? val : [val];
+    const ptr = Module._Rf_protect(Module._Rf_allocVector(RType.list, values.length));
+    values.forEach((v, i) => {
+      Module._SET_VECTOR_ELT(ptr, i, new RObjImpl(v).ptr);
+    });
+    RObjImpl.wrap(ptr).setNames(isRObjectTree(val) ? val.names : null);
+    Module._Rf_unprotect(1);
+    Module._R_PreserveObject(ptr);
+    super({ targetType: RTargetType.ptr, obj: { ptr } });
+  }
+
   get length(): number {
     return Module._LENGTH(this.ptr);
   }
@@ -1102,7 +1137,7 @@ export function isRFunction(value: any): value is RFunction {
  * @param {any} value The object to test.
  * @return {boolean} True if the object is an instance of an RObjectTree.
  */
-export function isRObjectTree(value: any): value is RObjectTree<void> {
+export function isRObjectTree(value: any): value is RObjectTree<any> {
   return (
     typeof value === 'object' &&
     (Array.isArray(value.names) || value.names === null) &&

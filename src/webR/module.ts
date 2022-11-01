@@ -64,9 +64,11 @@ export interface Module extends EmscriptenModule {
   _Rf_ScalarLogical: (l: number) => RPtr;
   _Rf_ScalarInteger: (n: number) => RPtr;
   _Rf_ScalarString: (s: string) => RPtr;
+  _Rf_allocList: (len: number) => RPtr;
   _Rf_allocVector: (type: RTypeNumber, len: number) => RPtr;
   _Rf_eval: (call: RPtr, env: RPtr) => RPtr;
   _Rf_findVarInFrame: (rho: RPtr, symbol: RPtr) => RPtr;
+  _Rf_listAppend: (source: RPtr, target: RPtr) => RPtr;
   _Rf_getAttrib: (ptr1: RPtr, ptr2: RPtr) => RPtr;
   _Rf_install: (ptr: number) => RPtr;
   _Rf_installTrChar: (name: RPtr) => RPtr;
