@@ -29,22 +29,27 @@ const handleFetch = (event: FetchEvent) => {
   }
 
   const sendRequest = async () => {
-    const client = await self.clients.get(event.clientId);
+    const message = (await event.request.json()) as {
+      type: string;
+      data: { clientId: string; request: MessageRequest };
+    };
+
+    const client = await self.clients.get(message.data.clientId);
     if (!client) {
       throw new Error('Service worker client not found');
     }
 
-    const message = (await event.request.json()) as MessageRequest;
-    if (!(message.data.uuid in requests)) {
-      requests[message.data.uuid] = promiseHandles();
+    const request = message.data.request;
+    if (!(request.data.uuid in requests)) {
+      requests[request.data.uuid] = promiseHandles();
       client.postMessage({
         type: 'wasm-webr-fetch-request',
-        uuid: message.data.uuid,
-        msg: message.data.msg,
+        uuid: request.data.uuid,
+        msg: request.data.msg,
       });
     }
 
-    const response = await requests[message.data.uuid].promise;
+    const response = await requests[request.data.uuid].promise;
     const headers = { 'Cross-Origin-Embedder-Policy': 'require-corp' };
     return new Response(JSON.stringify(response), { headers });
   };
