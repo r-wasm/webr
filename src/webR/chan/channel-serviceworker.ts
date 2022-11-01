@@ -27,15 +27,16 @@ export class ServiceWorkerChannelMain {
 
   constructor(url: string, config: Required<WebROptions>) {
     const worker = new Worker(url);
-
-    this.#registerServiceWorker(`${config.WEBR_URL}serviceworker.js`);
     this.#handleEventsFromWorker(worker);
     this.close = () => worker.terminate();
-    const msg = {
-      type: 'init',
-      data: { config, channelType: ChannelType.ServiceWorker },
-    } as Message;
-    worker.postMessage(msg);
+
+    this.#registerServiceWorker(`${config.WEBR_URL}serviceworker.js`).then((clientId) => {
+      const msg = {
+        type: 'init',
+        data: { config, channelType: ChannelType.ServiceWorker, clientId },
+      } as Message;
+      worker.postMessage(msg);
+    });
 
     ({ resolve: this.resolve, promise: this.initialised } = promiseHandles());
   }
@@ -79,7 +80,7 @@ export class ServiceWorkerChannelMain {
     });
 
     // Ensure we can communicate with service worker and we have a client ID
-    const clientID = await new Promise<string>((resolve) => {
+    const clientId = await new Promise<string>((resolve) => {
       navigator.serviceWorker.addEventListener(
         'message',
         function listener(event: MessageEvent<{ type: string; clientId: string }>) {
@@ -102,8 +103,7 @@ export class ServiceWorkerChannelMain {
         this.#onMessageFromServiceWorker(event);
       }
     );
-
-    return clientID;
+    return clientId;
   }
 
   async #onMessageFromServiceWorker(
@@ -206,11 +206,16 @@ declare let callMain: (args: string[]) => void;
 
 export class ServiceWorkerChannelWorker {
   #ep: Endpoint;
+  #mainThreadId: string;
   #dispatch: (msg: Message) => void = () => 0;
   #interrupt = () => {};
   onMessageFromMainThread: (msg: Message) => void = () => {};
 
-  constructor() {
+  constructor(mainThreadId: string | undefined) {
+    if (!mainThreadId) {
+      throw Error('Unable to start service worker channel without a client ID for the main thread');
+    }
+    this.#mainThreadId = mainThreadId;
     this.#ep = (IN_NODE ? require('worker_threads').parentPort : globalThis) as Endpoint;
   }
 
@@ -222,7 +227,7 @@ export class ServiceWorkerChannelWorker {
     this.#ep.postMessage(msg, transfer);
   }
 
-  request(requestMsg: Message): Response {
+  request(message: Message): Response {
     /*
      * Browsers timeout service workers after about 5 minutes on inactivity.
      * See e.g. service_worker_version.cc in Chromium.
@@ -232,14 +237,21 @@ export class ServiceWorkerChannelWorker {
      * uses the message UUID to identify the request and continue waiting for a
      * response from where it left off.
      */
-    const msg = newRequest(requestMsg);
+    const request = newRequest(message);
     for (;;) {
       try {
-        const request = new XMLHttpRequest();
-        request.timeout = 60000;
-        request.open('POST', './__wasm__/webr-fetch-request/', false);
-        request.send(JSON.stringify(msg));
-        return JSON.parse(request.responseText) as Response;
+        const xhr = new XMLHttpRequest();
+        xhr.timeout = 60000;
+        xhr.open('POST', './__wasm__/webr-fetch-request/', false);
+        const fetchReqBody = {
+          type: 'webr-fetch-request',
+          data: {
+            clientId: this.#mainThreadId,
+            request: request,
+          },
+        };
+        xhr.send(JSON.stringify(fetchReqBody));
+        return JSON.parse(xhr.responseText) as Response;
       } catch (e: any) {
         if (e instanceof DOMException) {
           console.log('Service worker request failed - resending request');

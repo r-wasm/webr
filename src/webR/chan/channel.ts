@@ -53,6 +53,15 @@ export enum ChannelType {
   PostMessage,
 }
 
+export type ChannelInitMessage = {
+  type: string;
+  data: {
+    config: Required<WebROptions>;
+    channelType: Exclude<ChannelType, ChannelType.Automatic>;
+    clientId?: string;
+  };
+};
+
 export function newChannelMain(url: string, data: Required<WebROptions>) {
   switch (data.channelType) {
     case ChannelType.SharedArrayBuffer:
@@ -71,12 +80,12 @@ export function newChannelMain(url: string, data: Required<WebROptions>) {
   }
 }
 
-export function newChannelWorker(channelType: ChannelType) {
-  switch (channelType) {
+export function newChannelWorker(msg: ChannelInitMessage) {
+  switch (msg.data.channelType) {
     case ChannelType.SharedArrayBuffer:
       return new SharedBufferChannelWorker();
     case ChannelType.ServiceWorker:
-      return new ServiceWorkerChannelWorker();
+      return new ServiceWorkerChannelWorker(msg.data.clientId);
     default:
       throw new Error('Unknown worker channel type recieved');
   }

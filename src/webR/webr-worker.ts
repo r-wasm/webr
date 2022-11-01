@@ -1,5 +1,5 @@
 import { loadScript } from './compat';
-import { newChannelWorker, ChannelWorker, ChannelType } from './chan/channel';
+import { newChannelWorker, ChannelWorker, ChannelInitMessage } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions, EvalRCodeOptions } from './webr-main';
 import { Module } from './module';
@@ -26,8 +26,9 @@ const onWorkerMessage = function (msg: Message) {
   if (initialised) {
     throw new Error("Can't initialise worker multiple times.");
   }
-  chan = newChannelWorker(msg.data.channelType as ChannelType);
-  init(msg.data.config as Required<WebROptions>);
+  const messageInit = msg as ChannelInitMessage;
+  chan = newChannelWorker(messageInit);
+  init(messageInit.data.config);
   initialised = true;
 };
 
@@ -36,7 +37,7 @@ if (IN_NODE) {
   (globalThis as any).XMLHttpRequest = require('xmlhttprequest-ssl')
     .XMLHttpRequest as XMLHttpRequest;
 } else {
-  globalThis.onmessage = (ev: MessageEvent) => onWorkerMessage(ev.data as Message);
+  globalThis.onmessage = (ev: MessageEvent<Message>) => onWorkerMessage(ev.data);
 }
 
 type XHRResponse = {
