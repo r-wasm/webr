@@ -116,7 +116,12 @@ type RObjectTreeImpl<T> = {
 };
 
 function newRObjFromTarget(target: RTargetObj): RObjImpl {
-  const obj = target.obj;
+  const obj = target.obj as
+    | RawType
+    | RawType[]
+    | RObjectTree<RTargetObj>
+    | NamedObject<RawType | RTargetObj>;
+
   if (obj === null) {
     return new RObjNull();
   }
@@ -141,7 +146,16 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
   }
 
   if (Array.isArray(obj)) {
-    return new RObjList(obj as RawType[]);
+    return new RObjList(obj as RawType[] | RObjectTree<RTargetObj>);
+  }
+
+  if (typeof obj === 'object') {
+    const tree = {
+      type: 'List',
+      names: Object.keys(obj),
+      values: Object.values(obj) as RawType | RawType[] | RObjectTree<RTargetObj>,
+    };
+    return new RObjList(tree);
   }
 
   throw new Error('Robj construction for this JS object is not yet supported');
@@ -642,6 +656,26 @@ export class RObjString extends RObjImpl {
 }
 
 export class RObjEnvironment extends RObjImpl {
+  constructor(val: RTargetPtr | RObjectTree<RTargetObj>) {
+    if (isRTargetObj(val)) {
+      super(val);
+      return this;
+    }
+    const ptr = Module._Rf_protect(Module._R_NewEnv(RObjImpl.globalEnv.ptr, 0, 0));
+    val.values.forEach((v, i) => {
+      const name = val.names ? val.names[i] : null;
+      if (!name) {
+        throw new Error('Unable to create object in new environment with empty symbol name');
+      }
+      const namePtr = Module.allocateUTF8(name);
+      Module._Rf_defineVar(Module._Rf_install(namePtr), new RObjImpl(v).ptr, ptr);
+      Module._free(namePtr);
+    });
+    Module._Rf_unprotect(1);
+    Module._R_PreserveObject(ptr);
+    super({ type: RTargetType.PTR, obj: ptr });
+  }
+
   ls(all = false, sorted = true): string[] {
     const ls = RObjImpl.wrap(Module._R_lsInternal3(this.ptr, all, sorted)) as RObjCharacter;
     return ls.toArray() as string[];
@@ -653,6 +687,16 @@ export class RObjEnvironment extends RObjImpl {
 
   frame(): RObjImpl {
     return RObjImpl.wrap(Module._FRAME(this.ptr));
+  }
+
+  define(name: string, value: RObjImpl | RawType): void {
+    const namePtr = Module.allocateUTF8(name);
+    Module._Rf_defineVar(
+      Module._Rf_install(namePtr),
+      isRObjImpl(value) ? value.ptr : new RObjImpl({ obj: value, type: RTargetType.RAW }).ptr,
+      this.ptr
+    );
+    Module._free(namePtr);
   }
 
   subset(prop: number | string): RObjImpl {
