@@ -57,6 +57,7 @@ export interface Module extends EmscriptenModule {
   _VECTOR_ELT: (ptr: RPtr, idx: number) => RPtr;
   _R_lsInternal3: (env: RPtr, all: number, sorted: number) => RPtr;
   _R_MakeExternalPtr: (p: number, tag: RPtr, prot: RPtr) => RPtr;
+  _R_NewEnv: (enclos: RPtr, hash: number, size: number) => RPtr;
   _R_ParseEvalString: (code: number, env: RPtr) => RPtr;
   _R_PreserveObject: (ptr: RPtr) => void;
   _R_ReleaseObject: (ptr: RPtr) => void;
@@ -66,6 +67,7 @@ export interface Module extends EmscriptenModule {
   _Rf_ScalarString: (s: string) => RPtr;
   _Rf_allocList: (len: number) => RPtr;
   _Rf_allocVector: (type: RTypeNumber, len: number) => RPtr;
+  _Rf_defineVar: (symbol: RPtr, value: RPtr, env: RPtr) => void;
   _Rf_eval: (call: RPtr, env: RPtr) => RPtr;
   _Rf_findVarInFrame: (rho: RPtr, symbol: RPtr) => RPtr;
   _Rf_listAppend: (source: RPtr, target: RPtr) => RPtr;
