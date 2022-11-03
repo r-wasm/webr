@@ -1,8 +1,9 @@
 import { AsyncQueue } from './queue';
-import { promiseHandles, ResolveFn } from '../utils';
+import { promiseHandles, ResolveFn, newCrossOriginWorker, isCrossOrigin } from '../utils';
 import { Message, newRequest, Response, SyncRequest } from './message';
 import { Endpoint } from './task-common';
 import { syncResponse } from './task-main';
+import { ChannelType } from './channel';
 
 import { IN_NODE } from '../compat';
 import type { Worker as NodeWorker } from 'worker_threads';
@@ -10,29 +11,9 @@ if (IN_NODE) {
   (globalThis as any).Worker = require('worker_threads').Worker as NodeWorker;
 }
 
-// The channel structure is asymetric:
-//
-// - The main thread maintains the input and output queues. All
-//   messages sent from main are stored in the input queue. The input
-//   queue is pull-based, it's the worker that initiates a transfer
-//   via a sync-request.
-//
-//   The output queue is filled at the initiative of the worker. The
-//   main thread asynchronously reads from this queue, typically in an
-//   async infloop.
-//
-// - The worker synchronously reads from the input queue. Reading a
-//   message blocks until an input is available. Writing a message to
-//   the output queue is equivalent to calling `postMessage()` and
-//   returns immediately.
-//
-//   Note that the messages sent from main to worker need to be
-//   serialised. There is no structured cloning involved, and
-//   ArrayBuffers can't be transferred, only copied.
-
 // Main ----------------------------------------------------------------
 
-export class ChannelMain {
+export class SharedBufferChannelMain {
   inputQueue = new AsyncQueue<Message>();
   outputQueue = new AsyncQueue<Message>();
   #interruptBuffer?: Int32Array;
@@ -43,39 +24,19 @@ export class ChannelMain {
 
   #parked = new Map<string, ResolveFn>();
 
-  constructor(url: string, data: unknown) {
+  constructor(url: string, config: unknown) {
     const initWorker = (worker: Worker) => {
       this.#handleEventsFromWorker(worker);
       this.close = () => worker.terminate();
-      const msg = { type: 'init', data: data } as Message;
+      const msg = {
+        type: 'init',
+        data: { config, channelType: ChannelType.SharedArrayBuffer },
+      } as Message;
       worker.postMessage(msg);
     };
 
-    if (url.startsWith('http')) {
-      /* Workaround for loading a cross-origin script.
-       *
-       * When fetching a worker script, the fetch is required by the spec to
-       * use "same-origin" mode. This is to avoid loading a worker with a
-       * cross-origin global scope, which can allow for a cross-origin
-       * restriction bypass.
-       *
-       * When the fetch URL begins with 'http', we assume the request is
-       * cross-origin. We download the content of the URL using a XHR first,
-       * create a blob URL containing the requested content, then load the
-       * blob URL as a script.
-       *
-       * The origin of a blob URL is the same as that of the environment that
-       * created the URL, and so the global scope of the resulting worker is
-       * no longer cross-origin. In that case, the cross-origin restriction
-       * bypass is not possible, and the script is permitted to be loaded.
-       */
-      const req = new XMLHttpRequest();
-      req.open('get', url, true);
-      req.onload = () => {
-        const worker = new Worker(URL.createObjectURL(new Blob([req.responseText])));
-        initWorker(worker);
-      };
-      req.send();
+    if (isCrossOrigin(url)) {
+      newCrossOriginWorker(url, (worker: Worker) => initWorker(worker));
     } else {
       const worker = new Worker(url);
       initWorker(worker);
@@ -186,17 +147,27 @@ export class ChannelMain {
 
 // Worker --------------------------------------------------------------
 
-import { SyncTask, interruptBuffer } from './task-worker';
+import { SyncTask, setInterruptHandler, setInterruptBuffer } from './task-worker';
+import { Module as _Module } from '../module';
 
-export class ChannelWorker {
+declare let Module: _Module;
+// callMain function readied by Emscripten
+declare let callMain: (args: string[]) => void;
+
+export class SharedBufferChannelWorker {
   #ep: Endpoint;
+  #dispatch: (msg: Message) => void = () => 0;
+  #interruptBuffer = new Int32Array(new SharedArrayBuffer(4));
+  #interrupt = () => {};
 
   constructor() {
     this.#ep = (IN_NODE ? require('worker_threads').parentPort : globalThis) as Endpoint;
+    setInterruptBuffer(this.#interruptBuffer.buffer);
+    setInterruptHandler(() => this.handleInterrupt());
   }
 
   resolve() {
-    this.write({ type: 'resolve', data: interruptBuffer.buffer });
+    this.write({ type: 'resolve', data: this.#interruptBuffer.buffer });
   }
 
   write(msg: Message, transfer?: [Transferable]) {
@@ -207,5 +178,34 @@ export class ChannelWorker {
     const msg = { type: 'read' } as Message;
     const task = new SyncTask(this.#ep, msg);
     return task.syncify() as Message;
+  }
+
+  inputOrDispatch(): number {
+    for (;;) {
+      const msg = this.read();
+      if (msg.type === 'stdin') {
+        return Module.allocateUTF8(msg.data as string);
+      }
+      this.#dispatch(msg);
+    }
+  }
+
+  run(args: string[]) {
+    Module.callMain(args);
+  }
+
+  setInterrupt(interrupt: () => void) {
+    this.#interrupt = interrupt;
+  }
+
+  handleInterrupt() {
+    if (this.#interruptBuffer[0] !== 0) {
+      this.#interruptBuffer[0] = 0;
+      this.#interrupt();
+    }
+  }
+
+  setDispatchHandler(dispatch: (msg: Message) => void) {
+    this.#dispatch = dispatch;
   }
 }

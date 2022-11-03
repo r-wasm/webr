@@ -27,6 +27,7 @@ export class SyncTask {
   #syncGen?: Generator<void, unknown, void>;
   sizeBuffer?: Int32Array;
   signalBuffer?: Int32Array;
+  syncifier = new _Syncifier();
 
   constructor(endpoint: Endpoint, msg: Message, transfers: Transferable[] = []) {
     this.endpoint = endpoint;
@@ -41,7 +42,7 @@ export class SyncTask {
     }
     this.#scheduled = true;
 
-    Syncifier.scheduleTask(this);
+    this.syncifier.scheduleTask(this);
     this.#syncGen = this.doSync();
     this.#syncGen.next();
     return this;
@@ -114,7 +115,7 @@ export class SyncTask {
 
   syncify(): any {
     this.scheduleSync();
-    Syncifier.syncifyTask(this);
+    this.syncifier.syncifyTask(this);
     return this.result;
   }
 }
@@ -198,8 +199,6 @@ class _Syncifier {
   }
 }
 
-export const Syncifier = new _Syncifier();
-
 const dataBuffers: Uint8Array[][] = [];
 
 function acquireDataBuffer(size: number): Uint8Array {
@@ -220,7 +219,7 @@ function releaseDataBuffer(buffer: Uint8Array) {
   dataBuffers[powerof2].push(buffer);
 }
 
-export const interruptBuffer = new Int32Array(new SharedArrayBuffer(4));
+let interruptBuffer = new Int32Array(new ArrayBuffer(4));
 
 let handleInterrupt = (): void => {
   interruptBuffer[0] = 0;
@@ -235,4 +234,13 @@ let handleInterrupt = (): void => {
  */
 export function setInterruptHandler(handler: () => void) {
   handleInterrupt = handler;
+}
+
+/**
+ * Sets the interrupt buffer. Should be a shared array buffer. When element 0
+ * is set non-zero it signals an interrupt.
+ * @param {ArrayBufferLike} buffer
+ */
+export function setInterruptBuffer(buffer: ArrayBufferLike) {
+  interruptBuffer = new Int32Array(buffer);
 }
