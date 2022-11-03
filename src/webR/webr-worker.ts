@@ -1,5 +1,5 @@
 import { loadScript } from './compat';
-import { ChannelWorker } from './chan/channel';
+import { ChannelWorker } from './chan/channel-sharedbuffer';
 import { setInterruptHandler, interruptBuffer } from './chan/task-worker';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions, EvalRCodeOptions } from './webr-main';

@@ -1,4 +1,4 @@
-import { ChannelMain } from './chan/channel';
+import { ChannelMain } from './chan/channel-sharedbuffer';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy } from './proxy';
