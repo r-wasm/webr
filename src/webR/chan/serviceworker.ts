@@ -1,4 +1,4 @@
-import type { Request as MessageRequest } from './message';
+import type { Message, Request as MessageRequest } from './message';
 import { promiseHandles } from '../utils';
 
 declare let self: ServiceWorkerGlobalScope;
@@ -21,6 +21,26 @@ function handleActivate(event: ExtendableEvent) {
   event.waitUntil(self.clients.claim());
 }
 
+const sendRequest = async (clientId: string, request: MessageRequest): Promise<Response> => {
+  const client = await self.clients.get(clientId);
+  if (!client) {
+    throw new Error('Service worker client not found');
+  }
+
+  if (!(request.data.uuid in requests)) {
+    requests[request.data.uuid] = promiseHandles();
+    client.postMessage({
+      type: 'wasm-webr-fetch-request',
+      uuid: request.data.uuid,
+      msg: request.data.msg,
+    });
+  }
+
+  const response = await requests[request.data.uuid].promise;
+  const headers = { 'Cross-Origin-Embedder-Policy': 'require-corp' };
+  return new Response(JSON.stringify(response), { headers });
+};
+
 const handleFetch = (event: FetchEvent) => {
   // console.log('service worker got a fetch', event);
   const wasmMatch = /\/__wasm__\/webr-fetch-request\//.exec(event.request.url);
@@ -28,33 +48,11 @@ const handleFetch = (event: FetchEvent) => {
     return;
   }
 
-  const sendRequest = async () => {
-    const message = (await event.request.json()) as {
-      type: string;
-      data: { clientId: string; request: MessageRequest };
-    };
-
-    const client = await self.clients.get(message.data.clientId);
-    if (!client) {
-      throw new Error('Service worker client not found');
-    }
-
-    const request = message.data.request;
-    if (!(request.data.uuid in requests)) {
-      requests[request.data.uuid] = promiseHandles();
-      client.postMessage({
-        type: 'wasm-webr-fetch-request',
-        uuid: request.data.uuid,
-        msg: request.data.msg,
-      });
-    }
-
-    const response = await requests[request.data.uuid].promise;
-    const headers = { 'Cross-Origin-Embedder-Policy': 'require-corp' };
-    return new Response(JSON.stringify(response), { headers });
-  };
-
-  const requestReponse = sendRequest();
+  const requestBody = event.request.json();
+  const requestReponse = requestBody.then(async (message: Message) => {
+    const { clientId, request } = message.data as { clientId: string; request: MessageRequest };
+    return await sendRequest(clientId, request);
+  });
   event.waitUntil(requestReponse);
   event.respondWith(requestReponse);
 };
