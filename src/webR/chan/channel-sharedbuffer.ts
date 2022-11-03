@@ -151,8 +151,6 @@ import { SyncTask, setInterruptHandler, setInterruptBuffer } from './task-worker
 import { Module as _Module } from '../module';
 
 declare let Module: _Module;
-// callMain function readied by Emscripten
-declare let callMain: (args: string[]) => void;
 
 export class SharedBufferChannelWorker implements ChannelWorker {
   #ep: Endpoint;

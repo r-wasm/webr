@@ -201,8 +201,6 @@ export class ServiceWorkerChannelMain implements ChannelMain {
 import { Module as _Module } from '../module';
 
 declare let Module: _Module;
-// callMain function readied by Emscripten
-declare let callMain: (args: string[]) => void;
 
 export class ServiceWorkerChannelWorker implements ChannelWorker {
   #ep: Endpoint;
