@@ -225,7 +225,7 @@ export class ServiceWorkerChannelWorker implements ChannelWorker {
     this.#ep.postMessage(msg, transfer);
   }
 
-  request(message: Message): Response {
+  syncRequest(message: Message): Response {
     /*
      * Browsers timeout service workers after about 5 minutes on inactivity.
      * See e.g. service_worker_version.cc in Chromium.
@@ -261,7 +261,7 @@ export class ServiceWorkerChannelWorker implements ChannelWorker {
   }
 
   read(): Message {
-    const response = this.request({ type: 'read' });
+    const response = this.syncRequest({ type: 'read' });
     return response.data.resp as Message;
   }
 
@@ -289,7 +289,7 @@ export class ServiceWorkerChannelWorker implements ChannelWorker {
      * SharedArrayBuffer as a signal method, we instead send a message to the
      * main thread to ask if we should interrupt R.
      */
-    const response = this.request({ type: 'interrupt' });
+    const response = this.syncRequest({ type: 'interrupt' });
     const interrupted = response.data.resp as boolean;
     if (interrupted) {
       this.#interrupt();
