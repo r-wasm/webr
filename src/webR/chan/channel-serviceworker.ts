@@ -2,7 +2,7 @@ import { AsyncQueue } from './queue';
 import { promiseHandles, ResolveFn } from '../utils';
 import { Message, newRequest, Response, Request, newResponse } from './message';
 import { Endpoint } from './task-common';
-import { ChannelType } from './channel';
+import { ChannelType, ChannelMain, ChannelWorker } from './channel';
 import { WebROptions } from '../webr-main';
 
 import { IN_NODE } from '../compat';
@@ -13,7 +13,7 @@ if (IN_NODE) {
 
 // Main ----------------------------------------------------------------
 
-export class ServiceWorkerChannelMain {
+export class ServiceWorkerChannelMain implements ChannelMain {
   inputQueue = new AsyncQueue<Message>();
   outputQueue = new AsyncQueue<Message>();
 
@@ -204,7 +204,7 @@ declare let Module: _Module;
 // callMain function readied by Emscripten
 declare let callMain: (args: string[]) => void;
 
-export class ServiceWorkerChannelWorker {
+export class ServiceWorkerChannelWorker implements ChannelWorker {
   #ep: Endpoint;
   #mainThreadId: string;
   #dispatch: (msg: Message) => void = () => 0;

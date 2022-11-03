@@ -3,7 +3,7 @@ import { promiseHandles, ResolveFn, newCrossOriginWorker, isCrossOrigin } from '
 import { Message, newRequest, Response, SyncRequest } from './message';
 import { Endpoint } from './task-common';
 import { syncResponse } from './task-main';
-import { ChannelType } from './channel';
+import { ChannelType, ChannelMain, ChannelWorker } from './channel';
 
 import { IN_NODE } from '../compat';
 import type { Worker as NodeWorker } from 'worker_threads';
@@ -13,7 +13,7 @@ if (IN_NODE) {
 
 // Main ----------------------------------------------------------------
 
-export class SharedBufferChannelMain {
+export class SharedBufferChannelMain implements ChannelMain {
   inputQueue = new AsyncQueue<Message>();
   outputQueue = new AsyncQueue<Message>();
   #interruptBuffer?: Int32Array;
@@ -154,7 +154,7 @@ declare let Module: _Module;
 // callMain function readied by Emscripten
 declare let callMain: (args: string[]) => void;
 
-export class SharedBufferChannelWorker {
+export class SharedBufferChannelWorker implements ChannelWorker {
   #ep: Endpoint;
   #dispatch: (msg: Message) => void = () => 0;
   #interruptBuffer = new Int32Array(new SharedArrayBuffer(4));
