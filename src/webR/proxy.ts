@@ -1,6 +1,6 @@
 import { RTargetType, RTargetPtr, isRObject, RTargetObj } from './robj';
 import { RObjImpl, RObjFunction, RawType, isRFunction } from './robj';
-import { ChannelMain } from './chan/channel-sharedbuffer';
+import { ChannelMain } from './chan/channel';
 
 /** Obtain a union of the keys corresponding to methods of a given class T
  */
