@@ -12,12 +12,12 @@ const requests: {
 } = {};
 
 function handleInstall() {
-  console.log('Service worker installed');
+  console.log('webR service worker installed');
   self.skipWaiting();
 }
 
 function handleActivate(event: ExtendableEvent) {
-  console.log('Service worker activating');
+  console.log('webR service worker activating');
   event.waitUntil(self.clients.claim());
 }
 
