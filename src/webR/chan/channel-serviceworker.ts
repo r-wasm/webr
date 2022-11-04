@@ -50,6 +50,13 @@ export class ServiceWorkerChannelMain implements ChannelMain {
     ({ resolve: this.resolve, promise: this.initialised } = promiseHandles());
   }
 
+  activeRegistration(): ServiceWorker {
+    if (!this.#registration?.active) {
+      throw new Error('Attempted to obtain a non-existent active registration.');
+    }
+    return this.#registration.active;
+  }
+
   async read() {
     return await this.outputQueue.get();
   }
@@ -99,10 +106,7 @@ export class ServiceWorkerChannelMain implements ChannelMain {
           }
         }
       );
-      if (!this.#registration?.active) {
-        throw new Error("Can't respond to service worker, no active registration.");
-      }
-      this.#registration?.active.postMessage({ type: 'register-client-main' });
+      this.activeRegistration().postMessage({ type: 'register-client-main' });
     });
 
     // Setup listener for service worker messages
@@ -119,13 +123,10 @@ export class ServiceWorkerChannelMain implements ChannelMain {
     event: MessageEvent<{ type: string; url: string; msg: Message; uuid: string }>
   ) {
     if (event.data.type === 'wasm-webr-fetch-request') {
-      if (!this.#registration?.active) {
-        throw new Error("Can't respond to service worker request, no active registration.");
-      }
       switch (event.data.msg.type) {
         case 'read': {
           const response = await this.inputQueue.get();
-          this.#registration?.active.postMessage({
+          this.activeRegistration().postMessage({
             type: 'wasm-webr-fetch-response',
             uuid: event.data.uuid,
             response: newResponse(event.data.uuid, response),
@@ -134,7 +135,7 @@ export class ServiceWorkerChannelMain implements ChannelMain {
         }
         case 'interrupt': {
           const response = this.#interrupted;
-          this.#registration?.active.postMessage({
+          this.activeRegistration().postMessage({
             type: 'wasm-webr-fetch-response',
             uuid: event.data.uuid,
             response: newResponse(event.data.uuid, response),
