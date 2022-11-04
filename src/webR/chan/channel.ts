@@ -1,6 +1,6 @@
 import { Message } from './message';
-import { SharedBufferChannelMain, SharedBufferChannelWorker } from './channel-sharedbuffer';
-import { ServiceWorkerChannelMain, ServiceWorkerChannelWorker } from './channel-serviceworker';
+import { SharedBufferChannelMain, SharedBufferChannelWorker } from './channel-shared';
+import { ServiceWorkerChannelMain, ServiceWorkerChannelWorker } from './channel-service';
 import { WebROptions } from '../webr-main';
 import { isCrossOrigin } from '../utils';
 import { IN_NODE } from '../compat';
