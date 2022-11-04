@@ -73,6 +73,11 @@ export function newChannelMain(data: Required<WebROptions>) {
       if (IN_NODE || crossOriginIsolated) {
         return new SharedBufferChannelMain(data);
       }
+      /*
+       * TODO: If we are not cross-origin isolated but we can still use service
+       * workers, we could setup a service worker to inject the relevant headers
+       * to enable cross-origin isolation.
+       */
       if ('serviceWorker' in navigator && !isCrossOrigin(data.SW_URL)) {
         return new ServiceWorkerChannelMain(data);
       }
