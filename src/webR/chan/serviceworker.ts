@@ -43,7 +43,7 @@ const sendRequest = async (clientId: string, request: MessageRequest): Promise<R
 
 const handleFetch = (event: FetchEvent) => {
   // console.log('service worker got a fetch', event);
-  const wasmMatch = /\/__wasm__\/webr-fetch-request\//.exec(event.request.url);
+  const wasmMatch = /__wasm__\/webr-fetch-request\//.exec(event.request.url);
   if (!wasmMatch) {
     return;
   }

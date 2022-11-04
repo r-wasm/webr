@@ -4,6 +4,7 @@ import { Message, newRequest, Response, SyncRequest } from './message';
 import { Endpoint } from './task-common';
 import { syncResponse } from './task-main';
 import { ChannelType, ChannelMain, ChannelWorker } from './channel';
+import { WebROptions } from '../webr-main';
 
 import { IN_NODE } from '../compat';
 import type { Worker as NodeWorker } from 'worker_threads';
@@ -24,7 +25,7 @@ export class SharedBufferChannelMain implements ChannelMain {
 
   #parked = new Map<string, ResolveFn>();
 
-  constructor(url: string, config: unknown) {
+  constructor(config: Required<WebROptions>) {
     const initWorker = (worker: Worker) => {
       this.#handleEventsFromWorker(worker);
       this.close = () => worker.terminate();
@@ -35,10 +36,12 @@ export class SharedBufferChannelMain implements ChannelMain {
       worker.postMessage(msg);
     };
 
-    if (isCrossOrigin(url)) {
-      newCrossOriginWorker(url, (worker: Worker) => initWorker(worker));
+    if (isCrossOrigin(config.WEBR_URL)) {
+      newCrossOriginWorker(`${config.WEBR_URL}webr-worker.js`, (worker: Worker) =>
+        initWorker(worker)
+      );
     } else {
-      const worker = new Worker(url);
+      const worker = new Worker(`${config.WEBR_URL}webr-worker.js`);
       initWorker(worker);
     }
 

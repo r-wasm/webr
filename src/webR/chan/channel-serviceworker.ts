@@ -1,5 +1,5 @@
 import { AsyncQueue } from './queue';
-import { promiseHandles, ResolveFn } from '../utils';
+import { promiseHandles, ResolveFn, newCrossOriginWorker, isCrossOrigin } from '../utils';
 import { Message, newRequest, Response, Request, newResponse } from './message';
 import { Endpoint } from './task-common';
 import { ChannelType, ChannelMain, ChannelWorker } from './channel';
@@ -25,18 +25,27 @@ export class ServiceWorkerChannelMain implements ChannelMain {
   #registration?: ServiceWorkerRegistration;
   #interrupted = false;
 
-  constructor(url: string, config: Required<WebROptions>) {
-    const worker = new Worker(url);
-    this.#handleEventsFromWorker(worker);
-    this.close = () => worker.terminate();
+  constructor(config: Required<WebROptions>) {
+    const initWorker = (worker: Worker) => {
+      this.#handleEventsFromWorker(worker);
+      this.close = () => worker.terminate();
+      this.#registerServiceWorker(config.SW_URL).then((clientId) => {
+        const msg = {
+          type: 'init',
+          data: { config, channelType: ChannelType.ServiceWorker, clientId },
+        } as Message;
+        worker.postMessage(msg);
+      });
+    };
 
-    this.#registerServiceWorker(`${config.WEBR_URL}serviceworker.js`).then((clientId) => {
-      const msg = {
-        type: 'init',
-        data: { config, channelType: ChannelType.ServiceWorker, clientId },
-      } as Message;
-      worker.postMessage(msg);
-    });
+    if (isCrossOrigin(config.WEBR_URL)) {
+      newCrossOriginWorker(`${config.WEBR_URL}webr-worker.js`, (worker: Worker) =>
+        initWorker(worker)
+      );
+    } else {
+      const worker = new Worker(`${config.WEBR_URL}webr-worker.js`);
+      initWorker(worker);
+    }
 
     ({ resolve: this.resolve, promise: this.initialised } = promiseHandles());
   }
@@ -240,7 +249,8 @@ export class ServiceWorkerChannelWorker implements ChannelWorker {
       try {
         const xhr = new XMLHttpRequest();
         xhr.timeout = 60000;
-        xhr.open('POST', './__wasm__/webr-fetch-request/', false);
+        xhr.responseType = 'arraybuffer';
+        xhr.open('POST', 'https://__wasm__/webr-fetch-request/', false);
         const fetchReqBody = {
           type: 'webr-fetch-request',
           data: {

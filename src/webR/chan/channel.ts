@@ -62,19 +62,19 @@ export type ChannelInitMessage = {
   };
 };
 
-export function newChannelMain(url: string, data: Required<WebROptions>) {
+export function newChannelMain(data: Required<WebROptions>) {
   switch (data.channelType) {
     case ChannelType.SharedArrayBuffer:
-      return new SharedBufferChannelMain(url, data);
+      return new SharedBufferChannelMain(data);
     case ChannelType.ServiceWorker:
-      return new ServiceWorkerChannelMain(url, data);
+      return new ServiceWorkerChannelMain(data);
     case ChannelType.Automatic:
     default:
       if (IN_NODE || crossOriginIsolated) {
-        return new SharedBufferChannelMain(url, data);
+        return new SharedBufferChannelMain(data);
       }
-      if ('serviceWorker' in navigator && !isCrossOrigin(url)) {
-        return new ServiceWorkerChannelMain(url, data);
+      if ('serviceWorker' in navigator && !isCrossOrigin(data.SW_URL)) {
+        return new ServiceWorkerChannelMain(data);
       }
       throw new Error('Unable to initialise main thread communication channel');
   }
