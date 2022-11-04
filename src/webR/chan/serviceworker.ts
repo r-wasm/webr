@@ -1,5 +1,5 @@
-import type { Message, Request as MessageRequest } from './message';
 import { promiseHandles } from '../utils';
+import { decodeData, encodeData } from './message';
 
 declare let self: ServiceWorkerGlobalScope;
 
@@ -21,20 +21,20 @@ function handleActivate(event: ExtendableEvent) {
   event.waitUntil(self.clients.claim());
 }
 
-const sendRequest = async (clientId: string, request: MessageRequest): Promise<Response> => {
+const sendRequest = async (clientId: string, uuid: string): Promise<Response> => {
   const client = await self.clients.get(clientId);
   if (!client) {
     throw new Error('Service worker client not found');
   }
 
-  if (!(request.data.uuid in requests)) {
-    requests[request.data.uuid] = promiseHandles();
-    client.postMessage(request);
+  if (!(uuid in requests)) {
+    requests[uuid] = promiseHandles();
+    client.postMessage({ type: 'request', data: uuid });
   }
 
-  const response = await requests[request.data.uuid].promise;
+  const response = await requests[uuid].promise;
   const headers = { 'Cross-Origin-Embedder-Policy': 'require-corp' };
-  return new Response(JSON.stringify(response), { headers });
+  return new Response(encodeData(response), { headers });
 };
 
 const handleFetch = (event: FetchEvent) => {
@@ -43,11 +43,10 @@ const handleFetch = (event: FetchEvent) => {
   if (!wasmMatch) {
     return;
   }
-
-  const requestBody = event.request.json();
-  const requestReponse = requestBody.then(async (message: Message) => {
-    const { clientId, request } = message.data as { clientId: string; request: MessageRequest };
-    return await sendRequest(clientId, request);
+  const requestBody = event.request.arrayBuffer();
+  const requestReponse = requestBody.then(async (body) => {
+    const data = decodeData(new Uint8Array(body)) as { clientId: string; uuid: string };
+    return await sendRequest(data.clientId, data.uuid);
   });
   event.waitUntil(requestReponse);
   event.respondWith(requestReponse);

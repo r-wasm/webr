@@ -131,7 +131,6 @@ export class SharedBufferChannelMain implements ChannelMain {
         switch (payload.type) {
           case 'read': {
             const response = await this.inputQueue.get();
-            // TODO: Pass a `replacer` function
             await syncResponse(worker, reqData, response);
             break;
           }

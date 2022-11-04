@@ -1,6 +1,14 @@
 import { AsyncQueue } from './queue';
 import { promiseHandles, ResolveFn, newCrossOriginWorker, isCrossOrigin } from '../utils';
-import { Message, newRequest, Response, Request, newResponse } from './message';
+import {
+  Message,
+  newRequest,
+  Response,
+  Request,
+  newResponse,
+  encodeData,
+  decodeData,
+} from './message';
 import { Endpoint } from './task-common';
 import { ChannelType, ChannelMain, ChannelWorker } from './channel';
 import { WebROptions } from '../webr-main';
@@ -22,6 +30,7 @@ export class ServiceWorkerChannelMain implements ChannelMain {
   close = () => {};
 
   #parked = new Map<string, ResolveFn>();
+  #syncMessageCache = new Map<string, Message>();
   #registration?: ServiceWorkerRegistration;
   #interrupted = false;
 
@@ -118,14 +127,19 @@ export class ServiceWorkerChannelMain implements ChannelMain {
 
   async #onMessageFromServiceWorker(event: MessageEvent<Message>) {
     if (event.data.type === 'request') {
-      const request = event.data as Request;
-      switch (request.data.msg.type) {
+      const uuid = event.data.data as string;
+      const message = this.#syncMessageCache.get(uuid);
+      if (!message) {
+        throw new Error('Request not found during service worker XHR request');
+      }
+      this.#syncMessageCache.delete(uuid);
+      switch (message.type) {
         case 'read': {
           const response = await this.inputQueue.get();
           this.activeRegistration().postMessage({
             type: 'wasm-webr-fetch-response',
-            uuid: request.data.uuid,
-            response: newResponse(request.data.uuid, response),
+            uuid: uuid,
+            response: newResponse(uuid, response),
           });
           break;
         }
@@ -133,14 +147,14 @@ export class ServiceWorkerChannelMain implements ChannelMain {
           const response = this.#interrupted;
           this.activeRegistration().postMessage({
             type: 'wasm-webr-fetch-response',
-            uuid: request.data.uuid,
-            response: newResponse(request.data.uuid, response),
+            uuid: uuid,
+            response: newResponse(uuid, response),
           });
           this.#interrupted = false;
           break;
         }
         default:
-          throw new TypeError(`Unsupported request type '${request.data.msg.type}'.`);
+          throw new TypeError(`Unsupported request type '${message.type}'.`);
       }
       return;
     }
@@ -187,11 +201,11 @@ export class ServiceWorkerChannelMain implements ChannelMain {
         this.outputQueue.put(message);
         return;
 
-      case 'sync-request':
-        throw new TypeError(
-          "Can't send messages of type 'sync-request' in service worker mode." +
-            'Use service worker fetch request instead.'
-        );
+      case 'sync-request': {
+        const request = message.data as Request;
+        this.#syncMessageCache.set(request.data.uuid, request.data.msg);
+        return;
+      }
 
       case 'request':
         throw new TypeError(
@@ -242,6 +256,8 @@ export class ServiceWorkerChannelWorker implements ChannelWorker {
      * response from where it left off.
      */
     const request = newRequest(message);
+    this.write({ type: 'sync-request', data: request });
+
     for (;;) {
       try {
         const xhr = new XMLHttpRequest();
@@ -249,14 +265,11 @@ export class ServiceWorkerChannelWorker implements ChannelWorker {
         xhr.responseType = 'arraybuffer';
         xhr.open('POST', 'https://__wasm__/webr-fetch-request/', false);
         const fetchReqBody = {
-          type: 'webr-fetch-request',
-          data: {
-            clientId: this.#mainThreadId,
-            request: request,
-          },
+          clientId: this.#mainThreadId,
+          uuid: request.data.uuid,
         };
-        xhr.send(JSON.stringify(fetchReqBody));
-        return JSON.parse(xhr.responseText) as Response;
+        xhr.send(encodeData(fetchReqBody));
+        return decodeData(new Uint8Array(xhr.response as ArrayBuffer)) as Response;
       } catch (e: any) {
         if (e instanceof DOMException) {
           console.log('Service worker request failed - resending request');
