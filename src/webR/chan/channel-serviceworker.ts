@@ -110,26 +110,22 @@ export class ServiceWorkerChannelMain implements ChannelMain {
     });
 
     // Setup listener for service worker messages
-    navigator.serviceWorker.addEventListener(
-      'message',
-      (event: MessageEvent<{ type: string; url: string; msg: Request; uuid: string }>) => {
-        this.#onMessageFromServiceWorker(event);
-      }
-    );
+    navigator.serviceWorker.addEventListener('message', (event: MessageEvent<Request>) => {
+      this.#onMessageFromServiceWorker(event);
+    });
     return clientId;
   }
 
-  async #onMessageFromServiceWorker(
-    event: MessageEvent<{ type: string; url: string; msg: Message; uuid: string }>
-  ) {
-    if (event.data.type === 'wasm-webr-fetch-request') {
-      switch (event.data.msg.type) {
+  async #onMessageFromServiceWorker(event: MessageEvent<Message>) {
+    if (event.data.type === 'request') {
+      const request = event.data as Request;
+      switch (request.data.msg.type) {
         case 'read': {
           const response = await this.inputQueue.get();
           this.activeRegistration().postMessage({
             type: 'wasm-webr-fetch-response',
-            uuid: event.data.uuid,
-            response: newResponse(event.data.uuid, response),
+            uuid: request.data.uuid,
+            response: newResponse(request.data.uuid, response),
           });
           break;
         }
@@ -137,14 +133,14 @@ export class ServiceWorkerChannelMain implements ChannelMain {
           const response = this.#interrupted;
           this.activeRegistration().postMessage({
             type: 'wasm-webr-fetch-response',
-            uuid: event.data.uuid,
-            response: newResponse(event.data.uuid, response),
+            uuid: request.data.uuid,
+            response: newResponse(request.data.uuid, response),
           });
           this.#interrupted = false;
           break;
         }
         default:
-          throw new TypeError(`Unsupported request type '${event.data.msg.type}'.`);
+          throw new TypeError(`Unsupported request type '${request.data.msg.type}'.`);
       }
       return;
     }

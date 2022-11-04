@@ -29,11 +29,7 @@ const sendRequest = async (clientId: string, request: MessageRequest): Promise<R
 
   if (!(request.data.uuid in requests)) {
     requests[request.data.uuid] = promiseHandles();
-    client.postMessage({
-      type: 'wasm-webr-fetch-request',
-      uuid: request.data.uuid,
-      msg: request.data.msg,
-    });
+    client.postMessage(request);
   }
 
   const response = await requests[request.data.uuid].promise;
