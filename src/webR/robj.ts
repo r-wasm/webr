@@ -88,6 +88,33 @@ type Complex = {
   im: number;
 };
 
+export type RawType =
+  | number
+  | string
+  | boolean
+  | undefined
+  | null
+  | Complex
+  | Error
+  | ArrayBuffer
+  | ArrayBufferView
+  | Array<RawType>
+  | Map<RawType, RawType>
+  | Set<RawType>
+  | { [key: string]: RawType };
+
+export type NamedEntries<T> = [string | null, T][];
+export type NamedObject<T> = { [key: string]: T };
+
+export type RObjectTree<T> = RObjectTreeImpl<(RObjectTree<T> | RawType | T)[]>;
+export type RObjectTreeAtomic<T> = RObjectTreeImpl<(T | null)[]>;
+type RObjectTreeImpl<T> = {
+  type: string;
+  names: (string | null)[] | null;
+  values: T;
+  missing?: boolean[];
+};
+
 function newRObjFromTarget(target: RTargetObj): RObjImpl {
   const obj = target.obj;
   if (target.type === RTargetType.PTR) {
@@ -151,30 +178,6 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
 
   throw new Error('Robj construction for this JS object is not yet supported');
 }
-
-export type RawType =
-  | number
-  | string
-  | boolean
-  | undefined
-  | null
-  | Complex
-  | Error
-  | ArrayBuffer
-  | ArrayBufferView
-  | Array<RawType>
-  | Map<RawType, RawType>
-  | Set<RawType>
-  | { [key: string]: RawType };
-
-export type NamedEntries<T> = [string | null, T][];
-export type NamedObject<T> = { [key: string]: T };
-export type RObjectTree<T = void> = {
-  type: string;
-  names: (string | null)[] | null;
-  values: T extends void ? (RawType | RObjImpl | RObjectTree)[] : T;
-  missing?: boolean[];
-};
 
 export class RObjImpl {
   ptr: RPtr;
@@ -244,7 +247,7 @@ export class RObjImpl {
     return names && names.includes(name);
   }
 
-  toTree(options: ToTreeOptions = { depth: 0 }, depth = 1): RawType | RObjectTree {
+  toTree(options: ToTreeOptions = { depth: 0 }, depth = 1): RawType | RObjectTree<RObjImpl> {
     throw new Error('This R object cannot be converted to JS');
   }
 
@@ -447,12 +450,12 @@ export class RObjPairlist extends RObjImpl {
     return this.toArray().length;
   }
 
-  toArray(options: ToTreeOptions = { depth: 1 }): (RObjImpl | RawType | RObjectTree)[] {
+  toArray(options: ToTreeOptions = { depth: 1 }): (RObjImpl | RawType | RObjectTree<RObjImpl>)[] {
     return this.toTree(options).values;
   }
 
   toObject({ allowDuplicateKey = true, allowEmptyKey = false, depth = 1 } = {}): NamedObject<
-    RObjImpl | RawType | RObjectTree
+    RObjImpl | RawType | RObjectTree<RObjImpl>
   > {
     const entries = this.entries({ depth });
     const keys = entries.map(([k, v]) => k);
@@ -467,15 +470,17 @@ export class RObjPairlist extends RObjImpl {
     );
   }
 
-  entries(options: ToTreeOptions = { depth: 1 }): NamedEntries<RObjImpl | RawType | RObjectTree> {
+  entries(
+    options: ToTreeOptions = { depth: 1 }
+  ): NamedEntries<RObjImpl | RawType | RObjectTree<RObjImpl>> {
     const obj = this.toTree(options);
     return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
   }
 
-  toTree(options: ToTreeOptions = { depth: 0 }, depth = 1): RObjectTree {
+  toTree(options: ToTreeOptions = { depth: 0 }, depth = 1): RObjectTree<RObjImpl> {
     const namesArray: string[] = [];
     let hasNames = false;
-    const values: (RawType | RObjImpl | RObjectTree)[] = [];
+    const values: (RawType | RObjImpl | RObjectTree<RObjImpl>)[] = [];
 
     for (let next = this as Nullable<RObjPairlist>; !next.isNull(); next = next.cdr()) {
       const symbol = next.tag();
@@ -521,12 +526,14 @@ export class RObjList extends RObjImpl {
     return Module._LENGTH(this.ptr);
   }
 
-  toArray(options: { depth: number } = { depth: 1 }): (RObjImpl | RawType | RObjectTree)[] {
+  toArray(
+    options: { depth: number } = { depth: 1 }
+  ): (RObjImpl | RawType | RObjectTree<RObjImpl>)[] {
     return this.toTree(options).values;
   }
 
   toObject({ allowDuplicateKey = true, allowEmptyKey = false, depth = 1 } = {}): NamedObject<
-    RObjImpl | RawType | RObjectTree
+    RObjImpl | RawType | RObjectTree<RObjImpl>
   > {
     const entries = this.entries({ depth });
     const keys = entries.map(([k, v]) => k);
@@ -543,12 +550,12 @@ export class RObjList extends RObjImpl {
 
   entries(
     options: { depth: number } = { depth: 1 }
-  ): NamedEntries<RObjImpl | RawType | RObjectTree> {
+  ): NamedEntries<RObjImpl | RawType | RObjectTree<RObjImpl>> {
     const obj = this.toTree(options);
     return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
   }
 
-  toTree(options: { depth: number } = { depth: 0 }, depth = 1): RObjectTree {
+  toTree(options: { depth: number } = { depth: 0 }, depth = 1): RObjectTree<RObjImpl> {
     return {
       type: RType[this.type],
       names: this.names(),
@@ -621,7 +628,7 @@ export class RObjEnvironment extends RObjImpl {
     return this.getDollar(prop);
   }
 
-  toObject({ depth = 0 } = {}): NamedObject<RawType | RObjImpl | RObjectTree> {
+  toObject({ depth = 0 } = {}): NamedObject<RawType | RObjImpl | RObjectTree<RObjImpl>> {
     const symbols = this.names();
     return Object.fromEntries(
       [...Array(symbols.length).keys()].map((i) => {
@@ -630,7 +637,7 @@ export class RObjEnvironment extends RObjImpl {
     );
   }
 
-  toTree(options: { depth: number } = { depth: 0 }, depth = 1): RObjectTree {
+  toTree(options: { depth: number } = { depth: 0 }, depth = 1): RObjectTree<RObjImpl> {
     const names = this.names();
     const values = [...Array(names.length).keys()].map((i) => {
       if (options.depth && depth >= options.depth) {
@@ -720,7 +727,7 @@ abstract class RObjAtomicVector<T extends atomicType> extends RObjImpl {
     return values.map((v, i) => [names ? names[i] : null, v]);
   }
 
-  toTree(): RObjectTree<(T | null)[]> {
+  toTree(): RObjectTreeAtomic<T> {
     return {
       type: RType[this.type],
       names: this.names(),
@@ -931,6 +938,25 @@ export function isRTargetPtr(value: any): value is RTargetPtr {
  */
 export function isRFunction(value: any): value is RFunction {
   return isRObject(value) && 'methods' in value._target && value._target.methods.includes('exec');
+}
+
+/**
+ * Test for an RObjectTree instance
+ *
+ * @param {any} value The object to test.
+ * @return {boolean} True if the object is an instance of an RObjectTree.
+ */
+export function isRObjectTree(value: any): value is RObjectTree<any> {
+  return (
+    value &&
+    typeof value === 'object' &&
+    'type' in value &&
+    'names' in value &&
+    'values' in value &&
+    (Array.isArray(value.names) || value.names === null) &&
+    typeof value.type === 'string' &&
+    Object.values(RType).includes(value.type as string)
+  );
 }
 
 export function getRObjClass(type: RType): typeof RObjImpl {

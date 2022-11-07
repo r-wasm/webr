@@ -1,4 +1,4 @@
-import { RTargetType, RTargetPtr, isRObject, RTargetObj } from './robj';
+import { RTargetType, RTargetPtr, isRObject, RTargetObj, RObjectTree, RObject } from './robj';
 import { RObjImpl, RObjFunction, RawType, isRFunction, isRTargetPtr } from './robj';
 import { ChannelMain } from './chan/channel';
 import { replaceInObject } from './utils';
@@ -13,7 +13,11 @@ type Methods<T> = {
  *
  * Distributes RProxy over any RObjImpls in the given union type U.
  */
-type DistProxy<U> = U extends RObjImpl ? RProxy<U> : U;
+type DistProxy<U> = U extends RObjImpl
+  ? RProxy<U>
+  : U extends RObjectTree<RObjImpl>
+  ? RObjectTree<RObject>
+  : U;
 
 /** Convert an RObjImpl property type to a corresponding RProxy property type
  *
