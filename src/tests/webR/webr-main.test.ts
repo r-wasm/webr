@@ -191,7 +191,7 @@ describe('Create R objects from the main thread', () => {
   });
 
   test('Create an environment', async () => {
-    const jsObj = { x: 123, y: 'abc' };
+    const jsObj = { type: 'Environment', names: ['x', 'y'], values: [123, 'abc'] };
     const rObj = (await webR.newRObject(jsObj)) as REnvironment;
     expect(await rObj.type()).toEqual(RType.Environment);
     expect(await rObj.ls()).toEqual(['x', 'y']);
@@ -219,7 +219,11 @@ describe('Create R objects from the main thread', () => {
     ).result as RList;
     const jsObj = await rObj.toTree();
     const newRObj = (await webR.newRObject(jsObj)) as RList;
-    const env = (await webR.newRObject({ newRObj, rObj })) as REnvironment;
+    const env = (await webR.newRObject({
+      type: 'Environment',
+      names: ['newRObj', 'rObj'],
+      values: [newRObj, rObj],
+    })) as REnvironment;
     const identical = (await webR.evalRCode('identical(rObj, newRObj)', env)).result as RLogical;
     expect(await rObj.type()).toEqual(RType.List);
     expect(await identical.toLogical()).toEqual(true);
@@ -233,7 +237,11 @@ describe('Create R objects from the main thread', () => {
     ).result as RList;
     const jsObj = await rObj.toTree({ depth: 1 });
     const newRObj = (await webR.newRObject(jsObj)) as RList;
-    const env = (await webR.newRObject({ newRObj, rObj })) as REnvironment;
+    const env = (await webR.newRObject({
+      type: 'Environment',
+      names: ['newRObj', 'rObj'],
+      values: [newRObj, rObj],
+    })) as REnvironment;
     const identical = (await webR.evalRCode('identical(rObj, newRObj)', env)).result as RLogical;
     expect(await rObj.type()).toEqual(RType.List);
     expect(await identical.toLogical()).toEqual(true);

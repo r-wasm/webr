@@ -158,6 +158,15 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
     return new RObjList(tree);
   }
 
+  if (typeof obj === 'object') {
+    const tree = {
+      type: 'List',
+      names: Object.keys(obj),
+      values: Object.values(obj),
+    };
+    return new RObjList(tree as NamedObject<RawType>);
+  }
+
   throw new Error('Robj construction for this JS object is not yet supported');
 }
 
