@@ -59,6 +59,7 @@ export type ChannelInitMessage = {
     config: Required<WebROptions>;
     channelType: Exclude<ChannelType, ChannelType.Automatic>;
     clientId?: string;
+    location?: string;
   };
 };
 
@@ -90,7 +91,7 @@ export function newChannelWorker(msg: ChannelInitMessage) {
     case ChannelType.SharedArrayBuffer:
       return new SharedBufferChannelWorker();
     case ChannelType.ServiceWorker:
-      return new ServiceWorkerChannelWorker(msg.data.clientId);
+      return new ServiceWorkerChannelWorker(msg.data);
     default:
       throw new Error('Unknown worker channel type recieved');
   }

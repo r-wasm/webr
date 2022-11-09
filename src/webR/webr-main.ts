@@ -42,7 +42,7 @@ const defaultOptions = {
   RArgs: [],
   REnv: defaultEnv,
   WEBR_URL: BASE_URL,
-  SW_URL: 'serviceworker.js',
+  SW_URL: '',
   PKG_URL: PKG_BASE_URL,
   homedir: '/home/web_user',
   interactive: true,

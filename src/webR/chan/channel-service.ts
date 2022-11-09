@@ -38,21 +38,26 @@ export class ServiceWorkerChannelMain implements ChannelMain {
     const initWorker = (worker: Worker) => {
       this.#handleEventsFromWorker(worker);
       this.close = () => worker.terminate();
-      this.#registerServiceWorker(config.SW_URL).then((clientId) => {
+      this.#registerServiceWorker(`${config.SW_URL}webr-serviceworker.js`).then((clientId) => {
         const msg = {
           type: 'init',
-          data: { config, channelType: ChannelType.ServiceWorker, clientId },
+          data: {
+            config,
+            channelType: ChannelType.ServiceWorker,
+            clientId,
+            location: window.location.href,
+          },
         } as Message;
         worker.postMessage(msg);
       });
     };
 
-    if (isCrossOrigin(config.WEBR_URL)) {
-      newCrossOriginWorker(`${config.WEBR_URL}webr-worker.js`, (worker: Worker) =>
+    if (isCrossOrigin(config.SW_URL)) {
+      newCrossOriginWorker(`${config.SW_URL}webr-worker.js`, (worker: Worker) =>
         initWorker(worker)
       );
     } else {
-      const worker = new Worker(`${config.WEBR_URL}webr-worker.js`);
+      const worker = new Worker(`${config.SW_URL}webr-worker.js`);
       initWorker(worker);
     }
 
@@ -225,15 +230,17 @@ declare let Module: _Module;
 export class ServiceWorkerChannelWorker implements ChannelWorker {
   #ep: Endpoint;
   #mainThreadId: string;
+  #location: string;
   #dispatch: (msg: Message) => void = () => 0;
   #interrupt = () => {};
   onMessageFromMainThread: (msg: Message) => void = () => {};
 
-  constructor(mainThreadId: string | undefined) {
-    if (!mainThreadId) {
-      throw Error('Unable to start service worker channel without a client ID for the main thread');
+  constructor(data: { clientId?: string; location?: string }) {
+    if (!data.clientId || !data.location) {
+      throw Error('Unable to start service worker channel');
     }
-    this.#mainThreadId = mainThreadId;
+    this.#mainThreadId = data.clientId;
+    this.#location = data.location;
     this.#ep = (IN_NODE ? require('worker_threads').parentPort : globalThis) as Endpoint;
   }
 
@@ -258,12 +265,14 @@ export class ServiceWorkerChannelWorker implements ChannelWorker {
     const request = newRequest(message);
     this.write({ type: 'sync-request', data: request });
 
+    let retryCount = 0;
     for (;;) {
       try {
+        const url = new URL('__wasm__/webr-fetch-request/', this.#location);
         const xhr = new XMLHttpRequest();
         xhr.timeout = 60000;
         xhr.responseType = 'arraybuffer';
-        xhr.open('POST', 'https://__wasm__/webr-fetch-request/', false);
+        xhr.open('POST', url, false);
         const fetchReqBody = {
           clientId: this.#mainThreadId,
           uuid: request.data.uuid,
@@ -271,7 +280,7 @@ export class ServiceWorkerChannelWorker implements ChannelWorker {
         xhr.send(encodeData(fetchReqBody));
         return decodeData(new Uint8Array(xhr.response as ArrayBuffer)) as Response;
       } catch (e: any) {
-        if (e instanceof DOMException) {
+        if (e instanceof DOMException && retryCount++ < 1000) {
           console.log('Service worker request failed - resending request');
         } else {
           throw e;
