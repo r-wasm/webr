@@ -120,6 +120,22 @@ function dispatch(msg: Message): void {
           }
           break;
         }
+        case 'getRObjProperty': {
+          const data = reqMsg.data as {
+            target: RTargetPtr;
+            prop: string;
+          };
+          try {
+            write(getRObjProperty(RObjImpl.wrap(data.target.obj), data.prop));
+          } catch (_e) {
+            const e = _e as Error;
+            write({
+              type: RTargetType.ERR,
+              obj: { name: e.name, message: e.message, stack: e.stack },
+            });
+          }
+          break;
+        }
         case 'installPackage':
           write(
             evalRCode(`webr::install("${reqMsg.data.name as string}", repos="${_config.PKG_URL}")`)
@@ -218,6 +234,29 @@ function callRObjMethod(obj: RObjImpl, prop: string, args: RTargetObj[]): RTarge
     })
   ) as RawType | RObjImpl;
 
+  if (isRObjImpl(res)) {
+    return { obj: res.ptr, methods: RObjImpl.getMethods(res), type: RTargetType.PTR };
+  } else {
+    return { obj: res, type: RTargetType.RAW };
+  }
+}
+
+/**
+ * For a given RObjImpl object, get the value of the given property
+ *
+ * Returns a RTargetObj containing either a reference to the resulting SEXP
+ * object in WASM memory, or the object represented in an equivalent raw
+ * JS form.
+ *
+ * @param {RObjImpl}  obj The R RObj object
+ * @param {string} [prop] RObj property to get
+ * @return {RTargetObj} The resulting R object
+ */
+function getRObjProperty(obj: RObjImpl, prop: string): RTargetObj {
+  if (!(prop in obj)) {
+    throw new ReferenceError(`${prop} is not defined`);
+  }
+  const res = obj[prop as keyof typeof obj] as RawType | RObjImpl;
   if (isRObjImpl(res)) {
     return { obj: res.ptr, methods: RObjImpl.getMethods(res), type: RTargetType.PTR };
   } else {
