@@ -1,4 +1,4 @@
-import { newChannelMain, ChannelMain } from './chan/channel';
+import { newChannelMain, ChannelMain, ChannelType } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy } from './proxy';
@@ -27,8 +27,10 @@ export interface WebROptions {
   REnv?: { [key: string]: string };
   WEBR_URL?: string;
   PKG_URL?: string;
+  SW_URL?: string;
   homedir?: string;
   interactive?: boolean;
+  channelType?: ChannelType;
 }
 
 const defaultEnv = {
@@ -40,9 +42,11 @@ const defaultOptions = {
   RArgs: [],
   REnv: defaultEnv,
   WEBR_URL: BASE_URL,
+  SW_URL: '',
   PKG_URL: PKG_BASE_URL,
   homedir: '/home/web_user',
   interactive: true,
+  channelType: ChannelType.Automatic,
 };
 
 export class WebR {
@@ -50,7 +54,7 @@ export class WebR {
 
   constructor(options: WebROptions = {}) {
     const config: Required<WebROptions> = Object.assign(defaultOptions, options);
-    this.#chan = newChannelMain(`${config.WEBR_URL}webr-worker.js`, config);
+    this.#chan = newChannelMain(config);
   }
 
   async init() {

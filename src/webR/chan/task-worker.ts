@@ -8,7 +8,7 @@ import {
   UUID_LENGTH,
 } from './task-common';
 
-import { newSyncRequest, Message } from './message';
+import { newSyncRequest, Message, decodeData } from './message';
 
 const decoder = new TextDecoder('utf-8');
 
@@ -99,7 +99,7 @@ export class SyncTask {
 
     const size = Atomics.load(sizeBuffer, SZ_BUF_SIZE_IDX);
     // console.log("===completing", taskId);
-    return JSON.parse(decoder.decode(dataBuffer.slice(0, size))) as unknown;
+    return decodeData(dataBuffer.slice(0, size));
   }
 
   get result() {

@@ -3,7 +3,8 @@ import { promiseHandles, ResolveFn, newCrossOriginWorker, isCrossOrigin } from '
 import { Message, newRequest, Response, SyncRequest } from './message';
 import { Endpoint } from './task-common';
 import { syncResponse } from './task-main';
-import { ChannelType } from './channel';
+import { ChannelType, ChannelMain, ChannelWorker } from './channel';
+import { WebROptions } from '../webr-main';
 
 import { IN_NODE } from '../compat';
 import type { Worker as NodeWorker } from 'worker_threads';
@@ -13,7 +14,7 @@ if (IN_NODE) {
 
 // Main ----------------------------------------------------------------
 
-export class SharedBufferChannelMain {
+export class SharedBufferChannelMain implements ChannelMain {
   inputQueue = new AsyncQueue<Message>();
   outputQueue = new AsyncQueue<Message>();
   #interruptBuffer?: Int32Array;
@@ -24,7 +25,7 @@ export class SharedBufferChannelMain {
 
   #parked = new Map<string, ResolveFn>();
 
-  constructor(url: string, config: unknown) {
+  constructor(config: Required<WebROptions>) {
     const initWorker = (worker: Worker) => {
       this.#handleEventsFromWorker(worker);
       this.close = () => worker.terminate();
@@ -35,10 +36,12 @@ export class SharedBufferChannelMain {
       worker.postMessage(msg);
     };
 
-    if (isCrossOrigin(url)) {
-      newCrossOriginWorker(url, (worker: Worker) => initWorker(worker));
+    if (isCrossOrigin(config.WEBR_URL)) {
+      newCrossOriginWorker(`${config.WEBR_URL}webr-worker.js`, (worker: Worker) =>
+        initWorker(worker)
+      );
     } else {
-      const worker = new Worker(url);
+      const worker = new Worker(`${config.WEBR_URL}webr-worker.js`);
       initWorker(worker);
     }
 
@@ -128,7 +131,6 @@ export class SharedBufferChannelMain {
         switch (payload.type) {
           case 'read': {
             const response = await this.inputQueue.get();
-            // TODO: Pass a `replacer` function
             await syncResponse(worker, reqData, response);
             break;
           }
@@ -151,10 +153,8 @@ import { SyncTask, setInterruptHandler, setInterruptBuffer } from './task-worker
 import { Module as _Module } from '../module';
 
 declare let Module: _Module;
-// callMain function readied by Emscripten
-declare let callMain: (args: string[]) => void;
 
-export class SharedBufferChannelWorker {
+export class SharedBufferChannelWorker implements ChannelWorker {
   #ep: Endpoint;
   #dispatch: (msg: Message) => void = () => 0;
   #interruptBuffer = new Int32Array(new SharedArrayBuffer(4));

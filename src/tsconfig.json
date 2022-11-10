@@ -11,6 +11,7 @@
     "allowSyntheticDefaultImports": true,
     "types": ["node", "emscripten", "jquery", "xterm", "jstree", "jest"],
     "noEmit": true,
+    "lib": ["dom", "webworker"],
   },
   "include": ["**/*.ts"],
 }

@@ -77,3 +77,15 @@ export function newSyncRequest(msg: Message, data: SyncRequestData): SyncRequest
     data: { msg, reqData: data },
   };
 }
+
+const encoder = new TextEncoder();
+const decoder = new TextDecoder('utf-8');
+
+// TODO: Pass a `replacer` function
+export function encodeData(data: any): Uint8Array {
+  return encoder.encode(JSON.stringify(data));
+}
+
+export function decodeData(data: Uint8Array): unknown {
+  return JSON.parse(decoder.decode(data)) as unknown;
+}
