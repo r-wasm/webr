@@ -40,7 +40,7 @@ export interface WebROptions {
   SW_URL?: string;
   homedir?: string;
   interactive?: boolean;
-  channelType?: ChannelType;
+  channelType?: typeof ChannelType[keyof typeof ChannelType];
 }
 
 const defaultEnv = {
