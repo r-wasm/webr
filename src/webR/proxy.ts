@@ -53,7 +53,7 @@ type RProxify<T> = T extends Array<any>
  * property.
  */
 export type RProxy<T extends RObjImpl> = { [P in Methods<T>]: RProxify<T[P]> } & {
-  _target: RTargetObj;
+  _target: RTargetPtr;
   [Symbol.asyncIterator](): AsyncGenerator<RProxy<RObjImpl>, void, unknown>;
 };
 
@@ -77,7 +77,7 @@ function targetAsyncIterator(chan: ChannelMain, proxy: RProxy<RObjImpl>) {
     })) as RTargetObj;
 
     // Throw an error if there was some problem accessing the object length
-    if (reply.type === RTargetType.ERR) {
+    if (reply.targetType === RTargetType.err) {
       const e = new Error(`Cannot iterate over object, ${reply.obj.message}`);
       e.name = reply.obj.name;
       e.stack = reply.obj.stack;
@@ -100,7 +100,7 @@ function targetMethod(chan: ChannelMain, target: RTargetPtr, prop: string) {
   return async (..._args: unknown[]) => {
     const args = Array.from({ length: _args.length }, (_, idx) => {
       const arg = _args[idx];
-      return isRObject(arg) ? arg._target : { obj: arg, type: RTargetType.RAW };
+      return isRObject(arg) ? arg._target : { obj: arg, targetType: RTargetType.raw };
     });
 
     const reply = (await chan.request({
@@ -108,10 +108,10 @@ function targetMethod(chan: ChannelMain, target: RTargetPtr, prop: string) {
       data: { target, prop, args },
     })) as RTargetObj;
 
-    switch (reply.type) {
-      case RTargetType.PTR:
+    switch (reply.targetType) {
+      case RTargetType.ptr:
         return newRProxy(chan, reply);
-      case RTargetType.ERR: {
+      case RTargetType.err: {
         const e = new Error(reply.obj.message);
         e.name = reply.obj.name;
         e.stack = reply.obj.stack;
@@ -133,14 +133,14 @@ function targetMethod(chan: ChannelMain, target: RTargetPtr, prop: string) {
 export function newRProxy(chan: ChannelMain, target: RTargetPtr): RProxy<RObjImpl> {
   const proxy = new Proxy(
     // Assume we are proxying an RFunction if the methods list contains 'exec'.
-    target.methods.includes('exec') ? Object.assign(empty, { ...target }) : target,
+    target.obj.methods?.includes('exec') ? Object.assign(empty, { ...target }) : target,
     {
       get: (_: RTargetObj, prop: string | number | symbol) => {
         if (prop === '_target') {
           return target;
         } else if (prop === Symbol.asyncIterator) {
           return targetAsyncIterator(chan, proxy);
-        } else if (target.methods.includes(prop.toString())) {
+        } else if (target.obj.methods?.includes(prop.toString())) {
           return targetMethod(chan, target, prop.toString());
         }
       },

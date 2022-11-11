@@ -12,6 +12,7 @@ import {
   RList,
   RObjectTree,
   NamedObject,
+  REnvironment,
 } from './robj';
 
 export type EvalRCodeOptions = {
@@ -112,7 +113,7 @@ export class WebR {
 
   async evalRCode(
     code: string,
-    env?: RObject,
+    env?: REnvironment,
     options: EvalRCodeOptions = {}
   ): Promise<{
     result: RObject;
@@ -126,15 +127,15 @@ export class WebR {
       type: 'evalRCode',
       data: {
         code: code,
-        env: env?._target.obj,
+        env: env?._target,
         options: options,
       },
     })) as RTargetObj;
 
-    switch (target.type) {
-      case RTargetType.RAW:
+    switch (target.targetType) {
+      case RTargetType.raw:
         throw new Error('Unexpected raw target type returned from evalRCode');
-      case RTargetType.ERR: {
+      case RTargetType.err: {
         const e = new Error(target.obj.message);
         e.name = target.obj.name;
         e.stack = target.obj.stack;
@@ -162,14 +163,12 @@ export class WebR {
     const targetObj = replaceInObject(jsObj, isRObject, (obj: RObject) => obj._target);
     const target = (await this.#chan.request({
       type: 'newRObject',
-      data: {
-        obj: { type: RTargetType.RAW, obj: targetObj },
-      },
+      data: { targetType: RTargetType.raw, obj: targetObj },
     })) as RTargetObj;
-    switch (target.type) {
-      case RTargetType.RAW:
+    switch (target.targetType) {
+      case RTargetType.raw:
         throw new Error('Unexpected raw target type returned from newRObject');
-      case RTargetType.ERR: {
+      case RTargetType.err: {
         const e = new Error(target.obj.message);
         e.name = target.obj.name;
         e.stack = target.obj.stack;

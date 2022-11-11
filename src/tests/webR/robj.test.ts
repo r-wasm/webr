@@ -39,7 +39,7 @@ test('Convert an R symbol to JS', async () => {
 
 test('Get RObject type as a string', async () => {
   const result = (await webR.evalRCode('NULL')).result as RNull;
-  expect(await result.toString()).toEqual('[object RObj:Null]');
+  expect(await result.toString()).toEqual('[object RObj:null]');
 });
 
 describe('Working with R lists and vectors', () => {
@@ -187,13 +187,13 @@ describe('Working with R lists and vectors', () => {
   test('Converted object has type property', async () => {
     const list = (await webR.evalRCode('list(1,2,3)')).result as RList;
     const listJs = await list.toJs();
-    expect(listJs.type).toEqual('List');
+    expect(listJs.type).toEqual('list');
     const logical = (await webR.evalRCode('TRUE')).result as RLogical;
     const logicalJs = await logical.toJs();
-    expect(logicalJs.type).toEqual('Logical');
+    expect(logicalJs.type).toEqual('logical');
     const double = (await webR.evalRCode('c(1,2,3)')).result as RDouble;
     const doubleJs = await double.toJs();
-    expect(doubleJs.type).toEqual('Double');
+    expect(doubleJs.type).toEqual('double');
   });
 
   test('First key wins when converting R objects to JS objects', async () => {
@@ -335,7 +335,7 @@ describe('Working with R lists and vectors', () => {
 describe('Working with R environments', () => {
   test('Create an R environment', async () => {
     const env = (await webR.evalRCode('new.env()')).result as REnvironment;
-    expect(await env.toString()).toEqual('[object RObj:Environment]');
+    expect(await env.toString()).toEqual('[object RObj:environment]');
   });
 
   test('List items in an R environment', async () => {

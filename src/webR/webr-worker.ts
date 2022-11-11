@@ -8,11 +8,9 @@ import { replaceInObject } from './utils';
 import {
   isRObjImpl,
   RObjImpl,
-  RPtr,
   RTargetObj,
   RTargetPtr,
   RTargetType,
-  RType,
   RawType,
   RTargetRaw,
 } from './robj';
@@ -75,7 +73,7 @@ function dispatch(msg: Message): void {
         case 'evalRCode': {
           const data = reqMsg.data as {
             code: string;
-            env: RPtr;
+            env?: RTargetPtr;
             options: EvalRCodeOptions;
           };
           try {
@@ -83,23 +81,28 @@ function dispatch(msg: Message): void {
           } catch (_e) {
             const e = _e as Error;
             write({
-              type: RTargetType.ERR,
+              targetType: RTargetType.err,
               obj: { name: e.name, message: e.message, stack: e.stack },
             });
           }
           break;
         }
         case 'newRObject': {
-          const data = reqMsg.data as {
-            obj: RTargetRaw;
-          };
+          const data = reqMsg.data as RTargetRaw;
           try {
-            const res = new RObjImpl(data.obj);
-            write({ obj: res.ptr, methods: RObjImpl.getMethods(res), type: RTargetType.PTR });
+            const res = new RObjImpl(data);
+            write({
+              obj: {
+                type: res.type(),
+                ptr: res.ptr,
+                methods: RObjImpl.getMethods(res),
+              },
+              targetType: RTargetType.ptr,
+            });
           } catch (_e) {
             const e = _e as Error;
             write({
-              type: RTargetType.ERR,
+              targetType: RTargetType.err,
               obj: { name: e.name, message: e.message, stack: e.stack },
             });
           }
@@ -112,11 +115,11 @@ function dispatch(msg: Message): void {
             args: RTargetObj[];
           };
           try {
-            write(callRObjMethod(RObjImpl.wrap(data.target.obj), data.prop, data.args));
+            write(callRObjMethod(RObjImpl.wrap(data.target.obj.ptr), data.prop, data.args));
           } catch (_e) {
             const e = _e as Error;
             write({
-              type: RTargetType.ERR,
+              targetType: RTargetType.err,
               obj: { name: e.name, message: e.message, stack: e.stack },
             });
           }
@@ -128,11 +131,11 @@ function dispatch(msg: Message): void {
             prop: string;
           };
           try {
-            write(getRObjProperty(RObjImpl.wrap(data.target.obj), data.prop));
+            write(getRObjProperty(RObjImpl.wrap(data.target.obj.ptr), data.prop));
           } catch (_e) {
             const e = _e as Error;
             write({
-              type: RTargetType.ERR,
+              targetType: RTargetType.err,
               obj: { name: e.name, message: e.message, stack: e.stack },
             });
           }
@@ -232,15 +235,18 @@ function callRObjMethod(obj: RObjImpl, prop: string, args: RTargetObj[]): RTarge
     obj,
     Array.from({ length: args.length }, (_, idx) => {
       const arg = args[idx];
-      return arg.type === RTargetType.PTR ? RObjImpl.wrap(arg.obj) : arg.obj;
+      return arg.targetType === RTargetType.ptr ? RObjImpl.wrap(arg.obj.ptr) : arg.obj;
     })
   ) as RawType | RObjImpl;
 
   const ret = replaceInObject(res, isRObjImpl, (obj: RObjImpl) => {
-    return { obj: obj.ptr, methods: RObjImpl.getMethods(obj), type: RTargetType.PTR };
+    return {
+      obj: { type: obj.type(), ptr: obj.ptr, methods: RObjImpl.getMethods(obj) },
+      targetType: RTargetType.ptr,
+    };
   }) as RawType;
 
-  return { obj: ret, type: RTargetType.RAW };
+  return { obj: ret, targetType: RTargetType.raw };
 }
 
 /**
@@ -260,9 +266,12 @@ function getRObjProperty(obj: RObjImpl, prop: string): RTargetObj {
   }
   const res = obj[prop as keyof typeof obj] as RawType | RObjImpl;
   if (isRObjImpl(res)) {
-    return { obj: res.ptr, methods: RObjImpl.getMethods(res), type: RTargetType.PTR };
+    return {
+      obj: { type: res.type(), ptr: res.ptr, methods: RObjImpl.getMethods(res) },
+      targetType: RTargetType.ptr,
+    };
   } else {
-    return { obj: res, type: RTargetType.RAW };
+    return { obj: res, targetType: RTargetType.raw };
   }
 }
 
@@ -286,7 +295,7 @@ function getRObjProperty(obj: RObjImpl, prop: string): RTargetObj {
  * @return {RTargetObj} An R object containing the result of the computation
  * along with any other objects captured during execution.
  */
-function evalRCode(code: string, env?: RPtr, options: EvalRCodeOptions = {}): RTargetObj {
+function evalRCode(code: string, env?: RTargetPtr, options: EvalRCodeOptions = {}): RTargetObj {
   const _options: Required<EvalRCodeOptions> = Object.assign(
     {
       captureStreams: true,
@@ -299,8 +308,8 @@ function evalRCode(code: string, env?: RPtr, options: EvalRCodeOptions = {}): RT
 
   let envObj = RObjImpl.globalEnv;
   if (env) {
-    envObj = RObjImpl.wrap(env);
-    if (envObj.type !== RType.Environment) {
+    envObj = RObjImpl.wrap(env.obj.ptr);
+    if (envObj.type() !== 'environment') {
       throw new Error('Attempted to eval R code with an env argument with invalid SEXP type');
     }
   }
@@ -309,7 +318,7 @@ function evalRCode(code: string, env?: RPtr, options: EvalRCodeOptions = {}): RT
   const fPtr = Module.getValue(Module._R_FalseValue, '*');
   const codeStr = Module.allocateUTF8(code);
   const evalStr = Module.allocateUTF8('webr:::evalRCode');
-  const codeObj = new RObjImpl({ type: RTargetType.RAW, obj: code });
+  const codeObj = new RObjImpl({ targetType: RTargetType.raw, obj: code });
   codeObj.preserve();
   const expr = Module._Rf_lang6(
     Module._R_ParseEvalString(evalStr, RObjImpl.baseEnv.ptr),
@@ -323,8 +332,10 @@ function evalRCode(code: string, env?: RPtr, options: EvalRCodeOptions = {}): RT
   codeObj.release();
   Module._free(codeStr);
   Module._free(evalStr);
-
-  return { obj: evalResult.ptr, methods: RObjImpl.getMethods(evalResult), type: RTargetType.PTR };
+  return {
+    obj: { type: evalResult.type(), ptr: evalResult.ptr, methods: RObjImpl.getMethods(evalResult) },
+    targetType: RTargetType.ptr,
+  };
 }
 
 function getFileData(name: string): Uint8Array {

@@ -1,5 +1,5 @@
 import { WebR } from '../../webR/webr-main';
-import { RDouble, RFunction, RList } from '../../webR/robj';
+import { RDouble, RFunction, RList, RTargetType } from '../../webR/robj';
 import util from 'util';
 
 const webR = new WebR({
@@ -18,10 +18,12 @@ test('Evaluate code and return a proxy', async () => {
 
 test('RProxy _target property', async () => {
   const result = (await webR.evalRCode('42')).result;
-  expect(result._target).toHaveProperty('type', 'PTR');
-  expect(result._target).toHaveProperty('methods');
+  expect(result._target).toHaveProperty('targetType', RTargetType.ptr);
   expect(result._target).toHaveProperty('obj');
-  expect(result._target.obj).toEqual(expect.any(Number));
+  const obj = result._target.obj as { type: string; methods: string[]; ptr: number };
+  expect(obj.type).toEqual('double');
+  expect(obj.methods[0]).toEqual(expect.any(String));
+  expect(obj.ptr).toEqual(expect.any(Number));
 });
 
 test('RFunctions can be invoked via the proxy apply hook', async () => {

@@ -24,60 +24,67 @@ export type RRaw = RProxy<RObjRaw>;
 // RFunction proxies are callable
 export type RFunction = RProxy<RObjFunction> & ((...args: unknown[]) => Promise<unknown>);
 
-export enum RType {
-  Null = 0,
-  Symbol,
-  Pairlist,
-  Closure,
-  Environment,
-  Promise,
-  Call,
-  Special,
-  Builtin,
-  String,
-  Logical,
-  Integer = 13,
-  Double,
-  Complex,
-  Character,
-  Dots,
-  Any,
-  List,
-  Expression,
-  Bytecode,
-  Pointer,
-  Weakref,
-  Raw,
-  S4,
-  New = 30,
-  Free = 31,
-  Function = 99,
-}
-
 export type RPtr = number;
 
-export enum RTargetType {
-  RAW = 'RAW',
-  PTR = 'PTR',
-  ERR = 'ERR',
-}
+export const RType = {
+  null: 0,
+  symbol: 1,
+  pairlist: 2,
+  closure: 3,
+  environment: 4,
+  promise: 5,
+  call: 6,
+  special: 7,
+  builtin: 8,
+  string: 9,
+  logical: 10,
+  integer: 13,
+  double: 14,
+  complex: 15,
+  character: 16,
+  dots: 17,
+  any: 18,
+  list: 19,
+  expression: 20,
+  bytecode: 21,
+  pointer: 22,
+  weakref: 23,
+  raw: 24,
+  s4: 25,
+  new: 30,
+  free: 31,
+  function: 99,
+} as const;
+type RTypeKey = keyof typeof RType;
+type RTypeNumber = typeof RType[keyof typeof RType];
 
-export type RTargetPtr = {
-  obj: RPtr;
-  methods: string[];
-  type: RTargetType.PTR;
-};
+export const RTargetType = {
+  raw: 0,
+  ptr: 1,
+  err: 2,
+} as const;
+
 export type RTargetRaw = {
   obj: RawType;
-  type: RTargetType.RAW;
+  targetType: typeof RTargetType.raw;
 };
+
+export type RTargetPtr = {
+  obj: {
+    type?: RTypeKey;
+    ptr: RPtr;
+    methods?: string[];
+  };
+  targetType: typeof RTargetType.ptr;
+};
+
 export type RTargetError = {
   obj: {
     message: string;
     name: string;
     stack?: string;
   };
-  type: RTargetType.ERR;
+  targetType: typeof RTargetType.err;
 };
 export type RTargetObj = RTargetRaw | RTargetPtr | RTargetError;
 
@@ -110,7 +117,7 @@ export type RObjData = RObjImpl | RawType | RObjectTree<RObjImpl>;
 export type RObjectTree<T> = RObjectTreeImpl<(RObjectTree<T> | RawType | T)[]>;
 export type RObjectTreeAtomic<T> = RObjectTreeImpl<(T | null)[]>;
 type RObjectTreeImpl<T> = {
-  type: string;
+  type: RTypeKey;
   names: (string | null)[] | null;
   values: T;
   missing?: boolean[];
@@ -118,8 +125,8 @@ type RObjectTreeImpl<T> = {
 
 function newRObjFromTarget(target: RTargetObj): RObjImpl {
   const obj = target.obj;
-  if (target.type === RTargetType.PTR) {
-    return RObjImpl.wrap(target.obj);
+  if (target.targetType === RTargetType.ptr) {
+    return RObjImpl.wrap(target.obj.ptr);
   }
 
   if (typeof obj === 'number') {
@@ -140,7 +147,7 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
   }
 
   if (typeof obj === 'object' && obj && 're' in obj && 'im' in obj) {
-    const ptr = Module._Rf_protect(Module._Rf_allocVector(RType.Complex, 1));
+    const ptr = Module._Rf_protect(Module._Rf_allocVector(RType.complex, 1));
     Module.setValue(Module._COMPLEX(ptr), obj.re, 'double');
     Module.setValue(Module._COMPLEX(ptr) + 8, obj.im, 'double');
     Module._Rf_unprotect(1);
@@ -149,7 +156,7 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
 
   if (Array.isArray(obj) && obj.some((el) => typeof el === 'string')) {
     // Create a vector of strings
-    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.Character, obj.length));
+    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.character, obj.length));
     obj.forEach((el, idx) => {
       const str = Module.allocateUTF8(String(el));
       Module._SET_STRING_ELT(robjVec, idx, Module._Rf_mkChar(str));
@@ -161,7 +168,7 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
 
   if (Array.isArray(obj) && obj.some((el) => typeof el === 'number')) {
     // Create a vector of reals
-    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.Double, obj.length));
+    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.double, obj.length));
     obj.forEach((el, idx) =>
       Module.setValue(Module._REAL(robjVec) + 8 * idx, Number(el), 'double')
     );
@@ -171,7 +178,7 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
 
   if (Array.isArray(obj)) {
     // Create a vector of logicals
-    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.Logical, obj.length));
+    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.logical, obj.length));
     obj.forEach((el, idx) => Module.setValue(Module._LOGICAL(robjVec) + 4 * idx, el, 'i32'));
     Module._Rf_unprotect(1);
     return RObjImpl.wrap(robjVec);
@@ -196,11 +203,13 @@ export class RObjImpl {
   }
 
   get [Symbol.toStringTag](): string {
-    return `RObj:${RType[this.type]}`;
+    return `RObj:${this.type()}`;
   }
 
-  get type(): RType {
-    return Module._TYPEOF(this.ptr);
+  type(): RTypeKey {
+    const typeNumber = Module._TYPEOF(this.ptr) as RTypeNumber;
+    const type = Object.keys(RType).find((typeName) => RType[typeName as RTypeKey] === typeNumber);
+    return type as RTypeKey;
   }
 
   protect(): void {
@@ -220,7 +229,7 @@ export class RObjImpl {
   }
 
   isNull(): this is RObjNull {
-    return Module._TYPEOF(this.ptr) === RType.Null;
+    return Module._TYPEOF(this.ptr) === RType.null;
   }
 
   isUnbound(): boolean {
@@ -326,7 +335,7 @@ export class RObjImpl {
 
     const valueObj = isRObjImpl(value)
       ? value
-      : new RObjImpl({ obj: value, type: RTargetType.RAW });
+      : new RObjImpl({ obj: value, targetType: RTargetType.raw });
 
     const assign = Module.allocateUTF8('[[<-');
     const call = Module._Rf_protect(
@@ -387,8 +396,8 @@ export class RObjImpl {
   }
 
   static wrap(ptr: RPtr): RObjImpl {
-    const type = Module._TYPEOF(ptr);
-    return new (getRObjClass(type))(ptr);
+    const typeNumber = Module._TYPEOF(ptr) as RTypeNumber;
+    return new (getRObjClass(typeNumber))(ptr);
   }
 
   static protect<T extends RObjImpl>(obj: T): T {
@@ -498,7 +507,7 @@ export class RObjPairlist extends RObjImpl {
       }
     }
     const names = hasNames ? namesArray : null;
-    return { type: RType[this.type], names, values };
+    return { type: this.type(), names, values };
   }
 
   includes(name: string): boolean {
@@ -556,7 +565,7 @@ export class RObjList extends RObjImpl {
 
   toTree(options: { depth: number } = { depth: 0 }, depth = 1): RObjectTree<RObjImpl> {
     return {
-      type: RType[this.type],
+      type: this.type(),
       names: this.names(),
       values: [...Array(this.length).keys()].map((i) => {
         if (options.depth && depth >= options.depth) {
@@ -572,10 +581,10 @@ export class RObjList extends RObjImpl {
 export class RObjFunction extends RObjImpl {
   exec(...args: (RawType | RObjImpl)[]): RObjImpl {
     const argObjs = args.map((arg) =>
-      isRObjImpl(arg) ? arg : new RObjImpl({ obj: arg, type: RTargetType.RAW })
+      isRObjImpl(arg) ? arg : new RObjImpl({ obj: arg, targetType: RTargetType.raw })
     );
     const call = RObjImpl.protect(
-      new RObjPairlist(Module._Rf_allocVector(RType.Call, args.length + 1))
+      new RObjPairlist(Module._Rf_allocVector(RType.call, args.length + 1))
     );
     call.setcar(this);
     let c = call.cdr();
@@ -647,7 +656,7 @@ export class RObjEnvironment extends RObjImpl {
     });
 
     return {
-      type: RType[this.type],
+      type: this.type(),
       names,
       values,
     };
@@ -728,7 +737,7 @@ abstract class RObjAtomicVector<T extends atomicType> extends RObjImpl {
 
   toTree(): RObjectTreeAtomic<T> {
     return {
-      type: RType[this.type],
+      type: this.type(),
       names: this.names(),
       values: this.toArray(),
       missing: this.detectMissing(),
@@ -904,11 +913,26 @@ export function isRObjImpl(value: any): value is RObjImpl {
  */
 export function isRObject(value: any): value is RObject {
   return (
+    value &&
     (typeof value === 'object' || typeof value === 'function') &&
-    'type' in value &&
+    'targetType' in value &&
+    isRTargetPtr(value._target)
+  );
+}
+
+/**
+ * Test for an RTargetObj object
+ *
+ * @param {any} value The object to test.
+ * @return {boolean} True if the object is an instance of an RTargetObj.
+ */
+export function isRTargetObj(value: any): value is RTargetObj {
+  return (
+    value &&
+    typeof value === 'object' &&
+    'targetType' in value &&
     'obj' in value &&
-    'methods' in value &&
-    value._target.type === 'PTR'
+    value.targetType in Object.values(RTargetType)
   );
 }
 
@@ -919,14 +943,7 @@ export function isRObject(value: any): value is RObject {
  * @return {boolean} True if the object is an instance of an RTargetPtr.
  */
 export function isRTargetPtr(value: any): value is RTargetPtr {
-  return (
-    value &&
-    typeof value === 'object' &&
-    'type' in value &&
-    'obj' in value &&
-    'methods' in value &&
-    value.type === 'PTR'
-  );
+  return isRTargetObj(value) && value.targetType === RTargetType.ptr;
 }
 
 /**
@@ -936,7 +953,7 @@ export function isRTargetPtr(value: any): value is RTargetPtr {
  * @return {boolean} True if the object is an instance of an RFunction.
  */
 export function isRFunction(value: any): value is RFunction {
-  return isRObject(value) && 'methods' in value._target && value._target.methods.includes('exec');
+  return Boolean(isRObject(value) && value._target.obj.methods?.includes('exec'));
 }
 
 /**
@@ -947,36 +964,31 @@ export function isRFunction(value: any): value is RFunction {
  */
 export function isRObjectTree(value: any): value is RObjectTree<any> {
   return (
-    value &&
     typeof value === 'object' &&
-    'type' in value &&
-    'names' in value &&
-    'values' in value &&
     (Array.isArray(value.names) || value.names === null) &&
-    typeof value.type === 'string' &&
-    Object.values(RType).includes(value.type as string)
+    Object.keys(RType).includes(value.type as string)
   );
 }
 
-export function getRObjClass(type: RType): typeof RObjImpl {
+export function getRObjClass(type: typeof RType[keyof typeof RType]): typeof RObjImpl {
   const typeClasses: { [key: number]: typeof RObjImpl } = {
-    [RType.Null]: RObjNull,
-    [RType.Symbol]: RObjSymbol,
-    [RType.Pairlist]: RObjPairlist,
-    [RType.Closure]: RObjFunction,
-    [RType.Environment]: RObjEnvironment,
-    [RType.Call]: RObjPairlist,
-    [RType.Special]: RObjFunction,
-    [RType.Builtin]: RObjFunction,
-    [RType.String]: RObjString,
-    [RType.Logical]: RObjLogical,
-    [RType.Integer]: RObjInteger,
-    [RType.Double]: RObjDouble,
-    [RType.Complex]: RObjComplex,
-    [RType.Character]: RObjCharacter,
-    [RType.List]: RObjList,
-    [RType.Raw]: RObjRaw,
-    [RType.Function]: RObjFunction,
+    [RType.null]: RObjNull,
+    [RType.symbol]: RObjSymbol,
+    [RType.pairlist]: RObjPairlist,
+    [RType.closure]: RObjFunction,
+    [RType.environment]: RObjEnvironment,
+    [RType.call]: RObjPairlist,
+    [RType.special]: RObjFunction,
+    [RType.builtin]: RObjFunction,
+    [RType.string]: RObjString,
+    [RType.logical]: RObjLogical,
+    [RType.integer]: RObjInteger,
+    [RType.double]: RObjDouble,
+    [RType.complex]: RObjComplex,
+    [RType.character]: RObjCharacter,
+    [RType.list]: RObjList,
+    [RType.raw]: RObjRaw,
+    [RType.function]: RObjFunction,
   };
   if (type in typeClasses) {
     return typeClasses[type];
