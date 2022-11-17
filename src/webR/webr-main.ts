@@ -2,8 +2,17 @@ import { newChannelMain, ChannelMain, ChannelType } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy } from './proxy';
-import { unpackScalarVectors } from './utils';
-import { RTargetObj, RTargetType, RObject, isRObject, RawType, RList } from './robj';
+import { unpackScalarVectors, replaceInObject } from './utils';
+import {
+  RTargetObj,
+  RTargetType,
+  RObject,
+  isRObject,
+  RawType,
+  RList,
+  RObjectTree,
+  NamedObject,
+} from './robj';
 
 export type EvalRCodeOptions = {
   captureStreams?: boolean;
@@ -138,7 +147,7 @@ export class WebR {
         const outList = (await obj.get(2)) as RList;
         const output: RawType[] = [];
         for await (const out of outList) {
-          const obj = await (out as RList).toObject();
+          const obj = (await (out as RList).toObject({ depth: 0 })) as RawType;
           output.push(unpackScalarVectors(obj));
         }
         obj.release();
@@ -147,11 +156,14 @@ export class WebR {
     }
   }
 
-  async newRObject(jsObj: RawType): Promise<RObject> {
+  async newRObject(
+    jsObj: RawType | RawType[] | RObjectTree<RObject> | NamedObject<RawType | RObject>
+  ): Promise<RObject> {
+    const targetObj = replaceInObject(jsObj, isRObject, (obj: RObject) => obj._target);
     const target = (await this.#chan.request({
       type: 'newRObject',
       data: {
-        obj: { type: RTargetType.RAW, obj: jsObj },
+        obj: { type: RTargetType.RAW, obj: targetObj },
       },
     })) as RTargetObj;
     switch (target.type) {

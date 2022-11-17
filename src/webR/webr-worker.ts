@@ -4,6 +4,7 @@ import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions, EvalRCodeOptions } from './webr-main';
 import { Module } from './module';
 import { IN_NODE } from './compat';
+import { replaceInObject } from './utils';
 import {
   isRObjImpl,
   RObjImpl,
@@ -235,11 +236,11 @@ function callRObjMethod(obj: RObjImpl, prop: string, args: RTargetObj[]): RTarge
     })
   ) as RawType | RObjImpl;
 
-  if (isRObjImpl(res)) {
-    return { obj: res.ptr, methods: RObjImpl.getMethods(res), type: RTargetType.PTR };
-  } else {
-    return { obj: res, type: RTargetType.RAW };
-  }
+  const ret = replaceInObject(res, isRObjImpl, (obj: RObjImpl) => {
+    return { obj: obj.ptr, methods: RObjImpl.getMethods(obj), type: RTargetType.PTR };
+  }) as RawType;
+
+  return { obj: ret, type: RTargetType.RAW };
 }
 
 /**

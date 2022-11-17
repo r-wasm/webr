@@ -13,6 +13,7 @@ import {
   RList,
   REnvironment,
   RCharacter,
+  isRObject,
 } from '../../webR/robj';
 
 const webR = new WebR({
@@ -45,7 +46,7 @@ describe('Working with R lists and vectors', () => {
   test('Get R object attributes', async () => {
     const vector = (await webR.evalRCode('c(a=1, b=2, c=3)')).result;
     const value = (await vector.attrs()) as RList;
-    const attrs = await value.toObject();
+    const attrs = await value.toObject({ depth: 0 });
     expect(attrs.names).toEqual(expect.objectContaining({ names: null, values: ['a', 'b', 'c'] }));
   });
 
@@ -70,11 +71,11 @@ describe('Working with R lists and vectors', () => {
   test('Get an item with [ operator', async () => {
     const vector = (await webR.evalRCode('list(a=1+4i, b=2-5i, c=3+6i)')).result;
     const val1 = (await vector.subset('b')) as RList;
-    const obj1 = await val1.toObject();
+    const obj1 = await val1.toObject({ depth: 0 });
     expect(obj1.b).toEqual(expect.objectContaining({ names: null, values: [{ re: 2, im: -5 }] }));
 
     const val2 = (await vector.subset(3)) as RList;
-    const obj2 = await val2.toObject();
+    const obj2 = await val2.toObject({ depth: 0 });
     expect(obj2.c).toEqual(expect.objectContaining({ names: null, values: [{ re: 3, im: 6 }] }));
   });
 
@@ -114,11 +115,11 @@ describe('Working with R lists and vectors', () => {
   test('Convert an R pairlist to JS', async () => {
     const result = (await webR.evalRCode('as.pairlist(list(x="a", y="b", z="c"))'))
       .result as RPairlist;
-    const arr = await result.toArray();
+    const arr = await result.toArray({ depth: 0 });
     expect(arr[0]).toEqual(expect.objectContaining({ names: null, values: ['a'] }));
     expect(arr[1]).toEqual(expect.objectContaining({ names: null, values: ['b'] }));
     expect(arr[2]).toEqual(expect.objectContaining({ names: null, values: ['c'] }));
-    const obj = await result.toObject();
+    const obj = await result.toObject({ depth: 0 });
     expect(obj.x).toEqual(expect.objectContaining({ names: null, values: ['a'] }));
     expect(obj.y).toEqual(expect.objectContaining({ names: null, values: ['b'] }));
     expect(obj.z).toEqual(expect.objectContaining({ names: null, values: ['c'] }));
@@ -136,11 +137,11 @@ describe('Working with R lists and vectors', () => {
 
   test('Convert an R list to JS', async () => {
     const result = (await webR.evalRCode('list(x="a", y="b", z="c")')).result as RList;
-    const arr = await result.toArray();
+    const arr = await result.toArray({ depth: 0 });
     expect(arr[0]).toEqual(expect.objectContaining({ names: null, values: ['a'] }));
     expect(arr[1]).toEqual(expect.objectContaining({ names: null, values: ['b'] }));
     expect(arr[2]).toEqual(expect.objectContaining({ names: null, values: ['c'] }));
-    const obj = await result.toObject();
+    const obj = await result.toObject({ depth: 0 });
     expect(obj.x).toEqual(expect.objectContaining({ names: null, values: ['a'] }));
     expect(obj.y).toEqual(expect.objectContaining({ names: null, values: ['b'] }));
     expect(obj.z).toEqual(expect.objectContaining({ names: null, values: ['c'] }));
@@ -197,10 +198,10 @@ describe('Working with R lists and vectors', () => {
 
   test('First key wins when converting R objects to JS objects', async () => {
     const list = (await webR.evalRCode('list(x="a", x="b")')).result as RList;
-    const listObj = await list.toObject();
+    const listObj = await list.toObject({ depth: 0 });
     expect(listObj.x).toEqual(expect.objectContaining({ names: null, values: ['a'] }));
     const pairlist = (await webR.evalRCode('pairlist(x="a", x="b")')).result as RPairlist;
-    const pairlistObj = await pairlist.toObject();
+    const pairlistObj = await pairlist.toObject({ depth: 0 });
     expect(pairlistObj.x).toEqual(expect.objectContaining({ names: null, values: ['a'] }));
     const atomic = (await webR.evalRCode('c(x="a", x="b")')).result as RCharacter;
     const atomicObj = await atomic.toObject();
@@ -211,12 +212,14 @@ describe('Working with R lists and vectors', () => {
     const list = (await webR.evalRCode('list(x="a", y="b", "c")')).result as RList;
     const pairlist = (await webR.evalRCode('pairlist(x="a", y="b", "c")')).result as RPairlist;
     const atomic = (await webR.evalRCode('c(x="a", y="b", "c")')).result as RCharacter;
-    await expect(list.toObject()).rejects.toThrow('Empty or null key when converting');
-    await expect(pairlist.toObject()).rejects.toThrow('Empty or null key when converting');
+    await expect(list.toObject({ depth: 0 })).rejects.toThrow('Empty or null key when converting');
+    await expect(pairlist.toObject({ depth: 0 })).rejects.toThrow(
+      'Empty or null key when converting'
+    );
     await expect(atomic.toObject()).rejects.toThrow('Empty or null key when converting');
 
-    const listJs = await pairlist.toObject({ allowEmptyKey: true });
-    const pairlistJs = await pairlist.toObject({ allowEmptyKey: true });
+    const listJs = await pairlist.toObject({ allowEmptyKey: true, depth: 0 });
+    const pairlistJs = await pairlist.toObject({ allowEmptyKey: true, depth: 0 });
     const atomicJs = await atomic.toObject({ allowEmptyKey: true });
     expect(Object.keys(listJs)).toEqual(expect.arrayContaining(['']));
     expect(Object.keys(pairlistJs)).toEqual(expect.arrayContaining(['']));
@@ -228,10 +231,10 @@ describe('Working with R lists and vectors', () => {
 
   test('Throw on duplicate keys when converting R objects to JS objects', async () => {
     const list = (await webR.evalRCode('list(x="a", x="b")')).result as RList;
-    const listObj = list.toObject({ allowDuplicateKey: false });
+    const listObj = list.toObject({ allowDuplicateKey: false, depth: 0 });
     await expect(listObj).rejects.toThrow('Duplicate key when converting');
     const pairlist = (await webR.evalRCode('pairlist(x="a", x="b")')).result as RPairlist;
-    const pairlistObj = pairlist.toObject({ allowDuplicateKey: false });
+    const pairlistObj = pairlist.toObject({ allowDuplicateKey: false, depth: 0 });
     await expect(pairlistObj).rejects.toThrow('Duplicate key when converting');
     const atomic = (await webR.evalRCode('c(x="a", x="b")')).result as RCharacter;
     const atomicObj = atomic.toObject({ allowDuplicateKey: false });
@@ -311,6 +314,22 @@ describe('Working with R lists and vectors', () => {
     const result = (await webR.evalRCode('c(-3+4i)')).result as RComplex;
     expect(await result.toComplex()).toEqual({ re: -3, im: 4 });
   });
+
+  test('Convert an R pairlist to depth 1', async () => {
+    const result = (await webR.evalRCode('pairlist(pairlist(1))')).result as RPairlist;
+    let convert = await result.toTree();
+    expect(isRObject(convert.values[0])).toEqual(false);
+    convert = await result.toTree({ depth: 1 });
+    expect(isRObject(convert.values[0])).toEqual(true);
+  });
+
+  test('Convert an R list to depth 1', async () => {
+    const result = (await webR.evalRCode('list(list(1))')).result as RList;
+    let convert = await result.toTree();
+    expect(isRObject(convert.values[0])).toEqual(false);
+    convert = await result.toTree({ depth: 1 });
+    expect(isRObject(convert.values[0])).toEqual(true);
+  });
 });
 
 describe('Working with R environments', () => {
@@ -351,6 +370,15 @@ describe('Working with R environments', () => {
     expect(envObj['.c']).toEqual(expect.objectContaining({ names: null, values: [null] }));
     expect(envObj['a']).toEqual(expect.objectContaining({ names: null, values: [true] }));
     expect(envObj['b']).toEqual(expect.objectContaining({ names: null, values: [false] }));
+  });
+
+  test('Convert an R environment to depth 1', async () => {
+    const env = (await webR.evalRCode('x<-new.env();x$a=TRUE;x$b=FALSE;x$.c=NA;x'))
+      .result as REnvironment;
+    let convert = await env.toTree();
+    expect(isRObject(convert.values[0])).toEqual(false);
+    convert = await env.toTree({ depth: 1 });
+    expect(isRObject(convert.values[0])).toEqual(true);
   });
 
   test('Evaluating R code in an environment', async () => {
