@@ -106,6 +106,7 @@ export type RawType =
 export type NamedEntries<T> = [string | null, T][];
 export type NamedObject<T> = { [key: string]: T };
 
+export type RObjData = RObjImpl | RawType | RObjectTree<RObjImpl>;
 export type RObjectTree<T> = RObjectTreeImpl<(RObjectTree<T> | RawType | T)[]>;
 export type RObjectTreeAtomic<T> = RObjectTreeImpl<(T | null)[]>;
 type RObjectTreeImpl<T> = {
@@ -450,13 +451,15 @@ export class RObjPairlist extends RObjImpl {
     return this.toArray().length;
   }
 
-  toArray(options: ToTreeOptions = { depth: 1 }): (RObjImpl | RawType | RObjectTree<RObjImpl>)[] {
+  toArray(options: ToTreeOptions = { depth: 1 }): RObjData[] {
     return this.toTree(options).values;
   }
 
-  toObject({ allowDuplicateKey = true, allowEmptyKey = false, depth = 1 } = {}): NamedObject<
-    RObjImpl | RawType | RObjectTree<RObjImpl>
-  > {
+  toObject({
+    allowDuplicateKey = true,
+    allowEmptyKey = false,
+    depth = 1,
+  } = {}): NamedObject<RObjData> {
     const entries = this.entries({ depth });
     const keys = entries.map(([k, v]) => k);
     if (!allowDuplicateKey && new Set(keys).size !== keys.length) {
@@ -470,9 +473,7 @@ export class RObjPairlist extends RObjImpl {
     );
   }
 
-  entries(
-    options: ToTreeOptions = { depth: 1 }
-  ): NamedEntries<RObjImpl | RawType | RObjectTree<RObjImpl>> {
+  entries(options: ToTreeOptions = { depth: 1 }): NamedEntries<RObjData> {
     const obj = this.toTree(options);
     return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
   }
@@ -526,15 +527,15 @@ export class RObjList extends RObjImpl {
     return Module._LENGTH(this.ptr);
   }
 
-  toArray(
-    options: { depth: number } = { depth: 1 }
-  ): (RObjImpl | RawType | RObjectTree<RObjImpl>)[] {
+  toArray(options: { depth: number } = { depth: 1 }): RObjData[] {
     return this.toTree(options).values;
   }
 
-  toObject({ allowDuplicateKey = true, allowEmptyKey = false, depth = 1 } = {}): NamedObject<
-    RObjImpl | RawType | RObjectTree<RObjImpl>
-  > {
+  toObject({
+    allowDuplicateKey = true,
+    allowEmptyKey = false,
+    depth = 1,
+  } = {}): NamedObject<RObjData> {
     const entries = this.entries({ depth });
     const keys = entries.map(([k, v]) => k);
     if (!allowDuplicateKey && new Set(keys).size !== keys.length) {
@@ -548,9 +549,7 @@ export class RObjList extends RObjImpl {
     );
   }
 
-  entries(
-    options: { depth: number } = { depth: 1 }
-  ): NamedEntries<RObjImpl | RawType | RObjectTree<RObjImpl>> {
+  entries(options: { depth: number } = { depth: 1 }): NamedEntries<RObjData> {
     const obj = this.toTree(options);
     return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
   }
