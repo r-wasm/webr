@@ -67,6 +67,7 @@ export interface Module extends EmscriptenModule {
   _Rf_allocVector: (type: RTypeNumber, len: number) => RPtr;
   _Rf_eval: (call: RPtr, env: RPtr) => RPtr;
   _Rf_findVarInFrame: (rho: RPtr, symbol: RPtr) => RPtr;
+  _Rf_getAttrib: (ptr1: RPtr, ptr2: RPtr) => RPtr;
   _Rf_install: (ptr: number) => RPtr;
   _Rf_installTrChar: (name: RPtr) => RPtr;
   _Rf_lang1: (ptr1: RPtr) => RPtr;
@@ -79,6 +80,7 @@ export interface Module extends EmscriptenModule {
   _Rf_mkString: (ptr: number) => RPtr;
   _Rf_onintr: () => void;
   _Rf_protect: (ptr: RPtr) => RPtr;
+  _Rf_setAttrib: (ptr1: RPtr, ptr2: RPtr, ptr3: RPtr) => RPtr;
   _Rf_unprotect: (n: number) => void;
   _Rf_unprotect_ptr: (ptr: RPtr) => void;
   _R_BaseEnv: RPtr;
@@ -89,8 +91,10 @@ export interface Module extends EmscriptenModule {
   _R_FalseValue: RPtr;
   _R_GlobalEnv: RPtr;
   _R_Interactive: RPtr;
+  _R_NaString: RPtr;
   _R_NilValue: RPtr;
   _R_TrueValue: RPtr;
+  _R_NamesSymbol: RPtr;
   _R_UnboundValue: RPtr;
   _SET_STRING_ELT: (ptr: RPtr, idx: number, val: RPtr) => void;
   _SET_VECTOR_ELT: (ptr: RPtr, idx: number, val: RPtr) => void;

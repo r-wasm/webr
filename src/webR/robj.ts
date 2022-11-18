@@ -237,12 +237,35 @@ export class RObjImpl {
     return RObjImpl.wrap(Module._ATTRIB(this.ptr)) as RObjPairlist;
   }
 
-  names(): (string | null)[] | null {
-    const attrs = this.attrs();
-    if (attrs.isNull()) {
-      return null;
+  setNames(values: (string | null)[] | null): this {
+    let namesObj: RObjImpl;
+    if (values === null) {
+      namesObj = RObjImpl.null;
+      RObjImpl.protect(namesObj);
+    } else if (Array.isArray(values) && values.every((v) => typeof v === 'string' || v === null)) {
+      const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.character, values.length));
+      values.forEach((v, i) => {
+        if (v === null) {
+          Module._SET_STRING_ELT(ptr, i, Module.getValue(Module._R_NaString, '*'));
+        } else {
+          const str = Module.allocateUTF8(String(v));
+          Module._SET_STRING_ELT(ptr, i, Module._Rf_mkChar(str));
+          Module._free(str);
+        }
+      });
+      namesObj = RObjImpl.wrap(ptr);
+    } else {
+      throw new Error('Argument to setNames must be null or an Array of strings or null');
     }
-    const names = attrs.get('names') as Nullable<RObjCharacter>;
+    Module._Rf_setAttrib(this.ptr, RObjImpl.namesSymbol.ptr, namesObj.ptr);
+    RObjImpl.unprotect(1);
+    return this;
+  }
+
+  names(): (string | null)[] | null {
+    const names = RObjImpl.wrap(
+      Module._Rf_protect(Module._Rf_getAttrib(this.ptr, RObjImpl.namesSymbol.ptr))
+    ) as RObjCharacter;
     if (names.isNull()) {
       return null;
     }
@@ -388,6 +411,10 @@ export class RObjImpl {
 
   static get dollarSymbol(): RObjSymbol {
     return new RObjSymbol(Module.getValue(Module._R_DollarSymbol, '*'));
+  }
+
+  static get namesSymbol(): RObjSymbol {
+    return RObjImpl.wrap(Module.getValue(Module._R_NamesSymbol, '*')) as RObjSymbol;
   }
 
   static wrap(ptr: RPtr): RObjImpl {
