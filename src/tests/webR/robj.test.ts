@@ -60,6 +60,17 @@ describe('Working with R lists and vectors', () => {
     expect(await value).toEqual(null);
   });
 
+  test('Set R object names', async () => {
+    const vector = (await webR.evalRCode('c(1, 2, 3)')).result;
+    await vector.setNames(['d', 'e', 'f']);
+    const value = await vector.names();
+    expect(await value).toEqual(['d', 'e', 'f']);
+
+    // @ts-expect-error Deliberate type error to test Error thrown
+    const err = vector.setNames(123);
+    await expect(err).rejects.toThrow('setNames must be null or an Array of strings or null');
+  });
+
   test('Get an item with [[ operator', async () => {
     const vector = (await webR.evalRCode('list(a=1, b=2, c=3)')).result;
     let value = (await vector.get('b')) as RDouble;
