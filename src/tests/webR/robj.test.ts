@@ -380,6 +380,19 @@ describe('Working with R environments', () => {
     expect(await value.toNumber()).toEqual(3);
   });
 
+  test('Set an item in an R environment', async () => {
+    const env = (await webR.evalRCode('new.env()')).result as REnvironment;
+    env.bind('a', 1);
+    env.bind('b', 2);
+    env.bind('.c', 3);
+    let value = (await env.getDollar('a')) as RDouble;
+    expect(await value.toNumber()).toEqual(1);
+    value = (await env.get('b')) as RDouble;
+    expect(await value.toNumber()).toEqual(2);
+    value = (await env.subset('.c')) as RDouble;
+    expect(await value.toNumber()).toEqual(3);
+  });
+
   test('Convert an R environment to JS', async () => {
     const env = (await webR.evalRCode('x<-new.env();x$a=TRUE;x$b=FALSE;x$.c=NA;x'))
       .result as REnvironment;
