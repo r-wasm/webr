@@ -38,11 +38,11 @@ let FSTree: FSTreeInterface;
 function onFSTreeChange(event: Event, data: { node: JSTreeNode }) {
   if (data.node && data.node.original) {
     if (!data.node.original.isFolder) {
-      $('#download-file').prop('disabled', false);
-      $('#upload-file').prop('disabled', true);
+      document.getElementById('download-file')?.removeAttribute('disabled');
+      document.getElementById('upload-file')?.setAttribute('disabled', '');
     } else {
-      $('#download-file').prop('disabled', true);
-      $('#upload-file').prop('disabled', false);
+      document.getElementById('download-file')?.setAttribute('disabled', '');
+      document.getElementById('upload-file')?.removeAttribute('disabled');
     }
   }
 }
