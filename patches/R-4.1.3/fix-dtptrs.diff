@@ -1,0 +1,13 @@
+Index: R-4.1.3/src/include/R_ext/Lapack.h
+===================================================================
+--- R-4.1.3.orig/src/include/R_ext/Lapack.h
++++ R-4.1.3/src/include/R_ext/Lapack.h
+@@ -1484,7 +1484,7 @@ F77_NAME(dtptrs)(const char* uplo, const char* trans,
+ 		 const char* diag, const int* n,
+ 		 const int* nrhs, const double* ap,
+ 		 double* b, const int* ldb, int* info
+-		 FCLEN FCLEN);
++		 FCLEN FCLEN FCLEN);
+ 
+ 
+ //* Double precision TRiangular matrices -> DTR
