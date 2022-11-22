@@ -367,7 +367,7 @@ Index: R-4.1.3/src/library/grDevices/src/devCanvas.c
 +			canvasContextExec(cGD, ("save()"));
 +			canvasColor(fillStyle,gc->col);
 +			canvasContextExec(cGD, ("translate(%f,%f)"), 2*x, 2*y);
-+			canvasContextExec(cGD, ("rotate(-%f / 180 * Math.PI)"), rot);
++			canvasContextExec(cGD, ("rotate(%f / 180 * Math.PI)"), -rot);
 +			canvasContextExec(cGD, ("fillText(decodeURIComponent(\\`%s\\`),-%f*%f,0)"), enc, 2*wi, hadj);
 +			canvasContextExec(cGD, ("restore()"));
 +		} else {
