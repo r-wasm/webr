@@ -51,6 +51,7 @@ describe('Evaluate R code', () => {
 
   test('Throw an error if passed an invalid environment object type', async () => {
     const euler = (await webR.evalRCode('0.57722')).result;
+    // @ts-expect-error Deliberate type error to test Error thrown
     await expect(webR.evalRCode('x', euler)).rejects.toThrow('env argument with invalid SEXP type');
   });
 

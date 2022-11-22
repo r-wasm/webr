@@ -46,18 +46,20 @@ export interface ChannelWorker {
   setDispatchHandler: (dispatch: (msg: Message) => void) => void;
 }
 
-export enum ChannelType {
-  Automatic,
-  SharedArrayBuffer,
-  ServiceWorker,
-  PostMessage,
-}
+export const ChannelType = {
+  Automatic: 0,
+  SharedArrayBuffer: 1,
+  ServiceWorker: 2,
+} as const;
 
 export type ChannelInitMessage = {
   type: string;
   data: {
     config: Required<WebROptions>;
-    channelType: Exclude<ChannelType, ChannelType.Automatic>;
+    channelType: Exclude<
+      typeof ChannelType[keyof typeof ChannelType],
+      typeof ChannelType.Automatic
+    >;
     clientId?: string;
     location?: string;
   };
