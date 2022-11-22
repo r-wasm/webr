@@ -762,7 +762,6 @@ abstract class RObjAtomicVector<T extends atomicType> extends RObjImpl {
       type: this.type(),
       names: this.names(),
       values: this.toArray(),
-      missing: this.detectMissing(),
     };
   }
 }

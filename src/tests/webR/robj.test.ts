@@ -257,6 +257,8 @@ describe('Working with R lists and vectors', () => {
     const result = (await webR.evalRCode('c(1, 1, 3, 8, 27, 91, 350, 1376)')).result as RDouble;
     const resJs = await result.toJs();
     expect(resJs.values).toEqual(polytree);
+    expect(resJs.names).toEqual(null);
+    expect(resJs.type).toEqual('double');
     const resArray = await result.toArray();
     expect(resArray).toEqual(polytree);
   });
@@ -267,6 +269,8 @@ describe('Working with R lists and vectors', () => {
       .result as RInteger;
     const resJs = await result.toJs();
     expect(resJs.values).toEqual(polytree);
+    expect(resJs.names).toEqual(null);
+    expect(resJs.type).toEqual('integer');
     const resArray = await result.toArray();
     expect(resArray).toEqual(polytree);
   });
@@ -276,6 +280,8 @@ describe('Working with R lists and vectors', () => {
     const result = (await webR.evalRCode('c(TRUE, FALSE, NA)')).result as RLogical;
     const resJs = await result.toJs();
     expect(resJs.values).toEqual(logical);
+    expect(resJs.names).toEqual(null);
+    expect(resJs.type).toEqual('logical');
     const resArray = await result.toArray();
     expect(resArray).toEqual(logical);
   });
@@ -285,6 +291,8 @@ describe('Working with R lists and vectors', () => {
     const result = (await webR.evalRCode('as.raw(c(2, 4, 6))')).result as RRaw;
     const resJs = await result.toJs();
     expect(resJs.values).toEqual(arr);
+    expect(resJs.names).toEqual(null);
+    expect(resJs.type).toEqual('raw');
   });
 
   test('Convert an R complex atomic vector to JS', async () => {
@@ -295,6 +303,8 @@ describe('Working with R lists and vectors', () => {
     const result = (await webR.evalRCode('c(2-7i, 1-8i)')).result as RComplex;
     const resJs = await result.toJs();
     expect(resJs.values).toEqual(cmplx);
+    expect(resJs.names).toEqual(null);
+    expect(resJs.type).toEqual('complex');
   });
 
   test('Convert an R scalar double to JS number', async () => {
