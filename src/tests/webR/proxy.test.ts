@@ -1,5 +1,5 @@
 import { WebR } from '../../webR/webr-main';
-import { RDouble, RFunction, RList, RTargetType } from '../../webR/robj';
+import { RDouble, RFunction, RList } from '../../webR/robj';
 import util from 'util';
 
 const webR = new WebR({
@@ -18,7 +18,7 @@ test('Evaluate code and return a proxy', async () => {
 
 test('RProxy _target property', async () => {
   const result = (await webR.evalRCode('42')).result;
-  expect(result._target).toHaveProperty('targetType', RTargetType.ptr);
+  expect(result._target).toHaveProperty('targetType', 'ptr');
   expect(result._target).toHaveProperty('obj');
   const obj = result._target.obj as { type: string; methods: string[]; ptr: number };
   expect(obj.type).toEqual('double');

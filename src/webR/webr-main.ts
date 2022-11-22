@@ -5,7 +5,6 @@ import { newRProxy } from './proxy';
 import { unpackScalarVectors, replaceInObject } from './utils';
 import {
   RTargetObj,
-  RTargetType,
   RObject,
   isRObject,
   RawType,
@@ -133,9 +132,9 @@ export class WebR {
     })) as RTargetObj;
 
     switch (target.targetType) {
-      case RTargetType.raw:
+      case 'raw':
         throw new Error('Unexpected raw target type returned from evalRCode');
-      case RTargetType.err: {
+      case 'err': {
         const e = new Error(target.obj.message);
         e.name = target.obj.name;
         e.stack = target.obj.stack;
@@ -163,12 +162,12 @@ export class WebR {
     const targetObj = replaceInObject(jsObj, isRObject, (obj: RObject) => obj._target);
     const target = (await this.#chan.request({
       type: 'newRObject',
-      data: { targetType: RTargetType.raw, obj: targetObj },
+      data: { targetType: 'raw', obj: targetObj },
     })) as RTargetObj;
     switch (target.targetType) {
-      case RTargetType.raw:
+      case 'raw':
         throw new Error('Unexpected raw target type returned from newRObject');
-      case RTargetType.err: {
+      case 'err': {
         const e = new Error(target.obj.message);
         e.name = target.obj.name;
         e.stack = target.obj.stack;

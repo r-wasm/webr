@@ -5,15 +5,7 @@ import { FSNode, WebROptions, EvalRCodeOptions } from './webr-main';
 import { Module } from './module';
 import { IN_NODE } from './compat';
 import { replaceInObject } from './utils';
-import {
-  isRObjImpl,
-  RObjImpl,
-  RTargetObj,
-  RTargetPtr,
-  RTargetType,
-  RawType,
-  RTargetRaw,
-} from './robj';
+import { isRObjImpl, RObjImpl, RTargetObj, RTargetPtr, RawType, RTargetRaw } from './robj';
 
 let initialised = false;
 let chan: ChannelWorker | undefined;
@@ -81,7 +73,7 @@ function dispatch(msg: Message): void {
           } catch (_e) {
             const e = _e as Error;
             write({
-              targetType: RTargetType.err,
+              targetType: 'err',
               obj: { name: e.name, message: e.message, stack: e.stack },
             });
           }
@@ -97,12 +89,12 @@ function dispatch(msg: Message): void {
                 ptr: res.ptr,
                 methods: RObjImpl.getMethods(res),
               },
-              targetType: RTargetType.ptr,
+              targetType: 'ptr',
             });
           } catch (_e) {
             const e = _e as Error;
             write({
-              targetType: RTargetType.err,
+              targetType: 'err',
               obj: { name: e.name, message: e.message, stack: e.stack },
             });
           }
@@ -119,7 +111,7 @@ function dispatch(msg: Message): void {
           } catch (_e) {
             const e = _e as Error;
             write({
-              targetType: RTargetType.err,
+              targetType: 'err',
               obj: { name: e.name, message: e.message, stack: e.stack },
             });
           }
@@ -135,7 +127,7 @@ function dispatch(msg: Message): void {
           } catch (_e) {
             const e = _e as Error;
             write({
-              targetType: RTargetType.err,
+              targetType: 'err',
               obj: { name: e.name, message: e.message, stack: e.stack },
             });
           }
@@ -235,18 +227,18 @@ function callRObjMethod(obj: RObjImpl, prop: string, args: RTargetObj[]): RTarge
     obj,
     Array.from({ length: args.length }, (_, idx) => {
       const arg = args[idx];
-      return arg.targetType === RTargetType.ptr ? RObjImpl.wrap(arg.obj.ptr) : arg.obj;
+      return arg.targetType === 'ptr' ? RObjImpl.wrap(arg.obj.ptr) : arg.obj;
     })
   ) as RawType | RObjImpl;
 
   const ret = replaceInObject(res, isRObjImpl, (obj: RObjImpl) => {
     return {
       obj: { type: obj.type(), ptr: obj.ptr, methods: RObjImpl.getMethods(obj) },
-      targetType: RTargetType.ptr,
+      targetType: 'ptr',
     };
   }) as RawType;
 
-  return { obj: ret, targetType: RTargetType.raw };
+  return { obj: ret, targetType: 'raw' };
 }
 
 /**
@@ -268,10 +260,10 @@ function getRObjProperty(obj: RObjImpl, prop: string): RTargetObj {
   if (isRObjImpl(res)) {
     return {
       obj: { type: res.type(), ptr: res.ptr, methods: RObjImpl.getMethods(res) },
-      targetType: RTargetType.ptr,
+      targetType: 'ptr',
     };
   } else {
-    return { obj: res, targetType: RTargetType.raw };
+    return { obj: res, targetType: 'raw' };
   }
 }
 
@@ -318,7 +310,7 @@ function evalRCode(code: string, env?: RTargetPtr, options: EvalRCodeOptions = {
   const fPtr = Module.getValue(Module._R_FalseValue, '*');
   const codeStr = Module.allocateUTF8(code);
   const evalStr = Module.allocateUTF8('webr:::evalRCode');
-  const codeObj = new RObjImpl({ targetType: RTargetType.raw, obj: code });
+  const codeObj = new RObjImpl({ targetType: 'raw', obj: code });
   codeObj.preserve();
   const expr = Module._Rf_lang6(
     Module._R_ParseEvalString(evalStr, RObjImpl.baseEnv.ptr),
@@ -334,7 +326,7 @@ function evalRCode(code: string, env?: RTargetPtr, options: EvalRCodeOptions = {
   Module._free(evalStr);
   return {
     obj: { type: evalResult.type(), ptr: evalResult.ptr, methods: RObjImpl.getMethods(evalResult) },
-    targetType: RTargetType.ptr,
+    targetType: 'ptr',
   };
 }
 

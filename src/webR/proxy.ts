@@ -1,4 +1,4 @@
-import { RTargetType, RTargetPtr, isRObject, RTargetObj, RObjectTree, RObject } from './robj';
+import { RTargetPtr, isRObject, RTargetObj, RObjectTree, RObject } from './robj';
 import { RObjImpl, RObjFunction, RawType, isRFunction, isRTargetPtr } from './robj';
 import { ChannelMain } from './chan/channel';
 import { replaceInObject } from './utils';
@@ -77,7 +77,7 @@ function targetAsyncIterator(chan: ChannelMain, proxy: RProxy<RObjImpl>) {
     })) as RTargetObj;
 
     // Throw an error if there was some problem accessing the object length
-    if (reply.targetType === RTargetType.err) {
+    if (reply.targetType === 'err') {
       const e = new Error(`Cannot iterate over object, ${reply.obj.message}`);
       e.name = reply.obj.name;
       e.stack = reply.obj.stack;
@@ -100,7 +100,7 @@ function targetMethod(chan: ChannelMain, target: RTargetPtr, prop: string) {
   return async (..._args: unknown[]) => {
     const args = Array.from({ length: _args.length }, (_, idx) => {
       const arg = _args[idx];
-      return isRObject(arg) ? arg._target : { obj: arg, targetType: RTargetType.raw };
+      return isRObject(arg) ? arg._target : { obj: arg, targetType: 'raw' };
     });
 
     const reply = (await chan.request({
@@ -109,9 +109,9 @@ function targetMethod(chan: ChannelMain, target: RTargetPtr, prop: string) {
     })) as RTargetObj;
 
     switch (reply.targetType) {
-      case RTargetType.ptr:
+      case 'ptr':
         return newRProxy(chan, reply);
-      case RTargetType.err: {
+      case 'err': {
         const e = new Error(reply.obj.message);
         e.name = reply.obj.name;
         e.stack = reply.obj.stack;

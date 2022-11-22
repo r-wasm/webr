@@ -58,15 +58,9 @@ export const RTypeMap = {
 export type RType = keyof typeof RTypeMap;
 export type RTypeNumber = typeof RTypeMap[keyof typeof RTypeMap];
 
-export const RTargetType = {
-  raw: 0,
-  ptr: 1,
-  err: 2,
-} as const;
-
 export type RTargetRaw = {
   obj: RawType;
-  targetType: typeof RTargetType.raw;
+  targetType: 'raw';
 };
 
 export type RTargetPtr = {
@@ -75,7 +69,7 @@ export type RTargetPtr = {
     ptr: RPtr;
     methods?: string[];
   };
-  targetType: typeof RTargetType.ptr;
+  targetType: 'ptr';
 };
 
 export type RTargetError = {
@@ -84,8 +78,9 @@ export type RTargetError = {
     name: string;
     stack?: string;
   };
-  targetType: typeof RTargetType.err;
+  targetType: 'err';
 };
+export type RTargetType = 'raw' | 'ptr' | 'err';
 export type RTargetObj = RTargetRaw | RTargetPtr | RTargetError;
 
 type Nullable<T> = T | RObjNull;
@@ -125,7 +120,7 @@ type RObjectTreeImpl<T> = {
 
 function newRObjFromTarget(target: RTargetObj): RObjImpl {
   const obj = target.obj;
-  if (target.targetType === RTargetType.ptr) {
+  if (target.targetType === 'ptr') {
     return RObjImpl.wrap(target.obj.ptr);
   }
 
@@ -335,9 +330,7 @@ export class RObjImpl {
       idx = Module._Rf_protect(Module._Rf_mkString(char));
     }
 
-    const valueObj = isRObjImpl(value)
-      ? value
-      : new RObjImpl({ obj: value, targetType: RTargetType.raw });
+    const valueObj = isRObjImpl(value) ? value : new RObjImpl({ obj: value, targetType: 'raw' });
 
     const assign = Module.allocateUTF8('[[<-');
     const call = Module._Rf_protect(
@@ -583,7 +576,7 @@ export class RObjList extends RObjImpl {
 export class RObjFunction extends RObjImpl {
   exec(...args: (RawType | RObjImpl)[]): RObjImpl {
     const argObjs = args.map((arg) =>
-      isRObjImpl(arg) ? arg : new RObjImpl({ obj: arg, targetType: RTargetType.raw })
+      isRObjImpl(arg) ? arg : new RObjImpl({ obj: arg, targetType: 'raw' })
     );
     const call = RObjImpl.protect(
       new RObjPairlist(Module._Rf_allocVector(RTypeMap.call, args.length + 1))
@@ -929,13 +922,7 @@ export function isRObject(value: any): value is RObject {
  * @return {boolean} True if the object is an instance of an RTargetObj.
  */
 export function isRTargetObj(value: any): value is RTargetObj {
-  return (
-    value &&
-    typeof value === 'object' &&
-    'targetType' in value &&
-    'obj' in value &&
-    value.targetType in Object.values(RTargetType)
-  );
+  return value && typeof value === 'object' && 'targetType' in value && 'obj' in value;
 }
 
 /**
@@ -945,7 +932,7 @@ export function isRTargetObj(value: any): value is RTargetObj {
  * @return {boolean} True if the object is an instance of an RTargetPtr.
  */
 export function isRTargetPtr(value: any): value is RTargetPtr {
-  return isRTargetObj(value) && value.targetType === RTargetType.ptr;
+  return isRTargetObj(value) && value.targetType === 'ptr';
 }
 
 /**
