@@ -1,4 +1,4 @@
-import type { RPtr, RType } from './robj';
+import type { RPtr, RTypeNumber } from './robj';
 
 export interface Module extends EmscriptenModule {
   /* Add mkdirTree to FS namespace, missing from @types/emscripten at the
@@ -64,7 +64,7 @@ export interface Module extends EmscriptenModule {
   _Rf_ScalarLogical: (l: boolean) => RPtr;
   _Rf_ScalarInteger: (n: number) => RPtr;
   _Rf_ScalarString: (s: string) => RPtr;
-  _Rf_allocVector: (type: typeof RType[keyof typeof RType], len: number) => RPtr;
+  _Rf_allocVector: (type: RTypeNumber, len: number) => RPtr;
   _Rf_eval: (call: RPtr, env: RPtr) => RPtr;
   _Rf_findVarInFrame: (rho: RPtr, symbol: RPtr) => RPtr;
   _Rf_install: (ptr: number) => RPtr;

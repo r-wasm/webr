@@ -26,7 +26,7 @@ export type RFunction = RProxy<RObjFunction> & ((...args: unknown[]) => Promise<
 
 export type RPtr = number;
 
-export const RType = {
+export const RTypeMap = {
   null: 0,
   symbol: 1,
   pairlist: 2,
@@ -55,8 +55,8 @@ export const RType = {
   free: 31,
   function: 99,
 } as const;
-type RTypeKey = keyof typeof RType;
-type RTypeNumber = typeof RType[keyof typeof RType];
+export type RType = keyof typeof RTypeMap;
+export type RTypeNumber = typeof RTypeMap[keyof typeof RTypeMap];
 
 export const RTargetType = {
   raw: 0,
@@ -71,7 +71,7 @@ export type RTargetRaw = {
 
 export type RTargetPtr = {
   obj: {
-    type?: RTypeKey;
+    type?: RType;
     ptr: RPtr;
     methods?: string[];
   };
@@ -117,7 +117,7 @@ export type RObjData = RObjImpl | RawType | RObjectTree<RObjImpl>;
 export type RObjectTree<T> = RObjectTreeImpl<(RObjectTree<T> | RawType | T)[]>;
 export type RObjectTreeAtomic<T> = RObjectTreeImpl<(T | null)[]>;
 type RObjectTreeImpl<T> = {
-  type: RTypeKey;
+  type: RType;
   names: (string | null)[] | null;
   values: T;
   missing?: boolean[];
@@ -147,7 +147,7 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
   }
 
   if (typeof obj === 'object' && obj && 're' in obj && 'im' in obj) {
-    const ptr = Module._Rf_protect(Module._Rf_allocVector(RType.complex, 1));
+    const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.complex, 1));
     Module.setValue(Module._COMPLEX(ptr), obj.re, 'double');
     Module.setValue(Module._COMPLEX(ptr) + 8, obj.im, 'double');
     Module._Rf_unprotect(1);
@@ -156,7 +156,7 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
 
   if (Array.isArray(obj) && obj.some((el) => typeof el === 'string')) {
     // Create a vector of strings
-    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.character, obj.length));
+    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.character, obj.length));
     obj.forEach((el, idx) => {
       const str = Module.allocateUTF8(String(el));
       Module._SET_STRING_ELT(robjVec, idx, Module._Rf_mkChar(str));
@@ -168,7 +168,7 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
 
   if (Array.isArray(obj) && obj.some((el) => typeof el === 'number')) {
     // Create a vector of reals
-    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.double, obj.length));
+    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.double, obj.length));
     obj.forEach((el, idx) =>
       Module.setValue(Module._REAL(robjVec) + 8 * idx, Number(el), 'double')
     );
@@ -178,7 +178,7 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
 
   if (Array.isArray(obj)) {
     // Create a vector of logicals
-    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RType.logical, obj.length));
+    const robjVec = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.logical, obj.length));
     obj.forEach((el, idx) => Module.setValue(Module._LOGICAL(robjVec) + 4 * idx, el, 'i32'));
     Module._Rf_unprotect(1);
     return RObjImpl.wrap(robjVec);
@@ -206,10 +206,12 @@ export class RObjImpl {
     return `RObj:${this.type()}`;
   }
 
-  type(): RTypeKey {
+  type(): RType {
     const typeNumber = Module._TYPEOF(this.ptr) as RTypeNumber;
-    const type = Object.keys(RType).find((typeName) => RType[typeName as RTypeKey] === typeNumber);
-    return type as RTypeKey;
+    const type = Object.keys(RTypeMap).find(
+      (typeName) => RTypeMap[typeName as RType] === typeNumber
+    );
+    return type as RType;
   }
 
   protect(): void {
@@ -229,7 +231,7 @@ export class RObjImpl {
   }
 
   isNull(): this is RObjNull {
-    return Module._TYPEOF(this.ptr) === RType.null;
+    return Module._TYPEOF(this.ptr) === RTypeMap.null;
   }
 
   isUnbound(): boolean {
@@ -584,7 +586,7 @@ export class RObjFunction extends RObjImpl {
       isRObjImpl(arg) ? arg : new RObjImpl({ obj: arg, targetType: RTargetType.raw })
     );
     const call = RObjImpl.protect(
-      new RObjPairlist(Module._Rf_allocVector(RType.call, args.length + 1))
+      new RObjPairlist(Module._Rf_allocVector(RTypeMap.call, args.length + 1))
     );
     call.setcar(this);
     let c = call.cdr();
@@ -966,29 +968,29 @@ export function isRObjectTree(value: any): value is RObjectTree<any> {
   return (
     typeof value === 'object' &&
     (Array.isArray(value.names) || value.names === null) &&
-    Object.keys(RType).includes(value.type as string)
+    Object.keys(RTypeMap).includes(value.type as string)
   );
 }
 
-export function getRObjClass(type: typeof RType[keyof typeof RType]): typeof RObjImpl {
+export function getRObjClass(type: RTypeNumber): typeof RObjImpl {
   const typeClasses: { [key: number]: typeof RObjImpl } = {
-    [RType.null]: RObjNull,
-    [RType.symbol]: RObjSymbol,
-    [RType.pairlist]: RObjPairlist,
-    [RType.closure]: RObjFunction,
-    [RType.environment]: RObjEnvironment,
-    [RType.call]: RObjPairlist,
-    [RType.special]: RObjFunction,
-    [RType.builtin]: RObjFunction,
-    [RType.string]: RObjString,
-    [RType.logical]: RObjLogical,
-    [RType.integer]: RObjInteger,
-    [RType.double]: RObjDouble,
-    [RType.complex]: RObjComplex,
-    [RType.character]: RObjCharacter,
-    [RType.list]: RObjList,
-    [RType.raw]: RObjRaw,
-    [RType.function]: RObjFunction,
+    [RTypeMap.null]: RObjNull,
+    [RTypeMap.symbol]: RObjSymbol,
+    [RTypeMap.pairlist]: RObjPairlist,
+    [RTypeMap.closure]: RObjFunction,
+    [RTypeMap.environment]: RObjEnvironment,
+    [RTypeMap.call]: RObjPairlist,
+    [RTypeMap.special]: RObjFunction,
+    [RTypeMap.builtin]: RObjFunction,
+    [RTypeMap.string]: RObjString,
+    [RTypeMap.logical]: RObjLogical,
+    [RTypeMap.integer]: RObjInteger,
+    [RTypeMap.double]: RObjDouble,
+    [RTypeMap.complex]: RObjComplex,
+    [RTypeMap.character]: RObjCharacter,
+    [RTypeMap.list]: RObjList,
+    [RTypeMap.raw]: RObjRaw,
+    [RTypeMap.function]: RObjFunction,
   };
   if (type in typeClasses) {
     return typeClasses[type];
