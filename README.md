@@ -30,6 +30,16 @@ You can configure `make` variables in a `~/.webr-config.mk` file.
 A `dist` directory is created which when finished contains the R WASM files
 and an `index.html` file ready to serve an R REPL.
 
+### Building on macOS Ventura 13.0+
+
+At the time of writing the version of R used as the base for webR does not build cleanly using
+the macOS Ventura development SDK. If you are not using the included `Dockerfile` to build webR,
+the following extra setup must be done before starting the build process,
+
+ * Install the GNU version of the patch program: e.g. `brew install gpatch`
+ * Ensure the development target is set to version 12.0 in the current environment:
+   `export MACOSX_DEPLOYMENT_TARGET=12.0`.
+
 ## Demo
 
 A demo of the resulting R REPL can be found at https://webr.gwstagg.co.uk/
