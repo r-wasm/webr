@@ -353,6 +353,12 @@ function init(config: Required<WebROptions>) {
   Module.noAudioDecoding = true;
   Module.noInitialRun = true;
 
+  // Don't instantiate .so libraries packaged through `WEBR_REPO` too
+  // early. Otherwise C++ libraries with dynamic initialisation of
+  // global variables might call into the R API too early, beforeR has
+  // started.
+  Module.noWasmDecoding = true;
+
   Module.preRun.push(() => {
     if (IN_NODE) {
       globalThis.FS = Module.FS;
