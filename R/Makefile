@@ -11,7 +11,7 @@ WASM = $(WEBR_ROOT)/wasm
 # This is symlinked at configure-time
 include $(TOOLS)/fortran.mk
 
-R_VERSION = 4.1.3
+R_VERSION = $(shell cat R-VERSION)
 export R_VERSION
 
 R_TARBALL = $(DOWNLOAD)/R-$(R_VERSION).tar.gz
