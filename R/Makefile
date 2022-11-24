@@ -146,7 +146,8 @@ $(BUILD)/state/r-stage2-configured: $(BUILD)/state/r-patched $(FORTRAN_WASM_LIB)
 	    --disable-nls \
 	    --enable-byte-compiled-packages=no \
 	    --enable-static=yes \
-	    --host=wasm32-unknown-emscripten
+	    --host=wasm32-unknown-emscripten \
+	    --with-internal-tzcode
 # Disable umask which doesn't work well within Emscripten. Fixes
 # permission issues when extracting tarballs.
 	sed -i.bak '/D\["HAVE_UMASK"\]/d' $(R_SOURCE)/build/config.status
