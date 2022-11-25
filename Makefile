@@ -16,6 +16,13 @@ webr: $(EMFC_FILES)
 $(EMFC_FILES):
 	cd $(EMFC_DIR) && $(MAKE) && $(MAKE) install
 
+
+# Supporting libs for packages of webr-repo
+.PHONY: libs
+libs:
+	cd libs && $(MAKE)
+
+
 # Build webR in a temporary docker container
 .PHONY: docker-webr
 docker-webr:

@@ -1,5 +1,7 @@
 /dist
 /host
+/libs/build
+/libs/download
 /wasm
 /tools/fortran.mk
 /tools/dragonegg/build
