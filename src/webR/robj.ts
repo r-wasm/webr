@@ -122,12 +122,20 @@ type RObjectTreeImpl<T> = {
 function newRObjFromTarget(target: RTargetObj): RObjImpl {
   const obj = target.obj;
 
-  // null represents the R NULL value
-  if (obj === null) {
-    return RObjImpl.null;
+  // Conversion of RObjectTree type JS objects
+  if (isRObjectTree(obj)) {
+    return new (getRObjClass(RTypeMap[obj.type]))(obj);
+  }
+
+  // Conversion of explicit R NULL value
+  if (obj && typeof obj === 'object' && 'type' in obj && obj.type === 'null') {
+    return new RObjNull();
   }
 
   // Direct conversion of scalar JS values
+  if (obj === null) {
+    return new RObjLogical({ type: 'logical', names: null, values: [null] });
+  }
   if (typeof obj === 'boolean') {
     return new RObjLogical(obj);
   }
@@ -141,19 +149,10 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
     return new RObjCharacter(obj);
   }
 
-  // Conversion of RObjectTree type JS objects
-  if (isRObjectTree(obj)) {
-    return new (getRObjClass(RTypeMap[obj.type]))(obj);
-  }
-
   // JS arrays are interpreted using R's c() function, so as to match
   // R's built in coercion rules
   if (Array.isArray(obj)) {
-    // Here the JS null value represents logical NA
-    const logicalNA = new RObjLogical({ type: 'logical', names: null, values: [null] });
-    const objs = obj.map((el) =>
-      el === null ? logicalNA : newRObjFromTarget({ targetType: 'raw', obj: el })
-    );
+    const objs = obj.map((el) => newRObjFromTarget({ targetType: 'raw', obj: el }));
     const cString = Module.allocateUTF8('c');
     const call = RObjImpl.protect(
       RObjImpl.wrap(Module._Rf_allocVector(RTypeMap.call, objs.length + 1)) as RObjPairlist
@@ -440,8 +439,13 @@ export class RObjImpl {
 }
 
 export class RObjNull extends RObjImpl {
-  toTree(): null {
-    return null;
+  constructor() {
+    super({ targetType: 'ptr', obj: { ptr: Module.getValue(Module._R_NilValue, '*') } });
+    return this;
+  }
+
+  toTree(): { type: 'null' } {
+    return { type: 'null' };
   }
 }
 
@@ -1151,6 +1155,7 @@ export function isRFunction(value: any): value is RFunction {
  */
 export function isRObjectTree(value: any): value is RObjectTree<any> {
   return (
+    value &&
     typeof value === 'object' &&
     (Array.isArray(value.names) || value.names === null) &&
     Object.keys(RTypeMap).includes(value.type as string)

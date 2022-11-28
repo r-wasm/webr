@@ -27,7 +27,8 @@ beforeAll(async () => {
 
 test('Convert an RNull value to JS', async () => {
   const result = (await webR.evalRCode('NULL')).result as RNull;
-  expect(await result.toJs()).toBeNull();
+  const nullObj = await result.toJs();
+  expect(nullObj.type).toEqual('null');
 });
 
 test('Convert an R symbol to JS', async () => {
