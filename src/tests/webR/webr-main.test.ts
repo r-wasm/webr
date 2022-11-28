@@ -164,7 +164,7 @@ describe('Create R objects from the main thread', () => {
 
   test('Create a list', async () => {
     const jsObj = [true, 3.14, 'abc'];
-    const rObj = (await webR.newRObject(jsObj)) as RList;
+    const rObj = (await webR.newRObject({ type: 'list', values: jsObj, names: null })) as RList;
     expect(await rObj.type()).toEqual('list');
     const list = await rObj.toJs();
     expect(list.values[0]).toEqual({

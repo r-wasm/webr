@@ -121,39 +121,54 @@ type RObjectTreeImpl<T> = {
 
 function newRObjFromTarget(target: RTargetObj): RObjImpl {
   const obj = target.obj;
+
+  // null represents the R NULL value
   if (obj === null) {
     return RObjImpl.null;
   }
 
+  // Direct conversion of scalar JS values
+  if (typeof obj === 'boolean') {
+    return new RObjLogical(obj);
+  }
+  if (typeof obj === 'number') {
+    return new RObjDouble(obj);
+  }
+  if (typeof obj === 'object' && 're' in obj && 'im' in obj) {
+    return new RObjComplex(obj as Complex);
+  }
+  if (typeof obj === 'string') {
+    return new RObjCharacter(obj);
+  }
+
+  // Conversion of RObjectTree type JS objects
   if (isRObjectTree(obj)) {
     return new (getRObjClass(RTypeMap[obj.type]))(obj);
   }
 
-  const values = Array.isArray(obj) ? obj : [obj];
-  if (values.every((el) => typeof el === 'boolean' || el === null)) {
-    return new RObjLogical(obj as RObjAtomicData<boolean>);
-  }
-  if (values.every((el) => typeof el === 'number' || el === null)) {
-    return new RObjDouble(obj as RObjAtomicData<number>);
-  }
-  if (values.every((el) => el === null || (typeof el === 'object' && 're' in el && 'im' in el))) {
-    return new RObjComplex(obj as RObjAtomicData<Complex>);
-  }
-  if (values.every((el) => typeof el === 'string' || el === null)) {
-    return new RObjCharacter(obj as RObjAtomicData<string>);
-  }
-
+  // JS arrays are interpreted using R's c() function, so as to match
+  // R's built in coercion rules
   if (Array.isArray(obj)) {
-    return new RObjList(obj as RawType[]);
-  }
-
-  if (typeof obj === 'object') {
-    const tree = {
-      type: 'list',
-      names: Object.keys(obj),
-      values: Object.values(obj),
-    };
-    return new RObjList(tree);
+    // Here the JS null value represents logical NA
+    const logicalNA = new RObjLogical({ type: 'logical', names: null, values: [null] });
+    const objs = obj.map((el) =>
+      el === null ? logicalNA : newRObjFromTarget({ targetType: 'raw', obj: el })
+    );
+    const cString = Module.allocateUTF8('c');
+    const call = RObjImpl.protect(
+      RObjImpl.wrap(Module._Rf_allocVector(RTypeMap.call, objs.length + 1)) as RObjPairlist
+    );
+    call.setcar(RObjImpl.wrap(Module._Rf_install(cString)));
+    let next = call.cdr();
+    let i = 0;
+    while (!next.isNull()) {
+      next.setcar(objs[i++]);
+      next = next.cdr();
+    }
+    const res = RObjImpl.wrap(Module._Rf_eval(call.ptr, RObjImpl.baseEnv.ptr));
+    RObjImpl.unprotect(1);
+    Module._free(cString);
+    return res;
   }
 
   throw new Error('Robj construction for this JS object is not yet supported');
