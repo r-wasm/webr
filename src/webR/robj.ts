@@ -380,11 +380,15 @@ export class RObjImpl {
     return RObjImpl.wrap(Module.getValue(Module._R_NilValue, '*')) as RObjNull;
   }
 
-  static get naInt(): number {
+  static get naLogical(): number {
     return Module.getValue(Module._R_NaInt, 'i32');
   }
 
-  static get naReal(): number {
+  static get naInteger(): number {
+    return Module.getValue(Module._R_NaInt, 'i32');
+  }
+
+  static get naDouble(): number {
     return Module.getValue(Module._R_NaReal, 'double');
   }
 
@@ -833,7 +837,11 @@ export class RObjLogical extends RObjAtomicVector<boolean> {
     const values = isRObjectTree(val) ? val.values : Array.isArray(val) ? val : [val];
     const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.logical, values.length));
     values.forEach((v, i) =>
-      Module.setValue(Module._LOGICAL(ptr) + 4 * i, v === null ? RObjImpl.naInt : Boolean(v), 'i32')
+      Module.setValue(
+        Module._LOGICAL(ptr) + 4 * i,
+        v === null ? RObjImpl.naLogical : Boolean(v),
+        'i32'
+      )
     );
     RObjImpl.wrap(ptr).setNames(isRObjectTree(val) ? val.names : null);
     Module._Rf_unprotect(1);
@@ -878,7 +886,7 @@ export class RObjInteger extends RObjAtomicVector<number> {
     values.forEach((v, i) =>
       Module.setValue(
         Module._INTEGER(ptr) + 4 * i,
-        v === null ? RObjImpl.naInt : Math.round(Number(v)),
+        v === null ? RObjImpl.naInteger : Math.round(Number(v)),
         'i32'
       )
     );
@@ -918,7 +926,7 @@ export class RObjDouble extends RObjAtomicVector<number> {
     const values = isRObjectTree(val) ? val.values : Array.isArray(val) ? val : [val];
     const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.double, values.length));
     values.forEach((v, i) =>
-      Module.setValue(Module._REAL(ptr) + 8 * i, v === null ? RObjImpl.naReal : v, 'double')
+      Module.setValue(Module._REAL(ptr) + 8 * i, v === null ? RObjImpl.naDouble : v, 'double')
     );
     RObjImpl.wrap(ptr).setNames(isRObjectTree(val) ? val.names : null);
     Module._Rf_unprotect(1);
@@ -955,14 +963,14 @@ export class RObjComplex extends RObjAtomicVector<Complex> {
     values.forEach((v, i) =>
       Module.setValue(
         Module._COMPLEX(ptr) + 8 * (2 * i),
-        v === null ? RObjImpl.naReal : v.re,
+        v === null ? RObjImpl.naDouble : v.re,
         'double'
       )
     );
     values.forEach((v, i) =>
       Module.setValue(
         Module._COMPLEX(ptr) + 8 * (2 * i + 1),
-        v === null ? RObjImpl.naReal : v.im,
+        v === null ? RObjImpl.naDouble : v.im,
         'double'
       )
     );
