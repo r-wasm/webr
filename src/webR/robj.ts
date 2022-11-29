@@ -836,12 +836,9 @@ export class RObjLogical extends RObjAtomicVector<boolean> {
     }
     const values = isRObjectTree(val) ? val.values : Array.isArray(val) ? val : [val];
     const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.logical, values.length));
+    const data = Module._LOGICAL(ptr);
     values.forEach((v, i) =>
-      Module.setValue(
-        Module._LOGICAL(ptr) + 4 * i,
-        v === null ? RObjImpl.naLogical : Boolean(v),
-        'i32'
-      )
+      Module.setValue(data + 4 * i, v === null ? RObjImpl.naLogical : Boolean(v), 'i32')
     );
     RObjImpl.wrap(ptr).setNames(isRObjectTree(val) ? val.names : null);
     Module._Rf_unprotect(1);
@@ -883,12 +880,9 @@ export class RObjInteger extends RObjAtomicVector<number> {
     }
     const values = isRObjectTree(val) ? val.values : Array.isArray(val) ? val : [val];
     const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.integer, values.length));
+    const data = Module._INTEGER(ptr);
     values.forEach((v, i) =>
-      Module.setValue(
-        Module._INTEGER(ptr) + 4 * i,
-        v === null ? RObjImpl.naInteger : Math.round(Number(v)),
-        'i32'
-      )
+      Module.setValue(data + 4 * i, v === null ? RObjImpl.naInteger : Math.round(Number(v)), 'i32')
     );
     RObjImpl.wrap(ptr).setNames(isRObjectTree(val) ? val.names : null);
     Module._Rf_unprotect(1);
@@ -925,8 +919,9 @@ export class RObjDouble extends RObjAtomicVector<number> {
     }
     const values = isRObjectTree(val) ? val.values : Array.isArray(val) ? val : [val];
     const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.double, values.length));
+    const data = Module._REAL(ptr);
     values.forEach((v, i) =>
-      Module.setValue(Module._REAL(ptr) + 8 * i, v === null ? RObjImpl.naDouble : v, 'double')
+      Module.setValue(data + 8 * i, v === null ? RObjImpl.naDouble : v, 'double')
     );
     RObjImpl.wrap(ptr).setNames(isRObjectTree(val) ? val.names : null);
     Module._Rf_unprotect(1);
@@ -960,19 +955,12 @@ export class RObjComplex extends RObjAtomicVector<Complex> {
     }
     const values = isRObjectTree(val) ? val.values : Array.isArray(val) ? val : [val];
     const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.complex, values.length));
+    const data = Module._COMPLEX(ptr);
     values.forEach((v, i) =>
-      Module.setValue(
-        Module._COMPLEX(ptr) + 8 * (2 * i),
-        v === null ? RObjImpl.naDouble : v.re,
-        'double'
-      )
+      Module.setValue(data + 8 * (2 * i), v === null ? RObjImpl.naDouble : v.re, 'double')
     );
     values.forEach((v, i) =>
-      Module.setValue(
-        Module._COMPLEX(ptr) + 8 * (2 * i + 1),
-        v === null ? RObjImpl.naDouble : v.im,
-        'double'
-      )
+      Module.setValue(data + 8 * (2 * i + 1), v === null ? RObjImpl.naDouble : v.im, 'double')
     );
     RObjImpl.wrap(ptr).setNames(isRObjectTree(val) ? val.names : null);
     Module._Rf_unprotect(1);
@@ -1069,7 +1057,8 @@ export class RObjRaw extends RObjAtomicVector<number> {
       throw new Error('Cannot create new RRaw object');
     }
     const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.raw, values.length));
-    values.forEach((v, i) => Module.setValue(Module._RAW(ptr) + i, Number(v), 'i8'));
+    const data = Module._RAW(ptr);
+    values.forEach((v, i) => Module.setValue(data + i, Number(v), 'i8'));
     RObjImpl.wrap(ptr).setNames(isRObjectTree(val) ? val.names : null);
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
