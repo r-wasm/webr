@@ -13,6 +13,7 @@ TS_SOURCES = $(shell find . -name '*.ts' -not -path './node_modules/*')
 -include ~/.webr-config.mk
 
 BASE_URL ?= "./"
+PKG_BASE_URL ?= "https://repo.webr.workers.dev/"
 
 HTML_DIST = $(addprefix $(DIST)/,$(HTML_TEMPLATES))
 $(DIST): $(TS_SOURCES) $(HTML_DIST) \
@@ -22,10 +23,12 @@ $(DIST): $(TS_SOURCES) $(HTML_DIST) \
 	touch $@
 
 $(DIST)/%.html: templates/%.html
-	sed -e "s|@@BASE_URL@@|$(BASE_URL)|" $< > $@
+	sed -e "s|@@BASE_URL@@|$(BASE_URL)|" \
+	  -e "s|@@PKG_BASE_URL@@|$(PKG_BASE_URL)|" $< > $@
 
 webR/config.ts: webR/config.ts.in
-	sed -e "s|@@BASE_URL@@|$(BASE_URL)|" webR/config.ts.in > webR/config.ts
+	sed -e "s|@@BASE_URL@@|$(BASE_URL)|" \
+	  -e "s|@@PKG_BASE_URL@@|$(PKG_BASE_URL)|" webR/config.ts.in > webR/config.ts
 
 .PHONY: check
 check: $(DIST)

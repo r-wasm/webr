@@ -1,6 +1,5 @@
 import { initFSTree, FSTreeInterface, JSTreeNode } from './fstree';
 import { WebR, FSNode } from '../webR/webr-main';
-import { PKG_BASE_URL } from '../webR/config';
 
 import 'xterm/css/xterm.css';
 import { Terminal } from 'xterm';
@@ -78,7 +77,6 @@ const webR = new WebR({
 
   readline.setCtrlCHandler(() => webR.interrupt());
 
-  webR.evalRCode(`options(webr_pkg_repos="${PKG_BASE_URL}")`);
   webR.evalRCode('webr::global_prompt_install()', undefined, { withHandlers: false });
 
   // Clear the loading message

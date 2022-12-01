@@ -373,6 +373,7 @@ function init(config: Required<WebROptions>) {
     resolveInit: () => {
       chan?.setInterrupt(Module._Rf_onintr);
       Module.setValue(Module._R_Interactive, _config.interactive, '*');
+      evalRCode(`options(webr_pkg_repos="${_config.PKG_URL}")`);
       chan?.resolve();
     },
 
