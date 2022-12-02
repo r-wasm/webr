@@ -12,6 +12,7 @@ import {
   RObjectTree,
   NamedObject,
   REnvironment,
+  RCharacter,
 } from './robj';
 
 export type EvalRCodeOptions = {
@@ -145,10 +146,15 @@ export class WebR {
         obj.preserve();
         const result = await obj.get(1);
         const outList = (await obj.get(2)) as RList;
-        const output: RawType[] = [];
+        const output: any[] = [];
         for await (const out of outList) {
-          const obj = (await (out as RList).toObject({ depth: 0 })) as RawType;
-          output.push(unpackScalarVectors(obj));
+          const type = await ((await out.pluck(1, 1)) as RCharacter).toString();
+          if (type === 'stdout' || type === 'stderr') {
+            const obj = (await (out as RList).toObject({ depth: 0 })) as RawType;
+            output.push(unpackScalarVectors(obj));
+          } else {
+            output.push({ type, data: await out.pluck(2) });
+          }
         }
         obj.release();
         return { result, output };

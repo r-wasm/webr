@@ -1,8 +1,6 @@
 import { WebR } from '../../webR/webr-main';
 import { Message } from '../../webR/chan/message';
 import {
-  RObjectTree,
-  RawType,
   RDouble,
   RLogical,
   RCharacter,
@@ -69,10 +67,10 @@ describe('Evaluate R code', () => {
 
   test('Handle syntax errors in evalRCode', async () => {
     const badSyntax = await webR.evalRCode('42+');
-    const cond = badSyntax.output as { type: string; data: RObjectTree<RawType[]> }[];
+    const cond = badSyntax.output as { type: string; data: RList }[];
     expect(cond[0].type).toEqual('error');
-    expect(cond[0].data.names).toEqual(expect.arrayContaining(['message']));
-    expect(cond[0].data.values[0]).toEqual(expect.stringContaining('unexpected end of input'));
+    const condMsg = (await cond[0].data.get('message')) as RCharacter;
+    expect(await condMsg.toString()).toContain('unexpected end of input');
   });
 
   test('Write to stdout while evaluating R code', async () => {
@@ -114,10 +112,10 @@ describe('Evaluate R code', () => {
     const res = await webR.evalRCode('warning("This is a warning message")', undefined, {
       captureConditions: true,
     });
-    const cond = res.output as { type: string; data: RObjectTree<RawType[]> }[];
+    const cond = res.output as { type: string; data: RList }[];
     expect(cond[0].type).toEqual('warning');
-    expect(cond[0].data.names).toEqual(expect.arrayContaining(['message']));
-    expect(cond[0].data.values).toEqual(expect.arrayContaining(['This is a warning message']));
+    const condMsg = (await cond[0].data.get('message')) as RCharacter;
+    expect(await condMsg.toString()).toContain('This is a warning message');
   });
 });
 
