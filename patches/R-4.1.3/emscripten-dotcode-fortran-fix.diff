@@ -1,0 +1,857 @@
+Index: R-4.1.3/src/main/dotcode.c
+===================================================================
+--- R-4.1.3.orig/src/main/dotcode.c
++++ R-4.1.3/src/main/dotcode.c
+@@ -1767,6 +1767,342 @@ R_FindNativeSymbolFromDLL(char *name, DllReference *dl
+ #define FILL 0xee
+ #define NG 64
+ 
++typedef void (*FFUNS1)(void**);
++typedef void (*FFUNS2)(void**, void**);
++typedef void (*FFUNS3)(void**, void**, void**);
++typedef void (*FFUNS4)(void**, void**, void**, void**);
++typedef void (*FFUNS5)(void**, void**, void**, void**, void**);
++typedef void (*FFUNS6)(void**, void**, void**, void**, void**, void**);
++typedef void (*FFUNS7)(void**, void**, void**, void**, void**, void**, void**);
++typedef void (*FFUNS8)(void**, void**, void**, void**, void**, void**, void**,
++                       void**);
++typedef void (*FFUNS9)(void**, void**, void**, void**, void**, void**, void**,
++                       void**, void**);
++typedef void (*FFUNS10)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**);
++typedef void (*FFUNS11)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**);
++typedef void (*FFUNS12)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**);
++typedef void (*FFUNS13)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**);
++typedef void (*FFUNS14)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**);
++typedef void (*FFUNS15)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**);
++typedef void (*FFUNS16)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**);
++typedef void (*FFUNS17)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**);
++typedef void (*FFUNS18)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**);
++typedef void (*FFUNS19)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**);
++typedef void (*FFUNS20)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**);
++typedef void (*FFUNS21)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**);
++typedef void (*FFUNS22)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**);
++typedef void (*FFUNS23)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**);
++typedef void (*FFUNS24)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**);
++typedef void (*FFUNS25)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**);
++typedef void (*FFUNS26)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**);
++typedef void (*FFUNS27)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**);
++typedef void (*FFUNS28)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**);
++typedef void (*FFUNS29)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**);
++typedef void (*FFUNS30)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**);
++typedef void (*FFUNS31)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**);
++typedef void (*FFUNS32)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**);
++typedef void (*FFUNS33)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**);
++typedef void (*FFUNS34)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**);
++typedef void (*FFUNS35)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**);
++typedef void (*FFUNS36)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**);
++typedef void (*FFUNS37)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**);
++typedef void (*FFUNS38)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**);
++typedef void (*FFUNS39)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**);
++typedef void (*FFUNS40)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**);
++typedef void (*FFUNS41)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**);
++typedef void (*FFUNS42)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**);
++typedef void (*FFUNS43)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**);
++typedef void (*FFUNS44)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**);
++typedef void (*FFUNS45)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**);
++typedef void (*FFUNS46)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**);
++typedef void (*FFUNS47)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**);
++typedef void (*FFUNS48)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**);
++typedef void (*FFUNS49)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**);
++typedef void (*FFUNS50)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**);
++typedef void (*FFUNS51)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**);
++typedef void (*FFUNS52)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**);
++typedef void (*FFUNS53)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**);
++typedef void (*FFUNS54)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**);
++typedef void (*FFUNS55)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**);
++typedef void (*FFUNS56)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**);
++typedef void (*FFUNS57)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**);
++typedef void (*FFUNS58)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**);
++typedef void (*FFUNS59)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**);
++typedef void (*FFUNS60)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**);
++typedef void (*FFUNS61)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**);
++typedef void (*FFUNS62)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**);
++typedef void (*FFUNS63)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**);
++typedef void (*FFUNS64)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**);
++typedef void (*FFUNS65)(void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**, void**, void**, void**, void**, void**,
++                        void**, void**);
++
+ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, SEXP args, SEXP env)
+ {
+     void **cargs, **cargs0 = NULL /* -Wall */;
+@@ -2062,132 +2399,132 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	fun();
+ 	break;
+     case 1:
+-	((FUNS1)fun)(cargs[0]);
++	((FFUNS1)fun)(cargs[0]);
+ 	break;
+     case 2:
+-	((FUNS2)fun)(cargs[0], cargs[1]);
++	((FFUNS2)fun)(cargs[0], cargs[1]);
+ 	break;
+     case 3:
+-	((FUNS3)fun)(cargs[0], cargs[1], cargs[2]);
++	((FFUNS3)fun)(cargs[0], cargs[1], cargs[2]);
+ 	break;
+     case 4:
+-	((FUNS4)fun)(cargs[0], cargs[1], cargs[2], cargs[3]);
++	((FFUNS4)fun)(cargs[0], cargs[1], cargs[2], cargs[3]);
+ 	break;
+     case 5:
+-	((FUNS5)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4]);
++	((FFUNS5)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4]);
+ 	break;
+     case 6:
+-	((FUNS6)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS6)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5]);
+ 	break;
+     case 7:
+-	((FUNS7)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS7)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6]);
+ 	break;
+     case 8:
+-	((FUNS8)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS8)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7]);
+ 	break;
+     case 9:
+-	((FUNS9)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS9)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8]);
+ 	break;
+     case 10:
+-	((FUNS10)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS10)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9]);
+ 	break;
+     case 11:
+-	((FUNS11)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS11)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10]);
+ 	break;
+     case 12:
+-	((FUNS12)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS12)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11]);
+ 	break;
+     case 13:
+-	((FUNS13)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS13)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12]);
+ 	break;
+     case 14:
+-	((FUNS14)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS14)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13]);
+ 	break;
+     case 15:
+-	((FUNS15)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS15)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14]);
+ 	break;
+     case 16:
+-	((FUNS16)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS16)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15]);
+ 	break;
+     case 17:
+-	((FUNS17)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS17)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16]);
+ 	break;
+     case 18:
+-	((FUNS18)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS18)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17]);
+ 	break;
+     case 19:
+-	((FUNS19)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS19)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18]);
+ 	break;
+     case 20:
+-	((FUNS20)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS20)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19]);
+ 	break;
+     case 21:
+-	((FUNS21)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS21)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+ 	    cargs[20]);
+ 	break;
+     case 22:
+-	((FUNS22)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS22)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+ 	    cargs[20], cargs[21]);
+ 	break;
+     case 23:
+-	((FUNS23)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS23)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+ 	    cargs[20], cargs[21], cargs[22]);
+ 	break;
+     case 24:
+-	((FUNS24)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS24)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+ 	    cargs[20], cargs[21], cargs[22], cargs[23]);
+ 	break;
+     case 25:
+-	((FUNS25)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS25)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+ 	    cargs[20], cargs[21], cargs[22], cargs[23], cargs[24]);
+ 	break;
+     case 26:
+-	((FUNS26)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS26)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2195,7 +2532,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[25]);
+ 	break;
+     case 27:
+-	((FUNS27)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS27)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2203,7 +2540,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[25], cargs[26]);
+ 	break;
+     case 28:
+-	((FUNS28)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS28)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2211,7 +2548,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[25], cargs[26], cargs[27]);
+ 	break;
+     case 29:
+-	((FUNS29)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS29)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2219,7 +2556,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[25], cargs[26], cargs[27], cargs[28]);
+ 	break;
+     case 30:
+-	((FUNS30)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS30)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2227,7 +2564,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[25], cargs[26], cargs[27], cargs[28], cargs[29]);
+ 	break;
+     case 31:
+-	((FUNS31)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS31)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2236,7 +2573,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[30]);
+ 	break;
+     case 32:
+-	((FUNS32)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS32)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2245,7 +2582,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[30], cargs[31]);
+ 	break;
+     case 33:
+-	((FUNS33)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS33)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2254,7 +2591,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[30], cargs[31], cargs[32]);
+ 	break;
+     case 34:
+-	((FUNS34)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS34)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2263,7 +2600,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[30], cargs[31], cargs[32], cargs[33]);
+ 	break;
+     case 35:
+-	((FUNS35)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS35)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2272,7 +2609,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[30], cargs[31], cargs[32], cargs[33], cargs[34]);
+ 	break;
+     case 36:
+-	((FUNS36)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS36)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2282,7 +2619,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[35]);
+ 	break;
+     case 37:
+-	((FUNS37)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS37)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2292,7 +2629,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[35], cargs[36]);
+ 	break;
+     case 38:
+-	((FUNS38)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS38)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2302,7 +2639,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[35], cargs[36], cargs[37]);
+ 	break;
+     case 39:
+-	((FUNS39)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS39)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2312,7 +2649,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[35], cargs[36], cargs[37], cargs[38]);
+ 	break;
+     case 40:
+-	((FUNS40)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS40)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2322,7 +2659,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[35], cargs[36], cargs[37], cargs[38], cargs[39]);
+ 	break;
+     case 41:
+-	((FUNS41)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS41)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2333,7 +2670,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[40]);
+ 	break;
+     case 42:
+-	((FUNS42)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS42)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2344,7 +2681,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[40], cargs[41]);
+ 	break;
+     case 43:
+-	((FUNS43)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS43)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2355,7 +2692,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[40], cargs[41], cargs[42]);
+ 	break;
+     case 44:
+-	((FUNS44)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS44)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2366,7 +2703,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[40], cargs[41], cargs[42], cargs[43]);
+ 	break;
+     case 45:
+-	((FUNS45)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS45)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2377,7 +2714,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[40], cargs[41], cargs[42], cargs[43], cargs[44]);
+ 	break;
+     case 46:
+-	((FUNS46)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS46)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2389,7 +2726,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[45]);
+ 	break;
+     case 47:
+-	((FUNS47)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS47)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2401,7 +2738,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[45], cargs[46]);
+ 	break;
+     case 48:
+-	((FUNS48)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS48)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2413,7 +2750,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[45], cargs[46], cargs[47]);
+ 	break;
+     case 49:
+-	((FUNS49)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS49)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2425,7 +2762,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[45], cargs[46], cargs[47], cargs[48]);
+ 	break;
+     case 50:
+-	((FUNS50)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS50)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2437,7 +2774,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[45], cargs[46], cargs[47], cargs[48], cargs[49]);
+ 	break;
+     case 51:
+-	((FUNS51)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS51)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2450,7 +2787,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[50]);
+ 	break;
+     case 52:
+-	((FUNS52)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS52)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2463,7 +2800,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[50], cargs[51]);
+ 	break;
+     case 53:
+-	((FUNS53)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS53)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2476,7 +2813,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[50], cargs[51], cargs[52]);
+ 	break;
+     case 54:
+-	((FUNS54)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS54)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2489,7 +2826,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[50], cargs[51], cargs[52], cargs[53]);
+ 	break;
+     case 55:
+-	((FUNS55)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS55)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2502,7 +2839,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[50], cargs[51], cargs[52], cargs[53], cargs[54]);
+ 	break;
+     case 56:
+-	((FUNS56)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS56)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2516,7 +2853,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[55]);
+ 	break;
+     case 57:
+-	((FUNS57)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS57)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2530,7 +2867,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[55], cargs[56]);
+ 	break;
+     case 58:
+-	((FUNS58)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS58)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2544,7 +2881,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[55], cargs[56], cargs[57]);
+ 	break;
+     case 59:
+-	((FUNS59)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS59)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2558,7 +2895,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[55], cargs[56], cargs[57], cargs[58]);
+ 	break;
+     case 60:
+-	((FUNS60)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS60)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2572,7 +2909,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[55], cargs[56], cargs[57], cargs[58], cargs[59]);
+ 	break;
+     case 61:
+-	((FUNS61)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS61)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2587,7 +2924,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[60]);
+ 	break;
+     case 62:
+-	((FUNS62)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS62)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2602,7 +2939,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[60], cargs[61]);
+ 	break;
+     case 63:
+-	((FUNS63)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS63)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2617,7 +2954,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[60], cargs[61], cargs[62]);
+ 	break;
+     case 64:
+-	((FUNS64)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS64)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
+@@ -2632,7 +2969,7 @@ SEXP attribute_hidden do_dotCode(SEXP call, SEXP op, S
+ 	    cargs[60], cargs[61], cargs[62], cargs[63]);
+ 	break;
+     case 65:
+-	((FUNS65)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
++	((FFUNS65)fun)(cargs[0],  cargs[1],  cargs[2],  cargs[3],  cargs[4],
+ 	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
+ 	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
+ 	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],

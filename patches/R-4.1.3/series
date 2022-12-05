@@ -4,6 +4,7 @@ emscripten-unimplmented.diff
 emscripten-includes.diff
 emscripten-xdr.diff
 backport-dotcall-strict-prototypes.diff
+emscripten-dotcode-fortran-fix.diff
 emscripten-disable-system.diff
 emscripten-input.diff
 emscripten-canvas-device.diff
