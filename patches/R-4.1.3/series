@@ -3,7 +3,7 @@ emscripten-makefiles.diff
 emscripten-unimplmented.diff
 emscripten-includes.diff
 emscripten-xdr.diff
-emscripten-dotcall-trampoline.diff
+backport-dotcall-strict-prototypes.diff
 emscripten-disable-system.diff
 emscripten-input.diff
 emscripten-canvas-device.diff
