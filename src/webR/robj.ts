@@ -705,6 +705,16 @@ export class RObjEnvironment extends RObjImpl {
     return ls.toArray() as string[];
   }
 
+  bind(name: string, value: RObjImpl | RawType): void {
+    const namePtr = Module.allocateUTF8(name);
+    Module._Rf_defineVar(
+      Module._Rf_install(namePtr),
+      isRObjImpl(value) ? value.ptr : new RObjImpl({ targetType: 'raw', obj: value }).ptr,
+      this.ptr
+    );
+    Module._free(namePtr);
+  }
+
   names(): string[] {
     return this.ls(true, true);
   }
