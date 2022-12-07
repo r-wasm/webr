@@ -15,7 +15,7 @@ import {
   RCharacter,
 } from './robj';
 
-export type EvalRCodeOptions = {
+export type EvalROptions = {
   captureStreams?: boolean;
   captureConditions?: boolean;
   withAutoprint?: boolean;
@@ -111,20 +111,20 @@ export class WebR {
     return (await this.#chan.request({ type: 'getFSNode', data: { path: path } })) as FSNode;
   }
 
-  async evalRCode(
+  async evalR(
     code: string,
     env?: REnvironment,
-    options: EvalRCodeOptions = {}
+    options: EvalROptions = {}
   ): Promise<{
     result: RObject;
     output: unknown[];
   }> {
     if (env && !isRObject(env)) {
-      throw new Error('Attempted to evalRcode with invalid environment object');
+      throw new Error('Attempted to evaluate R code with invalid environment object');
     }
 
     const target = (await this.#chan.request({
-      type: 'evalRCode',
+      type: 'evalR',
       data: {
         code: code,
         env: env?._target,
@@ -134,7 +134,7 @@ export class WebR {
 
     switch (target.targetType) {
       case 'raw':
-        throw new Error('Unexpected raw target type returned from evalRCode');
+        throw new Error('Unexpected raw target type returned from evalR');
       case 'err': {
         const e = new Error(target.obj.message);
         e.name = target.obj.name;

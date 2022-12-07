@@ -47,7 +47,7 @@ describe('Test webR simple console input/output', () => {
 
 describe('Evaluate R code', () => {
   test('Evaluate R code without setting up error handlers', async () => {
-    const result = webR.evalRCode('webr::global_prompt_install()', undefined, {
+    const result = webR.evalR('webr::global_prompt_install()', undefined, {
       withHandlers: false,
     });
     await expect(result).resolves.not.toThrow();
@@ -55,18 +55,18 @@ describe('Evaluate R code', () => {
 
   test('Throw an error if passed an invalid environment', async () => {
     // @ts-expect-error Deliberate type error to test Error thrown
-    const promise = webR.evalRCode('3.14159', { env: 42 });
+    const promise = webR.evalR('3.14159', { env: 42 });
     await expect(promise).rejects.toThrow('invalid environment object');
   });
 
   test('Throw an error if passed an invalid environment object type', async () => {
-    const euler = (await webR.evalRCode('0.57722')).result;
+    const euler = (await webR.evalR('0.57722')).result;
     // @ts-expect-error Deliberate type error to test Error thrown
-    await expect(webR.evalRCode('x', euler)).rejects.toThrow('env argument with invalid SEXP type');
+    await expect(webR.evalR('x', euler)).rejects.toThrow('env argument with invalid SEXP type');
   });
 
-  test('Handle syntax errors in evalRCode', async () => {
-    const badSyntax = await webR.evalRCode('42+');
+  test('Handle syntax errors in evalR', async () => {
+    const badSyntax = await webR.evalR('42+');
     const cond = badSyntax.output as { type: string; data: RList }[];
     expect(cond[0].type).toEqual('error');
     const condMsg = (await cond[0].data.get('message')) as RCharacter;
@@ -75,7 +75,7 @@ describe('Evaluate R code', () => {
 
   test('Write to stdout while evaluating R code', async () => {
     await webR.flush();
-    const res = webR.evalRCode('print("Hello, stdout!")', undefined, {
+    const res = webR.evalR('print("Hello, stdout!")', undefined, {
       captureStreams: false,
     });
     await expect(res).resolves.not.toThrow();
@@ -84,7 +84,7 @@ describe('Evaluate R code', () => {
 
   test('Write to stderr while evaluating R code', async () => {
     await webR.flush();
-    const res = webR.evalRCode('message("Hello, stderr!")', undefined, {
+    const res = webR.evalR('message("Hello, stderr!")', undefined, {
       captureStreams: false,
       captureConditions: false,
     });
@@ -93,7 +93,7 @@ describe('Evaluate R code', () => {
   });
 
   test('Capture stdout while evaluating R code', async () => {
-    const composite = await webR.evalRCode('c(1, 2, 4, 6, 12, 24, 36, 48)', undefined, {
+    const composite = await webR.evalR('c(1, 2, 4, 6, 12, 24, 36, 48)', undefined, {
       withAutoprint: true,
       captureStreams: true,
     });
@@ -101,7 +101,7 @@ describe('Evaluate R code', () => {
   });
 
   test('Capture stderr while evaluating R code', async () => {
-    const res = await webR.evalRCode('message("Hello, stderr!")', undefined, {
+    const res = await webR.evalR('message("Hello, stderr!")', undefined, {
       captureStreams: true,
       captureConditions: false,
     });
@@ -109,7 +109,7 @@ describe('Evaluate R code', () => {
   });
 
   test('Capture condition while evaluating R code', async () => {
-    const res = await webR.evalRCode('warning("This is a warning message")', undefined, {
+    const res = await webR.evalR('warning("This is a warning message")', undefined, {
       captureConditions: true,
     });
     const cond = res.output as { type: string; data: RList }[];
@@ -266,7 +266,7 @@ describe('Create R atomic vectors from JS arrays', () => {
 describe('Serialise nested R lists, pairlists and vectors unambiguously', () => {
   test('Round trip convert to full depth and ensure result is identical', async () => {
     const rObj = (
-      await webR.evalRCode(
+      await webR.evalR(
         'list(a=list(e=c(T,F,NA),f=c(1,2,3)), b=pairlist(g=c(4L,5L,6L)), c=list(h=c("abc","def"), i=list(7i)))'
       )
     ).result as RList;
@@ -277,14 +277,14 @@ describe('Serialise nested R lists, pairlists and vectors unambiguously', () => 
       names: ['newRObj', 'rObj'],
       values: [newRObj, rObj],
     })) as REnvironment;
-    const identical = (await webR.evalRCode('identical(rObj, newRObj)', env)).result as RLogical;
+    const identical = (await webR.evalR('identical(rObj, newRObj)', env)).result as RLogical;
     expect(await rObj.type()).toEqual('list');
     expect(await identical.toLogical()).toEqual(true);
   });
 
   test('Round trip convert to partial depth and ensure result is identical', async () => {
     const rObj = (
-      await webR.evalRCode(
+      await webR.evalR(
         'list(a=list(e=c(T,F,NA),f=c(1,2,3)), b=pairlist(g=c(4L,5L,6L)), c=list(h=c("abc","def"), i=list(7i)))'
       )
     ).result as RList;
@@ -295,7 +295,7 @@ describe('Serialise nested R lists, pairlists and vectors unambiguously', () => 
       names: ['newRObj', 'rObj'],
       values: [newRObj, rObj],
     })) as REnvironment;
-    const identical = (await webR.evalRCode('identical(rObj, newRObj)', env)).result as RLogical;
+    const identical = (await webR.evalR('identical(rObj, newRObj)', env)).result as RLogical;
     expect(await rObj.type()).toEqual('list');
     expect(await identical.toLogical()).toEqual(true);
   });

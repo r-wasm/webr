@@ -3,7 +3,7 @@
 #' @description
 #' This function evaluates the provided R code with various settings in place
 #' to configure behavior. The function is intended to be used by the webR
-#' `evalRCode` API, rather than invoked directly by the end user.
+#' `evalR` API, rather than invoked directly by the end user.
 #'
 #' @param code The R code to evaluate.
 #' @param conditions If `TRUE`, capture and return conditions raised during
@@ -15,9 +15,10 @@
 #' @param handlers If `TRUE`, execute the R code using a [tryCatch], with
 #' handlers in place.
 #'
+#' @export
 #' @useDynLib webr, .registration = TRUE
-evalRCode <- function(code, conditions = TRUE, streams = FALSE,
-                      autoprint = FALSE, handlers = TRUE) {
+eval_r <- function(code, conditions = TRUE, streams = FALSE, autoprint = FALSE,
+                   handlers = TRUE) {
   res <- NULL
 
   # The following C routine prepares an output object that is used to capture
@@ -104,7 +105,7 @@ evalRCode <- function(code, conditions = TRUE, streams = FALSE,
   options(warn = old_warn)
 
   # Output vector out$vec expands exponentially, return only the valid subset
-  list(result = res, output = head(out$vec, out$n))
+  list(result = res, output = utils::head(out$vec, out$n))
 }
 
 #' Evaluate JavaScript code

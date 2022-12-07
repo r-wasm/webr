@@ -8,7 +8,7 @@ const webR = new WebR({
 });
 
 function evalTest(pkg: string) {
-  return webR.evalRCode(`webr::test_package("${pkg}")`, undefined, {
+  return webR.evalR(`webr::test_package("${pkg}")`, undefined, {
     captureConditions: false,
     captureStreams: false,
   });
@@ -21,7 +21,7 @@ beforeAll(async () => {
 });
 
 test('The webr R package is installed', async () => {
-  const pkg = (await webR.evalRCode('"webr" %in% installed.packages()')).result as RLogical;
+  const pkg = (await webR.evalR('"webr" %in% installed.packages()')).result as RLogical;
   expect(await pkg.toLogical()).toEqual(true);
 });
 
@@ -82,7 +82,7 @@ describe('Run R default package examples and tests', () => {
   });
 
   test('grid', async () => {
-    await webR.evalRCode('options(expressions=5000)');
+    await webR.evalR('options(expressions=5000)');
     const test = (await evalTest('grid')).result as RDouble;
     expect(await test.toNumber()).toEqual(0);
   });

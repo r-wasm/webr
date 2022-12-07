@@ -11,15 +11,15 @@ beforeAll(async () => {
 });
 
 describe('Download and install binary webR packages', () => {
-  test('Install packages via evalRCode', async () => {
-    await webR.evalRCode('webr::install("cli", repos="https://repo.webr.workers.dev/")');
-    const pkg = (await webR.evalRCode('"cli" %in% library(cli)')).result as RLogical;
+  test('Install packages via evalR', async () => {
+    await webR.evalR('webr::install("cli", repos="https://repo.webr.workers.dev/")');
+    const pkg = (await webR.evalR('"cli" %in% library(cli)')).result as RLogical;
     expect(await pkg.toLogical()).toEqual(true);
   });
 
   test('Install packages via API', async () => {
     await webR.installPackages(['MASS']);
-    const pkg = (await webR.evalRCode('"MASS" %in% library(MASS)')).result as RLogical;
+    const pkg = (await webR.evalR('"MASS" %in% library(MASS)')).result as RLogical;
     expect(await pkg.toLogical()).toEqual(true);
   });
 });
@@ -28,7 +28,7 @@ describe('Test webR virtual filesystem', () => {
   const testFileContents = new Uint8Array([1, 2, 4, 7, 11, 16, 22, 29, 37, 46]);
   test('Upload a file to the VFS', async () => {
     await expect(webR.putFileData('/tmp/testFile', testFileContents)).resolves.not.toThrow();
-    const readFile = (await webR.evalRCode('readBin("/tmp/testFile", "raw", 10)')).result as RRaw;
+    const readFile = (await webR.evalR('readBin("/tmp/testFile", "raw", 10)')).result as RRaw;
     expect(Array.from(await readFile.toArray())).toEqual(Array.from(testFileContents));
   });
 
@@ -52,13 +52,13 @@ describe('Test webR virtual filesystem', () => {
 
 describe('Execute JavaScript code from R', () => {
   test('Execute a JS expression', async () => {
-    const res = (await webR.evalRCode('webr::eval_js("Math.round(Math.sin(24) * 10)")'))
+    const res = (await webR.evalR('webr::eval_js("Math.round(Math.sin(24) * 10)")'))
       .result as RInteger;
     expect(await res.toNumber()).toEqual(-9);
   });
 
   test('Raise a JS exception as an R condition', async () => {
-    const res = (await webR.evalRCode('webr::eval_js("51+")')).output as {
+    const res = (await webR.evalR('webr::eval_js("51+")')).output as {
       type: string;
       data: RList;
     }[];
@@ -74,15 +74,15 @@ describe('Execute JavaScript code from R', () => {
      * future so as to return different types.
      */
     // Integers are returned as is
-    const res1 = (await webR.evalRCode('webr::eval_js("1 + 2")')).result as RInteger;
+    const res1 = (await webR.evalR('webr::eval_js("1 + 2")')).result as RInteger;
     expect(await res1.toNumber()).toEqual(3);
 
     // Doubles are truncated to integer
-    const res2 = (await webR.evalRCode('webr::eval_js("Math.E")')).result as RInteger;
+    const res2 = (await webR.evalR('webr::eval_js("Math.E")')).result as RInteger;
     expect(await res2.toNumber()).toEqual(2);
 
     // Other objects are converted to integer 0
-    const res3 = (await webR.evalRCode('webr::eval_js("\'abc\'")')).result as RInteger;
+    const res3 = (await webR.evalR('webr::eval_js("\'abc\'")')).result as RInteger;
     expect(await res3.toNumber()).toEqual(0);
   });
 });

@@ -1,7 +1,7 @@
 import { loadScript } from './compat';
 import { newChannelWorker, ChannelWorker, ChannelInitMessage } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
-import { FSNode, WebROptions, EvalRCodeOptions } from './webr-main';
+import { FSNode, WebROptions, EvalROptions } from './webr-main';
 import { Module } from './module';
 import { IN_NODE } from './compat';
 import { replaceInObject } from './utils';
@@ -62,14 +62,14 @@ function dispatch(msg: Message): void {
         case 'getFSNode':
           write(getFSNode(reqMsg.data.path as string));
           break;
-        case 'evalRCode': {
+        case 'evalR': {
           const data = reqMsg.data as {
             code: string;
             env?: RTargetPtr;
-            options: EvalRCodeOptions;
+            options: EvalROptions;
           };
           try {
-            write(evalRCode(data.code, data.env, data.options));
+            write(evalR(data.code, data.env, data.options));
           } catch (_e) {
             const e = _e as Error;
             write({
@@ -135,7 +135,7 @@ function dispatch(msg: Message): void {
         }
         case 'installPackage':
           write(
-            evalRCode(`webr::install("${reqMsg.data.name as string}", repos="${_config.PKG_URL}")`)
+            evalR(`webr::install("${reqMsg.data.name as string}", repos="${_config.PKG_URL}")`)
           );
           break;
         default:
@@ -287,8 +287,8 @@ function getRObjProperty(obj: RObjImpl, prop: string): RTargetObj {
  * @return {RTargetObj} An R object containing the result of the computation
  * along with any other objects captured during execution.
  */
-function evalRCode(code: string, env?: RTargetPtr, options: EvalRCodeOptions = {}): RTargetObj {
-  const _options: Required<EvalRCodeOptions> = Object.assign(
+function evalR(code: string, env?: RTargetPtr, options: EvalROptions = {}): RTargetObj {
+  const _options: Required<EvalROptions> = Object.assign(
     {
       captureStreams: true,
       captureConditions: true,
@@ -309,7 +309,7 @@ function evalRCode(code: string, env?: RTargetPtr, options: EvalRCodeOptions = {
   const tPtr = Module.getValue(Module._R_TrueValue, '*');
   const fPtr = Module.getValue(Module._R_FalseValue, '*');
   const codeStr = Module.allocateUTF8(code);
-  const evalStr = Module.allocateUTF8('webr:::evalRCode');
+  const evalStr = Module.allocateUTF8('webr::eval_r');
   const codeObj = new RObjImpl({ targetType: 'raw', obj: code });
   codeObj.preserve();
   const expr = Module._Rf_lang6(
@@ -373,7 +373,7 @@ function init(config: Required<WebROptions>) {
     resolveInit: () => {
       chan?.setInterrupt(Module._Rf_onintr);
       Module.setValue(Module._R_Interactive, _config.interactive, '*');
-      evalRCode(`options(webr_pkg_repos="${_config.PKG_URL}")`);
+      evalR(`options(webr_pkg_repos="${_config.PKG_URL}")`);
       chan?.resolve();
     },
 
