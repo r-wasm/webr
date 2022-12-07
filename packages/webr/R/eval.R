@@ -106,3 +106,27 @@ evalRCode <- function(code, conditions = TRUE, streams = FALSE,
   # Output vector out$vec expands exponentially, return only the valid subset
   list(result = res, output = head(out$vec, out$n))
 }
+
+#' Evaluate JavaScript code
+#'
+#' @description
+#' This function evaluates the given character string as JavaScript code. The
+#' result is returned as an integer.
+#'
+#' @details
+#' The JavaScript code is evaluated using `emscripten_run_script_int` from the
+#' Emscripten C API. In the event of a JavaScript exception an R error condition
+#' will be raised with the exception message.
+#'
+#' This is an experimental function that may undergo a breaking change in the
+#' future so as to support different return types.
+#'
+#' @param code The JavaScript code to evaluate.
+#'
+#' @return Integer result of evaluating the code.
+#'
+#' @export
+#' @useDynLib webr, .registration = TRUE
+eval_js <- function(code) {
+  .Call(ffi_eval_js, code)
+}

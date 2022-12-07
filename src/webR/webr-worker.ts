@@ -5,7 +5,7 @@ import { FSNode, WebROptions, EvalRCodeOptions } from './webr-main';
 import { Module } from './module';
 import { IN_NODE } from './compat';
 import { replaceInObject } from './utils';
-import { isRObjImpl, RObjImpl, RTargetObj, RTargetPtr, RawType, RTargetRaw } from './robj';
+import { RPtr, isRObjImpl, RObjImpl, RTargetObj, RTargetPtr, RawType, RTargetRaw } from './robj';
 
 let initialised = false;
 let chan: ChannelWorker | undefined;
@@ -386,6 +386,22 @@ function init(config: Required<WebROptions>) {
 
     handleEvents: () => {
       chan?.handleInterrupt();
+    },
+
+    evalJs: (code: RPtr): number => {
+      try {
+        return eval(Module.UTF8ToString(code));
+      } catch (e) {
+        const stop = Module.allocateUTF8('stop');
+        const msg = Module.allocateUTF8(
+          `An error occured during JavaScript evaluation:\n  ${(e as { message: string }).message}`
+        );
+        const call = Module._Rf_lang2(Module._Rf_install(stop), Module._Rf_mkString(msg));
+        Module._free(stop);
+        Module._free(msg);
+        Module._Rf_eval(call, RObjImpl.baseEnv.ptr);
+      }
+      return 0;
     },
   };
 

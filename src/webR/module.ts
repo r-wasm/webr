@@ -109,5 +109,6 @@ export interface Module extends EmscriptenModule {
     readConsole: () => number;
     resolveInit: () => void;
     handleEvents: () => void;
+    evalJs: (code: RPtr) => number;
   };
 }
