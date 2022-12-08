@@ -1,3 +1,14 @@
+self_test <- function() {
+  dir <- system.file("tests", package = "webr")
+  files <- dir(dir, full.names = TRUE, pattern = "\\.R$")
+
+  for (file in files) {
+    local({
+      source(file, local = TRUE)
+    })
+  }
+}
+
 # Run a R script within in this instance of R, capturing output to a file.
 sink_source_to_file <- function(src_file, out_file) {
   con <- file(out_file, open = "wt")
