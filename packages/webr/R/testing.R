@@ -3,10 +3,25 @@ self_test <- function() {
   files <- dir(dir, full.names = TRUE, pattern = "\\.R$")
 
   for (file in files) {
-    local({
+    sandbox({
       source(file, local = TRUE)
     })
   }
+}
+
+# Evaluates in a child of the current environment and restores options
+# and wd on exit
+sandbox <- function(expr, env = parent.frame()) {
+  expr <- substitute(expr)
+  box <- new.env(parent = env)
+
+  old_opts <- options()
+  on.exit(options(old_opts))
+
+  old_wd <- getwd()
+  on.exit(setwd(old_wd), add = TRUE, after = FALSE)
+
+  eval(expr, box)
 }
 
 # Run a R script within in this instance of R, capturing output to a file.

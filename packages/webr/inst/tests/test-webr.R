@@ -1,5 +1,5 @@
 "System calls are intercepted"
-local({
+webr:::sandbox({
   # Default return value
   stopifnot(
     identical(system("cmd"), c("", "")),
