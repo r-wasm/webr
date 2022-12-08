@@ -316,56 +316,70 @@ function getRObjProperty(obj: RObjImpl, prop: string): RTargetObj {
  * along with any other objects captured during execution.
  */
 function captureR(code: string, env?: RTargetPtr, options: CaptureROptions = {}): RObjList {
-  const _options: Required<CaptureROptions> = Object.assign(
-    {
-      captureStreams: true,
-      captureConditions: true,
-      withAutoprint: false,
-      throwJsException: true,
-      withHandlers: true,
-    },
-    options
-  );
-
-  let envObj = RObjImpl.globalEnv;
-  if (env) {
-    envObj = RObjImpl.wrap(env.obj.ptr);
-    if (envObj.type() !== 'environment') {
-      throw new Error('Attempted to eval R code with an env argument with invalid SEXP type');
-    }
-  }
-
-  const tPtr = Module.getValue(Module._R_TrueValue, '*');
-  const fPtr = Module.getValue(Module._R_FalseValue, '*');
-  const codeStr = Module.allocateUTF8(code);
-  const evalStr = Module.allocateUTF8('webr::eval_r');
-  const codeObj = new RObjImpl({ targetType: 'raw', obj: code });
-  Module._Rf_protect(codeObj.ptr);
-  const expr = Module._Rf_lang6(
-    Module._R_ParseEvalString(evalStr, RObjImpl.baseEnv.ptr),
-    codeObj.ptr,
-    _options.captureConditions ? tPtr : fPtr,
-    _options.captureStreams ? tPtr : fPtr,
-    _options.withAutoprint ? tPtr : fPtr,
-    _options.withHandlers ? tPtr : fPtr
-  );
-  const capture = RObjImpl.wrap(Module._Rf_protect(Module._Rf_eval(expr, envObj.ptr))) as RObjList;
-  Module._free(codeStr);
-  Module._free(evalStr);
-
-  if (_options.captureConditions && _options.throwJsException) {
-    const output = capture.get('output') as RObjList;
-    const error = (output.toArray() as RObjImpl[]).find(
-      (out) => out.get('type').toString() === 'error'
+  /*
+    This is a sensitive area of the code where we want to be careful to avoid
+    leaking objects when an exception is thrown. Here we keep track of our use
+    of protect and ensure a balanced unprotect is called using try-finally.
+  */
+  let protectCount = 0;
+  try {
+    const _options: Required<CaptureROptions> = Object.assign(
+      {
+        captureStreams: true,
+        captureConditions: true,
+        withAutoprint: false,
+        throwJsException: true,
+        withHandlers: true,
+      },
+      options
     );
-    if (error) {
-      throw new Error(
-        error.pluck('data', 'message')?.toString() || 'An error occured evaluating R code.'
-      );
+
+    let envObj = RObjImpl.globalEnv;
+    if (env) {
+      envObj = RObjImpl.wrap(env.obj.ptr);
+      if (envObj.type() !== 'environment') {
+        throw new Error('Attempted to eval R code with an env argument with invalid SEXP type');
+      }
     }
+
+    const tPtr = Module.getValue(Module._R_TrueValue, '*');
+    const fPtr = Module.getValue(Module._R_FalseValue, '*');
+    const codeStr = Module.allocateUTF8(code);
+    const evalStr = Module.allocateUTF8('webr::eval_r');
+    const codeObj = new RObjImpl({ targetType: 'raw', obj: code });
+    Module._Rf_protect(codeObj.ptr);
+    protectCount++;
+    const expr = Module._Rf_lang6(
+      Module._R_ParseEvalString(evalStr, RObjImpl.baseEnv.ptr),
+      codeObj.ptr,
+      _options.captureConditions ? tPtr : fPtr,
+      _options.captureStreams ? tPtr : fPtr,
+      _options.withAutoprint ? tPtr : fPtr,
+      _options.withHandlers ? tPtr : fPtr
+    );
+    const capture = RObjImpl.wrap(
+      Module._Rf_protect(Module._Rf_eval(expr, envObj.ptr))
+    ) as RObjList;
+    protectCount++;
+    Module._free(codeStr);
+    Module._free(evalStr);
+
+    if (_options.captureConditions && _options.throwJsException) {
+      const output = capture.get('output') as RObjList;
+      const error = (output.toArray() as RObjImpl[]).find(
+        (out) => out.get('type').toString() === 'error'
+      );
+      if (error) {
+        throw new Error(
+          error.pluck('data', 'message')?.toString() || 'An error occured evaluating R code.'
+        );
+      }
+    }
+
+    return capture;
+  } finally {
+    Module._Rf_unprotect(protectCount);
   }
-  Module._Rf_unprotect(2);
-  return capture;
 }
 
 function evalR(code: string, env?: RTargetPtr): RObjImpl {
