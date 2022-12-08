@@ -15,10 +15,11 @@ import {
   RCharacter,
 } from './robj';
 
-export type EvalROptions = {
+export type CaptureROptions = {
   captureStreams?: boolean;
   captureConditions?: boolean;
   withAutoprint?: boolean;
+  throwJsException?: boolean;
   withHandlers?: boolean;
 };
 
@@ -111,10 +112,10 @@ export class WebR {
     return (await this.#chan.request({ type: 'getFSNode', data: { path: path } })) as FSNode;
   }
 
-  async evalR(
+  async captureR(
     code: string,
     env?: REnvironment,
-    options: EvalROptions = {}
+    options: CaptureROptions = {}
   ): Promise<{
     result: RObject;
     output: unknown[];
@@ -124,7 +125,7 @@ export class WebR {
     }
 
     const target = (await this.#chan.request({
-      type: 'evalR',
+      type: 'captureR',
       data: {
         code: code,
         env: env?._target,
@@ -160,6 +161,10 @@ export class WebR {
         return { result, output };
       }
     }
+  }
+
+  async evalR(code: string, env?: REnvironment): Promise<RObject> {
+    return (await this.captureR(code, env)).result;
   }
 
   async newRObject(

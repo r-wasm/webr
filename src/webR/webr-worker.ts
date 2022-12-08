@@ -1,11 +1,20 @@
 import { loadScript } from './compat';
 import { newChannelWorker, ChannelWorker, ChannelInitMessage } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
-import { FSNode, WebROptions, EvalROptions } from './webr-main';
+import { FSNode, WebROptions, CaptureROptions } from './webr-main';
 import { Module } from './module';
 import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
-import { RPtr, isRObjImpl, RObjImpl, RTargetObj, RTargetPtr, RawType, RTargetRaw } from './robj';
+import {
+  RPtr,
+  isRObjImpl,
+  RObjImpl,
+  RTargetObj,
+  RTargetPtr,
+  RawType,
+  RTargetRaw,
+  RObjList,
+} from './robj';
 
 let initialised = false;
 let chan: ChannelWorker | undefined;
@@ -62,14 +71,22 @@ function dispatch(msg: Message): void {
         case 'getFSNode':
           write(getFSNode(reqMsg.data.path as string));
           break;
-        case 'evalR': {
+        case 'captureR': {
           const data = reqMsg.data as {
             code: string;
             env?: RTargetPtr;
-            options: EvalROptions;
+            options: CaptureROptions;
           };
           try {
-            write(evalR(data.code, data.env, data.options));
+            const capture = captureR(data.code, data.env, data.options);
+            write({
+              obj: {
+                type: capture.type(),
+                ptr: capture.ptr,
+                methods: RObjImpl.getMethods(capture),
+              },
+              targetType: 'ptr',
+            });
           } catch (_e) {
             const e = _e as Error;
             write({
@@ -133,11 +150,20 @@ function dispatch(msg: Message): void {
           }
           break;
         }
-        case 'installPackage':
-          write(
-            evalR(`webr::install("${reqMsg.data.name as string}", repos="${_config.PKG_URL}")`)
+        case 'installPackage': {
+          const res = evalR(
+            `webr::install("${reqMsg.data.name as string}", repos="${_config.PKG_URL}")`
           );
+          write({
+            obj: {
+              type: res.type(),
+              ptr: res.ptr,
+              methods: RObjImpl.getMethods(res),
+            },
+            targetType: 'ptr',
+          });
           break;
+        }
         default:
           throw new Error('Unknown event `' + reqMsg.type + '`');
       }
@@ -268,12 +294,12 @@ function getRObjProperty(obj: RObjImpl, prop: string): RTargetObj {
 }
 
 /**
- * Evaluate the given R code
+ * Evaluate the given R code and capture output
  *
- * Returns a RTargetObj containing a reference to the resulting SEXP object
- * in WASM memory.
+ * Returns an R list object containing the result of the computation along with
+ * a list of captured stream outputs and conditions.
  *
- * @param {string}  code The R code to evaluate.
+ * @param {string} code The R code to evaluate.
  * @param {RPtr} [env] An RPtr to the environment to evaluate within.
  * @param {Object<string,any>} [options={}] Options for the execution environment.
  * @param {boolean} [options.captureStreams] Should the stdout and stderr
@@ -283,51 +309,81 @@ function getRObjProperty(obj: RObjImpl, prop: string): RTargetObj {
  * @param {boolean} [options.withAutoprint] Should the code automatically print
  * output as if it were written at an R console?
  * @param {boolean} [options.withHandlers] Should the code be executed using a
- * tryCatch with handlers in place.
- * @return {RTargetObj} An R object containing the result of the computation
+ * tryCatch with handlers in place?
+ * @param {boolean} [options.throwJsException] Should an R error condition be
+ * re-thrown as a JS exception?
+ * @return {RObjList} An R object containing the result of the computation
  * along with any other objects captured during execution.
  */
-function evalR(code: string, env?: RTargetPtr, options: EvalROptions = {}): RTargetObj {
-  const _options: Required<EvalROptions> = Object.assign(
-    {
-      captureStreams: true,
-      captureConditions: true,
-      withAutoprint: false,
-      withHandlers: true,
-    },
-    options
-  );
+function captureR(code: string, env?: RTargetPtr, options: CaptureROptions = {}): RObjList {
+  /*
+    This is a sensitive area of the code where we want to be careful to avoid
+    leaking objects when an exception is thrown. Here we keep track of our use
+    of protect and ensure a balanced unprotect is called using try-finally.
+  */
+  let protectCount = 0;
+  try {
+    const _options: Required<CaptureROptions> = Object.assign(
+      {
+        captureStreams: true,
+        captureConditions: true,
+        withAutoprint: false,
+        throwJsException: true,
+        withHandlers: true,
+      },
+      options
+    );
 
-  let envObj = RObjImpl.globalEnv;
-  if (env) {
-    envObj = RObjImpl.wrap(env.obj.ptr);
-    if (envObj.type() !== 'environment') {
-      throw new Error('Attempted to eval R code with an env argument with invalid SEXP type');
+    let envObj = RObjImpl.globalEnv;
+    if (env) {
+      envObj = RObjImpl.wrap(env.obj.ptr);
+      if (envObj.type() !== 'environment') {
+        throw new Error('Attempted to eval R code with an env argument with invalid SEXP type');
+      }
     }
-  }
 
-  const tPtr = Module.getValue(Module._R_TrueValue, '*');
-  const fPtr = Module.getValue(Module._R_FalseValue, '*');
-  const codeStr = Module.allocateUTF8(code);
-  const evalStr = Module.allocateUTF8('webr::eval_r');
-  const codeObj = new RObjImpl({ targetType: 'raw', obj: code });
-  codeObj.preserve();
-  const expr = Module._Rf_lang6(
-    Module._R_ParseEvalString(evalStr, RObjImpl.baseEnv.ptr),
-    codeObj.ptr,
-    _options.captureConditions ? tPtr : fPtr,
-    _options.captureStreams ? tPtr : fPtr,
-    _options.withAutoprint ? tPtr : fPtr,
-    _options.withHandlers ? tPtr : fPtr
-  );
-  const evalResult = RObjImpl.wrap(Module._Rf_eval(expr, envObj.ptr));
-  codeObj.release();
-  Module._free(codeStr);
-  Module._free(evalStr);
-  return {
-    obj: { type: evalResult.type(), ptr: evalResult.ptr, methods: RObjImpl.getMethods(evalResult) },
-    targetType: 'ptr',
-  };
+    const tPtr = Module.getValue(Module._R_TrueValue, '*');
+    const fPtr = Module.getValue(Module._R_FalseValue, '*');
+    const codeStr = Module.allocateUTF8(code);
+    const evalStr = Module.allocateUTF8('webr::eval_r');
+    const codeObj = new RObjImpl({ targetType: 'raw', obj: code });
+    Module._Rf_protect(codeObj.ptr);
+    protectCount++;
+    const expr = Module._Rf_lang6(
+      Module._R_ParseEvalString(evalStr, RObjImpl.baseEnv.ptr),
+      codeObj.ptr,
+      _options.captureConditions ? tPtr : fPtr,
+      _options.captureStreams ? tPtr : fPtr,
+      _options.withAutoprint ? tPtr : fPtr,
+      _options.withHandlers ? tPtr : fPtr
+    );
+    const capture = RObjImpl.wrap(
+      Module._Rf_protect(Module._Rf_eval(expr, envObj.ptr))
+    ) as RObjList;
+    protectCount++;
+    Module._free(codeStr);
+    Module._free(evalStr);
+
+    if (_options.captureConditions && _options.throwJsException) {
+      const output = capture.get('output') as RObjList;
+      const error = (output.toArray() as RObjImpl[]).find(
+        (out) => out.get('type').toString() === 'error'
+      );
+      if (error) {
+        throw new Error(
+          error.pluck('data', 'message')?.toString() || 'An error occured evaluating R code.'
+        );
+      }
+    }
+
+    return capture;
+  } finally {
+    Module._Rf_unprotect(protectCount);
+  }
+}
+
+function evalR(code: string, env?: RTargetPtr): RObjImpl {
+  return captureR(code, env).get('result');
 }
 
 function getFileData(name: string): Uint8Array {

@@ -77,7 +77,7 @@ const webR = new WebR({
 
   readline.setCtrlCHandler(() => webR.interrupt());
 
-  webR.evalR('webr::global_prompt_install()', undefined, { withHandlers: false });
+  webR.captureR('webr::global_prompt_install()', undefined, { withHandlers: false });
 
   // Clear the loading message
   term.write('\x1b[2K\r');
