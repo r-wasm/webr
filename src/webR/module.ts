@@ -11,6 +11,7 @@ export interface Module extends EmscriptenModule {
   monitorRunDependencies: (n: number) => void;
   noImageDecoding: boolean;
   noAudioDecoding: boolean;
+  noWasmDecoding: boolean;
   setPrompt: (prompt: string) => void;
   canvasExec: (op: string) => void;
   downloadFileContent: (
