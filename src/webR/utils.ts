@@ -91,3 +91,10 @@ export function isCrossOrigin(urlString: string) {
   }
   return true;
 }
+
+export function throwUnreachable(context?: string) {
+  let msg = 'Reached the unreachable';
+  msg = msg + (context ? ': ' + context : '.');
+
+  throw new Error(msg);
+}

@@ -4,7 +4,7 @@ import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions, EvalROptions } from './webr-main';
 import { Module } from './module';
 import { IN_NODE } from './compat';
-import { replaceInObject } from './utils';
+import { replaceInObject, throwUnreachable } from './utils';
 import { RPtr, isRObjImpl, RObjImpl, RTargetObj, RTargetPtr, RawType, RTargetRaw } from './robj';
 
 let initialised = false;
@@ -397,14 +397,14 @@ function init(config: Required<WebROptions>) {
           `An error occured during JavaScript evaluation:\n  ${(e as { message: string }).message}`
         );
 
-        const ffi_msg = Module._Rf_protect(Module._Rf_mkString(msg));
-        const call = Module._Rf_protect(Module._Rf_lang2(Module._Rf_install(stop), ffi_msg));
+        const ffiMsg = Module._Rf_protect(Module._Rf_mkString(msg));
+        const call = Module._Rf_protect(Module._Rf_lang2(Module._Rf_install(stop), ffiMsg));
         Module._free(stop);
         Module._free(msg);
 
         Module._Rf_eval(call, RObjImpl.baseEnv.ptr);
-        Module._Rf_unprotect(2);
       }
+      throwUnreachable();
       return 0;
     },
   };
