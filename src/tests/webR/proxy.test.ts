@@ -12,12 +12,12 @@ beforeAll(async () => {
 });
 
 test('Evaluate code and return a proxy', async () => {
-  const result = (await webR.evalR('42')).result;
+  const result = await webR.evalR('42');
   expect(util.types.isProxy(result)).toBe(true);
 });
 
 test('RProxy _target property', async () => {
-  const result = (await webR.evalR('42')).result;
+  const result = await webR.evalR('42');
   expect(result._target).toHaveProperty('targetType', 'ptr');
   expect(result._target).toHaveProperty('obj');
   const obj = result._target.obj as { type: string; methods: string[]; ptr: number };
@@ -27,20 +27,20 @@ test('RProxy _target property', async () => {
 });
 
 test('RFunctions can be invoked via the proxy apply hook', async () => {
-  const fn = (await webR.evalR('factorial')).result as RFunction;
+  const fn = (await webR.evalR('factorial')) as RFunction;
   const result = await fn(8);
   expect(result).toEqual(expect.objectContaining({ names: null, values: [40320] }));
 });
 
 test('RFunctions can be returned by R functions and invoked via the apply hook', async () => {
-  const fn = (await webR.evalR('function(x) function (y) {x*y}')).result as RFunction;
+  const fn = (await webR.evalR('function(x) function (y) {x*y}')) as RFunction;
   const invoke = (await fn(5)) as RFunction;
   const result = await invoke(7);
   expect(result).toEqual(expect.objectContaining({ names: null, values: [35] }));
 });
 
 test('R list objects can be iterated over with `for await`', async () => {
-  const list = (await webR.evalR('list(1+2i, "b", TRUE)')).result as RList;
+  const list = (await webR.evalR('list(1+2i, "b", TRUE)')) as RList;
   const result: any[] = [];
   for await (const elem of list) {
     result.push(await elem.toJs());
@@ -54,7 +54,7 @@ test('R list objects can be iterated over with `for await`', async () => {
 
 test('Attempting to iterate over unsupported R objects throws an error', async () => {
   const shouldThrow = async () => {
-    const notalist = (await webR.evalR('as.symbol("notalist")')).result;
+    const notalist = await webR.evalR('as.symbol("notalist")');
     const result: any[] = [];
     for await (const elem of notalist) {
       result.push(await elem.toJs());
@@ -65,7 +65,7 @@ test('Attempting to iterate over unsupported R objects throws an error', async (
 });
 
 test('R atomic vector objects can be iterated over with `for await`', async () => {
-  const vec = (await webR.evalR('c(3, 5, 6, 7, 9, 10, 11, 12, 13)')).result as RList;
+  const vec = (await webR.evalR('c(3, 5, 6, 7, 9, 10, 11, 12, 13)')) as RList;
   const result: any[] = [];
   for await (const elem of vec) {
     const val = await (elem as RDouble).toNumber();
