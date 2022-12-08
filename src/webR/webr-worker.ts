@@ -309,8 +309,10 @@ function getRObjProperty(obj: RObjImpl, prop: string): RTargetObj {
  * @param {boolean} [options.withAutoprint] Should the code automatically print
  * output as if it were written at an R console?
  * @param {boolean} [options.withHandlers] Should the code be executed using a
- * tryCatch with handlers in place.
- * @return {RTargetObj} An R object containing the result of the computation
+ * tryCatch with handlers in place?
+ * @param {boolean} [options.throwJsException] Should an R error condition be
+ * re-thrown as a JS exception?
+ * @return {RObjList} An R object containing the result of the computation
  * along with any other objects captured during execution.
  */
 function captureR(code: string, env?: RTargetPtr, options: CaptureROptions = {}): RObjList {
@@ -319,6 +321,7 @@ function captureR(code: string, env?: RTargetPtr, options: CaptureROptions = {})
       captureStreams: true,
       captureConditions: true,
       withAutoprint: false,
+      throwJsException: true,
       withHandlers: true,
     },
     options
@@ -337,7 +340,7 @@ function captureR(code: string, env?: RTargetPtr, options: CaptureROptions = {})
   const codeStr = Module.allocateUTF8(code);
   const evalStr = Module.allocateUTF8('webr::eval_r');
   const codeObj = new RObjImpl({ targetType: 'raw', obj: code });
-  codeObj.preserve();
+  Module._Rf_protect(codeObj.ptr);
   const expr = Module._Rf_lang6(
     Module._R_ParseEvalString(evalStr, RObjImpl.baseEnv.ptr),
     codeObj.ptr,
@@ -346,10 +349,22 @@ function captureR(code: string, env?: RTargetPtr, options: CaptureROptions = {})
     _options.withAutoprint ? tPtr : fPtr,
     _options.withHandlers ? tPtr : fPtr
   );
-  const capture = RObjImpl.wrap(Module._Rf_eval(expr, envObj.ptr)) as RObjList;
-  codeObj.release();
+  const capture = RObjImpl.wrap(Module._Rf_protect(Module._Rf_eval(expr, envObj.ptr))) as RObjList;
   Module._free(codeStr);
   Module._free(evalStr);
+
+  if (_options.captureConditions && _options.throwJsException) {
+    const output = capture.get('output') as RObjList;
+    const error = (output.toArray() as RObjImpl[]).find(
+      (out) => out.get('type').toString() === 'error'
+    );
+    if (error) {
+      throw new Error(
+        error.pluck('data', 'message')?.toString() || 'An error occured evaluating R code.'
+      );
+    }
+  }
+  Module._Rf_unprotect(2);
   return capture;
 }
 

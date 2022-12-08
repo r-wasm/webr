@@ -19,6 +19,7 @@ export type CaptureROptions = {
   captureStreams?: boolean;
   captureConditions?: boolean;
   withAutoprint?: boolean;
+  throwJsException?: boolean;
   withHandlers?: boolean;
 };
 
