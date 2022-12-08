@@ -355,7 +355,7 @@ function init(config: Required<WebROptions>) {
 
   // Don't instantiate .so libraries packaged through `WEBR_REPO` too
   // early. Otherwise C++ libraries with dynamic initialisation of
-  // global variables might call into the R API too early, beforeR has
+  // global variables might call into the R API too early, before R has
   // started.
   Module.noWasmDecoding = true;
 
