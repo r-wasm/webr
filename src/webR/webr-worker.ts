@@ -396,10 +396,14 @@ function init(config: Required<WebROptions>) {
         const msg = Module.allocateUTF8(
           `An error occured during JavaScript evaluation:\n  ${(e as { message: string }).message}`
         );
-        const call = Module._Rf_lang2(Module._Rf_install(stop), Module._Rf_mkString(msg));
+
+        const ffi_msg = Module._Rf_protect(Module._Rf_mkString(msg));
+        const call = Module._Rf_protect(Module._Rf_lang2(Module._Rf_install(stop), ffi_msg));
         Module._free(stop);
         Module._free(msg);
+
         Module._Rf_eval(call, RObjImpl.baseEnv.ptr);
+        Module._Rf_unprotect(2);
       }
       return 0;
     },
