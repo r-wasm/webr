@@ -1,11 +1,20 @@
 import { loadScript } from './compat';
 import { newChannelWorker, ChannelWorker, ChannelInitMessage } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
-import { FSNode, WebROptions, EvalROptions } from './webr-main';
+import { FSNode, WebROptions, CaptureROptions } from './webr-main';
 import { Module } from './module';
 import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
-import { RPtr, isRObjImpl, RObjImpl, RTargetObj, RTargetPtr, RawType, RTargetRaw } from './robj';
+import {
+  RPtr,
+  isRObjImpl,
+  RObjImpl,
+  RTargetObj,
+  RTargetPtr,
+  RawType,
+  RTargetRaw,
+  RObjList,
+} from './robj';
 
 let initialised = false;
 let chan: ChannelWorker | undefined;
@@ -62,14 +71,22 @@ function dispatch(msg: Message): void {
         case 'getFSNode':
           write(getFSNode(reqMsg.data.path as string));
           break;
-        case 'evalR': {
+        case 'captureR': {
           const data = reqMsg.data as {
             code: string;
             env?: RTargetPtr;
-            options: EvalROptions;
+            options: CaptureROptions;
           };
           try {
-            write(evalR(data.code, data.env, data.options));
+            const capture = captureR(data.code, data.env, data.options);
+            write({
+              obj: {
+                type: capture.type(),
+                ptr: capture.ptr,
+                methods: RObjImpl.getMethods(capture),
+              },
+              targetType: 'ptr',
+            });
           } catch (_e) {
             const e = _e as Error;
             write({
@@ -133,11 +150,20 @@ function dispatch(msg: Message): void {
           }
           break;
         }
-        case 'installPackage':
-          write(
-            evalR(`webr::install("${reqMsg.data.name as string}", repos="${_config.PKG_URL}")`)
+        case 'installPackage': {
+          const res = evalR(
+            `webr::install("${reqMsg.data.name as string}", repos="${_config.PKG_URL}")`
           );
+          write({
+            obj: {
+              type: res.type(),
+              ptr: res.ptr,
+              methods: RObjImpl.getMethods(res),
+            },
+            targetType: 'ptr',
+          });
           break;
+        }
         default:
           throw new Error('Unknown event `' + reqMsg.type + '`');
       }
@@ -268,12 +294,12 @@ function getRObjProperty(obj: RObjImpl, prop: string): RTargetObj {
 }
 
 /**
- * Evaluate the given R code
+ * Evaluate the given R code and capture output
  *
- * Returns a RTargetObj containing a reference to the resulting SEXP object
- * in WASM memory.
+ * Returns an R list object containing the result of the computation along with
+ * a list of captured stream outputs and conditions.
  *
- * @param {string}  code The R code to evaluate.
+ * @param {string} code The R code to evaluate.
  * @param {RPtr} [env] An RPtr to the environment to evaluate within.
  * @param {Object<string,any>} [options={}] Options for the execution environment.
  * @param {boolean} [options.captureStreams] Should the stdout and stderr
@@ -287,8 +313,8 @@ function getRObjProperty(obj: RObjImpl, prop: string): RTargetObj {
  * @return {RTargetObj} An R object containing the result of the computation
  * along with any other objects captured during execution.
  */
-function evalR(code: string, env?: RTargetPtr, options: EvalROptions = {}): RTargetObj {
-  const _options: Required<EvalROptions> = Object.assign(
+function captureR(code: string, env?: RTargetPtr, options: CaptureROptions = {}): RObjList {
+  const _options: Required<CaptureROptions> = Object.assign(
     {
       captureStreams: true,
       captureConditions: true,
@@ -320,14 +346,15 @@ function evalR(code: string, env?: RTargetPtr, options: EvalROptions = {}): RTar
     _options.withAutoprint ? tPtr : fPtr,
     _options.withHandlers ? tPtr : fPtr
   );
-  const evalResult = RObjImpl.wrap(Module._Rf_eval(expr, envObj.ptr));
+  const capture = RObjImpl.wrap(Module._Rf_eval(expr, envObj.ptr)) as RObjList;
   codeObj.release();
   Module._free(codeStr);
   Module._free(evalStr);
-  return {
-    obj: { type: evalResult.type(), ptr: evalResult.ptr, methods: RObjImpl.getMethods(evalResult) },
-    targetType: 'ptr',
-  };
+  return capture;
+}
+
+function evalR(code: string, env?: RTargetPtr): RObjImpl {
+  return captureR(code, env).get('result');
 }
 
 function getFileData(name: string): Uint8Array {
