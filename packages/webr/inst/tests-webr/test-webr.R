@@ -7,7 +7,7 @@ webr:::sandbox({
   )
 
   # Hooked
-  old <- options(webR.hook_system = function(...) "foo")
+  old <- options(webr.hook_system = function(...) "foo")
   stopifnot(
     identical(system("cmd"), "foo"),
     identical(system2("cmd"), "foo")

@@ -8,7 +8,7 @@ Index: R-4.1.3/src/library/base/R/unix/system.unix.R
  
 +    # Disable system() command when running under emscripten
 +    if (grepl("emscripten", R.version$os)) {
-+	return(webR_hook_system(command))
++	return(webr_hook_system(command))
 +    }
 +
      if(ignore.stdout) command <- paste(command, ">/dev/null")
@@ -20,7 +20,7 @@ Index: R-4.1.3/src/library/base/R/unix/system.unix.R
  
 +    # Disable system() command when running under emscripten
 +    if (grepl("emscripten", R.version$os)) {
-+	return(webR_hook_system(command))
++	return(webr_hook_system(command))
 +    }
 +
      intern <- FALSE
@@ -30,8 +30,8 @@ Index: R-4.1.3/src/library/base/R/unix/system.unix.R
      .Internal(system(command, intern, timeout))
  }
  
-+webR_hook_system <- function(command) {
-+    hook <- getOption("webR.hook_system")
++webr_hook_system <- function(command) {
++    hook <- getOption("webr.hook_system")
 +    if (is.function(hook)) {
 +       # This hook may be used to e.g. call `testthat::skip()`
 +	hook(command)
