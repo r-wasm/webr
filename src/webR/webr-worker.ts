@@ -96,6 +96,30 @@ function dispatch(msg: Message): void {
           }
           break;
         }
+        case 'evalR': {
+          const data = reqMsg.data as {
+            code: string;
+            env?: RTargetPtr;
+          };
+          try {
+            const result = evalR(data.code, data.env);
+            write({
+              obj: {
+                type: result.type(),
+                ptr: result.ptr,
+                methods: RObjImpl.getMethods(result),
+              },
+              targetType: 'ptr',
+            });
+          } catch (_e) {
+            const e = _e as Error;
+            write({
+              targetType: 'err',
+              obj: { name: e.name, message: e.message, stack: e.stack },
+            });
+          }
+          break;
+        }
         case 'newRObject': {
           const data = reqMsg.data as RTargetRaw;
           try {
