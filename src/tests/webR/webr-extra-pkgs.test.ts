@@ -10,9 +10,7 @@ beforeAll(async () => {
 });
 
 test('webr package tests succeed', async () => {
-  // TODO: Use the simpler eval functions that converts R errors to JS
-  // exceptions, this way we'll get information about failing tests
-  const out = (await webR.evalR('webr:::self_test()')).result;
+  const out = await webR.evalR('webr:::self_test()');
   expect(await out.type()).toEqual('null');
 });
 
