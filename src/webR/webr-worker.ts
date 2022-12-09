@@ -407,7 +407,34 @@ function captureR(code: string, env?: RTargetPtr, options: CaptureROptions = {})
 }
 
 function evalR(code: string, env?: RTargetPtr): RObjImpl {
-  return captureR(code, env).get('result');
+  const capture = captureR(code, env);
+
+  // Send captured conditions and output to the JS console. By default, captured
+  // error conditions are thrown and so do not need to be handled here.
+  const output = capture.get('output') as RObjList;
+  for (let i = 1; i <= output.length; i++) {
+    const out = output.get(i);
+    const outputType = out.get('type').toString();
+    switch (outputType) {
+      case 'stdout':
+        console.log(out.get('data').toString());
+        break;
+      case 'stderr':
+        console.warn(out.get('data').toString());
+        break;
+      case 'message':
+        console.warn(out.pluck('data', 'message')?.toString() || '');
+        break;
+      case 'warning':
+        console.warn(`Warning message: \n${out.pluck('data', 'message')?.toString() || ''}`);
+        break;
+      default:
+        console.warn(`Output of type ${outputType}:`);
+        console.warn(out.get('data').toJs());
+        break;
+    }
+  }
+  return capture.get('result');
 }
 
 function getFileData(name: string): Uint8Array {
