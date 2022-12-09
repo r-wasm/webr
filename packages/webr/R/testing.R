@@ -1,6 +1,10 @@
 self_test <- function() {
-  dir <- system.file("tests", package = "webr")
+  dir <- system.file("tests-webr", package = "webr")
   files <- dir(dir, full.names = TRUE, pattern = "\\.R$")
+
+  if (!length(files)) {
+    stop("Can't find test files.")
+  }
 
   for (file in files) {
     sandbox({
