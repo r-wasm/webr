@@ -4,9 +4,9 @@
 /tools/fortran.mk
 /tools/dragonegg/build
 /tools/dragonegg/emfc
-/tools/flang/build
+/tools/flang/build*
 /tools/flang/emfc
-/tools/flang/f18-llvm-project
+/tools/flang/*llvm-project
 /R/download
 /R/build
 /src/coverage
