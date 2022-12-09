@@ -1,3 +1,33 @@
+self_test <- function() {
+  dir <- system.file("tests-webr", package = "webr")
+  files <- dir(dir, full.names = TRUE, pattern = "\\.R$")
+
+  if (!length(files)) {
+    stop("Can't find test files.")
+  }
+
+  for (file in files) {
+    sandbox({
+      source(file, local = TRUE)
+    })
+  }
+}
+
+# Evaluates in a child of the current environment and restores options
+# and wd on exit
+sandbox <- function(expr, env = parent.frame()) {
+  expr <- substitute(expr)
+  box <- new.env(parent = env)
+
+  old_opts <- options()
+  on.exit(options(old_opts))
+
+  old_wd <- getwd()
+  on.exit(setwd(old_wd), add = TRUE, after = FALSE)
+
+  eval(expr, box)
+}
+
 # Run a R script within in this instance of R, capturing output to a file.
 sink_source_to_file <- function(src_file, out_file) {
   con <- file(out_file, open = "wt")
