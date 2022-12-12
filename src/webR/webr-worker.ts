@@ -503,7 +503,7 @@ function init(config: Required<WebROptions>) {
 
     evalJs: (code: RPtr): number => {
       try {
-        return eval(Module.UTF8ToString(code));
+        return (0, eval)(Module.UTF8ToString(code));
       } catch (e) {
         const stop = Module.allocateUTF8('stop');
         const msg = Module.allocateUTF8(
