@@ -89,7 +89,35 @@ describe('Evaluate R code', () => {
     expect((await webR.read()).data).toBe('Hello, stderr!');
   });
 
-  test('Capture stdout while evaluating R code', async () => {
+  /* Since console.log and console.warn are called from the worker thread in the
+   * next two tests, we cannot mock them in the usual way. Instead we spy on
+   * node's process.stdout and process.stderr streams, where console logging is
+   * ultimately written.
+   */
+  test('Send output to console.log while evaluating R code', async () => {
+    const spyStdout = jest.spyOn(process.stdout, 'write');
+    await webR.evalR('print(c(30, 42, 66, 70, 78, 102))');
+    const buffer = spyStdout.mock.calls[0][0] as Buffer;
+    expect(buffer.includes('[1]  30  42  66  70  78 102')).toEqual(true);
+    spyStdout.mockReset();
+    spyStdout.mockRestore();
+  });
+
+  test('Send conditions to console.warn while evaluating R code', async () => {
+    const spyStderr = jest.spyOn(process.stderr, 'write');
+    await webR.evalR('warning("This is a warning!")');
+    const buffer = spyStderr.mock.calls[0][0] as Buffer;
+    expect(buffer.includes('Warning message: \nThis is a warning!')).toEqual(true);
+    spyStderr.mockReset();
+    spyStderr.mockRestore();
+  });
+
+  test('Error conditions are re-thrown in JS when evaluating R code', async () => {
+    const throws = webR.evalR('stop("This is an error from R!")');
+    await expect(throws).rejects.toThrow('This is an error from R!');
+  });
+
+  test('Capture stdout while capturing R code', async () => {
     const composite = await webR.captureR('c(1, 2, 4, 6, 12, 24, 36, 48)', undefined, {
       withAutoprint: true,
       captureStreams: true,
@@ -97,7 +125,7 @@ describe('Evaluate R code', () => {
     expect(composite.output).toEqual([{ type: 'stdout', data: '[1]  1  2  4  6 12 24 36 48' }]);
   });
 
-  test('Capture stderr while evaluating R code', async () => {
+  test('Capture stderr while capturing R code', async () => {
     const res = await webR.captureR('message("Hello, stderr!")', undefined, {
       captureStreams: true,
       captureConditions: false,
@@ -105,7 +133,7 @@ describe('Evaluate R code', () => {
     expect(res.output).toEqual([{ type: 'stderr', data: 'Hello, stderr!' }]);
   });
 
-  test('Capture condition while evaluating R code', async () => {
+  test('Capture conditions while capturing R code', async () => {
     const res = await webR.captureR('warning("This is a warning message")', undefined, {
       captureConditions: true,
     });
@@ -292,6 +320,10 @@ describe('Serialise nested R lists, pairlists and vectors unambiguously', () => 
     expect(await rObj.type()).toEqual('list');
     expect(await identical.toLogical()).toEqual(true);
   });
+});
+
+beforeEach(() => {
+  jest.restoreAllMocks();
 });
 
 afterAll(() => {

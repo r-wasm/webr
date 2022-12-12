@@ -164,7 +164,28 @@ export class WebR {
   }
 
   async evalR(code: string, env?: REnvironment): Promise<RObject> {
-    return (await this.captureR(code, env)).result;
+    if (env && !isRObject(env)) {
+      throw new Error('Attempted to evaluate R code with invalid environment object');
+    }
+
+    const target = (await this.#chan.request({
+      type: 'evalR',
+      data: { code: code, env: env?._target },
+    })) as RTargetObj;
+
+    switch (target.targetType) {
+      case 'raw':
+        throw new Error('Unexpected raw target type returned from evalR');
+      case 'err': {
+        const e = new Error(target.obj.message);
+        e.name = target.obj.name;
+        e.stack = target.obj.stack;
+        throw e;
+      }
+      default: {
+        return newRProxy(this.#chan, target);
+      }
+    }
   }
 
   async newRObject(
