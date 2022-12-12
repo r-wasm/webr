@@ -1,5 +1,6 @@
 import { WebR } from '../../webR/webr-main';
 import { Message } from '../../webR/chan/message';
+import { promiseHandles } from '../../webR/utils';
 import {
   RDouble,
   RLogical,
@@ -95,8 +96,13 @@ describe('Evaluate R code', () => {
    * ultimately written.
    */
   test('Send output to console.log while evaluating R code', async () => {
-    const spyStdout = jest.spyOn(process.stdout, 'write');
+    const waitForOutput = promiseHandles();
+    const spyStdout = jest.spyOn(process.stdout, 'write').mockImplementation(() => {
+      waitForOutput.resolve();
+      return true;
+    });
     await webR.evalR('print(c(30, 42, 66, 70, 78, 102))');
+    await waitForOutput.promise;
     const buffer = spyStdout.mock.calls[0][0] as Buffer;
     expect(buffer.includes('[1]  30  42  66  70  78 102')).toEqual(true);
     spyStdout.mockReset();
@@ -104,8 +110,13 @@ describe('Evaluate R code', () => {
   });
 
   test('Send conditions to console.warn while evaluating R code', async () => {
-    const spyStderr = jest.spyOn(process.stderr, 'write');
+    const waitForOutput = promiseHandles();
+    const spyStderr = jest.spyOn(process.stderr, 'write').mockImplementation(() => {
+      waitForOutput.resolve();
+      return true;
+    });
     await webR.evalR('warning("This is a warning!")');
+    await waitForOutput.promise;
     const buffer = spyStderr.mock.calls[0][0] as Buffer;
     expect(buffer.includes('Warning message: \nThis is a warning!')).toEqual(true);
     spyStderr.mockReset();
