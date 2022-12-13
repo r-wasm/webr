@@ -13,7 +13,7 @@ type Methods<T> = {
  *
  * Distributes RProxy over any RObjImpls in the given union type U.
  */
-type DistProxy<U> = U extends RObjImpl
+export type DistProxy<U> = U extends RObjImpl
   ? RProxy<U>
   : U extends RObjectTree<RObjImpl>
   ? RObjectTree<RObject>
