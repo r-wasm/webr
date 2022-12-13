@@ -158,14 +158,14 @@ describe('Evaluate R code', () => {
 describe('Create R objects using serialised form', () => {
   test('Create an R NULL', async () => {
     const jsObj = { type: 'null' };
-    const rObj = (await webR.newRObject(jsObj)) as RNull;
+    const rObj = (await new webR.RObject(jsObj)) as RNull;
     expect(await rObj.type()).toEqual('null');
     expect(await rObj.toJs()).toEqual({ type: 'null' });
   });
 
   test('Create an atomic vector', async () => {
     const jsObj = { type: 'integer', values: [10, 20, 30], names: ['x', 'y', 'z'] };
-    const rObj = (await webR.newRObject(jsObj)) as RInteger;
+    const rObj = (await new webR.RObject(jsObj)) as RInteger;
     expect(await rObj.type()).toEqual('integer');
     expect(await rObj.toArray()).toEqual([10, 20, 30]);
     expect(await rObj.toJs()).toEqual({
@@ -177,7 +177,7 @@ describe('Create R objects using serialised form', () => {
 
   test('Create a list', async () => {
     const jsObj = { type: 'list', values: [true, 3.14, 'abc'], names: ['x', 'y', 'z'] };
-    const rObj = (await webR.newRObject(jsObj)) as RList;
+    const rObj = (await new webR.RObject(jsObj)) as RList;
     expect(await rObj.type()).toEqual('list');
     const list = await rObj.toJs();
     expect(list.names).toEqual(['x', 'y', 'z']);
@@ -200,7 +200,7 @@ describe('Create R objects using serialised form', () => {
 
   test('Create a pairlist', async () => {
     const jsObj = { type: 'pairlist', values: [true, 3.14, 'abc'], names: ['x', 'y', 'z'] };
-    const rObj = (await webR.newRObject(jsObj)) as RPairlist;
+    const rObj = (await new webR.RObject(jsObj)) as RPairlist;
     expect(await rObj.type()).toEqual('pairlist');
     const list = await rObj.toJs();
     expect(list.names).toEqual(['x', 'y', 'z']);
@@ -223,7 +223,7 @@ describe('Create R objects using serialised form', () => {
 
   test('Create an environment', async () => {
     const jsObj = { type: 'environment', names: ['x', 'y'], values: [123, 'abc'] };
-    const rObj = (await webR.newRObject(jsObj)) as REnvironment;
+    const rObj = (await new webR.RObject(jsObj)) as REnvironment;
     expect(await rObj.type()).toEqual('environment');
     expect(await rObj.ls()).toEqual(['x', 'y']);
     const x = await rObj.get('x');
@@ -245,7 +245,7 @@ describe('Create R objects using serialised form', () => {
 
 describe('Create R atomic vectors from JS arrays', () => {
   test('Convert a JS null to R logical NA', async () => {
-    const rObj = (await webR.newRObject(null)) as RLogical;
+    const rObj = (await new webR.RObject(null)) as RLogical;
     expect(await rObj.type()).toEqual('logical');
     expect(await rObj.toJs()).toEqual(
       expect.objectContaining({
@@ -257,7 +257,7 @@ describe('Create R atomic vectors from JS arrays', () => {
 
   test('Create a logical atomic vector', async () => {
     const jsObj = [true, false, true, null];
-    const rObj = (await webR.newRObject(jsObj)) as RLogical;
+    const rObj = (await new webR.RObject(jsObj)) as RLogical;
     expect(await rObj.type()).toEqual('logical');
     expect(await rObj.toJs()).toEqual(
       expect.objectContaining({
@@ -269,14 +269,14 @@ describe('Create R atomic vectors from JS arrays', () => {
 
   test('Create a double atomic vector', async () => {
     const jsObj = [1, 2, 3, 6, 11, 23, 47, 106, null];
-    const rObj = (await webR.newRObject(jsObj)) as RDouble;
+    const rObj = (await new webR.RObject(jsObj)) as RDouble;
     expect(await rObj.type()).toEqual('double');
     expect(await rObj.toArray()).toEqual(jsObj);
   });
 
   test('Create a character atomic vector', async () => {
     const jsObj = ['a', 'b', 'c', null];
-    const rObj = (await webR.newRObject(jsObj)) as RCharacter;
+    const rObj = (await new webR.RObject(jsObj)) as RCharacter;
     expect(await rObj.type()).toEqual('character');
     expect(await rObj.toJs()).toEqual(
       expect.objectContaining({
@@ -288,7 +288,7 @@ describe('Create R atomic vectors from JS arrays', () => {
 
   test('Create a complex atomic vector', async () => {
     const jsObj = [{ re: 1, im: 2 }, { re: -3, im: -4 }, null];
-    const rObj = (await webR.newRObject(jsObj)) as RComplex;
+    const rObj = (await new webR.RObject(jsObj)) as RComplex;
     expect(await rObj.type()).toEqual('complex');
     expect(await rObj.toJs()).toEqual(
       expect.objectContaining({
@@ -305,8 +305,8 @@ describe('Serialise nested R lists, pairlists and vectors unambiguously', () => 
       'list(a=list(e=c(T,F,NA),f=c(1,2,3)), b=pairlist(g=c(4L,5L,6L)), c=list(h=c("abc","def"), i=list(7i)))'
     )) as RList;
     const jsObj = await rObj.toTree();
-    const newRObj = (await webR.newRObject(jsObj)) as RList;
-    const env = (await webR.newRObject({
+    const newRObj = (await new webR.RObject(jsObj)) as RList;
+    const env = (await new webR.RObject({
       type: 'environment',
       names: ['newRObj', 'rObj'],
       values: [newRObj, rObj],
@@ -321,8 +321,8 @@ describe('Serialise nested R lists, pairlists and vectors unambiguously', () => 
       'list(a=list(e=c(T,F,NA),f=c(1,2,3)), b=pairlist(g=c(4L,5L,6L)), c=list(h=c("abc","def"), i=list(7i)))'
     )) as RList;
     const jsObj = await rObj.toTree({ depth: 1 });
-    const newRObj = (await webR.newRObject(jsObj)) as RList;
-    const env = (await webR.newRObject({
+    const newRObj = (await new webR.RObject(jsObj)) as RList;
+    const env = (await new webR.RObject({
       type: 'environment',
       names: ['newRObj', 'rObj'],
       values: [newRObj, rObj],
