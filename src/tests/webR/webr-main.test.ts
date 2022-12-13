@@ -243,7 +243,7 @@ describe('Create R objects using serialised form', () => {
   });
 });
 
-describe('Create R atomic vectors from JS arrays', () => {
+describe('Create R vectors from JS arrays using RObject constructor', () => {
   test('Convert a JS null to R logical NA', async () => {
     const rObj = (await new webR.RObject(null)) as RLogical;
     expect(await rObj.type()).toEqual('logical');
@@ -299,6 +299,175 @@ describe('Create R atomic vectors from JS arrays', () => {
   });
 });
 
+describe('Create R objects from JS objects using proxy constructors', () => {
+  test('Create an R NULL', async () => {
+    const rObj = await new webR.RNull();
+    expect(await rObj.type()).toEqual('null');
+    expect(await rObj.isNull()).toEqual(true);
+  });
+
+  test('Create a logical atomic vector', async () => {
+    const jsObj = { a: true, b: false, c: true, d: null };
+    const rObj = await new webR.RLogical(jsObj);
+    expect(await rObj.type()).toEqual('logical');
+    expect(await rObj.toJs()).toEqual(
+      expect.objectContaining({
+        values: Object.values(jsObj),
+        names: Object.keys(jsObj),
+      })
+    );
+  });
+
+  test('Create an integer atomic vector', async () => {
+    const jsObj = { a: 10, b: 11, c: 12, d: null };
+    const rObj = await new webR.RInteger(jsObj);
+    expect(await rObj.type()).toEqual('integer');
+    expect(await rObj.toJs()).toEqual(
+      expect.objectContaining({
+        values: Object.values(jsObj),
+        names: Object.keys(jsObj),
+      })
+    );
+  });
+
+  test('Create a double atomic vector', async () => {
+    const jsObj = { a: 11, b: 23, c: 47, d: null };
+    const rObj = await new webR.RDouble(jsObj);
+    expect(await rObj.type()).toEqual('double');
+    expect(await rObj.toJs()).toEqual(
+      expect.objectContaining({
+        values: Object.values(jsObj),
+        names: Object.keys(jsObj),
+      })
+    );
+  });
+
+  test('Create a character atomic vector', async () => {
+    const jsObj = { x: 'a', y: 'b', z: 'c', w: null };
+    const rObj = await new webR.RCharacter(jsObj);
+    expect(await rObj.type()).toEqual('character');
+    expect(await rObj.toJs()).toEqual(
+      expect.objectContaining({
+        values: Object.values(jsObj),
+        names: Object.keys(jsObj),
+      })
+    );
+  });
+
+  test('Create a complex atomic vector', async () => {
+    const jsObj = { a: { re: 1, im: 2 }, b: { re: -3, im: -4 }, c: null };
+    const rObj = await new webR.RComplex(jsObj);
+    expect(await rObj.type()).toEqual('complex');
+    expect(await rObj.toJs()).toEqual(
+      expect.objectContaining({
+        values: Object.values(jsObj),
+        names: Object.keys(jsObj),
+      })
+    );
+  });
+
+  test('Create a raw atomic vector', async () => {
+    const jsObj = { a: 210, b: 211, c: 212 };
+    const rObj = await new webR.RRaw(jsObj);
+    expect(await rObj.type()).toEqual('raw');
+    expect(await rObj.toJs()).toEqual(
+      expect.objectContaining({
+        values: Object.values(jsObj),
+        names: Object.keys(jsObj),
+      })
+    );
+  });
+
+  test('Create a list containing both a logical NA and R NULL', async () => {
+    const rNull = await new webR.RNull();
+    const jsObj = [true, 2, null, rNull];
+    const rObj = await new webR.RList(jsObj);
+    expect(await rObj.type()).toEqual('list');
+
+    let elem = await rObj.get(1);
+    expect(await elem.type()).toEqual('logical');
+    expect(await elem.toJs()).toEqual(
+      expect.objectContaining({
+        values: [true],
+        names: null,
+      })
+    );
+
+    elem = await rObj.get(2);
+    expect(await elem.type()).toEqual('double');
+    expect(await elem.toJs()).toEqual(
+      expect.objectContaining({
+        values: [2],
+        names: null,
+      })
+    );
+
+    elem = await rObj.get(3);
+    expect(await elem.type()).toEqual('logical');
+    expect(await elem.toJs()).toEqual(
+      expect.objectContaining({
+        values: [null],
+        names: null,
+      })
+    );
+
+    elem = await rObj.get(4);
+    expect(await elem.type()).toEqual('null');
+    expect(await elem.isNull()).toEqual(true);
+  });
+
+  test('Create a pairlist containing both a logical NA and R NULL', async () => {
+    const rNull = await new webR.RNull();
+    const jsObj = [true, 2, null, rNull];
+    const rObj = await new webR.RPairlist(jsObj);
+    expect(await rObj.type()).toEqual('pairlist');
+
+    let elem = await rObj.get(1);
+    expect(await elem.type()).toEqual('logical');
+    expect(await elem.toJs()).toEqual(
+      expect.objectContaining({
+        values: [true],
+        names: null,
+      })
+    );
+
+    elem = await rObj.get(2);
+    expect(await elem.type()).toEqual('double');
+    expect(await elem.toJs()).toEqual(
+      expect.objectContaining({
+        values: [2],
+        names: null,
+      })
+    );
+
+    elem = await rObj.get(3);
+    expect(await elem.type()).toEqual('logical');
+    expect(await elem.toJs()).toEqual(
+      expect.objectContaining({
+        values: [null],
+        names: null,
+      })
+    );
+
+    elem = await rObj.get(4);
+    expect(await elem.type()).toEqual('null');
+    expect(await elem.isNull()).toEqual(true);
+  });
+
+  test('Create an environment', async () => {
+    const rObj = await new webR.REnvironment({ x: 123, y: 456 });
+    expect(await rObj.type()).toEqual('environment');
+    expect(await rObj.ls()).toEqual(['x', 'y']);
+
+    let elem = (await rObj.get('x')) as RDouble;
+    expect(await elem.type()).toEqual('double');
+    expect(await elem.toNumber()).toEqual(123);
+    elem = (await rObj.get('y')) as RDouble;
+    expect(await elem.type()).toEqual('double');
+    expect(await elem.toNumber()).toEqual(456);
+  });
+});
+
 describe('Serialise nested R lists, pairlists and vectors unambiguously', () => {
   test('Round trip convert to full depth and ensure result is identical', async () => {
     const rObj = (await webR.evalR(
@@ -306,11 +475,7 @@ describe('Serialise nested R lists, pairlists and vectors unambiguously', () => 
     )) as RList;
     const jsObj = await rObj.toTree();
     const newRObj = (await new webR.RObject(jsObj)) as RList;
-    const env = (await new webR.RObject({
-      type: 'environment',
-      names: ['newRObj', 'rObj'],
-      values: [newRObj, rObj],
-    })) as REnvironment;
+    const env = await new webR.REnvironment({ newRObj, rObj });
     const identical = (await webR.evalR('identical(rObj, newRObj)', env)) as RLogical;
     expect(await rObj.type()).toEqual('list');
     expect(await identical.toLogical()).toEqual(true);
@@ -322,11 +487,7 @@ describe('Serialise nested R lists, pairlists and vectors unambiguously', () => 
     )) as RList;
     const jsObj = await rObj.toTree({ depth: 1 });
     const newRObj = (await new webR.RObject(jsObj)) as RList;
-    const env = (await new webR.RObject({
-      type: 'environment',
-      names: ['newRObj', 'rObj'],
-      values: [newRObj, rObj],
-    })) as REnvironment;
+    const env = await new webR.REnvironment({ newRObj, rObj });
     const identical = (await webR.evalR('identical(rObj, newRObj)', env)) as RLogical;
     expect(await rObj.type()).toEqual('list');
     expect(await identical.toLogical()).toEqual(true);
