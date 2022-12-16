@@ -193,18 +193,21 @@ export class WebR {
     }
   }
 
-  #newRObjConstructor<T, R>() {
+  #newRObjConstructor<T, R>(objType: RType | 'object') {
     return new Proxy(RObjImpl, {
-      construct: (_, args: [unknown]) => this.#newRObject(...args),
+      construct: (_, args: [unknown]) => this.#newRObject(objType, ...args),
     }) as unknown as {
       new (arg: T): Promise<R>;
     };
   }
 
-  async #newRObject(value: unknown): Promise<RObject> {
+  async #newRObject(objType: RType | 'object', value: unknown): Promise<RObject> {
     const target = (await this.#chan.request({
       type: 'newRObject',
-      data: replaceInObject(value, isRObject, (obj: RObject) => obj._target),
+      data: {
+        objType,
+        obj: replaceInObject(value, isRObject, (obj: RObject) => obj._target),
+      },
     })) as RTargetObj;
     switch (target.targetType) {
       case 'raw':
