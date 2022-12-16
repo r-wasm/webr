@@ -61,6 +61,7 @@ const defaultOptions = {
 };
 
 type RData = DistProxy<RObjData>;
+
 export class WebR {
   #chan: ChannelMain;
   RObject;
