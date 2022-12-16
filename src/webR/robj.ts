@@ -85,7 +85,7 @@ export type RTargetObj = RTargetRaw | RTargetPtr | RTargetError;
 
 type Nullable<T> = T | RObjNull;
 
-type Complex = {
+export type Complex = {
   re: number;
   im: number;
 };
@@ -109,7 +109,7 @@ export type NamedEntries<T> = [string | null, T][];
 export type NamedObject<T> = { [key: string]: T };
 
 export type RObjData = RObjImpl | RawType | RObjectTree<RObjImpl>;
-export type RObjAtomicData<T> = T | (T | null)[] | RObjectTreeAtomic<T>;
+export type RObjAtomicData<T> = T | (T | null)[] | RObjectTreeAtomic<T> | NamedObject<T | null>;
 export type RObjectTree<T> = RObjectTreeImpl<(RObjectTree<T> | RawType | T)[]>;
 export type RObjectTreeAtomic<T> = RObjectTreeImpl<(T | null)[]>;
 type RObjectTreeImpl<T> = {
@@ -482,7 +482,7 @@ export class RObjSymbol extends RObjImpl {
 }
 
 export class RObjPairlist extends RObjImpl {
-  constructor(val: RawType | (RawType | null)[] | RTargetPtr | RObjectTree<RTargetObj>) {
+  constructor(val: RawType | RObjectTree<RTargetObj> | NamedObject<RTargetObj | RawType>) {
     if (isRTargetObj(val)) {
       super(val);
       return this;
@@ -577,7 +577,7 @@ export class RObjPairlist extends RObjImpl {
 }
 
 export class RObjList extends RObjImpl {
-  constructor(val: RawType | (RawType | null)[] | RTargetPtr | RObjectTree<RTargetObj>) {
+  constructor(val: RawType | RObjectTree<RTargetObj> | NamedObject<RTargetObj | RawType>) {
     if (isRTargetObj(val)) {
       super(val);
       return this;
@@ -678,7 +678,7 @@ export class RObjString extends RObjImpl {
 }
 
 export class RObjEnvironment extends RObjImpl {
-  constructor(val: RTargetPtr | RObjectTree<RTargetObj>) {
+  constructor(val: RTargetPtr | RObjectTree<RTargetObj> | NamedObject<RTargetObj | RawType>) {
     if (isRTargetObj(val)) {
       super(val);
       return this;
