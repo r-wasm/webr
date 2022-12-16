@@ -1,7 +1,7 @@
 import { newChannelMain, ChannelMain, ChannelType } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
-import { newRProxy } from './proxy';
+import { newRProxy, DistProxy } from './proxy';
 import { unpackScalarVectors, replaceInObject } from './utils';
 import {
   RTargetObj,
@@ -9,10 +9,10 @@ import {
   isRObject,
   RawType,
   RList,
-  RObjectTree,
-  NamedObject,
   REnvironment,
   RCharacter,
+  RObjData,
+  RObjImpl,
 } from './robj';
 
 export type CaptureROptions = {
@@ -60,12 +60,17 @@ const defaultOptions = {
   channelType: ChannelType.Automatic,
 };
 
+type RData = DistProxy<RObjData>;
+
 export class WebR {
   #chan: ChannelMain;
+  RObject;
 
   constructor(options: WebROptions = {}) {
     const config: Required<WebROptions> = Object.assign(defaultOptions, options);
     this.#chan = newChannelMain(config);
+
+    this.RObject = this.#newRObjConstructor<RData | RData[], RObject>();
   }
 
   async init() {
@@ -188,13 +193,18 @@ export class WebR {
     }
   }
 
-  async newRObject(
-    jsObj: RawType | RawType[] | RObjectTree<RObject> | NamedObject<RawType | RObject>
-  ): Promise<RObject> {
-    const targetObj = replaceInObject(jsObj, isRObject, (obj: RObject) => obj._target);
+  #newRObjConstructor<T, R>() {
+    return new Proxy(RObjImpl, {
+      construct: (_, args: [unknown]) => this.#newRObject(...args),
+    }) as unknown as {
+      new (arg: T): Promise<R>;
+    };
+  }
+
+  async #newRObject(value: unknown): Promise<RObject> {
     const target = (await this.#chan.request({
       type: 'newRObject',
-      data: { targetType: 'raw', obj: targetObj },
+      data: replaceInObject(value, isRObject, (obj: RObject) => obj._target),
     })) as RTargetObj;
     switch (target.targetType) {
       case 'raw':
