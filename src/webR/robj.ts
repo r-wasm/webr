@@ -142,11 +142,11 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
   if (typeof obj === 'number') {
     return new RObjDouble(obj);
   }
-  if (typeof obj === 'object' && 're' in obj && 'im' in obj) {
-    return new RObjComplex(obj as Complex);
-  }
   if (typeof obj === 'string') {
     return new RObjCharacter(obj);
+  }
+  if (isComplex(obj)) {
+    return new RObjComplex(obj);
   }
 
   // JS arrays are interpreted using R's c() function, so as to match
@@ -1170,6 +1170,16 @@ export function isRObjectTree(value: any): value is RObjectTree<any> {
   );
 }
 
+/**
+ * Test if an object is of type Complex
+ *
+ * @param {any} value The object to test.
+ * @return {boolean} True if the object is of type Complex.
+ */
+export function isComplex(value: any): value is Complex {
+  return value && typeof value === 'object' && 're' in value && 'im' in value;
+}
+
 export function getRObjClass(type: RTypeNumber): typeof RObjImpl {
   const typeClasses: { [key: number]: typeof RObjImpl } = {
     [RTypeMap.null]: RObjNull,
@@ -1209,11 +1219,7 @@ function toRObjData(jsObj: RObjData): RObjData {
     return jsObj;
   } else if (Array.isArray(jsObj)) {
     return { names: null, values: jsObj };
-  } else if (
-    jsObj !== null &&
-    typeof jsObj === 'object' &&
-    Object.keys(jsObj).some((k) => !(k === 're' || k === 'im'))
-  ) {
+  } else if (jsObj && typeof jsObj === 'object' && !isComplex(jsObj)) {
     return {
       names: Object.keys(jsObj),
       values: Object.values(jsObj),
