@@ -88,7 +88,7 @@ export class Console {
    * @param {string} input A line of input text.
    */
   stdin(input: string) {
-    this.webR.writeConsole(input + '\n');
+    this.webR.writeConsole(input);
   }
 
   /**
