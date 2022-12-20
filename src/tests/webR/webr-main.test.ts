@@ -9,7 +9,6 @@ import {
   RList,
   RPairlist,
   REnvironment,
-  RNull,
   RInteger,
 } from '../../webR/robj';
 
@@ -158,7 +157,7 @@ describe('Evaluate R code', () => {
 describe('Create R objects using serialised form', () => {
   test('Create an R NULL', async () => {
     const jsObj = { type: 'null' };
-    const rObj = (await new webR.RObject(jsObj)) as RNull;
+    const rObj = await new webR.RObject(jsObj);
     expect(await rObj.type()).toEqual('null');
     expect(await rObj.toJs()).toEqual({ type: 'null' });
   });
@@ -301,7 +300,7 @@ describe('Create R vectors from JS arrays using RObject constructor', () => {
 
 describe('Create R objects from JS objects using proxy constructors', () => {
   test('Create an R NULL', async () => {
-    const rObj = await new webR.RNull();
+    const rObj = await new webR.RObject({ type: 'null' });
     expect(await rObj.type()).toEqual('null');
     expect(await rObj.isNull()).toEqual(true);
   });
@@ -379,7 +378,7 @@ describe('Create R objects from JS objects using proxy constructors', () => {
   });
 
   test('Create a list containing both a logical NA and R NULL', async () => {
-    const rNull = await new webR.RNull();
+    const rNull = await new webR.RObject({ type: 'null' });
     const jsObj = [true, 2, null, rNull];
     const rObj = await new webR.RList(jsObj);
     expect(await rObj.type()).toEqual('list');
@@ -417,7 +416,7 @@ describe('Create R objects from JS objects using proxy constructors', () => {
   });
 
   test('Create a pairlist containing both a logical NA and R NULL', async () => {
-    const rNull = await new webR.RNull();
+    const rNull = await new webR.RObject({ type: 'null' });
     const jsObj = [true, 2, null, rNull];
     const rObj = await new webR.RPairlist(jsObj);
     expect(await rObj.type()).toEqual('pairlist');

@@ -4,7 +4,7 @@ import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy, DistProxy } from './proxy';
 import { unpackScalarVectors, replaceInObject } from './utils';
 import { Complex, RObject, RObjImpl, RList, RPairlist, REnvironment } from './robj';
-import { RType, RCharacter, RLogical, RInteger, RDouble, RComplex, RRaw, RNull } from './robj';
+import { RType, RCharacter, RLogical, RInteger, RDouble, RComplex, RRaw } from './robj';
 import { RObjAtomicData, RTargetObj, isRObject, RawType, RObjData, NamedObject } from './robj';
 
 export type CaptureROptions = {
@@ -57,7 +57,6 @@ type RData = DistProxy<RObjData>;
 export class WebR {
   #chan: ChannelMain;
   RObject;
-  RNull;
   RLogical;
   RInteger;
   RDouble;
@@ -73,7 +72,6 @@ export class WebR {
     this.#chan = newChannelMain(config);
 
     this.RObject = this.#newRObjConstructor<RData | RData[], RObject>('object');
-    this.RNull = this.#newRObjConstructor<void, RNull>('null');
     this.RLogical = this.#newRObjConstructor<RObjAtomicData<boolean>, RLogical>('logical');
     this.RInteger = this.#newRObjConstructor<RObjAtomicData<number>, RInteger>('integer');
     this.RDouble = this.#newRObjConstructor<RObjAtomicData<number>, RDouble>('double');
