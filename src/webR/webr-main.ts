@@ -3,17 +3,9 @@ import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy, DistProxy } from './proxy';
 import { unpackScalarVectors, replaceInObject } from './utils';
-import {
-  RTargetObj,
-  RObject,
-  isRObject,
-  RawType,
-  RList,
-  REnvironment,
-  RCharacter,
-  RObjData,
-  RObjImpl,
-} from './robj';
+import { Complex, RObject, RObjImpl, RList, RPairlist, REnvironment } from './robj';
+import { RType, RCharacter, RLogical, RInteger, RDouble, RComplex, RRaw } from './robj';
+import { RObjAtomicData, RTargetObj, isRObject, RawType, RObjData, NamedObject } from './robj';
 
 export type CaptureROptions = {
   captureStreams?: boolean;
@@ -65,12 +57,30 @@ type RData = DistProxy<RObjData>;
 export class WebR {
   #chan: ChannelMain;
   RObject;
+  RLogical;
+  RInteger;
+  RDouble;
+  RCharacter;
+  RComplex;
+  RRaw;
+  RList;
+  RPairlist;
+  REnvironment;
 
   constructor(options: WebROptions = {}) {
     const config: Required<WebROptions> = Object.assign(defaultOptions, options);
     this.#chan = newChannelMain(config);
 
-    this.RObject = this.#newRObjConstructor<RData | RData[], RObject>();
+    this.RObject = this.#newRObjConstructor<RData | RData[], RObject>('object');
+    this.RLogical = this.#newRObjConstructor<RObjAtomicData<boolean>, RLogical>('logical');
+    this.RInteger = this.#newRObjConstructor<RObjAtomicData<number>, RInteger>('integer');
+    this.RDouble = this.#newRObjConstructor<RObjAtomicData<number>, RDouble>('double');
+    this.RComplex = this.#newRObjConstructor<RObjAtomicData<Complex>, RComplex>('complex');
+    this.RCharacter = this.#newRObjConstructor<RObjAtomicData<string>, RCharacter>('character');
+    this.RRaw = this.#newRObjConstructor<RObjAtomicData<number>, RRaw>('raw');
+    this.RList = this.#newRObjConstructor<RData[] | NamedObject<RData>, RList>('list');
+    this.RPairlist = this.#newRObjConstructor<RData[] | NamedObject<RData>, RPairlist>('pairlist');
+    this.REnvironment = this.#newRObjConstructor<NamedObject<RData>, REnvironment>('environment');
   }
 
   async init() {
@@ -193,18 +203,21 @@ export class WebR {
     }
   }
 
-  #newRObjConstructor<T, R>() {
+  #newRObjConstructor<T, R>(objType: RType | 'object') {
     return new Proxy(RObjImpl, {
-      construct: (_, args: [unknown]) => this.#newRObject(...args),
+      construct: (_, args: [unknown]) => this.#newRObject(objType, ...args),
     }) as unknown as {
       new (arg: T): Promise<R>;
     };
   }
 
-  async #newRObject(value: unknown): Promise<RObject> {
+  async #newRObject(objType: RType | 'object', value: unknown): Promise<RObject> {
     const target = (await this.#chan.request({
       type: 'newRObject',
-      data: replaceInObject(value, isRObject, (obj: RObject) => obj._target),
+      data: {
+        objType,
+        obj: replaceInObject(value, isRObject, (obj: RObject) => obj._target),
+      },
     })) as RTargetObj;
     switch (target.targetType) {
       case 'raw':

@@ -7,6 +7,8 @@ import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import {
   RPtr,
+  RType,
+  RTypeMap,
   isRObjImpl,
   RObjImpl,
   RTargetObj,
@@ -14,6 +16,7 @@ import {
   RawType,
   RTargetRaw,
   RObjList,
+  getRObjClass,
 } from './robj';
 
 let initialised = false;
@@ -121,9 +124,14 @@ function dispatch(msg: Message): void {
           break;
         }
         case 'newRObject': {
-          const data = reqMsg.data as RTargetRaw;
+          const data = reqMsg.data as {
+            obj: RTargetRaw;
+            objType: RType | 'object';
+          };
           try {
-            const res = new RObjImpl(data);
+            const RObjClass =
+              data.objType === 'object' ? RObjImpl : getRObjClass(RTypeMap[data.objType]);
+            const res = new RObjClass(data.obj);
             write({
               obj: {
                 type: res.type(),
