@@ -33,7 +33,7 @@ test('Convert an RNull value to JS', async () => {
 
 test('Convert an R symbol to JS', async () => {
   const result = (await webR.evalR('as.symbol("x")')) as RSymbol;
-  expect(await (await result.printname()).toJs()).toBe('x');
+  expect(await (await result.printname()).toString()).toBe('x');
   expect(await (await result.symvalue()).isUnbound()).toBe(true);
   expect(await (await result.internal()).isNull()).toBe(true);
 });

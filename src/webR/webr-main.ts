@@ -1,11 +1,10 @@
 import { newChannelMain, ChannelMain, ChannelType } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
-import { newRProxy, DistProxy, newRObjClassProxy } from './proxy';
-import { unpackScalarVectors } from './utils';
-import { Complex, RObject, RList, RPairlist, REnvironment, RObjAtomicData, RNull } from './robj';
-import { RCharacter, RLogical, RInteger, RDouble, RComplex, RRaw } from './robj';
-import { RTargetObj, isRObject, RawType, RObjData, NamedObject } from './robj';
+import { newRProxy, newRObjClassProxy } from './proxy';
+import { Complex, RObject, RList, RPairlist, REnvironment, RObjAtomicData } from './robj';
+import { RCharacter, RLogical, RInteger, RDouble, RComplex, RRaw, RString } from './robj';
+import { RTargetObj, isRObject, RNull, RObjData, NamedObject } from './robj';
 
 export type CaptureROptions = {
   captureStreams?: boolean;
@@ -52,7 +51,7 @@ const defaultOptions = {
   channelType: ChannelType.Automatic,
 };
 
-type RData = DistProxy<RObjData>;
+type RData = RObjData<RObject>;
 
 export class WebR {
   #chan: ChannelMain;
@@ -183,11 +182,11 @@ export class WebR {
         const output: any[] = [];
         for await (const out of outList) {
           const type = await ((await out.pluck(1, 1)) as RCharacter).toString();
+          const data = await out.get(2);
           if (type === 'stdout' || type === 'stderr') {
-            const obj = (await (out as RList).toObject({ depth: 0 })) as RawType;
-            output.push(unpackScalarVectors(obj));
+            output.push({ type, data: await (data as RString).toString() });
           } else {
-            output.push({ type, data: await out.pluck(2) });
+            output.push({ type, data });
           }
         }
         obj.release();
