@@ -69,10 +69,11 @@ function targetAsyncIterator(chan: ChannelMain, proxy: RProxy<RObjImpl>) {
   return async function* () {
     // Get the R object's length
     const reply = (await chan.request({
-      type: 'getRObjProperty',
+      type: 'callRObjMethod',
       data: {
         target: proxy._target,
-        prop: 'length',
+        prop: 'getPropertyValue',
+        args: [{ targetType: 'raw', obj: 'length' }],
       },
     })) as RTargetObj;
 
@@ -95,8 +96,13 @@ function targetAsyncIterator(chan: ChannelMain, proxy: RProxy<RObjImpl>) {
 
 /* Proxy an R object method by providing an async function that requests that
  * the worker thread calls the method and then returns the result.
+ *
+ * When the optional target argument has not been provided, a RObjImpl static
+ * method is called.
  */
-function targetMethod(chan: ChannelMain, target: RTargetPtr, prop: string) {
+export function targetMethod(chan: ChannelMain, prop: string): any;
+export function targetMethod(chan: ChannelMain, prop: string, target: RTargetPtr): any;
+export function targetMethod(chan: ChannelMain, prop: string, target?: RTargetPtr): any {
   return async (..._args: unknown[]) => {
     const args = Array.from({ length: _args.length }, (_, idx) => {
       const arg = _args[idx];
@@ -166,7 +172,7 @@ export function newRProxy(chan: ChannelMain, target: RTargetPtr): RProxy<RObjImp
         } else if (prop === Symbol.asyncIterator) {
           return targetAsyncIterator(chan, proxy);
         } else if (target.obj.methods?.includes(prop.toString())) {
-          return targetMethod(chan, target, prop.toString());
+          return targetMethod(chan, prop.toString(), target);
         }
       },
       apply: async (_: RTargetObj, _thisArg, args: (RawType | RProxy<RObjImpl>)[]) => {
@@ -181,7 +187,12 @@ export function newRProxy(chan: ChannelMain, target: RTargetPtr): RProxy<RObjImp
 export function newRObjClassProxy<T, R>(chan: ChannelMain, objType: RType | 'object') {
   return new Proxy(RObjImpl, {
     construct: (_, args: [unknown]) => newRObject(chan, objType, ...args),
+    get: (_, prop: string | number | symbol) => {
+      return targetMethod(chan, prop.toString());
+    },
   }) as unknown as {
     new (arg: T): Promise<R>;
+  } & {
+    [P in Methods<typeof RObjImpl>]: RProxify<typeof RObjImpl[P]>;
   };
 }

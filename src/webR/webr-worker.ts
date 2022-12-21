@@ -151,28 +151,13 @@ function dispatch(msg: Message): void {
         }
         case 'callRObjMethod': {
           const data = reqMsg.data as {
-            target: RTargetPtr;
+            target?: RTargetPtr;
             prop: string;
             args: RTargetObj[];
           };
+          const obj = data.target ? RObjImpl.wrap(data.target.obj.ptr) : RObjImpl;
           try {
-            write(callRObjMethod(RObjImpl.wrap(data.target.obj.ptr), data.prop, data.args));
-          } catch (_e) {
-            const e = _e as Error;
-            write({
-              targetType: 'err',
-              obj: { name: e.name, message: e.message, stack: e.stack },
-            });
-          }
-          break;
-        }
-        case 'getRObjProperty': {
-          const data = reqMsg.data as {
-            target: RTargetPtr;
-            prop: string;
-          };
-          try {
-            write(getRObjProperty(RObjImpl.wrap(data.target.obj.ptr), data.prop));
+            write(callRObjMethod(obj, data.prop, data.args));
           } catch (_e) {
             const e = _e as Error;
             write({
@@ -266,12 +251,16 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
  * object in WASM memory, or the object represented in an equivalent raw
  * JS form.
  *
- * @param {RObjImpl}  obj The R RObj object
- * @param {string} [prop] RObj method to invoke
- * @param {RTargetObj[]} [args] List of arguments to call with
+ * @param {RObjImpl} obj The R RObj object, or RObjImpl for static methods.
+ * @param {string} prop RObj method to invoke
+ * @param {RTargetObj[]} args List of arguments to call with
  * @return {RTargetObj} The resulting R object
  */
-function callRObjMethod(obj: RObjImpl, prop: string, args: RTargetObj[]): RTargetObj {
+function callRObjMethod(
+  obj: RObjImpl | typeof RObjImpl,
+  prop: string,
+  args: RTargetObj[]
+): RTargetObj {
   if (!(prop in obj)) {
     throw new ReferenceError(`${prop} is not defined`);
   }
@@ -297,32 +286,6 @@ function callRObjMethod(obj: RObjImpl, prop: string, args: RTargetObj[]): RTarge
   }) as RawType;
 
   return { obj: ret, targetType: 'raw' };
-}
-
-/**
- * For a given RObjImpl object, get the value of the given property
- *
- * Returns a RTargetObj containing either a reference to the resulting SEXP
- * object in WASM memory, or the object represented in an equivalent raw
- * JS form.
- *
- * @param {RObjImpl}  obj The R RObj object
- * @param {string} [prop] RObj property to get
- * @return {RTargetObj} The resulting R object
- */
-function getRObjProperty(obj: RObjImpl, prop: string): RTargetObj {
-  if (!(prop in obj)) {
-    throw new ReferenceError(`${prop} is not defined`);
-  }
-  const res = obj[prop as keyof typeof obj] as RawType | RObjImpl;
-  if (isRObjImpl(res)) {
-    return {
-      obj: { type: res.type(), ptr: res.ptr, methods: RObjImpl.getMethods(res) },
-      targetType: 'ptr',
-    };
-  } else {
-    return { obj: res, targetType: 'raw' };
-  }
 }
 
 /**

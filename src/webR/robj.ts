@@ -194,6 +194,14 @@ export class RObjImpl {
     return `RObj:${this.type()}`;
   }
 
+  static getStaticPropertyValue(prop: keyof typeof RObjImpl): unknown {
+    return RObjImpl[prop];
+  }
+
+  getPropertyValue(prop: string): unknown {
+    return this[prop as keyof typeof this];
+  }
+
   type(): RType {
     const typeNumber = Module._TYPEOF(this.ptr) as RTypeNumber;
     const type = Object.keys(RTypeMap).find(
