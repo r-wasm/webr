@@ -1,4 +1,4 @@
-import { RTargetPtr, isRObject, RTargetObj, RObjectTree, RObject } from './robj';
+import { RTargetPtr, isRObject, RTargetObj, RObjectTree, RObject, RType } from './robj';
 import { RObjImpl, RObjFunction, RawType, isRFunction, isRTargetPtr } from './robj';
 import { ChannelMain } from './chan/channel';
 import { replaceInObject } from './utils';
@@ -130,6 +130,31 @@ function targetMethod(chan: ChannelMain, target: RTargetPtr, prop: string) {
   };
 }
 
+/* Proxy the RObjImpl class constructors. This allows us to create a new R
+ * object on the worker thread from a given JS object.
+ */
+async function newRObject(chan: ChannelMain, objType: RType | 'object', value: unknown) {
+  const target = (await chan.request({
+    type: 'newRObject',
+    data: {
+      objType,
+      obj: replaceInObject(value, isRObject, (obj: RObject) => obj._target),
+    },
+  })) as RTargetObj;
+  switch (target.targetType) {
+    case 'raw':
+      throw new Error('Unexpected raw target type returned from newRObject');
+    case 'err': {
+      const e = new Error(target.obj.message);
+      e.name = target.obj.name;
+      e.stack = target.obj.stack;
+      throw e;
+    }
+    default:
+      return newRProxy(chan, target);
+  }
+}
+
 export function newRProxy(chan: ChannelMain, target: RTargetPtr): RProxy<RObjImpl> {
   const proxy = new Proxy(
     // Assume we are proxying an RFunction if the methods list contains 'exec'.
@@ -151,4 +176,12 @@ export function newRProxy(chan: ChannelMain, target: RTargetPtr): RProxy<RObjImp
     }
   ) as unknown as RProxy<RObjImpl>;
   return proxy;
+}
+
+export function newRObjClassProxy<T, R>(chan: ChannelMain, objType: RType | 'object') {
+  return new Proxy(RObjImpl, {
+    construct: (_, args: [unknown]) => newRObject(chan, objType, ...args),
+  }) as unknown as {
+    new (arg: T): Promise<R>;
+  };
 }

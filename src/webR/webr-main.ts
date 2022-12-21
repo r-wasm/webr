@@ -1,11 +1,11 @@
 import { newChannelMain, ChannelMain, ChannelType } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
-import { newRProxy, DistProxy } from './proxy';
-import { unpackScalarVectors, replaceInObject } from './utils';
-import { Complex, RObject, RObjImpl, RList, RPairlist, REnvironment } from './robj';
-import { RType, RCharacter, RLogical, RInteger, RDouble, RComplex, RRaw } from './robj';
-import { RObjAtomicData, RTargetObj, isRObject, RawType, RObjData, NamedObject } from './robj';
+import { newRProxy, DistProxy, newRObjClassProxy } from './proxy';
+import { unpackScalarVectors } from './utils';
+import { Complex, RObject, RList, RPairlist, REnvironment, RObjAtomicData } from './robj';
+import { RCharacter, RLogical, RInteger, RDouble, RComplex, RRaw } from './robj';
+import { RTargetObj, isRObject, RawType, RObjData, NamedObject } from './robj';
 
 export type CaptureROptions = {
   captureStreams?: boolean;
@@ -69,18 +69,18 @@ export class WebR {
 
   constructor(options: WebROptions = {}) {
     const config: Required<WebROptions> = Object.assign(defaultOptions, options);
-    this.#chan = newChannelMain(config);
+    const ch = (this.#chan = newChannelMain(config));
 
-    this.RObject = this.#newRObjConstructor<RData | RData[], RObject>('object');
-    this.RLogical = this.#newRObjConstructor<RObjAtomicData<boolean>, RLogical>('logical');
-    this.RInteger = this.#newRObjConstructor<RObjAtomicData<number>, RInteger>('integer');
-    this.RDouble = this.#newRObjConstructor<RObjAtomicData<number>, RDouble>('double');
-    this.RComplex = this.#newRObjConstructor<RObjAtomicData<Complex>, RComplex>('complex');
-    this.RCharacter = this.#newRObjConstructor<RObjAtomicData<string>, RCharacter>('character');
-    this.RRaw = this.#newRObjConstructor<RObjAtomicData<number>, RRaw>('raw');
-    this.RList = this.#newRObjConstructor<RData[] | NamedObject<RData>, RList>('list');
-    this.RPairlist = this.#newRObjConstructor<RData[] | NamedObject<RData>, RPairlist>('pairlist');
-    this.REnvironment = this.#newRObjConstructor<NamedObject<RData>, REnvironment>('environment');
+    this.RObject = newRObjClassProxy<RData | RData[], RObject>(ch, 'object');
+    this.RLogical = newRObjClassProxy<RObjAtomicData<boolean>, RLogical>(ch, 'logical');
+    this.RInteger = newRObjClassProxy<RObjAtomicData<number>, RInteger>(ch, 'integer');
+    this.RDouble = newRObjClassProxy<RObjAtomicData<number>, RDouble>(ch, 'double');
+    this.RComplex = newRObjClassProxy<RObjAtomicData<Complex>, RComplex>(ch, 'complex');
+    this.RCharacter = newRObjClassProxy<RObjAtomicData<string>, RCharacter>(ch, 'character');
+    this.RRaw = newRObjClassProxy<RObjAtomicData<number>, RRaw>(ch, 'raw');
+    this.RList = newRObjClassProxy<RData[] | NamedObject<RData>, RList>(ch, 'list');
+    this.RPairlist = newRObjClassProxy<RData[] | NamedObject<RData>, RPairlist>(ch, 'pairlist');
+    this.REnvironment = newRObjClassProxy<NamedObject<RData>, REnvironment>(ch, 'environment');
   }
 
   async init() {
@@ -200,36 +200,6 @@ export class WebR {
       default: {
         return newRProxy(this.#chan, target);
       }
-    }
-  }
-
-  #newRObjConstructor<T, R>(objType: RType | 'object') {
-    return new Proxy(RObjImpl, {
-      construct: (_, args: [unknown]) => this.#newRObject(objType, ...args),
-    }) as unknown as {
-      new (arg: T): Promise<R>;
-    };
-  }
-
-  async #newRObject(objType: RType | 'object', value: unknown): Promise<RObject> {
-    const target = (await this.#chan.request({
-      type: 'newRObject',
-      data: {
-        objType,
-        obj: replaceInObject(value, isRObject, (obj: RObject) => obj._target),
-      },
-    })) as RTargetObj;
-    switch (target.targetType) {
-      case 'raw':
-        throw new Error('Unexpected raw target type returned from newRObject');
-      case 'err': {
-        const e = new Error(target.obj.message);
-        e.name = target.obj.name;
-        e.stack = target.obj.stack;
-        throw e;
-      }
-      default:
-        return newRProxy(this.#chan, target);
     }
   }
 }
