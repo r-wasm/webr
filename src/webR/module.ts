@@ -92,6 +92,7 @@ export interface Module extends EmscriptenModule {
   _R_NaInt: RPtr;
   _R_NaReal: RPtr;
   _R_NaString: RPtr;
+  _R_LogicalNAValue: RPtr;
   _R_NilValue: RPtr;
   _R_TrueValue: RPtr;
   _R_NamesSymbol: RPtr;

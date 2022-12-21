@@ -3,7 +3,7 @@ import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy, DistProxy, newRObjClassProxy } from './proxy';
 import { unpackScalarVectors } from './utils';
-import { Complex, RObject, RList, RPairlist, REnvironment, RObjAtomicData } from './robj';
+import { Complex, RObject, RList, RPairlist, REnvironment, RObjAtomicData, RNull } from './robj';
 import { RCharacter, RLogical, RInteger, RDouble, RComplex, RRaw } from './robj';
 import { RTargetObj, isRObject, RawType, RObjData, NamedObject } from './robj';
 
@@ -66,6 +66,14 @@ export class WebR {
   RList;
   RPairlist;
   REnvironment;
+  objs: {
+    baseEnv: REnvironment;
+    globalEnv: REnvironment;
+    null: RNull;
+    true: RLogical;
+    false: RLogical;
+    na: RLogical;
+  };
 
   constructor(options: WebROptions = {}) {
     const config: Required<WebROptions> = Object.assign(defaultOptions, options);
@@ -81,10 +89,20 @@ export class WebR {
     this.RList = newRObjClassProxy<RData[] | NamedObject<RData>, RList>(ch, 'list');
     this.RPairlist = newRObjClassProxy<RData[] | NamedObject<RData>, RPairlist>(ch, 'pairlist');
     this.REnvironment = newRObjClassProxy<NamedObject<RData>, REnvironment>(ch, 'environment');
+    this.objs = {} as typeof this.objs;
   }
 
   async init() {
-    return await this.#chan.initialised;
+    const init = await this.#chan.initialised;
+    this.objs = {
+      baseEnv: (await this.RObject.getStaticPropertyValue('baseEnv')) as REnvironment,
+      globalEnv: (await this.RObject.getStaticPropertyValue('globalEnv')) as REnvironment,
+      null: (await this.RObject.getStaticPropertyValue('null')) as RNull,
+      true: (await this.RObject.getStaticPropertyValue('true')) as RLogical,
+      false: (await this.RObject.getStaticPropertyValue('false')) as RLogical,
+      na: (await this.RObject.getStaticPropertyValue('logicalNA')) as RLogical,
+    };
+    return init;
   }
 
   close() {

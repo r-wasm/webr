@@ -337,8 +337,8 @@ function captureR(code: string, env?: RTargetPtr, options: CaptureROptions = {})
       }
     }
 
-    const tPtr = Module.getValue(Module._R_TrueValue, '*');
-    const fPtr = Module.getValue(Module._R_FalseValue, '*');
+    const tPtr = RObjImpl.true.ptr;
+    const fPtr = RObjImpl.false.ptr;
     const codeStr = Module.allocateUTF8(code);
     const evalStr = Module.allocateUTF8('webr::eval_r');
     const codeObj = new RObjImpl({ targetType: 'raw', obj: code });

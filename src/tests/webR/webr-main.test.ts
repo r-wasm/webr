@@ -10,6 +10,7 @@ import {
   RPairlist,
   REnvironment,
   RInteger,
+  RFunction,
 } from '../../webR/robj';
 
 const webR = new WebR({
@@ -378,8 +379,7 @@ describe('Create R objects from JS objects using proxy constructors', () => {
   });
 
   test('Create a list containing both a logical NA and R NULL', async () => {
-    const rNull = await new webR.RObject({ type: 'null' });
-    const jsObj = [true, 2, null, rNull];
+    const jsObj = [true, 2, null, webR.objs.null];
     const rObj = await new webR.RList(jsObj);
     expect(await rObj.type()).toEqual('list');
 
@@ -416,8 +416,7 @@ describe('Create R objects from JS objects using proxy constructors', () => {
   });
 
   test('Create a pairlist containing both a logical NA and R NULL', async () => {
-    const rNull = await new webR.RObject({ type: 'null' });
-    const jsObj = [true, 2, null, rNull];
+    const jsObj = [true, 2, null, webR.objs.null];
     const rObj = await new webR.RPairlist(jsObj);
     expect(await rObj.type()).toEqual('pairlist');
 
@@ -490,6 +489,46 @@ describe('Serialise nested R lists, pairlists and vectors unambiguously', () => 
     const identical = (await webR.evalR('identical(rObj, newRObj)', env)) as RLogical;
     expect(await rObj.type()).toEqual('list');
     expect(await identical.toLogical()).toEqual(true);
+  });
+});
+
+describe('Access R objects via the main thread object cache', () => {
+  test('R NULL', async () => {
+    expect(await webR.objs.null.type()).toEqual('null');
+    expect(await webR.objs.null.isNull()).toEqual(true);
+  });
+
+  test('R TRUE', async () => {
+    expect(await webR.objs.true.type()).toEqual('logical');
+    expect(await webR.objs.true.toLogical()).toEqual(true);
+  });
+
+  test('R FALSE', async () => {
+    expect(await webR.objs.false.type()).toEqual('logical');
+    expect(await webR.objs.false.toLogical()).toEqual(false);
+  });
+
+  test('Logical NA', async () => {
+    expect(await webR.objs.na.type()).toEqual('logical');
+    expect(await webR.objs.na.toLogical()).toEqual(null);
+  });
+
+  test('R global environment', async () => {
+    await webR.objs.globalEnv.bind('abc', 123);
+    expect(await webR.objs.globalEnv.ls()).toEqual(expect.arrayContaining(['abc']));
+
+    const check = (await webR.evalR('abc + 456')) as RDouble;
+    expect(await check.toNumber()).toEqual(579);
+    webR.evalR('rm(abc)');
+  });
+
+  test('R base environment', async () => {
+    expect(await webR.objs.baseEnv.ls()).toEqual(
+      expect.arrayContaining(['R.Version', '*', '+', '=', '$', 'sin', 'message', 'if', 'while'])
+    );
+    const len = (await webR.objs.baseEnv.get('length')) as RFunction;
+    const check = await len(['x', 'y', 'z']);
+    expect(check).toEqual(expect.objectContaining({ type: 'integer', names: null, values: [3] }));
   });
 });
 
