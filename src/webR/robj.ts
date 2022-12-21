@@ -194,6 +194,14 @@ export class RObjImpl {
     return `RObj:${this.type()}`;
   }
 
+  static getStaticPropertyValue(prop: keyof typeof RObjImpl): unknown {
+    return RObjImpl[prop];
+  }
+
+  getPropertyValue(prop: keyof this): unknown {
+    return this[prop];
+  }
+
   type(): RType {
     const typeNumber = Module._TYPEOF(this.ptr) as RTypeNumber;
     const type = Object.keys(RTypeMap).find(
@@ -394,6 +402,18 @@ export class RObjImpl {
 
   static get naString(): RObjImpl {
     return RObjImpl.wrap(Module.getValue(Module._R_NaString, '*'));
+  }
+
+  static get true(): RObjLogical {
+    return RObjImpl.wrap(Module.getValue(Module._R_TrueValue, '*')) as RObjLogical;
+  }
+
+  static get false(): RObjLogical {
+    return RObjImpl.wrap(Module.getValue(Module._R_FalseValue, '*')) as RObjLogical;
+  }
+
+  static get logicalNA(): RObjLogical {
+    return RObjImpl.wrap(Module.getValue(Module._R_LogicalNAValue, '*')) as RObjLogical;
   }
 
   static get unboundValue(): RObjImpl {
