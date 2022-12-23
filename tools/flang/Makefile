@@ -11,7 +11,8 @@ WASM = $(WEBR_ROOT)/wasm
 FLANG_BIN = $(BUILD)/bin/tco $(BUILD)/bin/bbc $(BUILD)/bin/llc
 RUNTIME_WASM_LIB = $(BUILD)/webr/libFortranRuntime.a
 
-# Configure your local environment in this file
+# Configure your local environment in this file. The LLVM build can
+# be configured via `WEBR_LLVM_CMAKE_VARS. See https://llvm.org/docs/CMake.html
 -include ~/.webr-config.mk
 
 NUM_CORES ?= 4
@@ -28,6 +29,7 @@ $(FLANG_BIN): $(SOURCE)
 	mkdir -p $(BUILD) && \
 	cd $(BUILD) && \
 	CMAKE_BUILD_PARALLEL_LEVEL=$(NUM_CORES) cmake ../f18-llvm-project/llvm \
+	  $(WEBR_LLVM_CMAKE_VARS) \
 	  -DCMAKE_INSTALL_PREFIX:PATH=$(HOST) \
 	  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
 	  -DLLVM_TARGETS_TO_BUILD="host;WebAssembly" \
