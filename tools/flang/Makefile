@@ -67,7 +67,7 @@ install: $(FLANG_BIN) $(RUNTIME_WASM_LIB)
 
 .PHONY: check
 check:
-	cd $(BUILD) && make check-flang
+	cd $(BUILD) && $(MAKE) check-flang
 
 .PHONY: clean
 clean:
