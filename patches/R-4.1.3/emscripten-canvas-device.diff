@@ -15,14 +15,14 @@ Index: R-4.1.3/src/library/grDevices/R/canvas.R
 --- /dev/null
 +++ R-4.1.3/src/library/grDevices/R/canvas.R
 @@ -0,0 +1,3 @@
-+canvas <- function(bg="transparent") {
-+       .External("canvas_new_device", bg)
++canvas <- function(width=504, height=504, pointsize=12, bg="transparent", ...) {
++       .External("canvas_new_device", width, height, pointsize, bg)
 +}
 Index: R-4.1.3/src/library/grDevices/src/devCanvas.c
 ===================================================================
 --- /dev/null
 +++ R-4.1.3/src/library/grDevices/src/devCanvas.c
-@@ -0,0 +1,494 @@
+@@ -0,0 +1,507 @@
 +/*
 +R graphics device targeting the HTML canvas element
 +Author: George Stagg, based on the canvas package created by Jeffrey Horner (http://www.rforge.net/canvas/)
@@ -359,7 +359,7 @@ Index: R-4.1.3/src/library/grDevices/src/devCanvas.c
 +
 +	char *enc = malloc(3 * strlen(str) + 1);
 +	for (int n = 0; n < strlen(str); n++) {
-+		sprintf(enc + 3 * n, "%%%02X", str[n]);
++		snprintf(enc + 3 * n, 4, "%%%02X", str[n]);
 +	}
 +
 +	if (hadj!=0. || rot != 0.){
@@ -425,16 +425,29 @@ Index: R-4.1.3/src/library/grDevices/src/devCanvas.c
 +        /* canvas Graphics Device */
 +        canvasDesc *cGD;
 +
-+        int bgcolor;
++        int width, height, bgcolor;
++        double pointsize;
 +
 +        SEXP v;
 +        args=CDR(args);
++        v=CAR(args); args=CDR(args);
++        if (!isNumeric(v)) error("`width' must be a number");
++        width = asInteger(v);
++
++        v=CAR(args); args=CDR(args);
++        if (!isNumeric(v)) error("`height' must be a number");
++        height = asInteger(v);
++
++        v=CAR(args); args=CDR(args);
++        if (!isNumeric(v)) error("`pointsize' must be a number");
++        pointsize = asReal(v);
++
 +        v=CAR(args); args=CDR(args);
 +        if (!isString(v) && !isInteger(v) && !isLogical(v) && !isReal(v))
 +                error("invalid color specification for `bg'");
 +        bgcolor = RGBpar(v, 0);
 +#ifdef CANVASDEBUG
-+        Rprintf("canvas_new_device()\n");
++        Rprintf("canvas_new_device(width=%d,height=%d)\n", width, height);
 +#endif
 +
 +	R_CheckDeviceAvailable();
@@ -485,20 +498,20 @@ Index: R-4.1.3/src/library/grDevices/src/devCanvas.c
 +	/* Initialise RGD */
 +	RGD->left = RGD->clipLeft = 0;
 +	RGD->top = RGD->clipTop = 0;
-+	RGD->right = RGD->clipRight = 504;
-+	RGD->bottom = RGD->clipBottom = 504;
++	RGD->right = RGD->clipRight = width;
++	RGD->bottom = RGD->clipBottom = height;
 +	RGD->xCharOffset = 0.4900;
 +	RGD->yCharOffset = 0.3333;
 +	RGD->yLineBias = 0.1;
 +	RGD->ipr[0] = 1.0/72.0;
 +	RGD->ipr[1] = 1.0/72.0;
-+	RGD->cra[0] = 0.9 * 10;
-+	RGD->cra[1] = 1.2 * 10;
++	RGD->cra[0] = 0.9 * 12;
++	RGD->cra[1] = 1.2 * 12;
 +	RGD->gamma = 1.0;
-+	RGD->canClip = FALSE;
++	RGD->canClip = TRUE;
 +	RGD->canChangeGamma = FALSE;
 +	RGD->canHAdj = 2;
-+	RGD->startps = 12.0;
++	RGD->startps = pointsize;
 +	RGD->startcol = R_RGB(0,0,0);
 +	RGD->startfill = bgcolor;
 +	RGD->startlty = LTY_SOLID;
@@ -545,7 +558,7 @@ Index: R-4.1.3/src/library/grDevices/src/init.c
  
  static const R_ExternalMethodDef ExtEntries[] = {
 +#ifdef __EMSCRIPTEN__
-+    EXTDEF(canvas_new_device, 1),
++    EXTDEF(canvas_new_device, 4),
 +#endif
      EXTDEF(PicTeX, 6),
      EXTDEF(PostScript, 19),
