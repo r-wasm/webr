@@ -1,5 +1,5 @@
 import { RTargetPtr, isRObject, RTargetObj, RObjTreeNode, RObject, RType } from './robj';
-import { RObjImpl, RObjFunction, RawType, isRFunction, isRTargetPtr } from './robj';
+import { RObjImpl, RObjFunction, RawType, isRFunction, isRTargetPtr, RObjData } from './robj';
 import { ChannelMain } from './chan/channel';
 import { replaceInObject } from './utils';
 
@@ -184,15 +184,22 @@ export function newRProxy(chan: ChannelMain, target: RTargetPtr): RProxy<RObjImp
   return proxy;
 }
 
+type DistObj<U> = U extends RawType ? U : U extends RObjData ? RObjData<RObject> : U;
 export function newRObjClassProxy<T, R>(chan: ChannelMain, objType: RType | 'object') {
   return new Proxy(RObjImpl, {
     construct: (_, args: [unknown]) => newRObject(chan, objType, ...args),
     get: (_, prop: string | number | symbol) => {
       return targetMethod(chan, prop.toString());
     },
-  }) as unknown as {
-    new (arg: T): Promise<R>;
-  } & {
+  }) as unknown as (T extends abstract new (...args: infer U) => any
+    ? {
+        new (
+          ...args: {
+            [V in keyof U]: DistObj<Exclude<U[V], RTargetObj>>;
+          }
+        ): Promise<R>;
+      }
+    : never) & {
     [P in Methods<typeof RObjImpl>]: RProxify<typeof RObjImpl[P]>;
   };
 }

@@ -122,7 +122,12 @@ export type NamedObject<T> = { [key: string]: T };
  * used on the main thread. Conversion between the reference types is handled
  * automatically during proxy communication.
  */
-export type RObjData<T = RObjImpl> = RawType | T | RObjTree<T> | { [key: string]: RObjData<T> };
+export type RObjData<T = RObjImpl> =
+  | RawType
+  | T
+  | RObjTree<T>
+  | RObjData<T>[]
+  | { [key: string]: RObjData<T> };
 
 /**
  * A subset of {@link RObjData} for JavaScript objects that can be converted
@@ -169,9 +174,7 @@ export type RObjTreeAtomic<T> = {
   values: (T | null)[];
 };
 
-function newRObjFromTarget(target: RTargetObj): RObjImpl {
-  const obj = target.obj;
-
+function newRObjFromData(obj: RObjData): RObjImpl {
   // Conversion of RObjTree type JS objects
   if (isRObjTree(obj)) {
     return new (getRObjClass(RTypeMap[obj.type]))(obj);
@@ -202,7 +205,7 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
   // JS arrays are interpreted using R's c() function, so as to match
   // R's built in coercion rules
   if (Array.isArray(obj)) {
-    const objs = obj.map((el) => newRObjFromTarget({ targetType: 'raw', obj: el }));
+    const objs = obj.map((el) => newRObjFromData(el));
     const cString = Module.allocateUTF8('c');
     const call = RObjImpl.protect(
       RObjImpl.wrap(Module._Rf_allocVector(RTypeMap.call, objs.length + 1)) as RObjPairlist
@@ -226,18 +229,22 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
 export class RObjImpl {
   ptr: RPtr;
 
-  constructor(target: RTargetObj | RawType) {
+  constructor(target: RTargetObj | RObjData) {
     this.ptr = 0;
+    if (isRObjImpl(target)) {
+      this.ptr = target.ptr;
+      return this;
+    }
     if (isRTargetObj(target)) {
       if (target.targetType === 'ptr') {
         this.ptr = target.obj.ptr;
         return this;
       }
       if (target.targetType === 'raw') {
-        return newRObjFromTarget(target);
+        return newRObjFromData(target.obj);
       }
     }
-    return newRObjFromTarget({ targetType: 'raw', obj: target });
+    return newRObjFromData(target);
   }
 
   get [Symbol.toStringTag](): string {
@@ -558,7 +565,7 @@ export class RObjSymbol extends RObjImpl {
 }
 
 export class RObjPairlist extends RObjImpl {
-  constructor(val: RTargetObj | RObjData<RTargetObj>) {
+  constructor(val: RTargetObj | RObjData) {
     if (isRTargetObj(val)) {
       super(val);
       return this;
@@ -653,7 +660,7 @@ export class RObjPairlist extends RObjImpl {
 }
 
 export class RObjList extends RObjImpl {
-  constructor(val: RTargetObj | RObjData<RTargetObj>) {
+  constructor(val: RTargetObj | RObjData) {
     if (isRTargetObj(val)) {
       super(val);
       return this;
@@ -757,7 +764,7 @@ export class RObjString extends RObjImpl {
 }
 
 export class RObjEnvironment extends RObjImpl {
-  constructor(val: RTargetObj | RObjData<RTargetObj>) {
+  constructor(val: RTargetObj | RObjData = {}) {
     if (isRTargetObj(val)) {
       super(val);
       return this;
