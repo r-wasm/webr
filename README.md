@@ -37,8 +37,6 @@ the macOS Ventura development SDK. If you are not using the included `Dockerfile
 the following extra setup must be done before starting the build process,
 
  * Install the GNU version of the patch program: e.g. `brew install gpatch`
- * Ensure the development target is set to version 12.0 in the current environment:
-   `export MACOSX_DEPLOYMENT_TARGET=12.0`.
 
 ## Demo
 

@@ -85,6 +85,7 @@ $(BUILD)/state/r-stage1-configured: $(BUILD)/state/r-patched
 	    ../configure \
 	      --prefix="$(R_HOST)" \
 	      --with-x=no \
+	      --with-aqua=no \
 	      --with-readline=no \
 	      --with-jpeglib=no \
 	      --with-cairo=no \
@@ -120,6 +121,7 @@ MAIN_LDFLAGS  = -s MAIN_MODULE=1
 MAIN_LDFLAGS += -s WASM=1
 MAIN_LDFLAGS += -s WASM_BIGINT
 MAIN_LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
+MAIN_LDFLAGS += -s STACK_SIZE=1MB
 MAIN_LDFLAGS += -s EXIT_RUNTIME=1
 MAIN_LDFLAGS += -s ERROR_ON_UNDEFINED_SYMBOLS=0
 MAIN_LDFLAGS += -s EXPORTED_RUNTIME_METHODS=['allocateUTF8','UTF8ToString','callMain']
