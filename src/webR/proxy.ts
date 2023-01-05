@@ -104,9 +104,14 @@ export function targetMethod(chan: ChannelMain, prop: string): any;
 export function targetMethod(chan: ChannelMain, prop: string, target: RTargetPtr): any;
 export function targetMethod(chan: ChannelMain, prop: string, target?: RTargetPtr): any {
   return async (..._args: unknown[]) => {
-    const args = Array.from({ length: _args.length }, (_, idx) => {
-      const arg = _args[idx];
-      return isRObject(arg) ? arg._target : { obj: arg, targetType: 'raw' };
+    const args = _args.map((arg) => {
+      if (isRObject(arg)) {
+        return arg._target;
+      }
+      return {
+        obj: replaceInObject(arg, isRObject, (obj: RObject) => obj._target),
+        targetType: 'raw',
+      };
     });
 
     const reply = (await chan.request({

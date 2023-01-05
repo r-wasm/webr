@@ -287,9 +287,11 @@ function callRObjMethod(
 
   const res = (fn as Function).apply(
     obj,
-    Array.from({ length: args.length }, (_, idx) => {
-      const arg = args[idx];
-      return arg.targetType === 'ptr' ? RObjImpl.wrap(arg.obj.ptr) : arg.obj;
+    args.map((arg) => {
+      if (arg.targetType === 'ptr') {
+        return RObjImpl.wrap(arg.obj.ptr);
+      }
+      return replaceInObject(arg.obj, isRTargetPtr, (t: RTargetPtr) => RObjImpl.wrap(t.obj.ptr));
     })
   ) as RawType | RObjImpl;
 
