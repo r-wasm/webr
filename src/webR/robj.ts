@@ -108,22 +108,75 @@ export type RawType =
 export type NamedEntries<T> = [string | null, T][];
 export type NamedObject<T> = { [key: string]: T };
 
-export type RObjData = RObjImpl | RawType | RObjectTree<RObjImpl>;
-export type RObjAtomicData<T> = T | (T | null)[] | RObjectTreeAtomic<T> | NamedObject<T | null>;
-export type RObjectTree<T> = RObjectTreeImpl<(RObjectTree<T> | RawType | T)[]>;
-export type RObjectTreeAtomic<T> = RObjectTreeImpl<(T | null)[]>;
-type RObjectTreeImpl<T> = {
-  type: RType;
+/**
+ * RObjData is a union of the JavaScript types that are able to be converted
+ * into an R object.
+ *
+ * RObjData is used both as a general input argument for R object construction
+ * and also as a general return type when converting R objects into JavaScript.
+ *
+ * The type parameter, T, chooses how references to R objects are implemented.
+ * This is required because there are different ways to represent a reference to
+ * an R object in webR. Instances of the RObjImpl class are used on the worker
+ * thread, while proxies of type RObject with a target of type RTargetObj are
+ * used on the main thread. Conversion between the reference types is handled
+ * automatically during proxy communication.
+ */
+export type RObjData<T = RObjImpl> =
+  | RawType
+  | T
+  | RObjTree<T>
+  | RObjData<T>[]
+  | { [key: string]: RObjData<T> };
+
+/**
+ * A subset of {@link RObjData} for JavaScript objects that can be converted
+ * into R atomic vectors. The parameter T is the JavaScript scalar type
+ * associated with the vector.
+ */
+export type RObjAtomicData<T> = T | (T | null)[] | RObjTreeAtomic<T> | NamedObject<T | null>;
+
+/**
+ * RObjTree is a union of types forming a tree structure, used when serialising
+ * R objects into a JavaScript respresentation.
+ *
+ * Nested R objects are serialised using the RObjTreeNode type, forming branches
+ * in the resulting tree structure, with leaves formed by the remaining types.
+ */
+export type RObjTree<T = RObjImpl> =
+  | RObjTreeNull
+  | RObjTreeString
+  | RObjTreeSymbol
+  | RObjTreeNode<T>
+  | RObjTreeAtomic<atomicType>;
+
+export type RObjTreeNull = {
+  type: 'null';
+};
+export type RObjTreeString = {
+  type: 'string';
+  value: string;
+};
+export type RObjTreeSymbol = {
+  type: 'symbol';
+  printname: string | null;
+  symvalue: RPtr | null;
+  internal: RPtr | null;
+};
+export type RObjTreeNode<T = RObjImpl> = {
+  type: 'list' | 'pairlist' | 'environment';
   names: (string | null)[] | null;
-  values: T;
-  missing?: boolean[];
+  values: (RawType | T | RObjTree<T>)[];
+};
+export type RObjTreeAtomic<T> = {
+  type: 'logical' | 'integer' | 'double' | 'complex' | 'character' | 'raw';
+  names: (string | null)[] | null;
+  values: (T | null)[];
 };
 
-function newRObjFromTarget(target: RTargetObj): RObjImpl {
-  const obj = target.obj;
-
-  // Conversion of RObjectTree type JS objects
-  if (isRObjectTree(obj)) {
+function newRObjFromData(obj: RObjData): RObjImpl {
+  // Conversion of RObjTree type JS objects
+  if (isRObjTree(obj)) {
     return new (getRObjClass(RTypeMap[obj.type]))(obj);
   }
 
@@ -152,7 +205,7 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
   // JS arrays are interpreted using R's c() function, so as to match
   // R's built in coercion rules
   if (Array.isArray(obj)) {
-    const objs = obj.map((el) => newRObjFromTarget({ targetType: 'raw', obj: el }));
+    const objs = obj.map((el) => newRObjFromData(el));
     const cString = Module.allocateUTF8('c');
     const call = RObjImpl.protect(
       RObjImpl.wrap(Module._Rf_allocVector(RTypeMap.call, objs.length + 1)) as RObjPairlist
@@ -176,18 +229,22 @@ function newRObjFromTarget(target: RTargetObj): RObjImpl {
 export class RObjImpl {
   ptr: RPtr;
 
-  constructor(target: RTargetObj | RawType) {
+  constructor(target: RTargetObj | RObjData) {
     this.ptr = 0;
+    if (isRObjImpl(target)) {
+      this.ptr = target.ptr;
+      return this;
+    }
     if (isRTargetObj(target)) {
       if (target.targetType === 'ptr') {
         this.ptr = target.obj.ptr;
         return this;
       }
       if (target.targetType === 'raw') {
-        return newRObjFromTarget(target);
+        return newRObjFromData(target.obj);
       }
     }
-    return newRObjFromTarget({ targetType: 'raw', obj: target });
+    return newRObjFromData(target);
   }
 
   get [Symbol.toStringTag](): string {
@@ -268,7 +325,7 @@ export class RObjImpl {
     return names && names.includes(name);
   }
 
-  toTree(options: ToTreeOptions = { depth: 0 }, depth = 1): RawType | RObjectTree<RObjImpl> {
+  toTree(options: ToTreeOptions = { depth: 0 }, depth = 1): RObjTree {
     throw new Error('This R object cannot be converted to JS');
   }
 
@@ -468,14 +525,20 @@ export class RObjNull extends RObjImpl {
     return this;
   }
 
-  toTree(): { type: 'null' } {
+  toTree(): RObjTreeNull {
     return { type: 'null' };
   }
 }
 
 export class RObjSymbol extends RObjImpl {
-  toTree(): RawType {
-    return this.isUnbound() ? null : this.toObject();
+  toTree(): RObjTreeSymbol {
+    const obj = this.toObject();
+    return {
+      type: 'symbol',
+      printname: obj.printname,
+      symvalue: obj.symvalue,
+      internal: obj.internal,
+    };
   }
 
   toObject(): {
@@ -502,7 +565,7 @@ export class RObjSymbol extends RObjImpl {
 }
 
 export class RObjPairlist extends RObjImpl {
-  constructor(val: RawType | RObjectTree<RTargetObj> | NamedObject<RTargetObj | RawType>) {
+  constructor(val: RTargetObj | RObjData) {
     if (isRTargetObj(val)) {
       super(val);
       return this;
@@ -552,10 +615,10 @@ export class RObjPairlist extends RObjImpl {
     return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
   }
 
-  toTree(options: ToTreeOptions = { depth: 0 }, depth = 1): RObjectTree<RObjImpl> {
+  toTree(options: ToTreeOptions = { depth: 0 }, depth = 1): RObjTreeNode {
     const namesArray: string[] = [];
     let hasNames = false;
-    const values: (RawType | RObjImpl | RObjectTree<RObjImpl>)[] = [];
+    const values: RObjTreeNode['values'] = [];
 
     for (let next = this as Nullable<RObjPairlist>; !next.isNull(); next = next.cdr()) {
       const symbol = next.tag();
@@ -572,7 +635,7 @@ export class RObjPairlist extends RObjImpl {
       }
     }
     const names = hasNames ? namesArray : null;
-    return { type: this.type(), names, values };
+    return { type: 'pairlist', names, values };
   }
 
   includes(name: string): boolean {
@@ -597,7 +660,7 @@ export class RObjPairlist extends RObjImpl {
 }
 
 export class RObjList extends RObjImpl {
-  constructor(val: RawType | RObjectTree<RTargetObj> | NamedObject<RTargetObj | RawType>) {
+  constructor(val: RTargetObj | RObjData) {
     if (isRTargetObj(val)) {
       super(val);
       return this;
@@ -644,9 +707,9 @@ export class RObjList extends RObjImpl {
     return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
   }
 
-  toTree(options: { depth: number } = { depth: 0 }, depth = 1): RObjectTree<RObjImpl> {
+  toTree(options: { depth: number } = { depth: 0 }, depth = 1): RObjTreeNode {
     return {
-      type: this.type(),
+      type: 'list',
       names: this.names(),
       values: [...Array(this.length).keys()].map((i) => {
         if (options.depth && depth >= options.depth) {
@@ -692,13 +755,16 @@ export class RObjString extends RObjImpl {
     return Module.UTF8ToString(Module._R_CHAR(this.ptr));
   }
 
-  toTree(): string {
-    return this.toString();
+  toTree(): RObjTreeString {
+    return {
+      type: 'string',
+      value: this.toString(),
+    };
   }
 }
 
 export class RObjEnvironment extends RObjImpl {
-  constructor(val: RTargetPtr | RObjectTree<RTargetObj> | NamedObject<RTargetObj | RawType>) {
+  constructor(val: RTargetObj | RObjData = {}) {
     if (isRTargetObj(val)) {
       super(val);
       return this;
@@ -751,7 +817,7 @@ export class RObjEnvironment extends RObjImpl {
     return this.getDollar(prop);
   }
 
-  toObject({ depth = 0 } = {}): NamedObject<RawType | RObjImpl | RObjectTree<RObjImpl>> {
+  toObject({ depth = 0 } = {}): NamedObject<RObjData> {
     const symbols = this.names();
     return Object.fromEntries(
       [...Array(symbols.length).keys()].map((i) => {
@@ -760,7 +826,7 @@ export class RObjEnvironment extends RObjImpl {
     );
   }
 
-  toTree(options: { depth: number } = { depth: 0 }, depth = 1): RObjectTree<RObjImpl> {
+  toTree(options: { depth: number } = { depth: 0 }, depth = 1): RObjTreeNode {
     const names = this.names();
     const values = [...Array(names.length).keys()].map((i) => {
       if (options.depth && depth >= options.depth) {
@@ -771,7 +837,7 @@ export class RObjEnvironment extends RObjImpl {
     });
 
     return {
-      type: this.type(),
+      type: 'environment',
       names,
       values,
     };
@@ -850,9 +916,9 @@ abstract class RObjAtomicVector<T extends atomicType> extends RObjImpl {
     return values.map((v, i) => [names ? names[i] : null, v]);
   }
 
-  toTree(): RObjectTreeAtomic<T> {
+  toTree(): RObjTreeAtomic<T> {
     return {
-      type: this.type(),
+      type: this.type() as 'logical' | 'integer' | 'double' | 'complex' | 'character' | 'raw',
       names: this.names(),
       values: this.toArray(),
     };
@@ -1176,18 +1242,13 @@ export function isRFunction(value: any): value is RFunction {
 }
 
 /**
- * Test for an RObjectTree instance
+ * Test for an RObjTree instance
  *
  * @param {any} value The object to test.
- * @return {boolean} True if the object is an instance of an RObjectTree.
+ * @return {boolean} True if the object is an instance of an RObjTree.
  */
-export function isRObjectTree(value: any): value is RObjectTree<any> {
-  return (
-    value &&
-    typeof value === 'object' &&
-    (Array.isArray(value.names) || value.names === null) &&
-    Object.keys(RTypeMap).includes(value.type as string)
-  );
+export function isRObjTree(value: any): value is RObjTree<any> {
+  return value && typeof value === 'object' && Object.keys(RTypeMap).includes(value.type as string);
 }
 
 /**
@@ -1234,8 +1295,9 @@ function toRObjData<T>(jsObj: RObjAtomicData<T>): {
   names: (string | null)[] | null;
   values: (T | null)[];
 };
+function toRObjData(jsObj: RObjData): RObjData;
 function toRObjData(jsObj: RObjData): RObjData {
-  if (isRObjectTree(jsObj)) {
+  if (isRObjTree(jsObj)) {
     return jsObj;
   } else if (Array.isArray(jsObj)) {
     return { names: null, values: jsObj };

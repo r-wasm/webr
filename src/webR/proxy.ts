@@ -1,5 +1,5 @@
-import { RTargetPtr, isRObject, RTargetObj, RObjectTree, RObject, RType } from './robj';
-import { RObjImpl, RObjFunction, RawType, isRFunction, isRTargetPtr } from './robj';
+import { RTargetPtr, isRObject, RTargetObj, RObjTreeNode, RObject, RType } from './robj';
+import { RObjImpl, RObjFunction, RawType, isRFunction, isRTargetPtr, RObjData } from './robj';
 import { ChannelMain } from './chan/channel';
 import { replaceInObject } from './utils';
 
@@ -15,8 +15,8 @@ type Methods<T> = {
  */
 export type DistProxy<U> = U extends RObjImpl
   ? RProxy<U>
-  : U extends RObjectTree<RObjImpl>
-  ? RObjectTree<RObject>
+  : U extends RObjTreeNode
+  ? RObjTreeNode<RObject>
   : U;
 
 /** Convert an RObjImpl property type to a corresponding RProxy property type
@@ -104,9 +104,14 @@ export function targetMethod(chan: ChannelMain, prop: string): any;
 export function targetMethod(chan: ChannelMain, prop: string, target: RTargetPtr): any;
 export function targetMethod(chan: ChannelMain, prop: string, target?: RTargetPtr): any {
   return async (..._args: unknown[]) => {
-    const args = Array.from({ length: _args.length }, (_, idx) => {
-      const arg = _args[idx];
-      return isRObject(arg) ? arg._target : { obj: arg, targetType: 'raw' };
+    const args = _args.map((arg) => {
+      if (isRObject(arg)) {
+        return arg._target;
+      }
+      return {
+        obj: replaceInObject(arg, isRObject, (obj: RObject) => obj._target),
+        targetType: 'raw',
+      };
     });
 
     const reply = (await chan.request({
@@ -184,15 +189,22 @@ export function newRProxy(chan: ChannelMain, target: RTargetPtr): RProxy<RObjImp
   return proxy;
 }
 
+type DistObj<U> = U extends RawType ? U : U extends RObjData ? RObjData<RObject> : U;
 export function newRObjClassProxy<T, R>(chan: ChannelMain, objType: RType | 'object') {
   return new Proxy(RObjImpl, {
     construct: (_, args: [unknown]) => newRObject(chan, objType, ...args),
     get: (_, prop: string | number | symbol) => {
       return targetMethod(chan, prop.toString());
     },
-  }) as unknown as {
-    new (arg: T): Promise<R>;
-  } & {
+  }) as unknown as (T extends abstract new (...args: infer U) => any
+    ? {
+        new (
+          ...args: {
+            [V in keyof U]: DistObj<Exclude<U[V], RTargetObj>>;
+          }
+        ): Promise<R>;
+      }
+    : never) & {
     [P in Methods<typeof RObjImpl>]: RProxify<typeof RObjImpl[P]>;
   };
 }

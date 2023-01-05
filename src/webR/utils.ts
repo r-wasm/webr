@@ -1,5 +1,4 @@
 import { IN_NODE } from './compat';
-import { RawType } from './robj';
 
 export type ResolveFn = (_value?: unknown) => void;
 export type RejectFn = (_reason?: any) => void;
@@ -42,17 +41,6 @@ export function replaceInObject(
   return Object.fromEntries(
     Object.entries(obj).map(([k, v], i) => [k, replaceInObject(v, test, replacer, ...replacerArgs)])
   );
-}
-
-export function unpackScalarVectors(obj: RawType) {
-  return replaceInObject(
-    obj,
-    (obj: any) =>
-      'values' in obj &&
-      (Array.isArray(obj.values) || ArrayBuffer.isView(obj)) &&
-      obj.values.length === 1,
-    (obj: any) => obj.values[0]
-  ) as RawType;
 }
 
 /* Workaround for loading a cross-origin script.

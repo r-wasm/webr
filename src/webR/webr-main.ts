@@ -1,11 +1,11 @@
 import { newChannelMain, ChannelMain, ChannelType } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
-import { newRProxy, DistProxy, newRObjClassProxy } from './proxy';
-import { unpackScalarVectors } from './utils';
-import { Complex, RObject, RList, RPairlist, REnvironment, RObjAtomicData, RNull } from './robj';
-import { RCharacter, RLogical, RInteger, RDouble, RComplex, RRaw } from './robj';
-import { RTargetObj, isRObject, RawType, RObjData, NamedObject } from './robj';
+import { newRProxy, newRObjClassProxy } from './proxy';
+import { RObject, RTargetObj, isRObject, RObjImpl, RNull, RList, RPairlist, RRaw } from './robj';
+import { REnvironment, RCharacter, RLogical, RInteger, RDouble, RComplex, RString } from './robj';
+import { RObjEnvironment, RObjInteger, RObjComplex, RObjPairlist, RObjList, RObjRaw } from './robj';
+import { RObjDouble, RObjLogical, RObjCharacter } from './robj';
 
 export type CaptureROptions = {
   captureStreams?: boolean;
@@ -52,8 +52,6 @@ const defaultOptions = {
   channelType: ChannelType.Automatic,
 };
 
-type RData = DistProxy<RObjData>;
-
 export class WebR {
   #chan: ChannelMain;
   RObject;
@@ -79,16 +77,16 @@ export class WebR {
     const config: Required<WebROptions> = Object.assign(defaultOptions, options);
     const ch = (this.#chan = newChannelMain(config));
 
-    this.RObject = newRObjClassProxy<RData | RData[], RObject>(ch, 'object');
-    this.RLogical = newRObjClassProxy<RObjAtomicData<boolean>, RLogical>(ch, 'logical');
-    this.RInteger = newRObjClassProxy<RObjAtomicData<number>, RInteger>(ch, 'integer');
-    this.RDouble = newRObjClassProxy<RObjAtomicData<number>, RDouble>(ch, 'double');
-    this.RComplex = newRObjClassProxy<RObjAtomicData<Complex>, RComplex>(ch, 'complex');
-    this.RCharacter = newRObjClassProxy<RObjAtomicData<string>, RCharacter>(ch, 'character');
-    this.RRaw = newRObjClassProxy<RObjAtomicData<number>, RRaw>(ch, 'raw');
-    this.RList = newRObjClassProxy<RData[] | NamedObject<RData>, RList>(ch, 'list');
-    this.RPairlist = newRObjClassProxy<RData[] | NamedObject<RData>, RPairlist>(ch, 'pairlist');
-    this.REnvironment = newRObjClassProxy<NamedObject<RData>, REnvironment>(ch, 'environment');
+    this.RObject = newRObjClassProxy<typeof RObjImpl, RObject>(ch, 'object');
+    this.RLogical = newRObjClassProxy<typeof RObjLogical, RLogical>(ch, 'logical');
+    this.RInteger = newRObjClassProxy<typeof RObjInteger, RInteger>(ch, 'integer');
+    this.RDouble = newRObjClassProxy<typeof RObjDouble, RDouble>(ch, 'double');
+    this.RComplex = newRObjClassProxy<typeof RObjComplex, RComplex>(ch, 'complex');
+    this.RCharacter = newRObjClassProxy<typeof RObjCharacter, RCharacter>(ch, 'character');
+    this.RRaw = newRObjClassProxy<typeof RObjRaw, RRaw>(ch, 'raw');
+    this.RList = newRObjClassProxy<typeof RObjList, RList>(ch, 'list');
+    this.RPairlist = newRObjClassProxy<typeof RObjPairlist, RPairlist>(ch, 'pairlist');
+    this.REnvironment = newRObjClassProxy<typeof RObjEnvironment, REnvironment>(ch, 'environment');
     this.objs = {} as typeof this.objs;
   }
 
@@ -183,11 +181,11 @@ export class WebR {
         const output: any[] = [];
         for await (const out of outList) {
           const type = await ((await out.pluck(1, 1)) as RCharacter).toString();
+          const data = await out.get(2);
           if (type === 'stdout' || type === 'stderr') {
-            const obj = (await (out as RList).toObject({ depth: 0 })) as RawType;
-            output.push(unpackScalarVectors(obj));
+            output.push({ type, data: await (data as RString).toString() });
           } else {
-            output.push({ type, data: await out.pluck(2) });
+            output.push({ type, data });
           }
         }
         obj.release();

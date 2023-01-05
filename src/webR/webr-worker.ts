@@ -10,6 +10,7 @@ import {
   RType,
   RTypeMap,
   isRObjImpl,
+  isRTargetPtr,
   RObjImpl,
   RTargetObj,
   RTargetPtr,
@@ -129,17 +130,7 @@ function dispatch(msg: Message): void {
             objType: RType | 'object';
           };
           try {
-            const RObjClass =
-              data.objType === 'object' ? RObjImpl : getRObjClass(RTypeMap[data.objType]);
-            const res = new RObjClass(data.obj);
-            write({
-              obj: {
-                type: res.type(),
-                ptr: res.ptr,
-                methods: RObjImpl.getMethods(res),
-              },
-              targetType: 'ptr',
-            });
+            write(newRObject(data.obj, data.objType));
           } catch (_e) {
             const e = _e as Error;
             write({
@@ -245,6 +236,30 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
 }
 
 /**
+ * Construct a new R object from a given JavaScript object.
+ *
+ * @param {RawType} target A JavaScript raw target object to be used when
+ * constructing the new R object.
+ * @param {RType | 'object'} objType The type of R object to create, or 'object'
+ * to infer the R object type.
+ * @return {RTargetPtr} The newly created R object, given as a target object.
+ */
+function newRObject(target: RTargetRaw, objType: RType | 'object'): RTargetPtr {
+  const RObjClass = objType === 'object' ? RObjImpl : getRObjClass(RTypeMap[objType]);
+  const obj = new RObjClass(
+    replaceInObject(target, isRTargetPtr, (t: RTargetPtr) => RObjImpl.wrap(t.obj.ptr)) as RTargetRaw
+  );
+  return {
+    obj: {
+      type: obj.type(),
+      ptr: obj.ptr,
+      methods: RObjImpl.getMethods(obj),
+    },
+    targetType: 'ptr',
+  };
+}
+
+/**
  * For a given RObjImpl object, call the given method with arguments
  *
  * Returns a RTargetObj containing either a reference to the resulting SEXP
@@ -272,9 +287,11 @@ function callRObjMethod(
 
   const res = (fn as Function).apply(
     obj,
-    Array.from({ length: args.length }, (_, idx) => {
-      const arg = args[idx];
-      return arg.targetType === 'ptr' ? RObjImpl.wrap(arg.obj.ptr) : arg.obj;
+    args.map((arg) => {
+      if (arg.targetType === 'ptr') {
+        return RObjImpl.wrap(arg.obj.ptr);
+      }
+      return replaceInObject(arg.obj, isRTargetPtr, (t: RTargetPtr) => RObjImpl.wrap(t.obj.ptr));
     })
   ) as RawType | RObjImpl;
 
