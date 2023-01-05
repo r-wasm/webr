@@ -85,6 +85,7 @@ $(BUILD)/state/r-stage1-configured: $(BUILD)/state/r-patched
 	    ../configure \
 	      --prefix="$(R_HOST)" \
 	      --with-x=no \
+	      --with-aqua=no \
 	      --with-readline=no \
 	      --with-jpeglib=no \
 	      --with-cairo=no \
