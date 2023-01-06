@@ -54,7 +54,7 @@ preserve <- function(x) {
 
   if (length(shelter$data) == shelter$size) {
     new_size <- shelter$size * shelter_growth_factor
-    shelter$data[new_size] <- NULL
+    shelter$data[new_size] <- list(NULL)
   }
 
   shelter$size <- shelter$size + 1L
