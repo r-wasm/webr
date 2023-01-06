@@ -54,3 +54,27 @@ stopifnot(
   )
 )
 
+# Protection -----------------------------------------------------------
+
+shelters_push()
+
+stopifnot(
+  identical(shelters$top$size, 0L)
+)
+
+preserve("foo")
+
+stopifnot(
+  identical(shelters$top$size, 1L),
+  identical(shelters$top$data[[1L]], "foo")
+)
+
+shelters$top$size <- length(shelters$top$data)
+preserve("bar")
+
+stopifnot(
+  identical(shelters$top$size, shelter_initial_size + 1L),
+  identical(shelters$top$data[[1L]], "foo")
+)
+
+shelters_pop()
