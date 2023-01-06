@@ -62,7 +62,7 @@ stopifnot(
   identical(shelters$top$size, 0L)
 )
 
-preserve("foo")
+shelter("foo")
 
 stopifnot(
   identical(shelters$top$size, 1L),
@@ -72,7 +72,7 @@ stopifnot(
 shelters$top$size <- length(shelters$top$data)
 rm(shelters) # Remove local copy created by `<-`
 
-preserve("bar")
+shelter("bar")
 
 stopifnot(
   identical(shelters$top$size, shelter_initial_size + 1L),

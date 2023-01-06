@@ -44,7 +44,7 @@ shelters_pop <- function() {
   invisible(shelters$top)
 }
 
-preserve <- function(x) {
+shelter <- function(x) {
   if (!shelters$stack_size) {
     warning("Pushing a new shelter on the empty stack.")
     shelters_push()
