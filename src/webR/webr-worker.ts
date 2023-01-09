@@ -126,12 +126,12 @@ function dispatch(msg: Message): void {
           break;
         }
         case 'shelterPush': {
-          sheltersPush();
+          evalR("webr:::shelters_push()");
           write(null);
           break;
         }
         case 'shelterPop': {
-          sheltersPop();
+          evalR("webr:::shelters_pop()");
           write(null);
           break;
         }
@@ -423,13 +423,6 @@ function shelter(x: RPtr): RPtr {
   Module._Rf_unprotect(2);
 
   return x;
-}
-
-function sheltersPush() {
-  evalR("webr:::shelters_push()");
-}
-function sheltersPop() {
-  evalR("webr:::shelters_pop()");
 }
 
 function getFileData(name: string): Uint8Array {

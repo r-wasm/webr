@@ -54,6 +54,8 @@ const defaultOptions = {
 
 export class WebR {
   #chan: ChannelMain;
+  shelter: Shelter;
+
   RObject;
   RLogical;
   RInteger;
@@ -76,6 +78,8 @@ export class WebR {
   constructor(options: WebROptions = {}) {
     const config: Required<WebROptions> = Object.assign(defaultOptions, options);
     const c = (this.#chan = newChannelMain(config));
+
+    this.shelter = new Shelter(c);
 
     this.RObject = newRClassProxy<typeof RWorker.RObject, RObject>(c, 'object');
     this.RLogical = newRClassProxy<typeof RWorker.RLogical, RLogical>(c, 'logical');
@@ -196,17 +200,6 @@ export class WebR {
     }
   }
 
-  async shelterPush() {
-    await this.#chan.request({
-      type: 'shelterPush'
-    })
-  }
-  async shelterPop() {
-    await this.#chan.request({
-      type: 'shelterPop'
-    })
-  }
-
   async evalR(code: string, env?: REnvironment, shelter?: boolean): Promise<RObject> {
     if (env && !isRObject(env)) {
       throw new Error('Attempted to evaluate R code with invalid environment object');
@@ -230,5 +223,24 @@ export class WebR {
         return newRProxy(this.#chan, payload);
       }
     }
+  }
+}
+
+class Shelter {
+  #chan: ChannelMain;
+
+  constructor(chan: ChannelMain) {
+    this.#chan = chan;
+  }
+
+  async push() {
+    await this.#chan.request({
+      type: 'shelterPush'
+    })
+  }
+  async pop() {
+    await this.#chan.request({
+      type: 'shelterPop'
+    })
   }
 }
