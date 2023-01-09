@@ -228,28 +228,29 @@ export class WebR {
 
 class Shelter {
   #webR: WebR;
+  stackSize = 0;
 
   constructor(webR: WebR) {
     this.#webR = webR;
   }
 
-  // Should these methods return the new stack size?
-  async push() {
+  async push(): Promise<number> {
     await this.#webR.evalR('webr:::shelters_push()', undefined, false);
+    return ++this.stackSize;
   }
-  async pop() {
+  async pop(): Promise<number> {
+    if (!this.stackSize) {
+      throw new Error('The shelter stack is empty.');
+    }
     await this.#webR.evalR('webr:::shelters_pop()', undefined, false);
+    return --this.stackSize;
   }
 
-  async stackSize(): Promise<number> {
-    const size = await this.#webR.evalR('webr:::shelters$stack_size', undefined, false) as RInteger;
-    return await size.toNumber() as number;
-  }
   async topShelterSize() {
-    if (await this.stackSize() == 0) {
-      throw new Error('The shelter stack is empty.') ;
+    if (!this.stackSize) {
+      throw new Error('The shelter stack is empty.');
     }
-    const size = await this.#webR.evalR('webr:::shelters$top$size', undefined, false) as RInteger;
-    return await size.toNumber() as number;
+    const out = (await this.#webR.evalR('webr:::shelters$top$size', undefined, false)) as RInteger;
+    return (await out.toNumber()) as number;
   }
 }
