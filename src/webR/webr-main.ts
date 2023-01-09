@@ -79,7 +79,7 @@ export class WebR {
     const config: Required<WebROptions> = Object.assign(defaultOptions, options);
     const c = (this.#chan = newChannelMain(config));
 
-    this.shelter = new Shelter(this);
+    this.shelter = new Shelter(this, c);
 
     this.RObject = newRClassProxy<typeof RWorker.RObject, RObject>(c, 'object');
     this.RLogical = newRClassProxy<typeof RWorker.RLogical, RLogical>(c, 'logical');
@@ -228,10 +228,12 @@ export class WebR {
 
 class Shelter {
   #webR: WebR;
+  #chan: ChannelMain;
   stackSize = 0;
 
-  constructor(webR: WebR) {
+  constructor(webR: WebR, chan: ChannelMain) {
     this.#webR = webR;
+    this.#chan = chan;
   }
 
   async push(): Promise<number> {
@@ -252,5 +254,15 @@ class Shelter {
     }
     const out = (await this.#webR.evalR('webr:::shelters$top$size', undefined, false)) as RInteger;
     return (await out.toNumber()) as number;
+  }
+
+  // Mainly for unit tests
+  async isSheltered(x: RObject): Promise<boolean> {
+    if (!this.stackSize) {
+      throw new Error('The shelter stack is empty.');
+    }
+
+    const msg = { type: 'isSheltered', data: { vessel: x._target } };
+    return (await this.#chan.request(msg)) as boolean;
   }
 }

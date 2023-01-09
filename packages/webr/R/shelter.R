@@ -62,3 +62,7 @@ shelter <- function(x) {
 
   invisible(x)
 }
+
+is_sheltered <- function(x) {
+  any(vapply(shelters$top$data, identical, x))
+}

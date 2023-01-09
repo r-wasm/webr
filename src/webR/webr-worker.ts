@@ -7,7 +7,7 @@ import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
 import { RObject, isRObject, RList, getRWorkerClass } from './robj-worker';
-import { REnvironment } from './robj-worker';
+import { REnvironment, RLogical } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
 
 let initialised = false;
@@ -173,6 +173,23 @@ function dispatch(msg: Message): void {
             },
             payloadType: 'ptr',
           });
+          break;
+        }
+        case 'isSheltered': {
+          const id = reqMsg.data as RTargetPtr;
+          const env = new REnvironment({ x: id.obj.ptr });
+          Module._Rf_protect(env.ptr);
+
+          const code = Module.allocateUTF8('webr:::is_sheltered(x)');
+          const outPtr = Module._R_ParseEvalString(code, env.ptr);
+          Module._Rf_protect(outPtr);
+          Module._free(code);
+
+          const outLgl = RObject.wrap(outPtr) as RLogical;
+          const out = outLgl.toLogical() as boolean;
+          Module._Rf_unprotect(2);
+
+          write(out);
           break;
         }
         default:
