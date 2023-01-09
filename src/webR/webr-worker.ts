@@ -125,16 +125,6 @@ function dispatch(msg: Message): void {
           }
           break;
         }
-        case 'shelterPush': {
-          evalR("webr:::shelters_push()");
-          write(null);
-          break;
-        }
-        case 'shelterPop': {
-          evalR("webr:::shelters_pop()");
-          write(null);
-          break;
-        }
         case 'newRObject': {
           const data = reqMsg.data as {
             obj: WebRData;

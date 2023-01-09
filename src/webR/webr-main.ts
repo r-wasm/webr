@@ -79,7 +79,7 @@ export class WebR {
     const config: Required<WebROptions> = Object.assign(defaultOptions, options);
     const c = (this.#chan = newChannelMain(config));
 
-    this.shelter = new Shelter(c);
+    this.shelter = new Shelter(this);
 
     this.RObject = newRClassProxy<typeof RWorker.RObject, RObject>(c, 'object');
     this.RLogical = newRClassProxy<typeof RWorker.RLogical, RLogical>(c, 'logical');
@@ -227,20 +227,16 @@ export class WebR {
 }
 
 class Shelter {
-  #chan: ChannelMain;
+  #webR: WebR;
 
-  constructor(chan: ChannelMain) {
-    this.#chan = chan;
+  constructor(webR: WebR) {
+    this.#webR = webR;
   }
 
   async push() {
-    await this.#chan.request({
-      type: 'shelterPush'
-    })
+    await this.#webR.evalR('webr:::shelters_push()', undefined, false);
   }
   async pop() {
-    await this.#chan.request({
-      type: 'shelterPop'
-    })
+    await this.#webR.evalR('webr:::shelters_pop()', undefined, false);
   }
 }
