@@ -1,3 +1,5 @@
+[![Build, test and deploy webR](https://github.com/georgestagg/webR/actions/workflows/deploy.yml/badge.svg)](https://github.com/georgestagg/webR/actions/workflows/deploy.yml) [![codecov](https://codecov.io/gh/georgestagg/webR/branch/main/graph/badge.svg)](https://codecov.io/gh/georgestagg/webR)
+
 # WebR - R in the Browser
 
 This project aims to compile the statistical language R (https://www.r-project.org/) into WASM for
