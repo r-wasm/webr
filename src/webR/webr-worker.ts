@@ -41,6 +41,23 @@ type XHRResponse = {
 
 let _config: Required<WebROptions>;
 
+function parseEval(code: string, data = {}): RPtr {
+  let nProt = 0;
+
+  const codeFFI = Module.allocateUTF8(code);
+
+  try {
+    const env = new REnvironment(data);
+    Module._Rf_protect(env.ptr);
+    ++nProt;
+
+    return Module._R_ParseEvalString(codeFFI, env.ptr);
+  } finally {
+    Module._free(codeFFI);
+    Module._Rf_unprotect(nProt);
+  }
+}
+
 function dispatch(msg: Message): void {
   switch (msg.type) {
     case 'request': {
@@ -177,17 +194,13 @@ function dispatch(msg: Message): void {
         }
         case 'isSheltered': {
           const id = reqMsg.data as RTargetPtr;
-          const env = new REnvironment({ x: id.obj.ptr });
-          Module._Rf_protect(env.ptr);
 
-          const code = Module.allocateUTF8('webr:::is_sheltered(x)');
-          const outPtr = Module._R_ParseEvalString(code, env.ptr);
+          const outPtr = parseEval('webr:::is_sheltered(x)', { x: id.obj.ptr });
           Module._Rf_protect(outPtr);
-          Module._free(code);
 
           const outLgl = RObject.wrap(outPtr) as RLogical;
           const out = outLgl.toLogical() as boolean;
-          Module._Rf_unprotect(2);
+          Module._Rf_unprotect(1);
 
           write(out);
           break;
@@ -420,14 +433,11 @@ function evalR(code: string, env?: WebRPayloadPtr): RObject {
 function shelter(x: RPtr): RPtr {
   Module._Rf_protect(x);
 
-  const env = new REnvironment({ obj: x });
-  Module._Rf_protect(env.ptr);
-
-  const code = Module.allocateUTF8('webr:::shelter(obj)');
-  Module._R_ParseEvalString(code, env.ptr);
-  Module._free(code);
-
-  Module._Rf_unprotect(2);
+  try {
+    parseEval('webr:::shelter(x)', { x: x });
+  } finally {
+    Module._Rf_unprotect(1);
+  }
 
   return x;
 }
