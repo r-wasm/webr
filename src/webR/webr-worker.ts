@@ -7,6 +7,7 @@ import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
 import { RObject, isRObject, RList, getRWorkerClass } from './robj-worker';
+import { REnvironment } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
 
 let initialised = false;
@@ -110,6 +111,16 @@ function dispatch(msg: Message): void {
               obj: { name: e.name, message: e.message, stack: e.stack },
             });
           }
+          break;
+        }
+        case 'shelterPush': {
+          sheltersPush();
+          write(null);
+          break;
+        }
+        case 'shelterPop': {
+          sheltersPop();
+          write(null);
           break;
         }
         case 'newRObject': {
@@ -383,6 +394,28 @@ function evalR(code: string, env?: WebRPayloadPtr): RObject {
   } finally {
     Module._Rf_unprotect(1);
   }
+}
+
+function shelter(x: RPtr): RPtr {
+  Module._Rf_protect(x);
+
+  const env = new REnvironment({ obj: x });
+  Module._Rf_protect(env.ptr);
+
+  const code = Module.allocateUTF8('webr:::shelter(obj)');
+  Module._R_ParseEvalString(code, env.ptr);
+  Module._free(code);
+
+  Module._Rf_unprotect(2);
+
+  return x;
+}
+
+function sheltersPush() {
+  evalR("webr:::shelters_push()");
+}
+function sheltersPop() {
+  evalR("webr:::shelters_pop()");
 }
 
 function getFileData(name: string): Uint8Array {

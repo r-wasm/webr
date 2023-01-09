@@ -194,6 +194,17 @@ export class WebR {
     }
   }
 
+  async shelterPush() {
+    await this.#chan.request({
+      type: 'shelterPush'
+    })
+  }
+  async shelterPop() {
+    await this.#chan.request({
+      type: 'shelterPop'
+    })
+  }
+
   async evalR(code: string, env?: REnvironment): Promise<RObject> {
     if (env && !isRObject(env)) {
       throw new Error('Attempted to evaluate R code with invalid environment object');
