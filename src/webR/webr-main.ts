@@ -146,7 +146,8 @@ export class WebR {
   async captureR(
     code: string,
     env?: REnvironment,
-    options: CaptureROptions = {}
+    options: CaptureROptions = {},
+    shelter?: boolean
   ): Promise<{
     result: RObject;
     output: unknown[];
@@ -160,6 +161,7 @@ export class WebR {
       data: {
         code: code,
         env: env?._payload,
+        shelter: shelter,
         options: options,
       },
     })) as WebRPayload;
@@ -205,15 +207,15 @@ export class WebR {
     })
   }
 
-  async evalR(code: string, env?: REnvironment): Promise<RObject> {
+  async evalR(code: string, env?: REnvironment, shelter?: boolean): Promise<RObject> {
     if (env && !isRObject(env)) {
       throw new Error('Attempted to evaluate R code with invalid environment object');
     }
 
     const payload = (await this.#chan.request({
       type: 'evalR',
-      data: { code: code, env: env?._payload },
-    })) as WebRPayload;
+      data: { code: code, env: env?._payload, shelter: shelter },
+    })) as RTargetObj;
 
     switch (payload.payloadType) {
       case 'raw':

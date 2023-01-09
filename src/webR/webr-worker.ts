@@ -68,10 +68,16 @@ function dispatch(msg: Message): void {
           const data = reqMsg.data as {
             code: string;
             env?: WebRPayloadPtr;
+            shelter?: boolean;
             options: CaptureROptions;
           };
           try {
             const capture = captureR(data.code, data.env, data.options);
+
+            if (data.shelter === undefined || data.shelter) {
+              shelter(capture.ptr);
+            }
+
             write({
               obj: {
                 type: capture.type(),
@@ -93,9 +99,15 @@ function dispatch(msg: Message): void {
           const data = reqMsg.data as {
             code: string;
             env?: WebRPayloadPtr;
+            shelter?: boolean;
           };
           try {
             const result = evalR(data.code, data.env);
+
+            if (data.shelter === undefined || data.shelter) {
+              shelter(result.ptr);
+            }
+
             write({
               obj: {
                 type: result.type(),
@@ -129,7 +141,9 @@ function dispatch(msg: Message): void {
             objType: RType | 'object';
           };
           try {
-            write(newRObject(data.obj, data.objType));
+            const out = newRObject(data.obj, data.objType);
+            shelter(out.obj.ptr);
+            write(out);
           } catch (_e) {
             const e = _e as Error;
             write({
