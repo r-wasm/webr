@@ -11,7 +11,7 @@ EMFC_FILES = $(EMFC) $(FORTRAN_WASM_LIB)
 .PHONY: webr
 webr: $(EMFC_FILES)
 	cd R && $(MAKE) && $(MAKE) install
-	cd src && $(MAKE) && $(MAKE) patch-libfile
+	cd src && $(MAKE)
 
 $(EMFC_FILES):
 	cd $(EMFC_DIR) && $(MAKE) && $(MAKE) install

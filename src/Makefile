@@ -31,23 +31,16 @@ webR/config.ts: webR/config.ts.in
 	  -e "s|@@PKG_BASE_URL@@|$(PKG_BASE_URL)|" webR/config.ts.in > webR/config.ts
 
 .PHONY: check
-check: $(DIST) patch-libfile
+check: $(DIST)
 	npx tsc
 	npx eslint $(TS_SOURCES)
 	NODE_V8_COVERAGE=coverage npx c8 node --experimental-wasm-bigint \
 	  ./node_modules/jest/bin/jest.js --config tests/webr.config.js
 
 .PHONY: check-packages
-check-packages: $(DIST) patch-libfile
+check-packages: $(DIST)
 	npx node --experimental-wasm-bigint ./node_modules/jest/bin/jest.js \
 	--config tests/packages.config.js
-
-.PHONY: patch-libfile
-patch-libfile:
-# Patch R.bin.js to workaround Emscripten issue #14502
-# https://github.com/emscripten-core/emscripten/issues/14502
-	sed -i.bak "s|readAsync(libFile,|readAsync(locateFile(libFile),|" ../dist/R.bin.js
-	rm ../dist/R.bin.js.bak
 
 node_modules: package.json
 	npm ci
