@@ -55,7 +55,7 @@ node_modules: package.json
 serve:
 	cd $(DIST) && $(ROOT)/serve.py
 
-package:
+package: Makefile webR/config.ts node_modules esbuild.js
 	npm run build
 	npm pack
 
