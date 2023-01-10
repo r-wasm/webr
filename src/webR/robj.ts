@@ -72,7 +72,7 @@ export type WebRPayloadPtr = {
   payloadType: 'ptr';
 };
 
-export type WebRPayloadError = {
+export type WebRPayloadErr = {
   obj: {
     message: string;
     name: string;
@@ -80,7 +80,7 @@ export type WebRPayloadError = {
   };
   payloadType: 'err';
 };
-export type WebRPayload = WebRPayloadRaw | WebRPayloadPtr | WebRPayloadError;
+export type WebRPayload = WebRPayloadRaw | WebRPayloadPtr | WebRPayloadErr;
 
 type Nullable<T> = T | RObjNull;
 
