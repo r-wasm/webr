@@ -89,7 +89,7 @@ function dispatch(msg: Message): void {
             options: CaptureROptions;
           };
           try {
-            const capture = captureR(data.code, data.env, data.options);
+            const capture = captureR(data.code, data.env?.obj.ptr, data.options);
 
             if (data.shelter === undefined || data.shelter) {
               shelter(capture.ptr);
@@ -119,7 +119,7 @@ function dispatch(msg: Message): void {
             shelter?: boolean;
           };
           try {
-            const result = evalR(data.code, data.env);
+            const result = evalR(data.code, data.env?.obj.ptr);
 
             if (data.shelter === undefined || data.shelter) {
               shelter(result.ptr);
@@ -321,7 +321,7 @@ function callRObjectMethod(
   return { obj: ret, payloadType: 'raw' };
 }
 
-function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions = {}): RList {
+function captureR(code: string, env?: RPtr, options: CaptureROptions = {}): RList {
   /*
     This is a sensitive area of the code where we want to be careful to avoid
     leaking objects when an exception is thrown. Here we keep track of our use
@@ -344,7 +344,7 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
 
     let envObj = RObject.globalEnv;
     if (env) {
-      envObj = RObject.wrap(env.obj.ptr);
+      envObj = RObject.wrap(env);
       if (envObj.type() !== 'environment') {
         throw new Error('Attempted to eval R code with an env argument with invalid SEXP type');
       }
@@ -394,7 +394,7 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
   }
 }
 
-function evalR(code: string, env?: WebRPayloadPtr): RObject {
+function evalR(code: string, env?: RPtr): RObject {
   const capture = captureR(code, env);
   Module._Rf_protect(capture.ptr);
 
