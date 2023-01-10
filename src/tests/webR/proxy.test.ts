@@ -16,11 +16,11 @@ test('Evaluate code and return a proxy', async () => {
   expect(util.types.isProxy(result)).toBe(true);
 });
 
-test('RProxy _target property', async () => {
+test('RProxy _payload property', async () => {
   const result = await webR.evalR('42');
-  expect(result._target).toHaveProperty('targetType', 'ptr');
-  expect(result._target).toHaveProperty('obj');
-  const obj = result._target.obj as { type: string; methods: string[]; ptr: number };
+  expect(result._payload).toHaveProperty('payloadType', 'ptr');
+  expect(result._payload).toHaveProperty('obj');
+  const obj = result._payload.obj as { type: string; methods: string[]; ptr: number };
   expect(obj.type).toEqual('double');
   expect(obj.methods[0]).toEqual(expect.any(String));
   expect(obj.ptr).toEqual(expect.any(Number));

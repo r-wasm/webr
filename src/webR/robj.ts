@@ -58,30 +58,29 @@ export const RTypeMap = {
 export type RType = keyof typeof RTypeMap;
 export type RTypeNumber = typeof RTypeMap[keyof typeof RTypeMap];
 
-export type RTargetRaw = {
+export type WebRPayloadRaw = {
   obj: RawType;
-  targetType: 'raw';
+  payloadType: 'raw';
 };
 
-export type RTargetPtr = {
+export type WebRPayloadPtr = {
   obj: {
     type?: RType;
     ptr: RPtr;
     methods?: string[];
   };
-  targetType: 'ptr';
+  payloadType: 'ptr';
 };
 
-export type RTargetError = {
+export type WebRPayloadErr = {
   obj: {
     message: string;
     name: string;
     stack?: string;
   };
-  targetType: 'err';
+  payloadType: 'err';
 };
-export type RTargetType = 'raw' | 'ptr' | 'err';
-export type RTargetObj = RTargetRaw | RTargetPtr | RTargetError;
+export type WebRPayload = WebRPayloadRaw | WebRPayloadPtr | WebRPayloadErr;
 
 type Nullable<T> = T | RObjNull;
 
@@ -118,9 +117,9 @@ export type NamedObject<T> = { [key: string]: T };
  * The type parameter, T, chooses how references to R objects are implemented.
  * This is required because there are different ways to represent a reference to
  * an R object in webR. Instances of the RObjImpl class are used on the worker
- * thread, while proxies of type RObject with a target of type RTargetObj are
- * used on the main thread. Conversion between the reference types is handled
- * automatically during proxy communication.
+ * thread, while proxies of type RObject targeting a WebRPayloadPtr object
+ * are used on the main thread. Conversion between the reference types is
+ * handled automatically during proxy communication.
  */
 export type RObjData<T = RObjImpl> =
   | RawType
@@ -229,22 +228,20 @@ function newRObjFromData(obj: RObjData): RObjImpl {
 export class RObjImpl {
   ptr: RPtr;
 
-  constructor(target: RTargetObj | RObjData) {
+  constructor(data: WebRPayload | RObjData) {
     this.ptr = 0;
-    if (isRObjImpl(target)) {
-      this.ptr = target.ptr;
+    if (isRObjImpl(data)) {
+      this.ptr = data.ptr;
       return this;
     }
-    if (isRTargetObj(target)) {
-      if (target.targetType === 'ptr') {
-        this.ptr = target.obj.ptr;
-        return this;
-      }
-      if (target.targetType === 'raw') {
-        return newRObjFromData(target.obj);
-      }
+    if (isWebRPayloadPtr(data)) {
+      this.ptr = data.obj.ptr;
+      return this;
     }
-    return newRObjFromData(target);
+    if (isWebRPayloadRaw(data)) {
+      return newRObjFromData(data.obj);
+    }
+    return newRObjFromData(data);
   }
 
   get [Symbol.toStringTag](): string {
@@ -401,7 +398,7 @@ export class RObjImpl {
       idx = Module._Rf_protect(Module._Rf_mkString(char));
     }
 
-    const valueObj = isRObjImpl(value) ? value : new RObjImpl({ obj: value, targetType: 'raw' });
+    const valueObj = isRObjImpl(value) ? value : new RObjImpl({ obj: value, payloadType: 'raw' });
 
     const assign = Module.allocateUTF8('[[<-');
     const call = Module._Rf_protect(
@@ -495,7 +492,7 @@ export class RObjImpl {
 
   static wrap(ptr: RPtr): RObjImpl {
     const type = Module._TYPEOF(ptr);
-    return new (getRObjClass(type as RTypeNumber))({ targetType: 'ptr', obj: { ptr } });
+    return new (getRObjClass(type as RTypeNumber))({ payloadType: 'ptr', obj: { ptr } });
   }
 
   static protect<T extends RObjImpl>(obj: T): T {
@@ -521,7 +518,7 @@ export class RObjImpl {
 
 export class RObjNull extends RObjImpl {
   constructor() {
-    super({ targetType: 'ptr', obj: { ptr: Module.getValue(Module._R_NilValue, '*') } });
+    super({ payloadType: 'ptr', obj: { ptr: Module.getValue(Module._R_NilValue, '*') } });
     return this;
   }
 
@@ -565,8 +562,8 @@ export class RObjSymbol extends RObjImpl {
 }
 
 export class RObjPairlist extends RObjImpl {
-  constructor(val: RTargetObj | RObjData) {
-    if (isRTargetObj(val)) {
+  constructor(val: WebRPayload | RObjData) {
+    if (isWebRPayload(val)) {
       super(val);
       return this;
     }
@@ -581,7 +578,7 @@ export class RObjPairlist extends RObjImpl {
       next.setcar(new RObjImpl(values[i]));
     }
     list.setNames(names);
-    super({ targetType: 'ptr', obj: { ptr: list.ptr } });
+    super({ payloadType: 'ptr', obj: { ptr: list.ptr } });
   }
 
   get length(): number {
@@ -660,8 +657,8 @@ export class RObjPairlist extends RObjImpl {
 }
 
 export class RObjList extends RObjImpl {
-  constructor(val: RTargetObj | RObjData) {
-    if (isRTargetObj(val)) {
+  constructor(val: WebRPayload | RObjData) {
+    if (isWebRPayload(val)) {
       super(val);
       return this;
     }
@@ -673,7 +670,7 @@ export class RObjList extends RObjImpl {
     RObjImpl.wrap(ptr).setNames(names);
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
-    super({ targetType: 'ptr', obj: { ptr } });
+    super({ payloadType: 'ptr', obj: { ptr } });
   }
 
   get length(): number {
@@ -725,7 +722,7 @@ export class RObjList extends RObjImpl {
 export class RObjFunction extends RObjImpl {
   exec(...args: (RawType | RObjImpl)[]): RObjImpl {
     const argObjs = args.map((arg) =>
-      isRObjImpl(arg) ? arg : new RObjImpl({ obj: arg, targetType: 'raw' })
+      isRObjImpl(arg) ? arg : new RObjImpl({ obj: arg, payloadType: 'raw' })
     );
     const call = RObjImpl.protect(
       RObjImpl.wrap(Module._Rf_allocVector(RTypeMap.call, args.length + 1)) as RObjPairlist
@@ -764,8 +761,8 @@ export class RObjString extends RObjImpl {
 }
 
 export class RObjEnvironment extends RObjImpl {
-  constructor(val: RTargetObj | RObjData = {}) {
-    if (isRTargetObj(val)) {
+  constructor(val: WebRPayload | RObjData = {}) {
+    if (isWebRPayload(val)) {
       super(val);
       return this;
     }
@@ -782,7 +779,7 @@ export class RObjEnvironment extends RObjImpl {
     });
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
-    super({ targetType: 'ptr', obj: { ptr } });
+    super({ payloadType: 'ptr', obj: { ptr } });
   }
 
   ls(all = false, sorted = true): string[] {
@@ -796,7 +793,7 @@ export class RObjEnvironment extends RObjImpl {
     const namePtr = Module.allocateUTF8(name);
     Module._Rf_defineVar(
       Module._Rf_install(namePtr),
-      isRObjImpl(value) ? value.ptr : new RObjImpl({ targetType: 'raw', obj: value }).ptr,
+      isRObjImpl(value) ? value.ptr : new RObjImpl({ payloadType: 'raw', obj: value }).ptr,
       this.ptr
     );
     Module._free(namePtr);
@@ -926,8 +923,8 @@ abstract class RObjAtomicVector<T extends atomicType> extends RObjImpl {
 }
 
 export class RObjLogical extends RObjAtomicVector<boolean> {
-  constructor(val: RTargetObj | RObjAtomicData<boolean>) {
-    if (isRTargetObj(val)) {
+  constructor(val: WebRPayload | RObjAtomicData<boolean>) {
+    if (isWebRPayload(val)) {
       super(val);
       return this;
     }
@@ -940,7 +937,7 @@ export class RObjLogical extends RObjAtomicVector<boolean> {
     RObjImpl.wrap(ptr).setNames(names);
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
-    super({ targetType: 'ptr', obj: { ptr } });
+    super({ payloadType: 'ptr', obj: { ptr } });
   }
 
   getLogical(idx: number): boolean | null {
@@ -970,8 +967,8 @@ export class RObjLogical extends RObjAtomicVector<boolean> {
 }
 
 export class RObjInteger extends RObjAtomicVector<number> {
-  constructor(val: RTargetObj | RObjAtomicData<number>) {
-    if (isRTargetObj(val)) {
+  constructor(val: WebRPayload | RObjAtomicData<number>) {
+    if (isWebRPayload(val)) {
       super(val);
       return this;
     }
@@ -984,7 +981,7 @@ export class RObjInteger extends RObjAtomicVector<number> {
     RObjImpl.wrap(ptr).setNames(names);
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
-    super({ targetType: 'ptr', obj: { ptr } });
+    super({ payloadType: 'ptr', obj: { ptr } });
   }
 
   getNumber(idx: number): number | null {
@@ -1009,8 +1006,8 @@ export class RObjInteger extends RObjAtomicVector<number> {
 }
 
 export class RObjDouble extends RObjAtomicVector<number> {
-  constructor(val: RTargetObj | RObjAtomicData<number>) {
-    if (isRTargetObj(val)) {
+  constructor(val: WebRPayload | RObjAtomicData<number>) {
+    if (isWebRPayload(val)) {
       super(val);
       return this;
     }
@@ -1023,7 +1020,7 @@ export class RObjDouble extends RObjAtomicVector<number> {
     RObjImpl.wrap(ptr).setNames(names);
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
-    super({ targetType: 'ptr', obj: { ptr } });
+    super({ payloadType: 'ptr', obj: { ptr } });
   }
 
   getNumber(idx: number): number | null {
@@ -1045,8 +1042,8 @@ export class RObjDouble extends RObjAtomicVector<number> {
 }
 
 export class RObjComplex extends RObjAtomicVector<Complex> {
-  constructor(val: RTargetObj | RObjAtomicData<Complex>) {
-    if (isRTargetObj(val)) {
+  constructor(val: WebRPayload | RObjAtomicData<Complex>) {
+    if (isWebRPayload(val)) {
       super(val);
       return this;
     }
@@ -1062,7 +1059,7 @@ export class RObjComplex extends RObjAtomicVector<Complex> {
     RObjImpl.wrap(ptr).setNames(names);
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
-    super({ targetType: 'ptr', obj: { ptr } });
+    super({ payloadType: 'ptr', obj: { ptr } });
   }
 
   getComplex(idx: number): Complex | null {
@@ -1094,8 +1091,8 @@ export class RObjComplex extends RObjAtomicVector<Complex> {
 }
 
 export class RObjCharacter extends RObjAtomicVector<string> {
-  constructor(val: RTargetObj | RObjAtomicData<string>) {
-    if (isRTargetObj(val)) {
+  constructor(val: WebRPayload | RObjAtomicData<string>) {
+    if (isWebRPayload(val)) {
       super(val);
       return this;
     }
@@ -1113,7 +1110,7 @@ export class RObjCharacter extends RObjAtomicVector<string> {
     RObjImpl.wrap(ptr).setNames(names);
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
-    super({ targetType: 'ptr', obj: { ptr } });
+    super({ payloadType: 'ptr', obj: { ptr } });
   }
 
   getString(idx: number): string | null {
@@ -1144,8 +1141,8 @@ export class RObjCharacter extends RObjAtomicVector<string> {
 }
 
 export class RObjRaw extends RObjAtomicVector<number> {
-  constructor(val: RTargetObj | RObjAtomicData<number>) {
-    if (isRTargetObj(val)) {
+  constructor(val: WebRPayload | RObjAtomicData<number>) {
+    if (isWebRPayload(val)) {
       super(val);
       return this;
     }
@@ -1159,7 +1156,7 @@ export class RObjRaw extends RObjAtomicVector<number> {
     RObjImpl.wrap(ptr).setNames(names);
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
-    super({ targetType: 'ptr', obj: { ptr } });
+    super({ payloadType: 'ptr', obj: { ptr } });
   }
 
   getNumber(idx: number): number | null {
@@ -1206,29 +1203,39 @@ export function isRObject(value: any): value is RObject {
   return (
     value &&
     (typeof value === 'object' || typeof value === 'function') &&
-    'targetType' in value &&
-    isRTargetPtr(value._target)
+    'payloadType' in value &&
+    isWebRPayloadPtr(value._payload)
   );
 }
 
 /**
- * Test for an RTargetObj object
+ * Test for an WebRPayload instance
  *
  * @param {any} value The object to test.
- * @return {boolean} True if the object is an instance of an RTargetObj.
+ * @return {boolean} True if the object is an instance of an WebRPayload.
  */
-export function isRTargetObj(value: any): value is RTargetObj {
-  return value && typeof value === 'object' && 'targetType' in value && 'obj' in value;
+export function isWebRPayload(value: any): value is WebRPayload {
+  return value && typeof value === 'object' && 'payloadType' in value && 'obj' in value;
 }
 
 /**
- * Test for an RTargetPtr instance
+ * Test for an WebRPayloadPtr instance
  *
  * @param {any} value The object to test.
- * @return {boolean} True if the object is an instance of an RTargetPtr.
+ * @return {boolean} True if the object is an instance of an WebRPayloadPtr.
  */
-export function isRTargetPtr(value: any): value is RTargetPtr {
-  return isRTargetObj(value) && value.targetType === 'ptr';
+export function isWebRPayloadPtr(value: any): value is WebRPayloadPtr {
+  return isWebRPayload(value) && value.payloadType === 'ptr';
+}
+
+/**
+ * Test for an WebRPayloadRaw instance
+ *
+ * @param {any} value The object to test.
+ * @return {boolean} True if the object is an instance of an WebRPayloadRaw.
+ */
+export function isWebRPayloadRaw(value: any): value is WebRPayloadRaw {
+  return isWebRPayload(value) && value.payloadType === 'raw';
 }
 
 /**
@@ -1238,7 +1245,7 @@ export function isRTargetPtr(value: any): value is RTargetPtr {
  * @return {boolean} True if the object is an instance of an RFunction.
  */
 export function isRFunction(value: any): value is RFunction {
-  return Boolean(isRObject(value) && value._target.obj.methods?.includes('exec'));
+  return Boolean(isRObject(value) && value._payload.obj.methods?.includes('exec'));
 }
 
 /**

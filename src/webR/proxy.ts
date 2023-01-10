@@ -1,5 +1,5 @@
-import { RTargetPtr, isRObject, RTargetObj, RObjTreeNode, RObject, RType } from './robj';
-import { RObjImpl, RObjFunction, RawType, isRFunction, isRTargetPtr, RObjData } from './robj';
+import { WebRPayloadPtr, WebRPayload, isRObject, RObjTreeNode, RObject, RType } from './robj';
+import { RObjImpl, RObjFunction, RawType, isRFunction, isWebRPayloadPtr, RObjData } from './robj';
 import { ChannelMain } from './chan/channel';
 import { replaceInObject } from './utils';
 
@@ -49,11 +49,11 @@ type RProxify<T> = T extends Array<any>
  *   - Where an RObjImpl would be returned, an RProxy is returned instead
  *   - All return types are wrapped in a Promise
  *
- * If required, the proxy target can be accessed directly through the _target
- * property.
+ * If required, the WebRPayloadPtr object associated with the proxy can be
+ * accessed directly through the _payload property.
  */
 export type RProxy<T extends RObjImpl> = { [P in Methods<T>]: RProxify<T[P]> } & {
-  _target: RTargetPtr;
+  _payload: WebRPayloadPtr;
   [Symbol.asyncIterator](): AsyncGenerator<RProxy<RObjImpl>, void, unknown>;
 };
 
@@ -71,14 +71,14 @@ function targetAsyncIterator(chan: ChannelMain, proxy: RProxy<RObjImpl>) {
     const reply = (await chan.request({
       type: 'callRObjMethod',
       data: {
-        target: proxy._target,
+        payload: proxy._payload,
         prop: 'getPropertyValue',
-        args: [{ targetType: 'raw', obj: 'length' }],
+        args: [{ payloadType: 'raw', obj: 'length' }],
       },
-    })) as RTargetObj;
+    })) as WebRPayload;
 
     // Throw an error if there was some problem accessing the object length
-    if (reply.targetType === 'err') {
+    if (reply.payloadType === 'err') {
       const e = new Error(`Cannot iterate over object, ${reply.obj.message}`);
       e.name = reply.obj.name;
       e.stack = reply.obj.stack;
@@ -97,29 +97,29 @@ function targetAsyncIterator(chan: ChannelMain, proxy: RProxy<RObjImpl>) {
 /* Proxy an R object method by providing an async function that requests that
  * the worker thread calls the method and then returns the result.
  *
- * When the optional target argument has not been provided, a RObjImpl static
+ * When the optional payload argument is not provided, an RObjImpl static
  * method is called.
  */
 export function targetMethod(chan: ChannelMain, prop: string): any;
-export function targetMethod(chan: ChannelMain, prop: string, target: RTargetPtr): any;
-export function targetMethod(chan: ChannelMain, prop: string, target?: RTargetPtr): any {
+export function targetMethod(chan: ChannelMain, prop: string, payload: WebRPayloadPtr): any;
+export function targetMethod(chan: ChannelMain, prop: string, payload?: WebRPayloadPtr): any {
   return async (..._args: unknown[]) => {
     const args = _args.map((arg) => {
       if (isRObject(arg)) {
-        return arg._target;
+        return arg._payload;
       }
       return {
-        obj: replaceInObject(arg, isRObject, (obj: RObject) => obj._target),
-        targetType: 'raw',
+        obj: replaceInObject(arg, isRObject, (obj: RObject) => obj._payload),
+        payloadType: 'raw',
       };
     });
 
     const reply = (await chan.request({
       type: 'callRObjMethod',
-      data: { target, prop, args },
-    })) as RTargetObj;
+      data: { payload, prop, args },
+    })) as WebRPayload;
 
-    switch (reply.targetType) {
+    switch (reply.payloadType) {
       case 'ptr':
         return newRProxy(chan, reply);
       case 'err': {
@@ -131,10 +131,10 @@ export function targetMethod(chan: ChannelMain, prop: string, target?: RTargetPt
       default: {
         const proxyReply = replaceInObject(
           reply,
-          isRTargetPtr,
-          (obj: RTargetPtr, chan: ChannelMain) => newRProxy(chan, obj),
+          isWebRPayloadPtr,
+          (obj: WebRPayloadPtr, chan: ChannelMain) => newRProxy(chan, obj),
           chan
-        ) as RTargetObj;
+        ) as WebRPayload;
         return proxyReply.obj;
       }
     }
@@ -145,43 +145,43 @@ export function targetMethod(chan: ChannelMain, prop: string, target?: RTargetPt
  * object on the worker thread from a given JS object.
  */
 async function newRObject(chan: ChannelMain, objType: RType | 'object', value: unknown) {
-  const target = (await chan.request({
+  const payload = (await chan.request({
     type: 'newRObject',
     data: {
       objType,
-      obj: replaceInObject(value, isRObject, (obj: RObject) => obj._target),
+      obj: replaceInObject(value, isRObject, (obj: RObject) => obj._payload),
     },
-  })) as RTargetObj;
-  switch (target.targetType) {
+  })) as WebRPayload;
+  switch (payload.payloadType) {
     case 'raw':
-      throw new Error('Unexpected raw target type returned from newRObject');
+      throw new Error('Unexpected raw payload type returned from newRObject');
     case 'err': {
-      const e = new Error(target.obj.message);
-      e.name = target.obj.name;
-      e.stack = target.obj.stack;
+      const e = new Error(payload.obj.message);
+      e.name = payload.obj.name;
+      e.stack = payload.obj.stack;
       throw e;
     }
     default:
-      return newRProxy(chan, target);
+      return newRProxy(chan, payload);
   }
 }
 
-export function newRProxy(chan: ChannelMain, target: RTargetPtr): RProxy<RObjImpl> {
+export function newRProxy(chan: ChannelMain, payload: WebRPayloadPtr): RProxy<RObjImpl> {
   const proxy = new Proxy(
     // Assume we are proxying an RFunction if the methods list contains 'exec'.
-    target.obj.methods?.includes('exec') ? Object.assign(empty, { ...target }) : target,
+    payload.obj.methods?.includes('exec') ? Object.assign(empty, { ...payload }) : payload,
     {
-      get: (_: RTargetObj, prop: string | number | symbol) => {
-        if (prop === '_target') {
-          return target;
+      get: (_: WebRPayload, prop: string | number | symbol) => {
+        if (prop === '_payload') {
+          return payload;
         } else if (prop === Symbol.asyncIterator) {
           return targetAsyncIterator(chan, proxy);
-        } else if (target.obj.methods?.includes(prop.toString())) {
-          return targetMethod(chan, prop.toString(), target);
+        } else if (payload.obj.methods?.includes(prop.toString())) {
+          return targetMethod(chan, prop.toString(), payload);
         }
       },
-      apply: async (_: RTargetObj, _thisArg, args: (RawType | RProxy<RObjImpl>)[]) => {
-        const res = await (newRProxy(chan, target) as RProxy<RObjFunction>).exec(...args);
+      apply: async (_: WebRPayload, _thisArg, args: (RawType | RProxy<RObjImpl>)[]) => {
+        const res = await (newRProxy(chan, payload) as RProxy<RObjFunction>).exec(...args);
         return isRFunction(res) ? res : res.toJs();
       },
     }
@@ -200,7 +200,7 @@ export function newRObjClassProxy<T, R>(chan: ChannelMain, objType: RType | 'obj
     ? {
         new (
           ...args: {
-            [V in keyof U]: DistObj<Exclude<U[V], RTargetObj>>;
+            [V in keyof U]: DistObj<Exclude<U[V], WebRPayload>>;
           }
         ): Promise<R>;
       }

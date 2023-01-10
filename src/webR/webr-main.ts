@@ -2,7 +2,7 @@ import { newChannelMain, ChannelMain, ChannelType } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy, newRObjClassProxy } from './proxy';
-import { RObject, RTargetObj, isRObject, RObjImpl, RNull, RList, RPairlist, RRaw } from './robj';
+import { RObject, WebRPayload, isRObject, RObjImpl, RNull, RList, RPairlist, RRaw } from './robj';
 import { REnvironment, RCharacter, RLogical, RInteger, RDouble, RComplex, RString } from './robj';
 import { RObjEnvironment, RObjInteger, RObjComplex, RObjPairlist, RObjList, RObjRaw } from './robj';
 import { RObjDouble, RObjLogical, RObjCharacter } from './robj';
@@ -155,26 +155,26 @@ export class WebR {
       throw new Error('Attempted to evaluate R code with invalid environment object');
     }
 
-    const target = (await this.#chan.request({
+    const payload = (await this.#chan.request({
       type: 'captureR',
       data: {
         code: code,
-        env: env?._target,
+        env: env?._payload,
         options: options,
       },
-    })) as RTargetObj;
+    })) as WebRPayload;
 
-    switch (target.targetType) {
+    switch (payload.payloadType) {
       case 'raw':
-        throw new Error('Unexpected raw target type returned from evalR');
+        throw new Error('Unexpected raw payload type returned from evalR');
       case 'err': {
-        const e = new Error(target.obj.message);
-        e.name = target.obj.name;
-        e.stack = target.obj.stack;
+        const e = new Error(payload.obj.message);
+        e.name = payload.obj.name;
+        e.stack = payload.obj.stack;
         throw e;
       }
       default: {
-        const obj = newRProxy(this.#chan, target);
+        const obj = newRProxy(this.#chan, payload);
         obj.preserve();
         const result = await obj.get(1);
         const outList = (await obj.get(2)) as RList;
@@ -199,22 +199,22 @@ export class WebR {
       throw new Error('Attempted to evaluate R code with invalid environment object');
     }
 
-    const target = (await this.#chan.request({
+    const payload = (await this.#chan.request({
       type: 'evalR',
-      data: { code: code, env: env?._target },
-    })) as RTargetObj;
+      data: { code: code, env: env?._payload },
+    })) as WebRPayload;
 
-    switch (target.targetType) {
+    switch (payload.payloadType) {
       case 'raw':
-        throw new Error('Unexpected raw target type returned from evalR');
+        throw new Error('Unexpected raw payload type returned from evalR');
       case 'err': {
-        const e = new Error(target.obj.message);
-        e.name = target.obj.name;
-        e.stack = target.obj.stack;
+        const e = new Error(payload.obj.message);
+        e.name = payload.obj.name;
+        e.stack = payload.obj.stack;
         throw e;
       }
       default: {
-        return newRProxy(this.#chan, target);
+        return newRProxy(this.#chan, payload);
       }
     }
   }
