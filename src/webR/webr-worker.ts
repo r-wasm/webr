@@ -193,9 +193,9 @@ function dispatch(msg: Message): void {
           break;
         }
         case 'isSheltered': {
-          const id = reqMsg.data as RTargetPtr;
+          const payload = reqMsg.data as WebRPayloadPtr;
 
-          const outPtr = parseEval('webr:::is_sheltered(x)', { x: id.obj.ptr });
+          const outPtr = parseEval('webr:::is_sheltered(x)', { x: payload.obj.ptr });
           Module._Rf_protect(outPtr);
 
           const outLgl = RObject.wrap(outPtr) as RLogical;

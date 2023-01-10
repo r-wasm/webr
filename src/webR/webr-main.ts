@@ -208,7 +208,7 @@ export class WebR {
     const payload = (await this.#chan.request({
       type: 'evalR',
       data: { code: code, env: env?._payload, shelter: shelter },
-    })) as RTargetObj;
+    })) as WebRPayload;
 
     switch (payload.payloadType) {
       case 'raw':
@@ -262,7 +262,7 @@ class Shelter {
       throw new Error('The shelter stack is empty.');
     }
 
-    const msg = { type: 'isSheltered', data: { vessel: x._target } };
+    const msg = { type: 'isSheltered', data: x._payload };
     return (await this.#chan.request(msg)) as boolean;
   }
 }
