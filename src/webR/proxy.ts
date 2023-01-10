@@ -49,7 +49,7 @@ type RProxify<T> = T extends Array<any>
  *   - Where an RObjImpl would be returned, an RProxy is returned instead
  *   - All return types are wrapped in a Promise
  *
- * If required, the WebRPayload object associated with the proxy can be
+ * If required, the WebRPayloadPtr object associated with the proxy can be
  * accessed directly through the _payload property.
  */
 export type RProxy<T extends RObjImpl> = { [P in Methods<T>]: RProxify<T[P]> } & {
