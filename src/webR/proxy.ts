@@ -66,7 +66,7 @@ function targetAsyncIterator(chan: ChannelMain, proxy: RProxy<RWorker.RObject>) 
   return async function* () {
     // Get the R object's length
     const reply = (await chan.request({
-      type: 'callRObjMethod',
+      type: 'callRObjectMethod',
       data: {
         payload: proxy._payload,
         prop: 'getPropertyValue',
@@ -112,7 +112,7 @@ export function targetMethod(chan: ChannelMain, prop: string, payload?: WebRPayl
     });
 
     const reply = (await chan.request({
-      type: 'callRObjMethod',
+      type: 'callRObjectMethod',
       data: { payload, prop, args },
     })) as WebRPayload;
 
@@ -186,7 +186,7 @@ export function newRProxy(chan: ChannelMain, payload: WebRPayloadPtr): RProxy<RW
   return proxy;
 }
 
-export function newRObjClassProxy<T, R>(chan: ChannelMain, objType: RType | 'object') {
+export function newRClassProxy<T, R>(chan: ChannelMain, objType: RType | 'object') {
   return new Proxy(RWorker.RObject, {
     construct: (_, args: [unknown]) => newRObject(chan, objType, ...args),
     get: (_, prop: string | number | symbol) => {

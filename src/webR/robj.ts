@@ -78,11 +78,11 @@ export type WebRData =
   | { [key: string]: WebRData };
 
 /**
- * A subset of {@link RObjData} for JavaScript objects that can be converted
- * into R atomic vectors. The parameter T is the JavaScript scalar type
- * associated with the vector.
+ * A subset of WebRData for JavaScript objects that can be converted into R
+ * atomic vectors. The parameter T is the JavaScript scalar type associated with
+ * the vector.
  */
-export type RObjAtomicData<T> = T | (T | null)[] | WebRDataTreeAtomic<T> | NamedObject<T | null>;
+export type WebRDataAtomic<T> = T | (T | null)[] | WebRDataTreeAtomic<T> | NamedObject<T | null>;
 
 /**
  * Test if an object is of type Complex

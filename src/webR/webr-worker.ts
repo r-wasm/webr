@@ -129,7 +129,7 @@ function dispatch(msg: Message): void {
           }
           break;
         }
-        case 'callRObjMethod': {
+        case 'callRObjectMethod': {
           const data = reqMsg.data as {
             payload?: WebRPayloadPtr;
             prop: string;
@@ -137,7 +137,7 @@ function dispatch(msg: Message): void {
           };
           const obj = data.payload ? RObject.wrap(data.payload.obj.ptr) : RObject;
           try {
-            write(callRObjMethod(obj, data.prop, data.args));
+            write(callRObjectMethod(obj, data.prop, data.args));
           } catch (_e) {
             const e = _e as Error;
             write({
@@ -225,8 +225,8 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
 }
 
 function newRObject(data: WebRData, objType: RType | 'object'): WebRPayloadPtr {
-  const RObjClass = objType === 'object' ? RObject : getRWorkerClass(RTypeMap[objType]);
-  const obj = new RObjClass(
+  const RClass = objType === 'object' ? RObject : getRWorkerClass(RTypeMap[objType]);
+  const obj = new RClass(
     replaceInObject(data, isWebRPayloadPtr, (t: WebRPayloadPtr) =>
       RObject.wrap(t.obj.ptr)
     ) as WebRData
@@ -241,7 +241,7 @@ function newRObject(data: WebRData, objType: RType | 'object'): WebRPayloadPtr {
   };
 }
 
-function callRObjMethod(
+function callRObjectMethod(
   obj: RObject | typeof RObject,
   prop: string,
   args: WebRPayload[]

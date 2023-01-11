@@ -1,7 +1,7 @@
 import type { Module } from './module';
 import { WebRPayload, isWebRPayload, isWebRPayloadPtr, isWebRPayloadRaw } from './payload';
 import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw } from './robj';
-import { RObjAtomicData, WebRData, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
+import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
 import { isWebRDataTree, WebRDataTree, WebRDataTreeAtomic, WebRDataTreeNode } from './tree';
 import { WebRDataTreeNull, WebRDataTreeString, WebRDataTreeSymbol } from './tree';
 
@@ -13,8 +13,8 @@ export interface ToTreeOptions {
 
 type Nullable<T> = T | RNull;
 
-function newRObjFromData(obj: WebRData): RObject {
-  // Conversion of RObjTree type JS objects
+function newObjectFromData(obj: WebRData): RObject {
+  // Conversion of WebRDataTree type JS objects
   if (isWebRDataTree(obj)) {
     return new (getRWorkerClass(RTypeMap[obj.type]))(obj);
   }
@@ -44,7 +44,7 @@ function newRObjFromData(obj: WebRData): RObject {
   // JS arrays are interpreted using R's c() function, so as to match
   // R's built in coercion rules
   if (Array.isArray(obj)) {
-    const objs = obj.map((el) => newRObjFromData(el));
+    const objs = obj.map((el) => newObjectFromData(el));
     const cString = Module.allocateUTF8('c');
     const call = RObject.protect(
       RObject.wrap(Module._Rf_allocVector(RTypeMap.call, objs.length + 1)) as RPairlist
@@ -79,9 +79,9 @@ export class RObject {
       return this;
     }
     if (isWebRPayloadRaw(data)) {
-      return newRObjFromData(data.obj);
+      return newObjectFromData(data.obj);
     }
-    return newRObjFromData(data);
+    return newObjectFromData(data);
   }
 
   get [Symbol.toStringTag](): string {
@@ -693,7 +693,7 @@ type TypedArray =
 
 export type atomicType = number | boolean | Complex | string;
 
-abstract class RObjAtomicVector<T extends atomicType> extends RObject {
+abstract class RVectorAtomic<T extends atomicType> extends RObject {
   get length(): number {
     return Module._LENGTH(this.ptr);
   }
@@ -762,8 +762,8 @@ abstract class RObjAtomicVector<T extends atomicType> extends RObject {
   }
 }
 
-export class RLogical extends RObjAtomicVector<boolean> {
-  constructor(val: WebRPayload | RObjAtomicData<boolean>) {
+export class RLogical extends RVectorAtomic<boolean> {
+  constructor(val: WebRPayload | WebRDataAtomic<boolean>) {
     if (isWebRPayload(val)) {
       super(val);
       return this;
@@ -806,8 +806,8 @@ export class RLogical extends RObjAtomicVector<boolean> {
   }
 }
 
-export class RInteger extends RObjAtomicVector<number> {
-  constructor(val: WebRPayload | RObjAtomicData<number>) {
+export class RInteger extends RVectorAtomic<number> {
+  constructor(val: WebRPayload | WebRDataAtomic<number>) {
     if (isWebRPayload(val)) {
       super(val);
       return this;
@@ -845,8 +845,8 @@ export class RInteger extends RObjAtomicVector<number> {
   }
 }
 
-export class RDouble extends RObjAtomicVector<number> {
-  constructor(val: WebRPayload | RObjAtomicData<number>) {
+export class RDouble extends RVectorAtomic<number> {
+  constructor(val: WebRPayload | WebRDataAtomic<number>) {
     if (isWebRPayload(val)) {
       super(val);
       return this;
@@ -881,8 +881,8 @@ export class RDouble extends RObjAtomicVector<number> {
   }
 }
 
-export class RComplex extends RObjAtomicVector<Complex> {
-  constructor(val: WebRPayload | RObjAtomicData<Complex>) {
+export class RComplex extends RVectorAtomic<Complex> {
+  constructor(val: WebRPayload | WebRDataAtomic<Complex>) {
     if (isWebRPayload(val)) {
       super(val);
       return this;
@@ -930,8 +930,8 @@ export class RComplex extends RObjAtomicVector<Complex> {
   }
 }
 
-export class RCharacter extends RObjAtomicVector<string> {
-  constructor(val: WebRPayload | RObjAtomicData<string>) {
+export class RCharacter extends RVectorAtomic<string> {
+  constructor(val: WebRPayload | WebRDataAtomic<string>) {
     if (isWebRPayload(val)) {
       super(val);
       return this;
@@ -980,8 +980,8 @@ export class RCharacter extends RObjAtomicVector<string> {
   }
 }
 
-export class RRaw extends RObjAtomicVector<number> {
-  constructor(val: WebRPayload | RObjAtomicData<number>) {
+export class RRaw extends RVectorAtomic<number> {
+  constructor(val: WebRPayload | WebRDataAtomic<number>) {
     if (isWebRPayload(val)) {
       super(val);
       return this;
@@ -1021,7 +1021,7 @@ export class RRaw extends RObjAtomicVector<number> {
  * Convert the various types possible in the type union WebRData into
  * consistently typed arrays of names and values.
  */
-function toWebRData<T>(jsObj: RObjAtomicData<T>): {
+function toWebRData<T>(jsObj: WebRDataAtomic<T>): {
   names: (string | null)[] | null;
   values: (T | null)[];
 };
