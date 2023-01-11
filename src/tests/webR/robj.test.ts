@@ -14,7 +14,7 @@ import {
   REnvironment,
   RCharacter,
   isRObject,
-} from '../../webR/robj';
+} from '../../webR/robj-main';
 
 const webR = new WebR({
   WEBR_URL: '../dist/',
@@ -40,7 +40,7 @@ test('Convert an R symbol to JS', async () => {
 
 test('Get RObject type as a string', async () => {
   const result = (await webR.evalR('NULL')) as RNull;
-  expect(await result.toString()).toEqual('[object RObj:null]');
+  expect(await result.toString()).toEqual('[object RObject:null]');
 });
 
 describe('Working with R lists and vectors', () => {
@@ -353,7 +353,7 @@ describe('Working with R lists and vectors', () => {
 describe('Working with R environments', () => {
   test('Create an R environment', async () => {
     const env = (await webR.evalR('new.env()')) as REnvironment;
-    expect(await env.toString()).toEqual('[object RObj:environment]');
+    expect(await env.toString()).toEqual('[object RObject:environment]');
   });
 
   test('List items in an R environment', async () => {

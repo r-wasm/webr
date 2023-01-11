@@ -5,8 +5,9 @@ import { FSNode, WebROptions, CaptureROptions } from './webr-main';
 import { Module } from './module';
 import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
-import { RPtr, RType, RTypeMap, RObjImpl, isRObjImpl, RObjList, getRObjClass } from './robj';
-import { RawType, RObjData, WebRPayload, WebRPayloadPtr, isWebRPayloadPtr } from './robj';
+import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
+import { RObject, isRObject, RList, getRWorkerClass } from './robj-worker';
+import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
 
 let initialised = false;
 let chan: ChannelWorker | undefined;
@@ -75,7 +76,7 @@ function dispatch(msg: Message): void {
               obj: {
                 type: capture.type(),
                 ptr: capture.ptr,
-                methods: RObjImpl.getMethods(capture),
+                methods: RObject.getMethods(capture),
               },
               payloadType: 'ptr',
             });
@@ -99,7 +100,7 @@ function dispatch(msg: Message): void {
               obj: {
                 type: result.type(),
                 ptr: result.ptr,
-                methods: RObjImpl.getMethods(result),
+                methods: RObject.getMethods(result),
               },
               payloadType: 'ptr',
             });
@@ -114,7 +115,7 @@ function dispatch(msg: Message): void {
         }
         case 'newRObject': {
           const data = reqMsg.data as {
-            obj: RObjData;
+            obj: WebRData;
             objType: RType | 'object';
           };
           try {
@@ -128,15 +129,15 @@ function dispatch(msg: Message): void {
           }
           break;
         }
-        case 'callRObjMethod': {
+        case 'callRObjectMethod': {
           const data = reqMsg.data as {
             payload?: WebRPayloadPtr;
             prop: string;
             args: WebRPayload[];
           };
-          const obj = data.payload ? RObjImpl.wrap(data.payload.obj.ptr) : RObjImpl;
+          const obj = data.payload ? RObject.wrap(data.payload.obj.ptr) : RObject;
           try {
-            write(callRObjMethod(obj, data.prop, data.args));
+            write(callRObjectMethod(obj, data.prop, data.args));
           } catch (_e) {
             const e = _e as Error;
             write({
@@ -154,7 +155,7 @@ function dispatch(msg: Message): void {
             obj: {
               type: res.type(),
               ptr: res.ptr,
-              methods: RObjImpl.getMethods(res),
+              methods: RObject.getMethods(res),
             },
             payloadType: 'ptr',
           });
@@ -223,44 +224,25 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
   }
 }
 
-/**
- * Construct a new R object from a given JavaScript object.
- *
- * @param {RObjData} data JavaScript object to be converted into an R object.
- * @param {RType | 'object'} objType The type of R object to create, or 'object'
- * to infer the R object type.
- * @return {WebRPayloadPtr} The newly created R object, as a webR payload.
- */
-function newRObject(data: RObjData, objType: RType | 'object'): WebRPayloadPtr {
-  const RObjClass = objType === 'object' ? RObjImpl : getRObjClass(RTypeMap[objType]);
-  const obj = new RObjClass(
+function newRObject(data: WebRData, objType: RType | 'object'): WebRPayloadPtr {
+  const RClass = objType === 'object' ? RObject : getRWorkerClass(RTypeMap[objType]);
+  const obj = new RClass(
     replaceInObject(data, isWebRPayloadPtr, (t: WebRPayloadPtr) =>
-      RObjImpl.wrap(t.obj.ptr)
-    ) as RObjData
+      RObject.wrap(t.obj.ptr)
+    ) as WebRData
   );
   return {
     obj: {
       type: obj.type(),
       ptr: obj.ptr,
-      methods: RObjImpl.getMethods(obj),
+      methods: RObject.getMethods(obj),
     },
     payloadType: 'ptr',
   };
 }
 
-/**
- * For a given R object, call the given method with arguments.
- *
- * Returns a WebRPayload containing a either a reference to the resulting R
- * object or a raw JS value.
- *
- * @param {RObjImpl} obj The R object, or RObjImpl for static methods.
- * @param {string} prop Name of the method to invoke.
- * @param {WebRPayload[]} args List of arguments to invoke the method with.
- * @return {WebRPayload} The result of invoking the method.
- */
-function callRObjMethod(
-  obj: RObjImpl | typeof RObjImpl,
+function callRObjectMethod(
+  obj: RObject | typeof RObject,
   prop: string,
   args: WebRPayload[]
 ): WebRPayload {
@@ -277,48 +259,25 @@ function callRObjMethod(
     obj,
     args.map((arg) => {
       if (arg.payloadType === 'ptr') {
-        return RObjImpl.wrap(arg.obj.ptr);
+        return RObject.wrap(arg.obj.ptr);
       }
       return replaceInObject(arg.obj, isWebRPayloadPtr, (t: WebRPayloadPtr) =>
-        RObjImpl.wrap(t.obj.ptr)
+        RObject.wrap(t.obj.ptr)
       );
     })
-  ) as RObjData;
+  ) as WebRData;
 
-  const ret = replaceInObject(res, isRObjImpl, (obj: RObjImpl) => {
+  const ret = replaceInObject(res, isRObject, (obj: RObject) => {
     return {
-      obj: { type: obj.type(), ptr: obj.ptr, methods: RObjImpl.getMethods(obj) },
+      obj: { type: obj.type(), ptr: obj.ptr, methods: RObject.getMethods(obj) },
       payloadType: 'ptr',
     };
-  }) as RawType;
+  }) as WebRDataRaw;
 
   return { obj: ret, payloadType: 'raw' };
 }
 
-/**
- * Evaluate the given R code and capture output
- *
- * Returns an R list object containing the result of the computation along with
- * a list of captured stream outputs and conditions.
- *
- * @param {string} code The R code to evaluate.
- * @param {WebRPayloadPtr} [env] A WebRPayloadPtr object referencing the
- * environment to evaluate within.
- * @param {Object<string,any>} [options={}] Options for the execution environment.
- * @param {boolean} [options.captureStreams] Should the stdout and stderr
- * output streams be captured and returned?
- * @param {boolean} [options.captureConditions] Should conditions raised during
- * execution be captured and returned?
- * @param {boolean} [options.withAutoprint] Should the code automatically print
- * output as if it were written at an R console?
- * @param {boolean} [options.withHandlers] Should the code be executed using a
- * tryCatch with handlers in place?
- * @param {boolean} [options.throwJsException] Should an R error condition be
- * re-thrown as a JS exception?
- * @return {RObjList} An R object containing the result of the computation
- * along with any other objects captured during execution.
- */
-function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions = {}): RObjList {
+function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions = {}): RList {
   /*
     This is a sensitive area of the code where we want to be careful to avoid
     leaking objects when an exception is thrown. Here we keep track of our use
@@ -337,39 +296,37 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
       options
     );
 
-    let envObj = RObjImpl.globalEnv;
+    let envObj = RObject.globalEnv;
     if (env) {
-      envObj = RObjImpl.wrap(env.obj.ptr);
+      envObj = RObject.wrap(env.obj.ptr);
       if (envObj.type() !== 'environment') {
         throw new Error('Attempted to eval R code with an env argument with invalid SEXP type');
       }
     }
 
-    const tPtr = RObjImpl.true.ptr;
-    const fPtr = RObjImpl.false.ptr;
+    const tPtr = RObject.true.ptr;
+    const fPtr = RObject.false.ptr;
     const codeStr = Module.allocateUTF8(code);
     const evalStr = Module.allocateUTF8('webr::eval_r');
-    const codeObj = new RObjImpl({ payloadType: 'raw', obj: code });
+    const codeObj = new RObject({ payloadType: 'raw', obj: code });
     Module._Rf_protect(codeObj.ptr);
     protectCount++;
     const expr = Module._Rf_lang6(
-      Module._R_ParseEvalString(evalStr, RObjImpl.baseEnv.ptr),
+      Module._R_ParseEvalString(evalStr, RObject.baseEnv.ptr),
       codeObj.ptr,
       _options.captureConditions ? tPtr : fPtr,
       _options.captureStreams ? tPtr : fPtr,
       _options.withAutoprint ? tPtr : fPtr,
       _options.withHandlers ? tPtr : fPtr
     );
-    const capture = RObjImpl.wrap(
-      Module._Rf_protect(Module._Rf_eval(expr, envObj.ptr))
-    ) as RObjList;
+    const capture = RObject.wrap(Module._Rf_protect(Module._Rf_eval(expr, envObj.ptr))) as RList;
     protectCount++;
     Module._free(codeStr);
     Module._free(evalStr);
 
     if (_options.captureConditions && _options.throwJsException) {
-      const output = capture.get('output') as RObjList;
-      const error = (output.toArray() as RObjImpl[]).find(
+      const output = capture.get('output') as RList;
+      const error = (output.toArray() as RObject[]).find(
         (out) => out.get('type').toString() === 'error'
       );
       if (error) {
@@ -385,12 +342,12 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
   }
 }
 
-function evalR(code: string, env?: WebRPayloadPtr): RObjImpl {
+function evalR(code: string, env?: WebRPayloadPtr): RObject {
   const capture = captureR(code, env);
 
   // Send captured conditions and output to the JS console. By default, captured
   // error conditions are thrown and so do not need to be handled here.
-  const output = capture.get('output') as RObjList;
+  const output = capture.get('output') as RList;
   for (let i = 1; i <= output.length; i++) {
     const out = output.get(i);
     const outputType = out.get('type').toString();
@@ -494,7 +451,7 @@ function init(config: Required<WebROptions>) {
         Module._free(stop);
         Module._free(msg);
 
-        Module._Rf_eval(call, RObjImpl.baseEnv.ptr);
+        Module._Rf_eval(call, RObject.baseEnv.ptr);
       }
       throwUnreachable();
       return 0;
