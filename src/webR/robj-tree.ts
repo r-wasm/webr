@@ -1,4 +1,4 @@
-import * as WorkerTypes from './robj-worker';
+import * as RWorker from './robj-worker';
 import { RawType, RPtr, RTypeMap } from './robj';
 import { atomicType } from './robj-worker';
 
@@ -9,7 +9,7 @@ import { atomicType } from './robj-worker';
  * Nested R objects are serialised using the RObjTreeNode type, forming branches
  * in the resulting tree structure, with leaves formed by the remaining types.
  */
-export type RObjTree<T = WorkerTypes.RObject> =
+export type RObjTree<T = RWorker.RObject> =
   | RObjTreeNull
   | RObjTreeString
   | RObjTreeSymbol
@@ -29,7 +29,7 @@ export type RObjTreeSymbol = {
   symvalue: RPtr | null;
   internal: RPtr | null;
 };
-export type RObjTreeNode<T = WorkerTypes.RObject> = {
+export type RObjTreeNode<T = RWorker.RObject> = {
   type: 'list' | 'pairlist' | 'environment';
   names: (string | null)[] | null;
   values: (RawType | T | RObjTree<T>)[];
