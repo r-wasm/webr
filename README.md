@@ -13,6 +13,7 @@ some required prerequisites:
  * quilt
  * liblzma
  * libpcre2
+ * node (>=16.0.0)
 
 R's Fortran source files can be compiled with either a
 [custom development version of flang](https://github.com/lionel-/f18-llvm-project/commits/fix-webr)

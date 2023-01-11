@@ -34,13 +34,12 @@ webR/config.ts: webR/config.ts.in
 check: $(DIST)
 	npx tsc
 	npx eslint $(TS_SOURCES)
-	NODE_V8_COVERAGE=coverage npx c8 node --experimental-wasm-bigint \
-	  ./node_modules/jest/bin/jest.js --config tests/webr.config.js
+	NODE_V8_COVERAGE=coverage npx c8 node ./node_modules/jest/bin/jest.js \
+	  --config tests/webr.config.js
 
 .PHONY: check-packages
 check-packages: $(DIST)
-	npx node --experimental-wasm-bigint ./node_modules/jest/bin/jest.js \
-	--config tests/packages.config.js
+	npx node ./node_modules/jest/bin/jest.js --config tests/packages.config.js
 
 node_modules: package.json
 	npm ci
