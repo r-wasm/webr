@@ -359,33 +359,38 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
 
 function evalR(code: string, env?: WebRPayloadPtr): RObject {
   const capture = captureR(code, env);
+  Module._Rf_protect(capture.ptr);
 
-  // Send captured conditions and output to the JS console. By default, captured
-  // error conditions are thrown and so do not need to be handled here.
-  const output = capture.get('output') as RList;
-  for (let i = 1; i <= output.length; i++) {
-    const out = output.get(i);
-    const outputType = out.get('type').toString();
-    switch (outputType) {
-      case 'stdout':
-        console.log(out.get('data').toString());
-        break;
-      case 'stderr':
-        console.warn(out.get('data').toString());
-        break;
-      case 'message':
-        console.warn(out.pluck('data', 'message')?.toString() || '');
-        break;
-      case 'warning':
-        console.warn(`Warning message: \n${out.pluck('data', 'message')?.toString() || ''}`);
-        break;
-      default:
-        console.warn(`Output of type ${outputType}:`);
-        console.warn(out.get('data').toJs());
-        break;
+  try {
+    // Send captured conditions and output to the JS console. By default, captured
+    // error conditions are thrown and so do not need to be handled here.
+    const output = capture.get('output') as RList;
+    for (let i = 1; i <= output.length; i++) {
+      const out = output.get(i);
+      const outputType = out.get('type').toString();
+      switch (outputType) {
+        case 'stdout':
+          console.log(out.get('data').toString());
+          break;
+        case 'stderr':
+          console.warn(out.get('data').toString());
+          break;
+        case 'message':
+          console.warn(out.pluck('data', 'message')?.toString() || '');
+          break;
+        case 'warning':
+          console.warn(`Warning message: \n${out.pluck('data', 'message')?.toString() || ''}`);
+          break;
+        default:
+          console.warn(`Output of type ${outputType}:`);
+          console.warn(out.get('data').toJs());
+          break;
+      }
     }
+    return capture.get('result');
+  } finally {
+    Module._Rf_unprotect(1);
   }
-  return capture.get('result');
 }
 
 function getFileData(name: string): Uint8Array {
