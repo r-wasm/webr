@@ -2,10 +2,10 @@ import { newChannelMain, ChannelMain, ChannelType } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy, newRObjClassProxy } from './proxy';
-import { RObject, WebRPayload, isRObject, RObjImpl, RNull, RList, RPairlist, RRaw } from './robj';
-import { REnvironment, RCharacter, RLogical, RInteger, RDouble, RComplex, RString } from './robj';
-import { RObjEnvironment, RObjInteger, RObjComplex, RObjPairlist, RObjList, RObjRaw } from './robj';
-import { RObjDouble, RObjLogical, RObjCharacter } from './robj';
+import { WebRPayload } from './payload';
+import { isRObject, RCharacter, RComplex, RDouble, REnvironment, RInteger } from './robj';
+import { RList, RLogical, RNull, RObject, RPairlist, RRaw, RString } from './robj';
+import * as RWorker from './robj-worker';
 
 export type CaptureROptions = {
   captureStreams?: boolean;
@@ -77,16 +77,19 @@ export class WebR {
     const config: Required<WebROptions> = Object.assign(defaultOptions, options);
     const ch = (this.#chan = newChannelMain(config));
 
-    this.RObject = newRObjClassProxy<typeof RObjImpl, RObject>(ch, 'object');
-    this.RLogical = newRObjClassProxy<typeof RObjLogical, RLogical>(ch, 'logical');
-    this.RInteger = newRObjClassProxy<typeof RObjInteger, RInteger>(ch, 'integer');
-    this.RDouble = newRObjClassProxy<typeof RObjDouble, RDouble>(ch, 'double');
-    this.RComplex = newRObjClassProxy<typeof RObjComplex, RComplex>(ch, 'complex');
-    this.RCharacter = newRObjClassProxy<typeof RObjCharacter, RCharacter>(ch, 'character');
-    this.RRaw = newRObjClassProxy<typeof RObjRaw, RRaw>(ch, 'raw');
-    this.RList = newRObjClassProxy<typeof RObjList, RList>(ch, 'list');
-    this.RPairlist = newRObjClassProxy<typeof RObjPairlist, RPairlist>(ch, 'pairlist');
-    this.REnvironment = newRObjClassProxy<typeof RObjEnvironment, REnvironment>(ch, 'environment');
+    this.RObject = newRObjClassProxy<typeof RWorker.RObject, RObject>(ch, 'object');
+    this.RLogical = newRObjClassProxy<typeof RWorker.RLogical, RLogical>(ch, 'logical');
+    this.RInteger = newRObjClassProxy<typeof RWorker.RInteger, RInteger>(ch, 'integer');
+    this.RDouble = newRObjClassProxy<typeof RWorker.RDouble, RDouble>(ch, 'double');
+    this.RComplex = newRObjClassProxy<typeof RWorker.RComplex, RComplex>(ch, 'complex');
+    this.RCharacter = newRObjClassProxy<typeof RWorker.RCharacter, RCharacter>(ch, 'character');
+    this.RRaw = newRObjClassProxy<typeof RWorker.RRaw, RRaw>(ch, 'raw');
+    this.RList = newRObjClassProxy<typeof RWorker.RList, RList>(ch, 'list');
+    this.RPairlist = newRObjClassProxy<typeof RWorker.RPairlist, RPairlist>(ch, 'pairlist');
+    this.REnvironment = newRObjClassProxy<typeof RWorker.REnvironment, REnvironment>(
+      ch,
+      'environment'
+    );
     this.objs = {} as typeof this.objs;
   }
 

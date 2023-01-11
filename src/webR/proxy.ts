@@ -1,7 +1,9 @@
-import { WebRPayloadPtr, WebRPayload, isRObject, RObjTreeNode, RObject, RType } from './robj';
-import { RObjImpl, RObjFunction, RawType, isRFunction, isWebRPayloadPtr, RObjData } from './robj';
 import { ChannelMain } from './chan/channel';
 import { replaceInObject } from './utils';
+import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
+import { isRObject, RObject, RType, RawType, isRFunction, RObjData } from './robj';
+import { RObjTreeNode } from './robj-tree';
+import * as RWorker from './robj-worker';
 
 /** Obtain a union of the keys corresponding to methods of a given class T
  */
@@ -11,24 +13,23 @@ type Methods<T> = {
 
 /** Distributive conditional type for RProxy
  *
- * Distributes RProxy over any RObjImpls in the given union type U.
+ * Distributes RProxy over any RWorker.RObject in the given union type U.
  */
-export type DistProxy<U> = U extends RObjImpl
+export type DistProxy<U> = U extends RWorker.RObject
   ? RProxy<U>
   : U extends RObjTreeNode
   ? RObjTreeNode<RObject>
   : U;
 
-/** Convert an RObjImpl property type to a corresponding RProxy property type
+/** Convert RWorker.RObject properties for use with an RProxy.
  *
- * RObjImpl types are converted into RProxy type, then wrapped in a Promise.
+ * Properties in the type parameter are mapped so that RProxy is distributed
+ * over any RWorker.RObject types, then wrapped in a Promise.
  *
- * Function signatures are mapped so that arguments with RObjImpl type instead
- * take RProxy<RObjImpl> type. Other function arguments remain as they are.
- * The function return type is also converted to a corresponding type
+ * Function signatures are mapped so that arguments with RWorker.RObject type
+ * instead take RProxy<RWorker.RObject> type. Other function arguments remain as
+ * they are. The function return type is also converted to a corresponding type
  * using RProxify recursively.
- *
- * Any other types are wrapped in a Promise.
  */
 type RProxify<T> = T extends Array<any>
   ? Promise<DistProxy<T[0]>[]>
@@ -40,21 +41,21 @@ type RProxify<T> = T extends Array<any>
     ) => RProxify<ReturnType<T>>
   : Promise<DistProxy<T>>;
 
-/** Create an RProxy type based on an RObjImpl type parameter
+/** Create an RProxy type based on an RWorker.RObject type parameter.
  *
- * RProxy is intended to be used in place of RObjImpl on the main thread.
- * An RProxy has the same instance methods as the given RObjImpl parameter,
- * with the following differences:
- *   - Method arguments take RProxy rather than RObjImpl
- *   - Where an RObjImpl would be returned, an RProxy is returned instead
+ * RProxy is intended to be used in place of RWorker.RObject on the main thread.
+ * An RProxy has the same instance methods as the given RWorker.RObject
+ * parameter, with the following differences:
+ *   - Method arguments take RProxy rather than RWorker.RObject
+ *   - Where an RWorker.RObject would be returned, an RProxy is returned instead
  *   - All return types are wrapped in a Promise
  *
  * If required, the WebRPayloadPtr object associated with the proxy can be
  * accessed directly through the _payload property.
  */
-export type RProxy<T extends RObjImpl> = { [P in Methods<T>]: RProxify<T[P]> } & {
+export type RProxy<T extends RWorker.RObject> = { [P in Methods<T>]: RProxify<T[P]> } & {
   _payload: WebRPayloadPtr;
-  [Symbol.asyncIterator](): AsyncGenerator<RProxy<RObjImpl>, void, unknown>;
+  [Symbol.asyncIterator](): AsyncGenerator<RProxy<RWorker.RObject>, void, unknown>;
 };
 
 /* The empty function is used as base when we are proxying RFunction objects.
@@ -65,7 +66,7 @@ function empty() {}
 /* Proxy the asyncIterator property for R objects with a length. This allows us
  * to use the `for await (i of obj){}` JavaScript syntax.
  */
-function targetAsyncIterator(chan: ChannelMain, proxy: RProxy<RObjImpl>) {
+function targetAsyncIterator(chan: ChannelMain, proxy: RProxy<RWorker.RObject>) {
   return async function* () {
     // Get the R object's length
     const reply = (await chan.request({
@@ -97,7 +98,7 @@ function targetAsyncIterator(chan: ChannelMain, proxy: RProxy<RObjImpl>) {
 /* Proxy an R object method by providing an async function that requests that
  * the worker thread calls the method and then returns the result.
  *
- * When the optional payload argument is not provided, an RObjImpl static
+ * When the optional payload argument is not provided, an RWorker.RObject static
  * method is called.
  */
 export function targetMethod(chan: ChannelMain, prop: string): any;
@@ -141,8 +142,8 @@ export function targetMethod(chan: ChannelMain, prop: string, payload?: WebRPayl
   };
 }
 
-/* Proxy the RObjImpl class constructors. This allows us to create a new R
- * object on the worker thread from a given JS object.
+/* Proxy the RWorker.RObject class constructors. This allows us to create a new
+ * R object on the worker thread from a given JS object.
  */
 async function newRObject(chan: ChannelMain, objType: RType | 'object', value: unknown) {
   const payload = (await chan.request({
@@ -166,7 +167,7 @@ async function newRObject(chan: ChannelMain, objType: RType | 'object', value: u
   }
 }
 
-export function newRProxy(chan: ChannelMain, payload: WebRPayloadPtr): RProxy<RObjImpl> {
+export function newRProxy(chan: ChannelMain, payload: WebRPayloadPtr): RProxy<RWorker.RObject> {
   const proxy = new Proxy(
     // Assume we are proxying an RFunction if the methods list contains 'exec'.
     payload.obj.methods?.includes('exec') ? Object.assign(empty, { ...payload }) : payload,
@@ -180,18 +181,18 @@ export function newRProxy(chan: ChannelMain, payload: WebRPayloadPtr): RProxy<RO
           return targetMethod(chan, prop.toString(), payload);
         }
       },
-      apply: async (_: WebRPayload, _thisArg, args: (RawType | RProxy<RObjImpl>)[]) => {
-        const res = await (newRProxy(chan, payload) as RProxy<RObjFunction>).exec(...args);
+      apply: async (_: WebRPayload, _thisArg, args: (RawType | RProxy<RWorker.RObject>)[]) => {
+        const res = await (newRProxy(chan, payload) as RProxy<RWorker.RFunction>).exec(...args);
         return isRFunction(res) ? res : res.toJs();
       },
     }
-  ) as unknown as RProxy<RObjImpl>;
+  ) as unknown as RProxy<RWorker.RObject>;
   return proxy;
 }
 
 type DistObj<U> = U extends RawType ? U : U extends RObjData ? RObjData<RObject> : U;
 export function newRObjClassProxy<T, R>(chan: ChannelMain, objType: RType | 'object') {
-  return new Proxy(RObjImpl, {
+  return new Proxy(RWorker.RObject, {
     construct: (_, args: [unknown]) => newRObject(chan, objType, ...args),
     get: (_, prop: string | number | symbol) => {
       return targetMethod(chan, prop.toString());
@@ -205,6 +206,6 @@ export function newRObjClassProxy<T, R>(chan: ChannelMain, objType: RType | 'obj
         ): Promise<R>;
       }
     : never) & {
-    [P in Methods<typeof RObjImpl>]: RProxify<typeof RObjImpl[P]>;
+    [P in Methods<typeof RWorker.RObject>]: RProxify<typeof RWorker.RObject[P]>;
   };
 }
