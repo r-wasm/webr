@@ -284,6 +284,8 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
     of protect and ensure a balanced unprotect is called using try-finally.
   */
   let nProt = 0;
+  const strings: { [key: string]: number } = {};
+
   try {
     const _options: Required<CaptureROptions> = Object.assign(
       {
@@ -307,15 +309,15 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
     const tPtr = RObject.true.ptr;
     const fPtr = RObject.false.ptr;
 
-    const codeStr = Module.allocateUTF8(code);
-    const evalStr = Module.allocateUTF8('webr::eval_r');
+    strings.code = Module.allocateUTF8(code);
+    strings.eval = Module.allocateUTF8('webr::eval_r');
 
     const codeObj = new RObject({ payloadType: 'raw', obj: code });
     Module._Rf_protect(codeObj.ptr);
     ++nProt;
 
     const expr = Module._Rf_lang6(
-      Module._R_ParseEvalString(evalStr, RObject.baseEnv.ptr),
+      Module._R_ParseEvalString(strings.eval, RObject.baseEnv.ptr),
       codeObj.ptr,
       _options.captureConditions ? tPtr : fPtr,
       _options.captureStreams ? tPtr : fPtr,
@@ -328,8 +330,6 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
     ++nProt;
 
     const capture = RObject.wrap(capturePtr) as RList;
-    Module._free(codeStr);
-    Module._free(evalStr);
 
     if (_options.captureConditions && _options.throwJsException) {
       const output = capture.get('output') as RList;
@@ -346,12 +346,12 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
     return capture;
   } finally {
     Module._Rf_unprotect(nProt);
+    Object.keys(strings).forEach((key) => Module._free(strings[key]));
   }
 }
 
 function evalR(code: string, env?: WebRPayloadPtr): RObject {
   const capture = captureR(code, env);
-  Module._Rf_protect(capture.ptr);
 
   // Send captured conditions and output to the JS console. By default, captured
   // error conditions are thrown and so do not need to be handled here.
