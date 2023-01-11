@@ -1,7 +1,7 @@
 import type { Module } from './module';
 import type { RProxy } from './proxy';
 import { isWebRPayloadPtr } from './payload';
-import { RObjTree, RObjTreeAtomic } from './robj-tree';
+import { WebRDataTree, WebRDataTreeAtomic } from './tree';
 import * as RWorker from './robj-worker';
 
 declare let Module: Module;
@@ -86,27 +86,21 @@ export type NamedObject<T> = { [key: string]: T };
  *
  * RObjData is used both as a general input argument for R object construction
  * and also as a general return type when converting R objects into JavaScript.
- *
- * The type parameter, T, chooses how references to R objects are implemented.
- * This is required because there are different ways to represent a reference to
- * an R object in webR. Instances of the RWorker.RObject class are used on the
- * worker thread, while proxies of type RObject targeting a WebRPayloadPtr
- * object are used on the main thread. Conversion between the reference types is
- * handled automatically during proxy communication.
  */
-export type RObjData<T = RWorker.RObject> =
+export type RObjData =
   | RawType
-  | T
-  | RObjTree<T>
-  | RObjData<T>[]
-  | { [key: string]: RObjData<T> };
+  | RObject
+  | RWorker.RObject
+  | WebRDataTree
+  | RObjData[]
+  | { [key: string]: RObjData };
 
 /**
  * A subset of {@link RObjData} for JavaScript objects that can be converted
  * into R atomic vectors. The parameter T is the JavaScript scalar type
  * associated with the vector.
  */
-export type RObjAtomicData<T> = T | (T | null)[] | RObjTreeAtomic<T> | NamedObject<T | null>;
+export type RObjAtomicData<T> = T | (T | null)[] | WebRDataTreeAtomic<T> | NamedObject<T | null>;
 
 /**
  * Test for an RObject instance

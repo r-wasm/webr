@@ -2,8 +2,8 @@ import type { Module } from './module';
 import { WebRPayload, isWebRPayload, isWebRPayloadPtr, isWebRPayloadRaw } from './payload';
 import { Complex, isComplex, NamedEntries, NamedObject, RawType } from './robj';
 import { RObjAtomicData, RObjData, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
-import { isRObjTree, RObjTree, RObjTreeAtomic, RObjTreeNode, RObjTreeNull } from './robj-tree';
-import { RObjTreeString, RObjTreeSymbol } from './robj-tree';
+import { isWebRDataTree, WebRDataTree, WebRDataTreeAtomic, WebRDataTreeNode } from './tree';
+import { WebRDataTreeNull, WebRDataTreeString, WebRDataTreeSymbol } from './tree';
 
 declare let Module: Module;
 
@@ -15,7 +15,7 @@ type Nullable<T> = T | RNull;
 
 function newRObjFromData(obj: RObjData): RObject {
   // Conversion of RObjTree type JS objects
-  if (isRObjTree(obj)) {
+  if (isWebRDataTree(obj)) {
     return new (getRWorkerClass(RTypeMap[obj.type]))(obj);
   }
 
@@ -162,7 +162,7 @@ export class RObject {
     return names && names.includes(name);
   }
 
-  toTree(options: ToTreeOptions = { depth: 0 }, depth = 1): RObjTree {
+  toTree(options: ToTreeOptions = { depth: 0 }, depth = 1): WebRDataTree {
     throw new Error('This R object cannot be converted to JS');
   }
 
@@ -362,13 +362,13 @@ export class RNull extends RObject {
     return this;
   }
 
-  toTree(): RObjTreeNull {
+  toTree(): WebRDataTreeNull {
     return { type: 'null' };
   }
 }
 
 export class RSymbol extends RObject {
-  toTree(): RObjTreeSymbol {
+  toTree(): WebRDataTreeSymbol {
     const obj = this.toObject();
     return {
       type: 'symbol',
@@ -452,10 +452,10 @@ export class RPairlist extends RObject {
     return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
   }
 
-  toTree(options: ToTreeOptions = { depth: 0 }, depth = 1): RObjTreeNode {
+  toTree(options: ToTreeOptions = { depth: 0 }, depth = 1): WebRDataTreeNode {
     const namesArray: string[] = [];
     let hasNames = false;
-    const values: RObjTreeNode['values'] = [];
+    const values: WebRDataTreeNode['values'] = [];
 
     for (let next = this as Nullable<RPairlist>; !next.isNull(); next = next.cdr()) {
       const symbol = next.tag();
@@ -544,7 +544,7 @@ export class RList extends RObject {
     return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
   }
 
-  toTree(options: { depth: number } = { depth: 0 }, depth = 1): RObjTreeNode {
+  toTree(options: { depth: number } = { depth: 0 }, depth = 1): WebRDataTreeNode {
     return {
       type: 'list',
       names: this.names(),
@@ -592,7 +592,7 @@ export class RString extends RObject {
     return Module.UTF8ToString(Module._R_CHAR(this.ptr));
   }
 
-  toTree(): RObjTreeString {
+  toTree(): WebRDataTreeString {
     return {
       type: 'string',
       value: this.toString(),
@@ -663,7 +663,7 @@ export class REnvironment extends RObject {
     );
   }
 
-  toTree(options: { depth: number } = { depth: 0 }, depth = 1): RObjTreeNode {
+  toTree(options: { depth: number } = { depth: 0 }, depth = 1): WebRDataTreeNode {
     const names = this.names();
     const values = [...Array(names.length).keys()].map((i) => {
       if (options.depth && depth >= options.depth) {
@@ -753,7 +753,7 @@ abstract class RObjAtomicVector<T extends atomicType> extends RObject {
     return values.map((v, i) => [names ? names[i] : null, v]);
   }
 
-  toTree(): RObjTreeAtomic<T> {
+  toTree(): WebRDataTreeAtomic<T> {
     return {
       type: this.type() as 'logical' | 'integer' | 'double' | 'complex' | 'character' | 'raw',
       names: this.names(),
@@ -1027,7 +1027,7 @@ function toRObjData<T>(jsObj: RObjAtomicData<T>): {
 };
 function toRObjData(jsObj: RObjData): RObjData;
 function toRObjData(jsObj: RObjData): RObjData {
-  if (isRObjTree(jsObj)) {
+  if (isWebRDataTree(jsObj)) {
     return jsObj;
   } else if (Array.isArray(jsObj)) {
     return { names: null, values: jsObj };

@@ -1,8 +1,7 @@
 import { ChannelMain } from './chan/channel';
 import { replaceInObject } from './utils';
 import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
-import { isRObject, RObject, RType, RawType, isRFunction, RObjData } from './robj';
-import { RObjTreeNode } from './robj-tree';
+import { isRObject, RObject, RType, RawType, isRFunction } from './robj';
 import * as RWorker from './robj-worker';
 
 /** Obtain a union of the keys corresponding to methods of a given class T
@@ -15,11 +14,7 @@ type Methods<T> = {
  *
  * Distributes RProxy over any RWorker.RObject in the given union type U.
  */
-export type DistProxy<U> = U extends RWorker.RObject
-  ? RProxy<U>
-  : U extends RObjTreeNode
-  ? RObjTreeNode<RObject>
-  : U;
+export type DistProxy<U> = U extends RWorker.RObject ? RProxy<U> : U;
 
 /** Convert RWorker.RObject properties for use with an RProxy.
  *
@@ -190,7 +185,6 @@ export function newRProxy(chan: ChannelMain, payload: WebRPayloadPtr): RProxy<RW
   return proxy;
 }
 
-type DistObj<U> = U extends RawType ? U : U extends RObjData ? RObjData<RObject> : U;
 export function newRObjClassProxy<T, R>(chan: ChannelMain, objType: RType | 'object') {
   return new Proxy(RWorker.RObject, {
     construct: (_, args: [unknown]) => newRObject(chan, objType, ...args),
@@ -201,7 +195,7 @@ export function newRObjClassProxy<T, R>(chan: ChannelMain, objType: RType | 'obj
     ? {
         new (
           ...args: {
-            [V in keyof U]: DistObj<Exclude<U[V], WebRPayload>>;
+            [V in keyof U]: Exclude<U[V], WebRPayload>;
           }
         ): Promise<R>;
       }
