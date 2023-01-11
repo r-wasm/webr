@@ -41,6 +41,15 @@ type XHRResponse = {
 const Module = {} as Module;
 let _config: Required<WebROptions>;
 
+type EmPtr = ReturnType<typeof Module.allocateUTF8>;
+
+interface DictEmPtrs {
+  [key: string]: EmPtr;
+}
+function dictEmFree(dict: { [key: string | number]: EmPtr }) {
+  Object.keys(dict).forEach((key) => Module._free(dict[key]));
+}
+
 function dispatch(msg: Message): void {
   switch (msg.type) {
     case 'request': {
@@ -283,7 +292,9 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
     leaking objects when an exception is thrown. Here we keep track of our use
     of protect and ensure a balanced unprotect is called using try-finally.
   */
-  let protectCount = 0;
+  let nProt = 0;
+  const strings: DictEmPtrs = {};
+
   try {
     const _options: Required<CaptureROptions> = Object.assign(
       {
@@ -306,23 +317,28 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
 
     const tPtr = RObject.true.ptr;
     const fPtr = RObject.false.ptr;
-    const codeStr = Module.allocateUTF8(code);
-    const evalStr = Module.allocateUTF8('webr::eval_r');
+
+    strings.code = Module.allocateUTF8(code);
+    strings.eval = Module.allocateUTF8('webr::eval_r');
+
     const codeObj = new RObject({ payloadType: 'raw', obj: code });
     Module._Rf_protect(codeObj.ptr);
-    protectCount++;
+    ++nProt;
+
     const expr = Module._Rf_lang6(
-      Module._R_ParseEvalString(evalStr, RObject.baseEnv.ptr),
+      Module._R_ParseEvalString(strings.eval, RObject.baseEnv.ptr),
       codeObj.ptr,
       _options.captureConditions ? tPtr : fPtr,
       _options.captureStreams ? tPtr : fPtr,
       _options.withAutoprint ? tPtr : fPtr,
       _options.withHandlers ? tPtr : fPtr
     );
-    const capture = RObject.wrap(Module._Rf_protect(Module._Rf_eval(expr, envObj.ptr))) as RList;
-    protectCount++;
-    Module._free(codeStr);
-    Module._free(evalStr);
+
+    const capturePtr = Module._Rf_eval(expr, envObj.ptr);
+    Module._Rf_protect(capturePtr);
+    ++nProt;
+
+    const capture = RObject.wrap(capturePtr) as RList;
 
     if (_options.captureConditions && _options.throwJsException) {
       const output = capture.get('output') as RList;
@@ -338,39 +354,45 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
 
     return capture;
   } finally {
-    Module._Rf_unprotect(protectCount);
+    dictEmFree(strings);
+    Module._Rf_unprotect(nProt);
   }
 }
 
 function evalR(code: string, env?: WebRPayloadPtr): RObject {
   const capture = captureR(code, env);
+  Module._Rf_protect(capture.ptr);
 
-  // Send captured conditions and output to the JS console. By default, captured
-  // error conditions are thrown and so do not need to be handled here.
-  const output = capture.get('output') as RList;
-  for (let i = 1; i <= output.length; i++) {
-    const out = output.get(i);
-    const outputType = out.get('type').toString();
-    switch (outputType) {
-      case 'stdout':
-        console.log(out.get('data').toString());
-        break;
-      case 'stderr':
-        console.warn(out.get('data').toString());
-        break;
-      case 'message':
-        console.warn(out.pluck('data', 'message')?.toString() || '');
-        break;
-      case 'warning':
-        console.warn(`Warning message: \n${out.pluck('data', 'message')?.toString() || ''}`);
-        break;
-      default:
-        console.warn(`Output of type ${outputType}:`);
-        console.warn(out.get('data').toJs());
-        break;
+  try {
+    // Send captured conditions and output to the JS console. By default, captured
+    // error conditions are thrown and so do not need to be handled here.
+    const output = capture.get('output') as RList;
+    for (let i = 1; i <= output.length; i++) {
+      const out = output.get(i);
+      const outputType = out.get('type').toString();
+      switch (outputType) {
+        case 'stdout':
+          console.log(out.get('data').toString());
+          break;
+        case 'stderr':
+          console.warn(out.get('data').toString());
+          break;
+        case 'message':
+          console.warn(out.pluck('data', 'message')?.toString() || '');
+          break;
+        case 'warning':
+          console.warn(`Warning message: \n${out.pluck('data', 'message')?.toString() || ''}`);
+          break;
+        default:
+          console.warn(`Output of type ${outputType}:`);
+          console.warn(out.get('data').toJs());
+          break;
+      }
     }
+    return capture.get('result');
+  } finally {
+    Module._Rf_unprotect(1);
   }
-  return capture.get('result');
 }
 
 function getFileData(name: string): Uint8Array {
