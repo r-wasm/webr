@@ -41,11 +41,13 @@ type XHRResponse = {
 const Module = {} as Module;
 let _config: Required<WebROptions>;
 
-interface DictStrings {
-  [key: string]: ReturnType<typeof Module.allocateUTF8>;
+type EmPtr = ReturnType<typeof Module.allocateUTF8>;
+
+interface DictEmPtrs {
+  [key: string]: EmPtr;
 }
-function stringsFree(strings: DictStrings) {
-  Object.keys(strings).forEach((key) => Module._free(strings[key]));
+function dictEmFree(dict: { [key: string | number]: EmPtr }) {
+  Object.keys(dict).forEach((key) => Module._free(dict[key]));
 }
 
 function dispatch(msg: Message): void {
@@ -291,7 +293,7 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
     of protect and ensure a balanced unprotect is called using try-finally.
   */
   let nProt = 0;
-  const strings: DictStrings = {};
+  const strings: DictEmPtrs = {};
 
   try {
     const _options: Required<CaptureROptions> = Object.assign(
@@ -352,7 +354,7 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
 
     return capture;
   } finally {
-    stringsFree(strings);
+    dictEmFree(strings);
     Module._Rf_unprotect(nProt);
   }
 }
