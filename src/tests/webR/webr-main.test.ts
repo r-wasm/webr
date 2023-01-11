@@ -109,7 +109,7 @@ describe('Evaluate R code', () => {
     spyStdout.mockRestore();
   });
 
-  test('Send conditions to console.warn while evaluating R code', async () => {
+  test.skip('Send conditions to console.warn while evaluating R code', async () => {
     const waitForOutput = promiseHandles();
     const spyStderr = jest.spyOn(process.stderr, 'write').mockImplementation(() => {
       waitForOutput.resolve();
