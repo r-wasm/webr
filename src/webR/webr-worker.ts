@@ -7,7 +7,7 @@ import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
 import { RObject, isRObject, RList, getRWorkerClass } from './robj-worker';
-import * as RObj from './robj';
+import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
 
 let initialised = false;
 let chan: ChannelWorker | undefined;
@@ -115,8 +115,8 @@ function dispatch(msg: Message): void {
         }
         case 'newRObject': {
           const data = reqMsg.data as {
-            obj: RObj.WebRData;
-            objType: RObj.RType | 'object';
+            obj: WebRData;
+            objType: RType | 'object';
           };
           try {
             write(newRObject(data.obj, data.objType));
@@ -224,12 +224,12 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
   }
 }
 
-function newRObject(data: RObj.WebRData, objType: RObj.RType | 'object'): WebRPayloadPtr {
-  const RObjClass = objType === 'object' ? RObject : getRWorkerClass(RObj.RTypeMap[objType]);
+function newRObject(data: WebRData, objType: RType | 'object'): WebRPayloadPtr {
+  const RObjClass = objType === 'object' ? RObject : getRWorkerClass(RTypeMap[objType]);
   const obj = new RObjClass(
     replaceInObject(data, isWebRPayloadPtr, (t: WebRPayloadPtr) =>
       RObject.wrap(t.obj.ptr)
-    ) as RObj.WebRData
+    ) as WebRData
   );
   return {
     obj: {
@@ -265,14 +265,14 @@ function callRObjMethod(
         RObject.wrap(t.obj.ptr)
       );
     })
-  ) as RObj.WebRData;
+  ) as WebRData;
 
   const ret = replaceInObject(res, isRObject, (obj: RObject) => {
     return {
       obj: { type: obj.type(), ptr: obj.ptr, methods: RObject.getMethods(obj) },
       payloadType: 'ptr',
     };
-  }) as RObj.WebRDataRaw;
+  }) as WebRDataRaw;
 
   return { obj: ret, payloadType: 'raw' };
 }
@@ -437,7 +437,7 @@ function init(config: Required<WebROptions>) {
       chan?.handleInterrupt();
     },
 
-    evalJs: (code: RObj.RPtr): number => {
+    evalJs: (code: RPtr): number => {
       try {
         return (0, eval)(Module.UTF8ToString(code));
       } catch (e) {
