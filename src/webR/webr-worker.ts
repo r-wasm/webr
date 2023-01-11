@@ -283,7 +283,7 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
     leaking objects when an exception is thrown. Here we keep track of our use
     of protect and ensure a balanced unprotect is called using try-finally.
   */
-  let protectCount = 0;
+  let nProt = 0;
   try {
     const _options: Required<CaptureROptions> = Object.assign(
       {
@@ -312,7 +312,7 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
 
     const codeObj = new RObject({ payloadType: 'raw', obj: code });
     Module._Rf_protect(codeObj.ptr);
-    protectCount++;
+    ++nProt;
 
     const expr = Module._Rf_lang6(
       Module._R_ParseEvalString(evalStr, RObject.baseEnv.ptr),
@@ -325,7 +325,7 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
 
     const capturePtr = Module._Rf_eval(expr, envObj.ptr);
     Module._Rf_protect(capturePtr);
-    protectCount++;
+    ++nProt;
 
     const capture = RObject.wrap(capturePtr) as RList;
     Module._free(codeStr);
@@ -345,12 +345,13 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
 
     return capture;
   } finally {
-    Module._Rf_unprotect(protectCount);
+    Module._Rf_unprotect(nProt);
   }
 }
 
 function evalR(code: string, env?: WebRPayloadPtr): RObject {
   const capture = captureR(code, env);
+  Module._Rf_protect(capture.ptr);
 
   // Send captured conditions and output to the JS console. By default, captured
   // error conditions are thrown and so do not need to be handled here.
