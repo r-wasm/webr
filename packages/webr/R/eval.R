@@ -27,15 +27,27 @@ eval_r <- function(code, conditions = TRUE, streams = FALSE, autoprint = FALSE,
   # for stdout and stderr. Using this method the outputs can be multiplexed
   # with individual events tagged by type.
   out <- .Call(ffi_new_output_connections)
+  on_exit({
+    # Close connections opened by ffi_new_output_connections
+    close(out$stdout)
+    close(out$stderr)
+  })
 
   # Print warnings as they are raised
-  old_warn <- getOption("warn")
-  options(warn = 1)
+  old_opts <- options(warn = 1)
+  on_exit({
+    # Flush any further warnings and restore original warn option
+    warnings()
+    options(old_opts)
+  })
 
   if (streams) {
     # Redirect stdout and stderr streams using sink
     sink(out$stdout)
+    on_exit(sink())
+
     sink(out$stderr, type = "message")
+    on_exit(sink(type = "message"))
   }
 
   # Create a function that executes the code. Wrap the code in `withAutoprint`
@@ -89,20 +101,6 @@ eval_r <- function(code, conditions = TRUE, streams = FALSE, autoprint = FALSE,
     # to the top level.
     res <- efun(code)
   }
-
-  if (streams) {
-    # Restore stdout and stderr streams using sink
-    sink(type = "message")
-    sink()
-  }
-
-  # Close connections opened by ffi_new_output_connections
-  close(out$stdout)
-  close(out$stderr)
-
-  # Flush any further warnings and restore original warn option
-  warnings()
-  options(warn = old_warn)
 
   # Output vector out$vec expands exponentially, return only the valid subset
   list(result = res, output = utils::head(out$vec, out$n))
