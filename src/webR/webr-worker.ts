@@ -306,11 +306,14 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
 
     const tPtr = RObject.true.ptr;
     const fPtr = RObject.false.ptr;
+
     const codeStr = Module.allocateUTF8(code);
     const evalStr = Module.allocateUTF8('webr::eval_r');
+
     const codeObj = new RObject({ payloadType: 'raw', obj: code });
     Module._Rf_protect(codeObj.ptr);
     protectCount++;
+
     const expr = Module._Rf_lang6(
       Module._R_ParseEvalString(evalStr, RObject.baseEnv.ptr),
       codeObj.ptr,
@@ -319,8 +322,12 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
       _options.withAutoprint ? tPtr : fPtr,
       _options.withHandlers ? tPtr : fPtr
     );
-    const capture = RObject.wrap(Module._Rf_protect(Module._Rf_eval(expr, envObj.ptr))) as RList;
+
+    const capturePtr = Module._Rf_eval(expr, envObj.ptr);
+    Module._Rf_protect(capturePtr);
     protectCount++;
+
+    const capture = RObject.wrap(capturePtr) as RList;
     Module._free(codeStr);
     Module._free(evalStr);
 
