@@ -1,5 +1,5 @@
 import { WebR } from '../../webR/webr-main';
-import { RDouble, RFunction, RList } from '../../webR/robj';
+import { RDouble, RFunction, RList } from '../../webR/robj-main';
 import util from 'util';
 
 const webR = new WebR({

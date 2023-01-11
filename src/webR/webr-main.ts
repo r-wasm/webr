@@ -3,8 +3,8 @@ import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy, newRObjClassProxy } from './proxy';
 import { WebRPayload } from './payload';
-import { isRObject, RCharacter, RComplex, RDouble, REnvironment, RInteger } from './robj';
-import { RList, RLogical, RNull, RObject, RPairlist, RRaw, RString } from './robj';
+import { isRObject, RCharacter, RComplex, RDouble, REnvironment, RInteger } from './robj-main';
+import { RList, RLogical, RNull, RObject, RPairlist, RRaw, RString } from './robj-main';
 import * as RWorker from './robj-worker';
 
 export type CaptureROptions = {

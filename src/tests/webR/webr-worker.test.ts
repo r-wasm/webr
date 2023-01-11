@@ -1,5 +1,5 @@
 import { WebR } from '../../webR/webr-main';
-import { RInteger, RLogical, RRaw } from '../../webR/robj';
+import { RInteger, RLogical, RRaw } from '../../webR/robj-main';
 
 const webR = new WebR({
   WEBR_URL: '../dist/',

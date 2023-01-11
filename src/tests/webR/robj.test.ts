@@ -14,7 +14,7 @@ import {
   REnvironment,
   RCharacter,
   isRObject,
-} from '../../webR/robj';
+} from '../../webR/robj-main';
 
 const webR = new WebR({
   WEBR_URL: '../dist/',

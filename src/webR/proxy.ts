@@ -1,7 +1,8 @@
 import { ChannelMain } from './chan/channel';
 import { replaceInObject } from './utils';
 import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
-import { isRObject, RObject, RType, RawType, isRFunction } from './robj';
+import { RType, RawType } from './robj';
+import { isRObject, RObject, isRFunction } from './robj-main';
 import * as RWorker from './robj-worker';
 
 /** Obtain a union of the keys corresponding to methods of a given class T
