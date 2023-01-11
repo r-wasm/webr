@@ -1,7 +1,7 @@
 import { ChannelMain } from './chan/channel';
 import { replaceInObject } from './utils';
 import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
-import { RType, RawType } from './robj';
+import { RType, WebRDataRaw } from './robj';
 import { isRObject, RObject, isRFunction } from './robj-main';
 import * as RWorker from './robj-worker';
 
@@ -177,7 +177,7 @@ export function newRProxy(chan: ChannelMain, payload: WebRPayloadPtr): RProxy<RW
           return targetMethod(chan, prop.toString(), payload);
         }
       },
-      apply: async (_: WebRPayload, _thisArg, args: (RawType | RProxy<RWorker.RObject>)[]) => {
+      apply: async (_: WebRPayload, _thisArg, args: (WebRDataRaw | RProxy<RWorker.RObject>)[]) => {
         const res = await (newRProxy(chan, payload) as RProxy<RWorker.RFunction>).exec(...args);
         return isRFunction(res) ? res : res.toJs();
       },

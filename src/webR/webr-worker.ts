@@ -115,7 +115,7 @@ function dispatch(msg: Message): void {
         }
         case 'newRObject': {
           const data = reqMsg.data as {
-            obj: RObj.RObjData;
+            obj: RObj.WebRData;
             objType: RObj.RType | 'object';
           };
           try {
@@ -224,12 +224,12 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
   }
 }
 
-function newRObject(data: RObj.RObjData, objType: RObj.RType | 'object'): WebRPayloadPtr {
+function newRObject(data: RObj.WebRData, objType: RObj.RType | 'object'): WebRPayloadPtr {
   const RObjClass = objType === 'object' ? RObject : getRWorkerClass(RObj.RTypeMap[objType]);
   const obj = new RObjClass(
     replaceInObject(data, isWebRPayloadPtr, (t: WebRPayloadPtr) =>
       RObject.wrap(t.obj.ptr)
-    ) as RObj.RObjData
+    ) as RObj.WebRData
   );
   return {
     obj: {
@@ -265,14 +265,14 @@ function callRObjMethod(
         RObject.wrap(t.obj.ptr)
       );
     })
-  ) as RObj.RObjData;
+  ) as RObj.WebRData;
 
   const ret = replaceInObject(res, isRObject, (obj: RObject) => {
     return {
       obj: { type: obj.type(), ptr: obj.ptr, methods: RObject.getMethods(obj) },
       payloadType: 'ptr',
     };
-  }) as RObj.RawType;
+  }) as RObj.WebRDataRaw;
 
   return { obj: ret, payloadType: 'raw' };
 }

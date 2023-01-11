@@ -1,7 +1,7 @@
-import { RawType, RPtr, RType } from './robj';
+import { WebRDataRaw, RPtr, RType } from './robj';
 
 export type WebRPayloadRaw = {
-  obj: RawType;
+  obj: WebRDataRaw;
   payloadType: 'raw';
 };
 

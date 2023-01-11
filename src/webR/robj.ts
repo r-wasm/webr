@@ -44,7 +44,7 @@ export type Complex = {
   im: number;
 };
 
-export type RawType =
+export type WebRDataRaw =
   | number
   | string
   | boolean
@@ -54,28 +54,28 @@ export type RawType =
   | Error
   | ArrayBuffer
   | ArrayBufferView
-  | Array<RawType>
-  | Map<RawType, RawType>
-  | Set<RawType>
-  | { [key: string]: RawType };
+  | Array<WebRDataRaw>
+  | Map<WebRDataRaw, WebRDataRaw>
+  | Set<WebRDataRaw>
+  | { [key: string]: WebRDataRaw };
 
 export type NamedEntries<T> = [string | null, T][];
 export type NamedObject<T> = { [key: string]: T };
 
 /**
- * RObjData is a union of the JavaScript types that are able to be converted
+ * WebRData is a union of the JavaScript types that are able to be converted
  * into an R object.
  *
- * RObjData is used both as a general input argument for R object construction
+ * WebRData is used both as a general input argument for R object construction
  * and also as a general return type when converting R objects into JavaScript.
  */
-export type RObjData =
-  | RawType
+export type WebRData =
   | RMain.RObject
   | RWorker.RObject
+  | WebRDataRaw
   | WebRDataTree
-  | RObjData[]
-  | { [key: string]: RObjData };
+  | WebRData[]
+  | { [key: string]: WebRData };
 
 /**
  * A subset of {@link RObjData} for JavaScript objects that can be converted

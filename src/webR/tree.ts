@@ -1,6 +1,6 @@
 import * as RWorker from './robj-worker';
 import * as RMain from './robj-worker';
-import { RawType, RPtr, RTypeMap } from './robj';
+import { WebRDataRaw, RPtr, RTypeMap } from './robj';
 
 /**
  * WebRDataTree objects form a tree structure, used when serialising
@@ -33,7 +33,7 @@ export type WebRDataTreeSymbol = {
 export type WebRDataTreeNode = {
   type: 'list' | 'pairlist' | 'environment';
   names: (string | null)[] | null;
-  values: (RawType | RWorker.RObject | RMain.RObject | WebRDataTree)[];
+  values: (WebRDataRaw | RWorker.RObject | RMain.RObject | WebRDataTree)[];
 };
 export type WebRDataTreeAtomic<T> = {
   type: 'logical' | 'integer' | 'double' | 'complex' | 'character' | 'raw';

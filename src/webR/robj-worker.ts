@@ -1,7 +1,7 @@
 import type { Module } from './module';
 import { WebRPayload, isWebRPayload, isWebRPayloadPtr, isWebRPayloadRaw } from './payload';
-import { Complex, isComplex, NamedEntries, NamedObject, RawType } from './robj';
-import { RObjAtomicData, RObjData, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
+import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw } from './robj';
+import { RObjAtomicData, WebRData, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
 import { isWebRDataTree, WebRDataTree, WebRDataTreeAtomic, WebRDataTreeNode } from './tree';
 import { WebRDataTreeNull, WebRDataTreeString, WebRDataTreeSymbol } from './tree';
 
@@ -13,7 +13,7 @@ export interface ToTreeOptions {
 
 type Nullable<T> = T | RNull;
 
-function newRObjFromData(obj: RObjData): RObject {
+function newRObjFromData(obj: WebRData): RObject {
   // Conversion of RObjTree type JS objects
   if (isWebRDataTree(obj)) {
     return new (getRWorkerClass(RTypeMap[obj.type]))(obj);
@@ -68,7 +68,7 @@ function newRObjFromData(obj: RObjData): RObject {
 export class RObject {
   ptr: RPtr;
 
-  constructor(data: WebRPayload | RObjData) {
+  constructor(data: WebRPayload | WebRData) {
     this.ptr = 0;
     if (isRObject(data)) {
       this.ptr = data.ptr;
@@ -228,7 +228,7 @@ export class RObject {
     }
   }
 
-  set(prop: string | number, value: RObject | RawType) {
+  set(prop: string | number, value: RObject | WebRDataRaw) {
     let idx: RPtr;
     let char: RPtr = 0;
     if (typeof prop === 'number') {
@@ -402,12 +402,12 @@ export class RSymbol extends RObject {
 }
 
 export class RPairlist extends RObject {
-  constructor(val: WebRPayload | RObjData) {
+  constructor(val: WebRPayload | WebRData) {
     if (isWebRPayload(val)) {
       super(val);
       return this;
     }
-    const { names, values } = toRObjData(val);
+    const { names, values } = toWebRData(val);
     const list = RObject.wrap(Module._Rf_allocList(values.length)) as RPairlist;
     list.preserve();
     for (
@@ -425,7 +425,7 @@ export class RPairlist extends RObject {
     return this.toArray().length;
   }
 
-  toArray(options: ToTreeOptions = { depth: 1 }): RObjData[] {
+  toArray(options: ToTreeOptions = { depth: 1 }): WebRData[] {
     return this.toTree(options).values;
   }
 
@@ -433,7 +433,7 @@ export class RPairlist extends RObject {
     allowDuplicateKey = true,
     allowEmptyKey = false,
     depth = 1,
-  } = {}): NamedObject<RObjData> {
+  } = {}): NamedObject<WebRData> {
     const entries = this.entries({ depth });
     const keys = entries.map(([k, v]) => k);
     if (!allowDuplicateKey && new Set(keys).size !== keys.length) {
@@ -447,7 +447,7 @@ export class RPairlist extends RObject {
     );
   }
 
-  entries(options: ToTreeOptions = { depth: 1 }): NamedEntries<RObjData> {
+  entries(options: ToTreeOptions = { depth: 1 }): NamedEntries<WebRData> {
     const obj = this.toTree(options);
     return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
   }
@@ -497,12 +497,12 @@ export class RPairlist extends RObject {
 }
 
 export class RList extends RObject {
-  constructor(val: WebRPayload | RObjData) {
+  constructor(val: WebRPayload | WebRData) {
     if (isWebRPayload(val)) {
       super(val);
       return this;
     }
-    const { names, values } = toRObjData(val);
+    const { names, values } = toWebRData(val);
     const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.list, values.length));
     values.forEach((v, i) => {
       Module._SET_VECTOR_ELT(ptr, i, new RObject(v).ptr);
@@ -517,7 +517,7 @@ export class RList extends RObject {
     return Module._LENGTH(this.ptr);
   }
 
-  toArray(options: { depth: number } = { depth: 1 }): RObjData[] {
+  toArray(options: { depth: number } = { depth: 1 }): WebRData[] {
     return this.toTree(options).values;
   }
 
@@ -525,7 +525,7 @@ export class RList extends RObject {
     allowDuplicateKey = true,
     allowEmptyKey = false,
     depth = 1,
-  } = {}): NamedObject<RObjData> {
+  } = {}): NamedObject<WebRData> {
     const entries = this.entries({ depth });
     const keys = entries.map(([k, v]) => k);
     if (!allowDuplicateKey && new Set(keys).size !== keys.length) {
@@ -539,7 +539,7 @@ export class RList extends RObject {
     );
   }
 
-  entries(options: { depth: number } = { depth: 1 }): NamedEntries<RObjData> {
+  entries(options: { depth: number } = { depth: 1 }): NamedEntries<WebRData> {
     const obj = this.toTree(options);
     return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
   }
@@ -560,7 +560,7 @@ export class RList extends RObject {
 }
 
 export class RFunction extends RObject {
-  exec(...args: (RawType | RObject)[]): RObject {
+  exec(...args: (WebRDataRaw | RObject)[]): RObject {
     const argObjs = args.map((arg) =>
       isRObject(arg) ? arg : new RObject({ obj: arg, payloadType: 'raw' })
     );
@@ -601,12 +601,12 @@ export class RString extends RObject {
 }
 
 export class REnvironment extends RObject {
-  constructor(val: WebRPayload | RObjData = {}) {
+  constructor(val: WebRPayload | WebRData = {}) {
     if (isWebRPayload(val)) {
       super(val);
       return this;
     }
-    const { names, values } = toRObjData(val);
+    const { names, values } = toWebRData(val);
     const ptr = Module._Rf_protect(Module._R_NewEnv(RObject.globalEnv.ptr, 0, 0));
     values.forEach((v, i) => {
       const name = names ? names[i] : null;
@@ -629,7 +629,7 @@ export class REnvironment extends RObject {
     return ls.toArray() as string[];
   }
 
-  bind(name: string, value: RObject | RawType): void {
+  bind(name: string, value: RObject | WebRDataRaw): void {
     const namePtr = Module.allocateUTF8(name);
     Module._Rf_defineVar(
       Module._Rf_install(namePtr),
@@ -654,7 +654,7 @@ export class REnvironment extends RObject {
     return this.getDollar(prop);
   }
 
-  toObject({ depth = 0 } = {}): NamedObject<RObjData> {
+  toObject({ depth = 0 } = {}): NamedObject<WebRData> {
     const symbols = this.names();
     return Object.fromEntries(
       [...Array(symbols.length).keys()].map((i) => {
@@ -768,7 +768,7 @@ export class RLogical extends RObjAtomicVector<boolean> {
       super(val);
       return this;
     }
-    const { names, values } = toRObjData(val);
+    const { names, values } = toWebRData(val);
     const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.logical, values.length));
     const data = Module._LOGICAL(ptr);
     values.forEach((v, i) =>
@@ -812,7 +812,7 @@ export class RInteger extends RObjAtomicVector<number> {
       super(val);
       return this;
     }
-    const { names, values } = toRObjData(val);
+    const { names, values } = toWebRData(val);
     const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.integer, values.length));
     const data = Module._INTEGER(ptr);
     values.forEach((v, i) =>
@@ -851,7 +851,7 @@ export class RDouble extends RObjAtomicVector<number> {
       super(val);
       return this;
     }
-    const { names, values } = toRObjData(val);
+    const { names, values } = toWebRData(val);
     const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.double, values.length));
     const data = Module._REAL(ptr);
     values.forEach((v, i) =>
@@ -887,7 +887,7 @@ export class RComplex extends RObjAtomicVector<Complex> {
       super(val);
       return this;
     }
-    const { names, values } = toRObjData(val);
+    const { names, values } = toWebRData(val);
     const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.complex, values.length));
     const data = Module._COMPLEX(ptr);
     values.forEach((v, i) =>
@@ -936,7 +936,7 @@ export class RCharacter extends RObjAtomicVector<string> {
       super(val);
       return this;
     }
-    const { names, values } = toRObjData(val);
+    const { names, values } = toWebRData(val);
     const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.character, values.length));
     values.forEach((v, i) => {
       if (v === null) {
@@ -986,7 +986,7 @@ export class RRaw extends RObjAtomicVector<number> {
       super(val);
       return this;
     }
-    const { names, values } = toRObjData(val);
+    const { names, values } = toWebRData(val);
     if (values.some((v) => v === null || v > 255 || v < 0)) {
       throw new Error('Cannot create new RRaw object');
     }
@@ -1018,15 +1018,15 @@ export class RRaw extends RObjAtomicVector<number> {
 }
 
 /*
- * Convert the various types possible in the type union RObjData into
+ * Convert the various types possible in the type union WebRData into
  * consistently typed arrays of names and values.
  */
-function toRObjData<T>(jsObj: RObjAtomicData<T>): {
+function toWebRData<T>(jsObj: RObjAtomicData<T>): {
   names: (string | null)[] | null;
   values: (T | null)[];
 };
-function toRObjData(jsObj: RObjData): RObjData;
-function toRObjData(jsObj: RObjData): RObjData {
+function toWebRData(jsObj: WebRData): WebRData;
+function toWebRData(jsObj: WebRData): WebRData {
   if (isWebRDataTree(jsObj)) {
     return jsObj;
   } else if (Array.isArray(jsObj)) {
