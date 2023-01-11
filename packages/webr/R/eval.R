@@ -17,8 +17,12 @@
 #'
 #' @export
 #' @useDynLib webr, .registration = TRUE
-eval_r <- function(code, conditions = TRUE, streams = FALSE, autoprint = FALSE,
-                   handlers = TRUE) {
+eval_r <- function(code,
+                   conditions = TRUE,
+                   streams = FALSE,
+                   autoprint = FALSE,
+                   handlers = TRUE,
+                   env = parent.frame()) {
   res <- NULL
 
   # The following C routine prepares an output object that is used to capture
@@ -54,13 +58,18 @@ eval_r <- function(code, conditions = TRUE, streams = FALSE, autoprint = FALSE,
   # if requested, otherwise just `parse` and `eval` the code.
   if (autoprint) {
     efun <- function(code) {
-      withAutoprint(parse(text = code),
-        local = parent.frame(2), echo = FALSE,
+      out <- withAutoprint(
+        parse(text = code),
+        local = env,
+        echo = FALSE,
         evaluated = TRUE
-      )$value
+      )
+      out$value
     }
   } else {
-    efun <- function(code) eval.parent(parse(text = code), 2)
+    efun <- function(code) {
+      eval(parse(text = code), env)
+    }
   }
 
   if (handlers) {
