@@ -26,6 +26,42 @@ describe('Test webR instance startup', () => {
   test('Initialises successfully', async () => {
     await expect(webR.init()).resolves.not.toThrow();
   });
+
+  test('Can push shelter on the stack', async () => {
+    expect(await webR.shelter.stackSize()).toEqual(0);
+
+    // A new shelter gets pushed automatically when an R object is
+    // sent to the main thread
+    const obj1 = (await webR.evalR('1')) as RList;
+    expect(await webR.shelter.stackSize()).toEqual(1);
+    expect(await webR.shelter.isSheltered(obj1)).toEqual(true);
+
+    expect(await webR.shelter.push()).toEqual(2);
+    expect(await webR.shelter.stackSize()).toEqual(2);
+
+    const obj2 = await webR.evalR('2');
+    expect(await webR.shelter.isSheltered(obj2)).toEqual(true);
+
+    const obj3 = await webR.captureR('3');
+    expect(await webR.shelter.isSheltered(obj3.result)).toEqual(true);
+
+    // Protect objects while they get unsheltered
+    await obj1.preserve();
+    await obj2.preserve();
+    await obj3.result.preserve();
+
+    expect(await webR.shelter.pop()).toEqual(1);
+    expect(await webR.shelter.stackSize()).toEqual(1);
+
+    expect(await webR.shelter.isSheltered(obj1)).toEqual(true);
+    expect(await webR.shelter.isSheltered(obj2)).toEqual(false);
+    expect(await webR.shelter.isSheltered(obj3.result)).toEqual(false);
+
+    expect(await webR.shelter.pop()).toEqual(0);
+    expect(await webR.shelter.stackSize()).toEqual(0);
+
+    expect(await webR.shelter.isSheltered(obj1)).toEqual(false);
+  });
 });
 
 describe('Test webR simple console input/output', () => {
@@ -166,6 +202,8 @@ describe('Create R objects using serialised form', () => {
   test('Create an atomic vector', async () => {
     const jsObj = { type: 'integer', values: [10, 20, 30], names: ['x', 'y', 'z'] };
     const rObj = (await new webR.RObject(jsObj)) as RInteger;
+
+    expect(await webR.shelter.isSheltered(rObj)).toEqual(true);
     expect(await rObj.type()).toEqual('integer');
     expect(await rObj.toArray()).toEqual([10, 20, 30]);
     expect(await rObj.toJs()).toEqual({
@@ -178,7 +216,10 @@ describe('Create R objects using serialised form', () => {
   test('Create a list', async () => {
     const jsObj = { type: 'list', values: [true, 3.14, 'abc'], names: ['x', 'y', 'z'] };
     const rObj = (await new webR.RObject(jsObj)) as RList;
+
+    expect(await webR.shelter.isSheltered(rObj)).toEqual(true);
     expect(await rObj.type()).toEqual('list');
+
     const list = await rObj.toJs();
     expect(list.names).toEqual(['x', 'y', 'z']);
     expect(list.values[0]).toEqual({
@@ -201,7 +242,10 @@ describe('Create R objects using serialised form', () => {
   test('Create a pairlist', async () => {
     const jsObj = { type: 'pairlist', values: [true, 3.14, 'abc'], names: ['x', 'y', 'z'] };
     const rObj = (await new webR.RObject(jsObj)) as RPairlist;
+
+    expect(await webR.shelter.isSheltered(rObj)).toEqual(true);
     expect(await rObj.type()).toEqual('pairlist');
+
     const list = await rObj.toJs();
     expect(list.names).toEqual(['x', 'y', 'z']);
     expect(list.values[0]).toEqual({
@@ -224,6 +268,8 @@ describe('Create R objects using serialised form', () => {
   test('Create an environment', async () => {
     const jsObj = { type: 'environment', names: ['x', 'y'], values: [123, 'abc'] };
     const rObj = (await new webR.RObject(jsObj)) as REnvironment;
+
+    expect(await webR.shelter.isSheltered(rObj)).toEqual(true);
     expect(await rObj.type()).toEqual('environment');
     expect(await rObj.ls()).toEqual(['x', 'y']);
     const x = await rObj.get('x');
@@ -246,6 +292,8 @@ describe('Create R objects using serialised form', () => {
 describe('Create R vectors from JS arrays using RObject constructor', () => {
   test('Convert a JS null to R logical NA', async () => {
     const rObj = (await new webR.RObject(null)) as RLogical;
+
+    expect(await webR.shelter.isSheltered(rObj)).toEqual(true);
     expect(await rObj.type()).toEqual('logical');
     expect(await rObj.toJs()).toEqual(
       expect.objectContaining({
@@ -258,6 +306,8 @@ describe('Create R vectors from JS arrays using RObject constructor', () => {
   test('Create a logical atomic vector', async () => {
     const jsObj = [true, false, true, null];
     const rObj = (await new webR.RObject(jsObj)) as RLogical;
+
+    expect(await webR.shelter.isSheltered(rObj)).toEqual(true);
     expect(await rObj.type()).toEqual('logical');
     expect(await rObj.toJs()).toEqual(
       expect.objectContaining({
@@ -270,6 +320,8 @@ describe('Create R vectors from JS arrays using RObject constructor', () => {
   test('Create a double atomic vector', async () => {
     const jsObj = [1, 2, 3, 6, 11, 23, 47, 106, null];
     const rObj = (await new webR.RObject(jsObj)) as RDouble;
+
+    expect(await webR.shelter.isSheltered(rObj)).toEqual(true);
     expect(await rObj.type()).toEqual('double');
     expect(await rObj.toArray()).toEqual(jsObj);
   });
@@ -277,6 +329,8 @@ describe('Create R vectors from JS arrays using RObject constructor', () => {
   test('Create a character atomic vector', async () => {
     const jsObj = ['a', 'b', 'c', null];
     const rObj = (await new webR.RObject(jsObj)) as RCharacter;
+
+    expect(await webR.shelter.isSheltered(rObj)).toEqual(true);
     expect(await rObj.type()).toEqual('character');
     expect(await rObj.toJs()).toEqual(
       expect.objectContaining({
@@ -289,6 +343,8 @@ describe('Create R vectors from JS arrays using RObject constructor', () => {
   test('Create a complex atomic vector', async () => {
     const jsObj = [{ re: 1, im: 2 }, { re: -3, im: -4 }, null];
     const rObj = (await new webR.RObject(jsObj)) as RComplex;
+
+    expect(await webR.shelter.isSheltered(rObj)).toEqual(true);
     expect(await rObj.type()).toEqual('complex');
     expect(await rObj.toJs()).toEqual(
       expect.objectContaining({
@@ -302,6 +358,8 @@ describe('Create R vectors from JS arrays using RObject constructor', () => {
 describe('Create R objects from JS objects using proxy constructors', () => {
   test('Create an R NULL', async () => {
     const rObj = await new webR.RObject({ type: 'null' });
+
+    expect(await webR.shelter.isSheltered(rObj)).toEqual(true);
     expect(await rObj.type()).toEqual('null');
     expect(await rObj.isNull()).toEqual(true);
   });
@@ -309,6 +367,8 @@ describe('Create R objects from JS objects using proxy constructors', () => {
   test('Create a logical atomic vector', async () => {
     const jsObj = { a: true, b: false, c: true, d: null };
     const rObj = await new webR.RLogical(jsObj);
+
+    expect(await webR.shelter.isSheltered(rObj)).toEqual(true);
     expect(await rObj.type()).toEqual('logical');
     expect(await rObj.toJs()).toEqual(
       expect.objectContaining({
@@ -321,6 +381,8 @@ describe('Create R objects from JS objects using proxy constructors', () => {
   test('Create an integer atomic vector', async () => {
     const jsObj = { a: 10, b: 11, c: 12, d: null };
     const rObj = await new webR.RInteger(jsObj);
+
+    expect(await webR.shelter.isSheltered(rObj)).toEqual(true);
     expect(await rObj.type()).toEqual('integer');
     expect(await rObj.toJs()).toEqual(
       expect.objectContaining({
@@ -333,6 +395,8 @@ describe('Create R objects from JS objects using proxy constructors', () => {
   test('Create a double atomic vector', async () => {
     const jsObj = { a: 11, b: 23, c: 47, d: null };
     const rObj = await new webR.RDouble(jsObj);
+
+    expect(await webR.shelter.isSheltered(rObj)).toEqual(true);
     expect(await rObj.type()).toEqual('double');
     expect(await rObj.toJs()).toEqual(
       expect.objectContaining({
@@ -345,6 +409,8 @@ describe('Create R objects from JS objects using proxy constructors', () => {
   test('Create a character atomic vector', async () => {
     const jsObj = { x: 'a', y: 'b', z: 'c', w: null };
     const rObj = await new webR.RCharacter(jsObj);
+
+    expect(await webR.shelter.isSheltered(rObj)).toEqual(true);
     expect(await rObj.type()).toEqual('character');
     expect(await rObj.toJs()).toEqual(
       expect.objectContaining({
@@ -357,6 +423,8 @@ describe('Create R objects from JS objects using proxy constructors', () => {
   test('Create a complex atomic vector', async () => {
     const jsObj = { a: { re: 1, im: 2 }, b: { re: -3, im: -4 }, c: null };
     const rObj = await new webR.RComplex(jsObj);
+
+    expect(await webR.shelter.isSheltered(rObj)).toEqual(true);
     expect(await rObj.type()).toEqual('complex');
     expect(await rObj.toJs()).toEqual(
       expect.objectContaining({
@@ -369,6 +437,8 @@ describe('Create R objects from JS objects using proxy constructors', () => {
   test('Create a raw atomic vector', async () => {
     const jsObj = { a: 210, b: 211, c: 212 };
     const rObj = await new webR.RRaw(jsObj);
+
+    expect(await webR.shelter.isSheltered(rObj)).toEqual(true);
     expect(await rObj.type()).toEqual('raw');
     expect(await rObj.toJs()).toEqual(
       expect.objectContaining({
@@ -381,6 +451,8 @@ describe('Create R objects from JS objects using proxy constructors', () => {
   test('Create a list containing both a logical NA and R NULL', async () => {
     const jsObj = [true, 2, null, webR.objs.null];
     const rObj = await new webR.RList(jsObj);
+
+    expect(await webR.shelter.isSheltered(rObj)).toEqual(true);
     expect(await rObj.type()).toEqual('list');
 
     let elem = await rObj.get(1);
@@ -418,6 +490,8 @@ describe('Create R objects from JS objects using proxy constructors', () => {
   test('Create a pairlist containing both a logical NA and R NULL', async () => {
     const jsObj = [true, 2, null, webR.objs.null];
     const rObj = await new webR.RPairlist(jsObj);
+
+    expect(await webR.shelter.isSheltered(rObj)).toEqual(true);
     expect(await rObj.type()).toEqual('pairlist');
 
     let elem = await rObj.get(1);
@@ -454,6 +528,8 @@ describe('Create R objects from JS objects using proxy constructors', () => {
 
   test('Create an environment', async () => {
     const rObj = await new webR.REnvironment({ x: 123, y: 456 });
+
+    expect(await webR.shelter.isSheltered(rObj)).toEqual(true);
     expect(await rObj.type()).toEqual('environment');
     expect(await rObj.ls()).toEqual(['x', 'y']);
 
