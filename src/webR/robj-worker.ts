@@ -784,11 +784,15 @@ export class RLogical extends RVectorAtomic<boolean> {
     return this.get(idx).toArray()[0];
   }
 
-  toBoolean(): boolean | null {
+  toBoolean(): boolean {
     if (this.length !== 1) {
       throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
     }
-    return this.getBoolean(1);
+    const val = this.getBoolean(1);
+    if (val === null) {
+      throw new Error('Unable to convert missing value `NA` to a JS boolean');
+    }
+    return val;
   }
 
   toTypedArray(): Int32Array {
@@ -828,11 +832,15 @@ export class RInteger extends RVectorAtomic<number> {
     return this.get(idx).toArray()[0];
   }
 
-  toNumber(): number | null {
+  toNumber(): number {
     if (this.length !== 1) {
       throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
     }
-    return this.getNumber(1);
+    const val = this.getNumber(1);
+    if (val === null) {
+      throw new Error('Unable to convert missing value `NA` to a JS number');
+    }
+    return val;
   }
 
   toTypedArray(): Int32Array {
@@ -864,14 +872,18 @@ export class RDouble extends RVectorAtomic<number> {
   }
 
   getNumber(idx: number): number | null {
-    return this.get(idx).toTypedArray()[0];
+    return this.get(idx).toArray()[0];
   }
 
-  toNumber(): number | null {
+  toNumber(): number {
     if (this.length !== 1) {
       throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
     }
-    return this.getNumber(1);
+    const val = this.getNumber(1);
+    if (val === null) {
+      throw new Error('Unable to convert missing value `NA` to a JS number');
+    }
+    return val;
   }
 
   toTypedArray(): Float64Array {
@@ -906,11 +918,15 @@ export class RComplex extends RVectorAtomic<Complex> {
     return this.get(idx).toArray()[0];
   }
 
-  toComplex(): Complex | null {
+  toComplex(): Complex {
     if (this.length !== 1) {
       throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
     }
-    return this.getComplex(1);
+    const val = this.getComplex(1);
+    if (val === null) {
+      throw new Error('Unable to convert missing value `NA` to a JS object');
+    }
+    return val;
   }
 
   toTypedArray(): Float64Array {
@@ -957,11 +973,15 @@ export class RCharacter extends RVectorAtomic<string> {
     return this.get(idx).toArray()[0];
   }
 
-  toString(): string | null {
+  toString(): string {
     if (this.length !== 1) {
       throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
     }
-    return this.getString(1);
+    const val = this.getString(1);
+    if (val === null) {
+      throw new Error('Unable to convert missing value `NA` to a JS string');
+    }
+    return val;
   }
 
   toTypedArray(): Uint32Array {
@@ -1003,11 +1023,15 @@ export class RRaw extends RVectorAtomic<number> {
     return this.get(idx).toArray()[0];
   }
 
-  toNumber(): number | null {
+  toNumber(): number {
     if (this.length !== 1) {
       throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
     }
-    return this.getNumber(1);
+    const val = this.getNumber(1);
+    if (val === null) {
+      throw new Error('Unable to convert missing value `NA` to a JS number');
+    }
+    return val;
   }
 
   toTypedArray(): Uint8Array {

@@ -320,7 +320,8 @@ describe('Working with R lists and vectors', () => {
     result = (await webR.evalR('FALSE')) as RLogical;
     expect(await result.toBoolean()).toEqual(false);
     result = (await webR.evalR('NA')) as RLogical;
-    expect(await result.toBoolean()).toEqual(null);
+    expect(await result.toArray()).toEqual([null]);
+    await expect(result.toBoolean()).rejects.toThrow('Unable to convert missing value');
   });
 
   test('Convert an R scalar raw to JS number', async () => {

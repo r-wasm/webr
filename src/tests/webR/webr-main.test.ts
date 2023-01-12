@@ -510,7 +510,7 @@ describe('Access R objects via the main thread object cache', () => {
 
   test('Logical NA', async () => {
     expect(await webR.objs.na.type()).toEqual('logical');
-    expect(await webR.objs.na.toBoolean()).toEqual(null);
+    expect(await webR.objs.na.toArray()).toEqual([null]);
   });
 
   test('R global environment', async () => {
