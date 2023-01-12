@@ -10,3 +10,7 @@ on_exit <- function(expr, env = parent.frame()) {
 obj_address <- function(x) {
   .Call(ffi_obj_address, x)
 }
+
+is_reference <- function(x, y) {
+  .Call(ffi_is_reference, x, y)
+}

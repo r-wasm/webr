@@ -15,3 +15,7 @@ SEXP ffi_obj_address(SEXP x) {
   UNPROTECT(1);
   return out;
 }
+
+SEXP ffi_is_reference(SEXP x, SEXP y) {
+  return Rf_ScalarLogical(x == y);
+}

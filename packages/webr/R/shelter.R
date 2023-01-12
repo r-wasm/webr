@@ -64,5 +64,5 @@ shelter <- function(x) {
 }
 
 is_sheltered <- function(x) {
-  any(vapply(shelters$top$data, identical, NA, x))
+  any(vapply(shelters$top$data, is_reference, NA, x))
 }
