@@ -224,44 +224,41 @@ export class WebR {
       }
     }
   }
+
+  async evalNumber(code: string, env?: REnvironment, shelter?: boolean): Promise<number> {
+    const obj = (await this.evalR(code, env, shelter)) as RInteger;
+    return await obj.toNumber();
+  }
 }
 
 class Shelter {
   #webR: WebR;
   #chan: ChannelMain;
-  stackSize = 0;
 
   constructor(webR: WebR, chan: ChannelMain) {
     this.#webR = webR;
     this.#chan = chan;
   }
 
-  async push(): Promise<number> {
-    await this.#webR.evalR('webr:::shelters_push()', undefined, false);
-    return ++this.stackSize;
+  async stackSize() {
+    return await this.#webR.evalNumber('webr:::shelters$stack_size', undefined, false);
   }
+
+  async push(): Promise<number> {
+    return await this.#webR.evalNumber('webr:::shelters_push()', undefined, false);
+  }
+
   async pop(): Promise<number> {
-    if (!this.stackSize) {
-      throw new Error('The shelter stack is empty.');
-    }
-    await this.#webR.evalR('webr:::shelters_pop()', undefined, false);
-    return --this.stackSize;
+    return await this.#webR.evalNumber('webr:::shelters_pop()', undefined, false);
   }
 
   async topShelterSize() {
-    if (!this.stackSize) {
-      throw new Error('The shelter stack is empty.');
-    }
-    const out = (await this.#webR.evalR('webr:::shelters$top$size', undefined, false)) as RInteger;
-    return (await out.toNumber()) as number;
+    return await this.#webR.evalNumber('webr:::shelters$top$size', undefined, false);
   }
 
-  // Mainly for unit tests
+  // Mainly for unit tests. Uses a custom message to avoid having to
+  // shelter.
   async isSheltered(x: RObject): Promise<boolean> {
-    if (!this.stackSize) {
-      throw new Error('The shelter stack is empty.');
-    }
-
     const msg = { type: 'isSheltered', data: x._payload };
     return (await this.#chan.request(msg)) as boolean;
   }

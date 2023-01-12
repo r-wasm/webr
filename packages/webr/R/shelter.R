@@ -28,7 +28,7 @@ shelters_push <- function() {
 
   shelters$stack_size <- shelters$stack_size + 1L
 
-  invisible(shelters$top)
+  shelters$stack_size
 }
 
 shelters_pop <- function() {
@@ -41,7 +41,7 @@ shelters_pop <- function() {
 
   shelters$stack_size <- shelters$stack_size - 1L
 
-  invisible(shelters$top)
+  shelters$stack_size
 }
 
 shelter <- function(x) {
@@ -64,5 +64,5 @@ shelter <- function(x) {
 }
 
 is_sheltered <- function(x) {
-  any(vapply(shelters$top$data, identical, x))
+  any(vapply(shelters$top$data, identical, NA, x))
 }
