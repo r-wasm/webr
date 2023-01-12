@@ -19,7 +19,7 @@ beforeAll(async () => {
 
 test('The webr R package is installed', async () => {
   const pkg = (await webR.evalR('"webr" %in% installed.packages()')) as RLogical;
-  expect(await pkg.toLogical()).toEqual(true);
+  expect(await pkg.toBoolean()).toEqual(true);
 });
 
 describe('Run R default package examples and tests', () => {

@@ -780,15 +780,15 @@ export class RLogical extends RVectorAtomic<boolean> {
     super({ payloadType: 'ptr', obj: { ptr } });
   }
 
-  getLogical(idx: number): boolean | null {
+  getBoolean(idx: number): boolean | null {
     return this.get(idx).toArray()[0];
   }
 
-  toLogical(): boolean | null {
+  toBoolean(): boolean | null {
     if (this.length !== 1) {
       throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
     }
-    return this.getLogical(1);
+    return this.getBoolean(1);
   }
 
   toTypedArray(): Int32Array {
