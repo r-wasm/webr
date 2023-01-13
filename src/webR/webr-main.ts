@@ -173,27 +173,35 @@ export class WebR {
     switch (payload.payloadType) {
       case 'raw':
         throw new Error('Unexpected raw payload type returned from evalR');
+
       case 'err': {
         const e = new Error(payload.obj.message);
         e.name = payload.obj.name;
         e.stack = payload.obj.stack;
         throw e;
       }
+
       default: {
         const obj = newRProxy(this.#chan, payload);
         obj.preserve();
+
         const result = await obj.get(1);
-        const outList = (await obj.get(2)) as RList;
+        const outputs = (await obj.get(2)) as RList;
+
         const output: any[] = [];
-        for await (const out of outList) {
+
+        for await (const out of outputs) {
           const type = await ((await out.pluck(1, 1)) as RCharacter).toString();
           const data = await out.get(2);
+
           if (type === 'stdout' || type === 'stderr') {
-            output.push({ type, data: await (data as RString).toString() });
+            const msg = await (data as RString).toString();
+            output.push({ type, data: msg });
           } else {
             output.push({ type, data });
           }
         }
+
         obj.release();
         return { result, output };
       }
