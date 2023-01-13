@@ -38,7 +38,6 @@ type XHRResponse = {
   response: string | ArrayBuffer;
 };
 
-const Module = {} as Module;
 let _config: Required<WebROptions>;
 
 type EmPtr = ReturnType<typeof Module.allocateUTF8>;

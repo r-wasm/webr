@@ -150,9 +150,7 @@ export class SharedBufferChannelMain implements ChannelMain {
 // Worker --------------------------------------------------------------
 
 import { SyncTask, setInterruptHandler, setInterruptBuffer } from './task-worker';
-import { Module as _Module } from '../module';
-
-declare let Module: _Module;
+import { Module } from '../module';
 
 export class SharedBufferChannelWorker implements ChannelWorker {
   #ep: Endpoint;

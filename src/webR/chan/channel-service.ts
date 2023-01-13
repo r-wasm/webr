@@ -223,9 +223,7 @@ export class ServiceWorkerChannelMain implements ChannelMain {
 
 // Worker --------------------------------------------------------------
 
-import { Module as _Module } from '../module';
-
-declare let Module: _Module;
+import { Module } from '../module';
 
 export class ServiceWorkerChannelWorker implements ChannelWorker {
   #ep: Endpoint;
