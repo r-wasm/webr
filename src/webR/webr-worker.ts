@@ -85,7 +85,7 @@ function dispatch(msg: Message): void {
             const capture = captureR(data.code, data.env?.obj.ptr, data.options);
 
             if (data.shelter === undefined || data.shelter) {
-              shelter(capture.ptr);
+              shelter(capture);
             }
 
             write({
@@ -115,7 +115,7 @@ function dispatch(msg: Message): void {
             const result = evalR(data.code, data.env?.obj.ptr);
 
             if (data.shelter === undefined || data.shelter) {
-              shelter(result.ptr);
+              shelter(result);
             }
 
             write({
@@ -142,7 +142,7 @@ function dispatch(msg: Message): void {
           };
           try {
             const out = newRObject(data.obj, data.objType);
-            shelter(out.obj.ptr);
+            shelter(RObject.wrap(out.obj.ptr));
             write(out);
           } catch (_e) {
             const e = _e as Error;
@@ -187,8 +187,9 @@ function dispatch(msg: Message): void {
         }
         case 'isSheltered': {
           const payload = reqMsg.data as WebRPayloadPtr;
+          const x = RObject.wrap(payload.obj.ptr);
 
-          const outLgl = parseEval('webr:::is_sheltered(x)', { x: payload.obj.ptr }) as RLogical;
+          const outLgl = parseEval('webr:::is_sheltered(x)', { x: x }) as RLogical;
           Module._Rf_protect(outLgl.ptr);
 
           const out = outLgl.toBoolean();
@@ -422,8 +423,8 @@ function evalR(code: string, env?: RPtr): RObject {
   }
 }
 
-function shelter(x: RPtr): RPtr {
-  Module._Rf_protect(x);
+function shelter(x: RObject): RObject {
+  Module._Rf_protect(x.ptr);
 
   try {
     parseEval('webr:::shelter(x)', { x: x });
