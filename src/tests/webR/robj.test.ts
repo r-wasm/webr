@@ -316,11 +316,12 @@ describe('Working with R lists and vectors', () => {
 
   test('Convert an R scalar logical to JS', async () => {
     let result = (await webR.evalR('TRUE')) as RLogical;
-    expect(await result.toLogical()).toEqual(true);
+    expect(await result.toBoolean()).toEqual(true);
     result = (await webR.evalR('FALSE')) as RLogical;
-    expect(await result.toLogical()).toEqual(false);
+    expect(await result.toBoolean()).toEqual(false);
     result = (await webR.evalR('NA')) as RLogical;
-    expect(await result.toLogical()).toEqual(null);
+    expect(await result.toArray()).toEqual([null]);
+    await expect(result.toBoolean()).rejects.toThrow("Can't convert missing value");
   });
 
   test('Convert an R scalar raw to JS number', async () => {

@@ -476,7 +476,7 @@ describe('Serialise nested R lists, pairlists and vectors unambiguously', () => 
     const env = await new webR.REnvironment({ newRObj, rObj });
     const identical = (await webR.evalR('identical(rObj, newRObj)', env)) as RLogical;
     expect(await rObj.type()).toEqual('list');
-    expect(await identical.toLogical()).toEqual(true);
+    expect(await identical.toBoolean()).toEqual(true);
   });
 
   test('Round trip convert to partial depth and ensure result is identical', async () => {
@@ -488,7 +488,7 @@ describe('Serialise nested R lists, pairlists and vectors unambiguously', () => 
     const env = await new webR.REnvironment({ newRObj, rObj });
     const identical = (await webR.evalR('identical(rObj, newRObj)', env)) as RLogical;
     expect(await rObj.type()).toEqual('list');
-    expect(await identical.toLogical()).toEqual(true);
+    expect(await identical.toBoolean()).toEqual(true);
   });
 });
 
@@ -500,17 +500,17 @@ describe('Access R objects via the main thread object cache', () => {
 
   test('R TRUE', async () => {
     expect(await webR.objs.true.type()).toEqual('logical');
-    expect(await webR.objs.true.toLogical()).toEqual(true);
+    expect(await webR.objs.true.toBoolean()).toEqual(true);
   });
 
   test('R FALSE', async () => {
     expect(await webR.objs.false.type()).toEqual('logical');
-    expect(await webR.objs.false.toLogical()).toEqual(false);
+    expect(await webR.objs.false.toBoolean()).toEqual(false);
   });
 
   test('Logical NA', async () => {
     expect(await webR.objs.na.type()).toEqual('logical');
-    expect(await webR.objs.na.toLogical()).toEqual(null);
+    expect(await webR.objs.na.toArray()).toEqual([null]);
   });
 
   test('R global environment', async () => {

@@ -450,7 +450,7 @@ function init(config: Required<WebROptions>) {
 
     readConsole: () => {
       if (!chan) {
-        throw new Error('Unable to read console input without a communication channel');
+        throw new Error("Can't read console input without a communication channel");
       }
       return chan.inputOrDispatch();
     },

@@ -14,13 +14,13 @@ describe('Download and install binary webR packages', () => {
   test('Install packages via evalR', async () => {
     await webR.evalR('webr::install("cli", repos="https://repo.webr.workers.dev/")');
     const pkg = (await webR.evalR('"cli" %in% library(cli)')) as RLogical;
-    expect(await pkg.toLogical()).toEqual(true);
+    expect(await pkg.toBoolean()).toEqual(true);
   });
 
   test('Install packages via API', async () => {
     await webR.installPackages(['MASS']);
     const pkg = (await webR.evalR('"MASS" %in% library(MASS)')) as RLogical;
-    expect(await pkg.toLogical()).toEqual(true);
+    expect(await pkg.toBoolean()).toEqual(true);
   });
 });
 

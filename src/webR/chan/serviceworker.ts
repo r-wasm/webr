@@ -60,7 +60,7 @@ function handleMessage(event: ExtendableMessageEvent) {
       const source = event.source as WindowClient;
       self.clients.get(source.id).then((client) => {
         if (!client) {
-          throw new Error('Unable to respond to client in service worker message handler');
+          throw new Error("Can't respond to client in service worker message handler");
         }
         client.postMessage({
           type: 'registration-successful',
