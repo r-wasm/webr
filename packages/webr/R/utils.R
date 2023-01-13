@@ -6,3 +6,7 @@ on_exit <- function(expr, env = parent.frame()) {
   )
   do.call("on.exit", args, envir = env)
 }
+
+obj_address <- function(x) {
+  .Call(ffi_obj_address, x)
+}
