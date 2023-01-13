@@ -109,3 +109,13 @@ export interface Module extends EmscriptenModule {
 }
 
 export const Module = {} as Module;
+
+type EmPtr = ReturnType<typeof Module.allocateUTF8>;
+
+export interface DictEmPtrs {
+  [key: string]: EmPtr;
+}
+
+export function dictEmFree(dict: { [key: string | number]: EmPtr }) {
+  Object.keys(dict).forEach((key) => Module._free(dict[key]));
+}
