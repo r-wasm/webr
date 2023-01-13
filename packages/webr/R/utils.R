@@ -14,3 +14,7 @@ obj_address <- function(x) {
 is_reference <- function(x, y) {
   .Call(ffi_is_reference, x, y)
 }
+
+compact <- function(xs) {
+  Filter(function(x) !is.null(x), xs)
+}
