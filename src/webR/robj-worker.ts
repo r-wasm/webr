@@ -611,7 +611,7 @@ export class REnvironment extends RObject {
     values.forEach((v, i) => {
       const name = names ? names[i] : null;
       if (!name) {
-        throw new Error('Unable to create object in new environment with empty symbol name');
+        throw new Error("Can't create object in new environment with empty symbol name");
       }
       const namePtr = Module.allocateUTF8(name);
       Module._Rf_defineVar(Module._Rf_install(namePtr), new RObject(v).ptr, ptr);
@@ -786,11 +786,11 @@ export class RLogical extends RVectorAtomic<boolean> {
 
   toBoolean(): boolean {
     if (this.length !== 1) {
-      throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
+      throw new Error("Can't convert atomic vector of length > 1 to a scalar JS value");
     }
     const val = this.getBoolean(1);
     if (val === null) {
-      throw new Error('Unable to convert missing value `NA` to a JS boolean');
+      throw new Error("Can't convert missing value `NA` to a JS boolean");
     }
     return val;
   }
@@ -834,11 +834,11 @@ export class RInteger extends RVectorAtomic<number> {
 
   toNumber(): number {
     if (this.length !== 1) {
-      throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
+      throw new Error("Can't convert atomic vector of length > 1 to a scalar JS value");
     }
     const val = this.getNumber(1);
     if (val === null) {
-      throw new Error('Unable to convert missing value `NA` to a JS number');
+      throw new Error("Can't convert missing value `NA` to a JS number");
     }
     return val;
   }
@@ -877,11 +877,11 @@ export class RDouble extends RVectorAtomic<number> {
 
   toNumber(): number {
     if (this.length !== 1) {
-      throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
+      throw new Error("Can't convert atomic vector of length > 1 to a scalar JS value");
     }
     const val = this.getNumber(1);
     if (val === null) {
-      throw new Error('Unable to convert missing value `NA` to a JS number');
+      throw new Error("Can't convert missing value `NA` to a JS number");
     }
     return val;
   }
@@ -920,11 +920,11 @@ export class RComplex extends RVectorAtomic<Complex> {
 
   toComplex(): Complex {
     if (this.length !== 1) {
-      throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
+      throw new Error("Can't convert atomic vector of length > 1 to a scalar JS value");
     }
     const val = this.getComplex(1);
     if (val === null) {
-      throw new Error('Unable to convert missing value `NA` to a JS object');
+      throw new Error("Can't convert missing value `NA` to a JS object");
     }
     return val;
   }
@@ -975,11 +975,11 @@ export class RCharacter extends RVectorAtomic<string> {
 
   toString(): string {
     if (this.length !== 1) {
-      throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
+      throw new Error("Can't convert atomic vector of length > 1 to a scalar JS value");
     }
     const val = this.getString(1);
     if (val === null) {
-      throw new Error('Unable to convert missing value `NA` to a JS string');
+      throw new Error("Can't convert missing value `NA` to a JS string");
     }
     return val;
   }
@@ -1025,11 +1025,11 @@ export class RRaw extends RVectorAtomic<number> {
 
   toNumber(): number {
     if (this.length !== 1) {
-      throw new Error('Unable to convert atomic vector of length > 1 to a scalar JS value');
+      throw new Error("Can't convert atomic vector of length > 1 to a scalar JS value");
     }
     const val = this.getNumber(1);
     if (val === null) {
-      throw new Error('Unable to convert missing value `NA` to a JS number');
+      throw new Error("Can't convert missing value `NA` to a JS number");
     }
     return val;
   }

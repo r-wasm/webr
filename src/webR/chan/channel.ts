@@ -84,7 +84,7 @@ export function newChannelMain(data: Required<WebROptions>) {
       if ('serviceWorker' in navigator && !isCrossOrigin(data.SW_URL)) {
         return new ServiceWorkerChannelMain(data);
       }
-      throw new Error('Unable to initialise main thread communication channel');
+      throw new Error("Can't initialise main thread communication channel");
   }
 }
 

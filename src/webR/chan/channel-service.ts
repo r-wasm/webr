@@ -237,7 +237,7 @@ export class ServiceWorkerChannelWorker implements ChannelWorker {
 
   constructor(data: { clientId?: string; location?: string }) {
     if (!data.clientId || !data.location) {
-      throw Error('Unable to start service worker channel');
+      throw Error("Can't start service worker channel");
     }
     this.#mainThreadId = data.clientId;
     this.#location = data.location;
