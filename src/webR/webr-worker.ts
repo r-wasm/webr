@@ -2,7 +2,7 @@ import { loadScript } from './compat';
 import { newChannelWorker, ChannelWorker, ChannelInitMessage } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions, CaptureROptions } from './webr-main';
-import { Module } from './module';
+import { Module, DictEmPtrs, dictEmFree } from './module';
 import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
@@ -39,15 +39,6 @@ type XHRResponse = {
 };
 
 let _config: Required<WebROptions>;
-
-type EmPtr = ReturnType<typeof Module.allocateUTF8>;
-
-interface DictEmPtrs {
-  [key: string]: EmPtr;
-}
-function dictEmFree(dict: { [key: string | number]: EmPtr }) {
-  Object.keys(dict).forEach((key) => Module._free(dict[key]));
-}
 
 function dispatch(msg: Message): void {
   switch (msg.type) {
