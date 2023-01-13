@@ -150,7 +150,7 @@ export class SharedBufferChannelMain implements ChannelMain {
 // Worker --------------------------------------------------------------
 
 import { SyncTask, setInterruptHandler, setInterruptBuffer } from './task-worker';
-import { Module } from '../module';
+import { Module } from '../emscripten';
 
 export class SharedBufferChannelWorker implements ChannelWorker {
   #ep: Endpoint;

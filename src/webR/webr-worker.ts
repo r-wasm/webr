@@ -2,7 +2,7 @@ import { loadScript } from './compat';
 import { newChannelWorker, ChannelWorker, ChannelInitMessage } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions, CaptureROptions } from './webr-main';
-import { Module, DictEmPtrs, dictEmFree } from './module';
+import { Module, DictEmPtrs, dictEmFree } from './emscripten';
 import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';

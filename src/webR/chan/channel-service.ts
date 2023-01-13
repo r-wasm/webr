@@ -223,7 +223,7 @@ export class ServiceWorkerChannelMain implements ChannelMain {
 
 // Worker --------------------------------------------------------------
 
-import { Module } from '../module';
+import { Module } from '../emscripten';
 
 export class ServiceWorkerChannelWorker implements ChannelWorker {
   #ep: Endpoint;
