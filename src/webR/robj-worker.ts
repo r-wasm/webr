@@ -1,7 +1,8 @@
-import { Module, DictEmPtrs, dictEmFree } from './emscripten';
+import { Module } from './emscripten';
 import { WebRPayload, isWebRPayload, isWebRPayloadPtr, isWebRPayloadRaw } from './payload';
 import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw } from './robj';
 import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
+import { parseEvalBare } from './utils-r';
 import { isWebRDataTree, WebRDataTree, WebRDataTreeAtomic, WebRDataTreeNode } from './tree';
 import { WebRDataTreeNull, WebRDataTreeString, WebRDataTreeSymbol } from './tree';
 
@@ -119,20 +120,7 @@ export class RObject {
   }
 
   inspect(): void {
-    const strings: DictEmPtrs = {};
-    let nProt = 0;
-
-    try {
-      const env = new REnvironment({ x: this });
-      env.protect();
-      ++nProt;
-
-      strings.code = Module.allocateUTF8('.Internal(inspect(x))');
-      Module._R_ParseEvalString(strings.code, env.ptr);
-    } finally {
-      dictEmFree(strings);
-      Module._Rf_unprotect(nProt);
-    }
+    parseEvalBare('.Internal(inspect(x))', { x: this });
   }
 
   isNull(): this is RNull {
