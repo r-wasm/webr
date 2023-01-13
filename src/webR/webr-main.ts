@@ -131,17 +131,6 @@ export class WebR {
       await this.#chan.request(msg);
     }
   }
-  async putFileData(name: string, data: Uint8Array) {
-    const msg = { type: 'putFileData', data: { name: name, data: data } };
-    return await this.#chan.request(msg);
-  }
-  async getFileData(name: string): Promise<Uint8Array> {
-    return (await this.#chan.request({ type: 'getFileData', data: { name: name } }))
-      .obj as Uint8Array;
-  }
-  async getFSNode(path: string): Promise<FSNode> {
-    return (await this.#chan.request({ type: 'getFSNode', data: { path: path } })).obj as FSNode;
-  }
 
   async captureR(
     code: string,
@@ -218,4 +207,26 @@ export class WebR {
       }
     }
   }
+
+  FS = {
+    lookupPath: async (path: string): Promise<FSNode> => {
+      return (await this.#chan.request({ type: 'lookupPath', data: { path } })).obj as FSNode;
+    },
+    mkdir: async (path: string): Promise<FSNode> => {
+      return (await this.#chan.request({ type: 'mkdir', data: { path } })).obj as FSNode;
+    },
+    readFile: async (path: string, flags?: string): Promise<Uint8Array> => {
+      return (await this.#chan.request({ type: 'readFile', data: { path, flags } }))
+        .obj as Uint8Array;
+    },
+    rmdir: async (path: string): Promise<void> => {
+      await this.#chan.request({ type: 'rmdir', data: { path } });
+    },
+    writeFile: async (path: string, data: ArrayBufferView, flags?: string): Promise<void> => {
+      await this.#chan.request({ type: 'writeFile', data: { path, data, flags } });
+    },
+    unlink: async (path: string): Promise<void> => {
+      await this.#chan.request({ type: 'unlink', data: { path } });
+    },
+  };
 }

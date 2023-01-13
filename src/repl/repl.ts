@@ -53,7 +53,7 @@ function FSTreeData(
   }
 ) {
   if (obj.id === '#') {
-    webR.getFSNode('/').then((node: FSNode) => {
+    webR.FS.lookupPath('/').then((node: FSNode) => {
       const jsTreeNode = FSTree.createJSTreeNodefromFSNode(node);
       jsTreeNode.parents = [];
       cb.call(FSTree, jsTreeNode);
@@ -101,7 +101,7 @@ const webR = new WebR({
       if (!node) return;
 
       const filepath = FSTree.getNodeFileName(node);
-      webR.getFileData(filepath).then((data) => {
+      webR.FS.readFile(filepath).then((data) => {
         const filename = node.text;
         const blob = new Blob([data], { type: 'application/octet-stream' });
         const url = URL.createObjectURL(blob);
@@ -136,7 +136,7 @@ const webR = new WebR({
           fr.onload = async function () {
             upload.value = '';
             const data = new Uint8Array(fr.result as ArrayBuffer);
-            await webR.putFileData(filepath + '/' + file.name, data);
+            await webR.FS.writeFile(filepath + '/' + file.name, data);
             FSTree.refresh();
           };
 
