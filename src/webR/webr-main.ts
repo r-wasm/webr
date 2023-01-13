@@ -258,7 +258,7 @@ class Shelter {
 
   // Mainly for unit tests. Uses a custom message to avoid having to
   // shelter.
-  async isSheltered(x: RObject): Promise<boolean> {
+  async has(x: RObject): Promise<boolean> {
     const msg = { type: 'isSheltered', data: x._payload };
     return (await this.#chan.request(msg)) as boolean;
   }
