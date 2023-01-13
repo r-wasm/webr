@@ -1,4 +1,4 @@
-import { Module } from './emscripten';
+import { Module, DictEmPtrs, dictEmFree } from './emscripten';
 import { WebRPayload, isWebRPayload, isWebRPayloadPtr, isWebRPayloadRaw } from './payload';
 import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw } from './robj';
 import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
@@ -116,6 +116,23 @@ export class RObject {
 
   release(): void {
     Module._R_ReleaseObject(this.ptr);
+  }
+
+  inspect(): void {
+    const strings: DictEmPtrs = {};
+    let nProt = 0;
+
+    try {
+      const env = new REnvironment({ x: this });
+      env.protect();
+      ++nProt;
+
+      strings.code = Module.allocateUTF8('.Internal(inspect(x))');
+      Module._R_ParseEvalString(strings.code, env.ptr);
+    } finally {
+      dictEmFree(strings);
+      Module._Rf_unprotect(nProt);
+    }
   }
 
   isNull(): this is RNull {
