@@ -191,7 +191,7 @@ function dispatch(msg: Message): void {
           const outLgl = parseEval('webr:::is_sheltered(x)', { x: payload.obj.ptr }) as RLogical;
           Module._Rf_protect(outLgl.ptr);
 
-          const out = outLgl.toLogical() as boolean;
+          const out = outLgl.toBoolean();
           Module._Rf_unprotect(1);
 
           write(out);
