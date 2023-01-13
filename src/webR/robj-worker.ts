@@ -1,11 +1,9 @@
-import type { Module } from './module';
+import { Module } from './module';
 import { WebRPayload, isWebRPayload, isWebRPayloadPtr, isWebRPayloadRaw } from './payload';
 import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw } from './robj';
 import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
 import { isWebRDataTree, WebRDataTree, WebRDataTreeAtomic, WebRDataTreeNode } from './tree';
 import { WebRDataTreeNull, WebRDataTreeString, WebRDataTreeSymbol } from './tree';
-
-declare let Module: Module;
 
 export interface ToTreeOptions {
   depth: number;

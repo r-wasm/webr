@@ -1,9 +1,6 @@
-import type { Module } from './module';
 import { WebRDataTree, WebRDataTreeAtomic } from './tree';
 import * as RMain from './robj-main';
 import * as RWorker from './robj-worker';
-
-declare let Module: Module;
 
 export type RPtr = number;
 

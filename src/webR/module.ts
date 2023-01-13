@@ -107,3 +107,5 @@ export interface Module extends EmscriptenModule {
     evalJs: (code: RPtr) => number;
   };
 }
+
+export const Module = {} as Module;
