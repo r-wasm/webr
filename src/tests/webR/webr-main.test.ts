@@ -184,8 +184,11 @@ describe('Evaluate R code', () => {
     const res = await webR.captureR('warning("This is a warning message")', undefined, {
       captureConditions: true,
     });
+
     const cond = res.output as { type: string; data: RList }[];
     expect(cond[0].type).toEqual('warning');
+    expect(await webR.shelter.isSheltered(cond[0].data)).toEqual(true);
+
     const condMsg = (await cond[0].data.get('message')) as RCharacter;
     expect(await condMsg.toString()).toContain('This is a warning message');
   });

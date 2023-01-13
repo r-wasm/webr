@@ -2,9 +2,9 @@ import { newChannelMain, ChannelMain, ChannelType } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy, newRClassProxy } from './proxy';
-import { WebRPayload } from './payload';
+import { WebRPayload, WebRPayloadPtr } from './payload';
 import { isRObject, RCharacter, RComplex, RDouble, REnvironment, RInteger } from './robj-main';
-import { RList, RLogical, RNull, RObject, RPairlist, RRaw, RString } from './robj-main';
+import { RList, RLogical, RNull, RObject, RPairlist, RRaw } from './robj-main';
 import * as RWorker from './robj-worker';
 
 export type CaptureROptions = {
@@ -171,8 +171,8 @@ export class WebR {
     })) as WebRPayload;
 
     switch (payload.payloadType) {
-      case 'raw':
-        throw new Error('Unexpected raw payload type returned from evalR');
+      case 'ptr':
+        throw new Error('Unexpected ptr payload type returned from evalR');
 
       case 'err': {
         const e = new Error(payload.obj.message);
@@ -181,22 +181,17 @@ export class WebR {
         throw e;
       }
 
-      default: {
-        const obj = newRProxy(this.#chan, payload);
-        const result = await obj.get(1);
-        const outputs = (await obj.get(2)) as RList;
+      case 'raw': {
+        const data = payload.obj as {
+          result: WebRPayloadPtr;
+          output: { type: string; data: any }[];
+        };
+        const result = newRProxy(this.#chan, data.result);
+        const output = data.output;
 
-        const output: any[] = [];
-
-        for await (const out of outputs) {
-          const type = await ((await out.pluck(1, 1)) as RCharacter).toString();
-          const data = await out.get(2);
-
-          if (type === 'stdout' || type === 'stderr') {
-            const msg = await (data as RString).toString();
-            output.push({ type, data: msg });
-          } else {
-            output.push({ type, data });
+        for (let i = 0; i < output.length; ++i) {
+          if (output[i].type !== 'stdout' && output[i].type !== 'stderr') {
+            output[i].data = newRProxy(this.#chan, output[i].data as WebRPayloadPtr);
           }
         }
 
