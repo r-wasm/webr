@@ -183,8 +183,6 @@ export class WebR {
 
       default: {
         const obj = newRProxy(this.#chan, payload);
-        obj.preserve();
-
         const result = await obj.get(1);
         const outputs = (await obj.get(2)) as RList;
 
@@ -202,7 +200,6 @@ export class WebR {
           }
         }
 
-        obj.release();
         return { result, output };
       }
     }

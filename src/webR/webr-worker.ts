@@ -81,11 +81,16 @@ function dispatch(msg: Message): void {
             shelter?: boolean;
             options: CaptureROptions;
           };
+          let nProt = 0;
+
           try {
             const capture = captureR(data.code, data.env?.obj.ptr, data.options);
+            capture.protect();
+            ++nProt;
 
             if (data.shelter === undefined || data.shelter) {
-              shelter(capture);
+              shelter(capture.get('result'));
+              shelter(capture.get('output'));
             }
 
             write({
@@ -102,6 +107,8 @@ function dispatch(msg: Message): void {
               payloadType: 'err',
               obj: { name: e.name, message: e.message, stack: e.stack },
             });
+          } finally {
+            Module._Rf_unprotect(nProt);
           }
           break;
         }
