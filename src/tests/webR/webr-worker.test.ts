@@ -43,10 +43,29 @@ describe('Test webR virtual filesystem', () => {
     expect(fileInfo).toHaveProperty('isFolder', false);
   });
 
+  test('Delete a file on the VFS', async () => {
+    await expect(webR.FS.unlink('/tmp/testFile')).resolves.not.toThrow();
+    const dirInfo = await webR.FS.lookupPath('/tmp');
+    expect(Object.keys(dirInfo.contents)).not.toContain('testFile');
+  });
+
+  test('Create a new directory on the VFS', async () => {
+    await expect(webR.FS.mkdir('/newdir')).resolves.not.toThrow();
+    const dirInfo = webR.FS.lookupPath('/newdir');
+    expect(await dirInfo).toHaveProperty('name', 'newdir');
+    expect(await dirInfo).toHaveProperty('isFolder', true);
+  });
+
   test('Receive information about a directory on the VFS', async () => {
-    const fileInfo = await webR.FS.lookupPath('/tmp');
-    expect(fileInfo).toHaveProperty('name', 'tmp');
+    const fileInfo = await webR.FS.lookupPath('/newdir');
+    expect(fileInfo).toHaveProperty('name', 'newdir');
     expect(fileInfo).toHaveProperty('isFolder', true);
+  });
+
+  test('Remove a directory on the VFS', async () => {
+    await expect(webR.FS.rmdir('/newdir')).resolves.not.toThrow();
+    const dirInfo = await webR.FS.lookupPath('/');
+    expect(Object.keys(dirInfo.contents)).not.toContain('newdir');
   });
 });
 
