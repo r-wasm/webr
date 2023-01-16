@@ -210,23 +210,61 @@ export class WebR {
 
   FS = {
     lookupPath: async (path: string): Promise<FSNode> => {
-      return (await this.#chan.request({ type: 'lookupPath', data: { path } })).obj as FSNode;
+      const payload = await this.#chan.request({ type: 'lookupPath', data: { path } });
+      if (payload.payloadType === 'err') {
+        const e = new Error(payload.obj.message);
+        e.name = payload.obj.name;
+        e.stack = payload.obj.stack;
+        throw e;
+      }
+      return payload.obj as FSNode;
     },
     mkdir: async (path: string): Promise<FSNode> => {
-      return (await this.#chan.request({ type: 'mkdir', data: { path } })).obj as FSNode;
+      const payload = await this.#chan.request({ type: 'mkdir', data: { path } });
+      if (payload.payloadType === 'err') {
+        const e = new Error(payload.obj.message);
+        e.name = payload.obj.name;
+        e.stack = payload.obj.stack;
+        throw e;
+      }
+      return payload.obj as FSNode;
     },
     readFile: async (path: string, flags?: string): Promise<Uint8Array> => {
-      return (await this.#chan.request({ type: 'readFile', data: { path, flags } }))
-        .obj as Uint8Array;
+      const payload = await this.#chan.request({ type: 'readFile', data: { path, flags } });
+      if (payload.payloadType === 'err') {
+        const e = new Error(payload.obj.message);
+        e.name = payload.obj.name;
+        e.stack = payload.obj.stack;
+        throw e;
+      }
+      return payload.obj as Uint8Array;
     },
     rmdir: async (path: string): Promise<void> => {
-      await this.#chan.request({ type: 'rmdir', data: { path } });
+      const payload = await this.#chan.request({ type: 'rmdir', data: { path } });
+      if (payload.payloadType === 'err') {
+        const e = new Error(payload.obj.message);
+        e.name = payload.obj.name;
+        e.stack = payload.obj.stack;
+        throw e;
+      }
     },
     writeFile: async (path: string, data: ArrayBufferView, flags?: string): Promise<void> => {
-      await this.#chan.request({ type: 'writeFile', data: { path, data, flags } });
+      const payload = await this.#chan.request({ type: 'writeFile', data: { path, data, flags } });
+      if (payload.payloadType === 'err') {
+        const e = new Error(payload.obj.message);
+        e.name = payload.obj.name;
+        e.stack = payload.obj.stack;
+        throw e;
+      }
     },
     unlink: async (path: string): Promise<void> => {
-      await this.#chan.request({ type: 'unlink', data: { path } });
+      const payload = await this.#chan.request({ type: 'unlink', data: { path } });
+      if (payload.payloadType === 'err') {
+        const e = new Error(payload.obj.message);
+        e.name = payload.obj.name;
+        e.stack = payload.obj.stack;
+        throw e;
+      }
     },
   };
 }
