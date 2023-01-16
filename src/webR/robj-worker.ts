@@ -2,6 +2,7 @@ import { Module } from './emscripten';
 import { WebRPayload, isWebRPayload, isWebRPayloadPtr, isWebRPayloadRaw } from './payload';
 import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw } from './robj';
 import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
+import { parseEvalBare } from './utils-r';
 import { isWebRDataTree, WebRDataTree, WebRDataTreeAtomic, WebRDataTreeNode } from './tree';
 import { WebRDataTreeNull, WebRDataTreeString, WebRDataTreeSymbol } from './tree';
 
@@ -116,6 +117,10 @@ export class RObject {
 
   release(): void {
     Module._R_ReleaseObject(this.ptr);
+  }
+
+  inspect(): void {
+    parseEvalBare('.Internal(inspect(x))', { x: this });
   }
 
   isNull(): this is RNull {
