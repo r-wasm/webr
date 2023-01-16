@@ -4,6 +4,7 @@ import { ServiceWorkerChannelMain, ServiceWorkerChannelWorker } from './channel-
 import { WebROptions } from '../webr-main';
 import { isCrossOrigin } from '../utils';
 import { IN_NODE } from '../compat';
+import { WebRPayload } from '../payload';
 
 // The channel structure is asymetric:
 //
@@ -31,7 +32,7 @@ export interface ChannelMain {
   read(): Promise<Message>;
   flush(): Promise<Message[]>;
   write(msg: Message): void;
-  request(msg: Message, transferables?: [Transferable]): Promise<any>;
+  request(msg: Message, transferables?: [Transferable]): Promise<WebRPayload>;
   interrupt(): void;
 }
 
