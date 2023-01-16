@@ -48,28 +48,37 @@ function dispatch(msg: Message): void {
 
       const write = (resp: any, transferables?: [Transferable]) =>
         chan?.write(newResponse(req.data.uuid, resp, transferables));
-      switch (reqMsg.type) {
-        case 'putFileData': {
-          // FIXME: Use a replacer + reviver to transfer Uint8Array
-          const data = Uint8Array.from(Object.values(reqMsg.data.data as ArrayLike<number>));
-          write(putFileData(reqMsg.data.name as string, data));
-          break;
-        }
-        case 'getFileData': {
-          const out = getFileData(reqMsg.data.name as string);
-          write(out, [out.buffer]);
-          break;
-        }
-        case 'getFSNode':
-          write(getFSNode(reqMsg.data.path as string));
-          break;
-        case 'captureR': {
-          const data = reqMsg.data as {
-            code: string;
-            env?: WebRPayloadPtr;
-            options: CaptureROptions;
-          };
-          try {
+      try {
+        switch (reqMsg.type) {
+          case 'putFileData': {
+            // FIXME: Use a replacer + reviver to transfer Uint8Array
+            const data = Uint8Array.from(Object.values(reqMsg.data.data as ArrayLike<number>));
+            write({
+              obj: putFileData(reqMsg.data.name as string, data),
+              payloadType: 'raw',
+            });
+            break;
+          }
+          case 'getFileData': {
+            const out = {
+              obj: getFileData(reqMsg.data.name as string),
+              payloadType: 'raw',
+            };
+            write(out, [out.obj.buffer]);
+            break;
+          }
+          case 'getFSNode':
+            write({
+              obj: getFSNode(reqMsg.data.path as string),
+              payloadType: 'raw',
+            });
+            break;
+          case 'captureR': {
+            const data = reqMsg.data as {
+              code: string;
+              env?: WebRPayloadPtr;
+              options: CaptureROptions;
+            };
             const capture = captureR(data.code, data.env, data.options);
             write({
               obj: {
@@ -79,21 +88,13 @@ function dispatch(msg: Message): void {
               },
               payloadType: 'ptr',
             });
-          } catch (_e) {
-            const e = _e as Error;
-            write({
-              payloadType: 'err',
-              obj: { name: e.name, message: e.message, stack: e.stack },
-            });
+            break;
           }
-          break;
-        }
-        case 'evalR': {
-          const data = reqMsg.data as {
-            code: string;
-            env?: WebRPayloadPtr;
-          };
-          try {
+          case 'evalR': {
+            const data = reqMsg.data as {
+              code: string;
+              env?: WebRPayloadPtr;
+            };
             const result = evalR(data.code, data.env);
             write({
               obj: {
@@ -103,65 +104,49 @@ function dispatch(msg: Message): void {
               },
               payloadType: 'ptr',
             });
-          } catch (_e) {
-            const e = _e as Error;
-            write({
-              payloadType: 'err',
-              obj: { name: e.name, message: e.message, stack: e.stack },
-            });
+            break;
           }
-          break;
-        }
-        case 'newRObject': {
-          const data = reqMsg.data as {
-            obj: WebRData;
-            objType: RType | 'object';
-          };
-          try {
+          case 'newRObject': {
+            const data = reqMsg.data as {
+              obj: WebRData;
+              objType: RType | 'object';
+            };
             write(newRObject(data.obj, data.objType));
-          } catch (_e) {
-            const e = _e as Error;
-            write({
-              payloadType: 'err',
-              obj: { name: e.name, message: e.message, stack: e.stack },
-            });
+            break;
           }
-          break;
-        }
-        case 'callRObjectMethod': {
-          const data = reqMsg.data as {
-            payload?: WebRPayloadPtr;
-            prop: string;
-            args: WebRPayload[];
-          };
-          const obj = data.payload ? RObject.wrap(data.payload.obj.ptr) : RObject;
-          try {
+          case 'callRObjectMethod': {
+            const data = reqMsg.data as {
+              payload?: WebRPayloadPtr;
+              prop: string;
+              args: WebRPayload[];
+            };
+            const obj = data.payload ? RObject.wrap(data.payload.obj.ptr) : RObject;
             write(callRObjectMethod(obj, data.prop, data.args));
-          } catch (_e) {
-            const e = _e as Error;
-            write({
-              payloadType: 'err',
-              obj: { name: e.name, message: e.message, stack: e.stack },
-            });
+            break;
           }
-          break;
+          case 'installPackage': {
+            const res = evalR(
+              `webr::install("${reqMsg.data.name as string}", repos="${_config.PKG_URL}")`
+            );
+            write({
+              obj: {
+                type: res.type(),
+                ptr: res.ptr,
+                methods: RObject.getMethods(res),
+              },
+              payloadType: 'ptr',
+            });
+            break;
+          }
+          default:
+            throw new Error('Unknown event `' + reqMsg.type + '`');
         }
-        case 'installPackage': {
-          const res = evalR(
-            `webr::install("${reqMsg.data.name as string}", repos="${_config.PKG_URL}")`
-          );
-          write({
-            obj: {
-              type: res.type(),
-              ptr: res.ptr,
-              methods: RObject.getMethods(res),
-            },
-            payloadType: 'ptr',
-          });
-          break;
-        }
-        default:
-          throw new Error('Unknown event `' + reqMsg.type + '`');
+      } catch (_e) {
+        const e = _e as Error;
+        write({
+          payloadType: 'err',
+          obj: { name: e.name, message: e.message, stack: e.stack },
+        });
       }
       break;
     }

@@ -65,14 +65,14 @@ function empty() {}
 function targetAsyncIterator(chan: ChannelMain, proxy: RProxy<RWorker.RObject>) {
   return async function* () {
     // Get the R object's length
-    const reply = (await chan.request({
+    const reply = await chan.request({
       type: 'callRObjectMethod',
       data: {
         payload: proxy._payload,
         prop: 'getPropertyValue',
         args: [{ payloadType: 'raw', obj: 'length' }],
       },
-    })) as WebRPayload;
+    });
 
     // Throw an error if there was some problem accessing the object length
     if (reply.payloadType === 'err') {
@@ -111,10 +111,10 @@ export function targetMethod(chan: ChannelMain, prop: string, payload?: WebRPayl
       };
     });
 
-    const reply = (await chan.request({
+    const reply = await chan.request({
       type: 'callRObjectMethod',
       data: { payload, prop, args },
-    })) as WebRPayload;
+    });
 
     switch (reply.payloadType) {
       case 'ptr':
@@ -142,13 +142,13 @@ export function targetMethod(chan: ChannelMain, prop: string, payload?: WebRPayl
  * R object on the worker thread from a given JS object.
  */
 async function newRObject(chan: ChannelMain, objType: RType | 'object', value: unknown) {
-  const payload = (await chan.request({
+  const payload = await chan.request({
     type: 'newRObject',
     data: {
       objType,
       obj: replaceInObject(value, isRObject, (obj: RObject) => obj._payload),
     },
-  })) as WebRPayload;
+  });
   switch (payload.payloadType) {
     case 'raw':
       throw new Error('Unexpected raw payload type returned from newRObject');

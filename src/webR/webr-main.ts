@@ -2,7 +2,6 @@ import { newChannelMain, ChannelMain, ChannelType } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { newRProxy, newRClassProxy } from './proxy';
-import { WebRPayload } from './payload';
 import { isRObject, RCharacter, RComplex, RDouble, REnvironment, RInteger } from './robj-main';
 import { RList, RLogical, RNull, RObject, RPairlist, RRaw, RString } from './robj-main';
 import * as RWorker from './robj-worker';
@@ -137,10 +136,11 @@ export class WebR {
     return await this.#chan.request(msg);
   }
   async getFileData(name: string): Promise<Uint8Array> {
-    return (await this.#chan.request({ type: 'getFileData', data: { name: name } })) as Uint8Array;
+    return (await this.#chan.request({ type: 'getFileData', data: { name: name } }))
+      .obj as Uint8Array;
   }
   async getFSNode(path: string): Promise<FSNode> {
-    return (await this.#chan.request({ type: 'getFSNode', data: { path: path } })) as FSNode;
+    return (await this.#chan.request({ type: 'getFSNode', data: { path: path } })).obj as FSNode;
   }
 
   async captureR(
@@ -155,14 +155,14 @@ export class WebR {
       throw new Error('Attempted to evaluate R code with invalid environment object');
     }
 
-    const payload = (await this.#chan.request({
+    const payload = await this.#chan.request({
       type: 'captureR',
       data: {
         code: code,
         env: env?._payload,
         options: options,
       },
-    })) as WebRPayload;
+    });
 
     switch (payload.payloadType) {
       case 'raw':
@@ -199,10 +199,10 @@ export class WebR {
       throw new Error('Attempted to evaluate R code with invalid environment object');
     }
 
-    const payload = (await this.#chan.request({
+    const payload = await this.#chan.request({
       type: 'evalR',
       data: { code: code, env: env?._payload },
-    })) as WebRPayload;
+    });
 
     switch (payload.payloadType) {
       case 'raw':
