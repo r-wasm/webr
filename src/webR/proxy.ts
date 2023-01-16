@@ -1,6 +1,6 @@
 import { ChannelMain } from './chan/channel';
 import { replaceInObject } from './utils';
-import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
+import { isWebRPayloadPtr, webRPayloadError, WebRPayloadPtr, WebRPayload } from './payload';
 import { RType, WebRDataRaw } from './robj';
 import { isRObject, RObject, isRFunction } from './robj-main';
 import * as RWorker from './robj-worker';
@@ -76,10 +76,7 @@ function targetAsyncIterator(chan: ChannelMain, proxy: RProxy<RWorker.RObject>) 
 
     // Throw an error if there was some problem accessing the object length
     if (reply.payloadType === 'err') {
-      const e = new Error(`Cannot iterate over object, ${reply.obj.message}`);
-      e.name = reply.obj.name;
-      e.stack = reply.obj.stack;
-      throw e;
+      throw webRPayloadError(reply);
     } else if (typeof reply.obj !== 'number') {
       throw new Error('Cannot iterate over object, unexpected type for length property.');
     }
@@ -119,12 +116,8 @@ export function targetMethod(chan: ChannelMain, prop: string, payload?: WebRPayl
     switch (reply.payloadType) {
       case 'ptr':
         return newRProxy(chan, reply);
-      case 'err': {
-        const e = new Error(reply.obj.message);
-        e.name = reply.obj.name;
-        e.stack = reply.obj.stack;
-        throw e;
-      }
+      case 'err':
+        throw webRPayloadError(reply);
       default: {
         const proxyReply = replaceInObject(
           reply,
@@ -152,12 +145,8 @@ async function newRObject(chan: ChannelMain, objType: RType | 'object', value: u
   switch (payload.payloadType) {
     case 'raw':
       throw new Error('Unexpected raw payload type returned from newRObject');
-    case 'err': {
-      const e = new Error(payload.obj.message);
-      e.name = payload.obj.name;
-      e.stack = payload.obj.stack;
-      throw e;
-    }
+    case 'err':
+      throw webRPayloadError(payload);
     default:
       return newRProxy(chan, payload);
   }

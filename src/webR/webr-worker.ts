@@ -50,29 +50,64 @@ function dispatch(msg: Message): void {
         chan?.write(newResponse(req.data.uuid, resp, transferables));
       try {
         switch (reqMsg.type) {
-          case 'putFileData': {
-            // FIXME: Use a replacer + reviver to transfer Uint8Array
-            const data = Uint8Array.from(Object.values(reqMsg.data.data as ArrayLike<number>));
+          case 'lookupPath': {
+            const node = Module.FS.lookupPath(reqMsg.data.path as string, {}).node;
             write({
-              obj: putFileData(reqMsg.data.name as string, data),
+              obj: copyFSNode(node as FSNode),
               payloadType: 'raw',
             });
             break;
           }
-          case 'getFileData': {
+          case 'mkdir': {
+            write({
+              obj: copyFSNode(Module.FS.mkdir(reqMsg.data.path as string) as FSNode),
+              payloadType: 'raw',
+            });
+            break;
+          }
+          case 'readFile': {
+            const reqData = reqMsg.data as {
+              path: string;
+              flags?: string;
+            };
             const out = {
-              obj: getFileData(reqMsg.data.name as string),
+              obj: Module.FS.readFile(reqData.path, {
+                encoding: 'binary',
+                flags: reqData.flags,
+              }),
               payloadType: 'raw',
             };
             write(out, [out.obj.buffer]);
             break;
           }
-          case 'getFSNode':
+          case 'rmdir': {
             write({
-              obj: getFSNode(reqMsg.data.path as string),
+              obj: Module.FS.rmdir(reqMsg.data.path as string),
               payloadType: 'raw',
             });
             break;
+          }
+          case 'writeFile': {
+            const reqData = reqMsg.data as {
+              path: string;
+              data: ArrayBufferView;
+              flags?: string;
+            };
+            // FIXME: Use a replacer + reviver to transfer Uint8Array
+            const data = Uint8Array.from(Object.values(reqData.data));
+            write({
+              obj: Module.FS.writeFile(reqData.path, data, { flags: reqData.flags }),
+              payloadType: 'raw',
+            });
+            break;
+          }
+          case 'unlink': {
+            write({
+              obj: Module.FS.unlink(reqMsg.data.path as string),
+              payloadType: 'raw',
+            });
+            break;
+          }
           case 'captureR': {
             const data = reqMsg.data as {
               code: string;
@@ -153,11 +188,6 @@ function dispatch(msg: Message): void {
     default:
       throw new Error('Unknown event `' + msg.type + '`');
   }
-}
-
-function getFSNode(path: string): FSNode {
-  const node = FS.lookupPath(path, {}).node;
-  return copyFSNode(node as FSNode);
 }
 
 function copyFSNode(obj: FSNode): FSNode {
@@ -368,19 +398,6 @@ function evalR(code: string, env?: WebRPayloadPtr): RObject {
   } finally {
     Module._Rf_unprotect(1);
   }
-}
-
-function getFileData(name: string): Uint8Array {
-  const size = FS.stat(name).size as number;
-  const stream = FS.open(name, 'r');
-  const buf = new Uint8Array(size);
-  FS.read(stream, buf, 0, size, 0);
-  FS.close(stream);
-  return buf;
-}
-
-function putFileData(name: string, data: Uint8Array) {
-  Module.FS.createDataFile('/', name, data, true, true, true);
 }
 
 function init(config: Required<WebROptions>) {

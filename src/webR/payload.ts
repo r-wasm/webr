@@ -24,6 +24,13 @@ export type WebRPayloadErr = {
 };
 export type WebRPayload = WebRPayloadRaw | WebRPayloadPtr | WebRPayloadErr;
 
+export function webRPayloadError(payload: WebRPayloadErr): Error {
+  const e = new Error(payload.obj.message);
+  e.name = payload.obj.name;
+  e.stack = payload.obj.stack;
+  return e;
+}
+
 /**
  * Test for an WebRPayload instance.
  *

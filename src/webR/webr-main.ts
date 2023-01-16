@@ -1,6 +1,7 @@
 import { newChannelMain, ChannelMain, ChannelType } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
+import { webRPayloadError } from './payload';
 import { newRProxy, newRClassProxy } from './proxy';
 import { isRObject, RCharacter, RComplex, RDouble, REnvironment, RInteger } from './robj-main';
 import { RList, RLogical, RNull, RObject, RPairlist, RRaw, RString } from './robj-main';
@@ -131,17 +132,6 @@ export class WebR {
       await this.#chan.request(msg);
     }
   }
-  async putFileData(name: string, data: Uint8Array) {
-    const msg = { type: 'putFileData', data: { name: name, data: data } };
-    return await this.#chan.request(msg);
-  }
-  async getFileData(name: string): Promise<Uint8Array> {
-    return (await this.#chan.request({ type: 'getFileData', data: { name: name } }))
-      .obj as Uint8Array;
-  }
-  async getFSNode(path: string): Promise<FSNode> {
-    return (await this.#chan.request({ type: 'getFSNode', data: { path: path } })).obj as FSNode;
-  }
 
   async captureR(
     code: string,
@@ -167,12 +157,8 @@ export class WebR {
     switch (payload.payloadType) {
       case 'raw':
         throw new Error('Unexpected raw payload type returned from evalR');
-      case 'err': {
-        const e = new Error(payload.obj.message);
-        e.name = payload.obj.name;
-        e.stack = payload.obj.stack;
-        throw e;
-      }
+      case 'err':
+        throw webRPayloadError(payload);
       default: {
         const obj = newRProxy(this.#chan, payload);
         obj.preserve();
@@ -207,15 +193,52 @@ export class WebR {
     switch (payload.payloadType) {
       case 'raw':
         throw new Error('Unexpected raw payload type returned from evalR');
-      case 'err': {
-        const e = new Error(payload.obj.message);
-        e.name = payload.obj.name;
-        e.stack = payload.obj.stack;
-        throw e;
-      }
-      default: {
+      case 'err':
+        throw webRPayloadError(payload);
+      default:
         return newRProxy(this.#chan, payload);
-      }
     }
   }
+
+  FS = {
+    lookupPath: async (path: string): Promise<FSNode> => {
+      const payload = await this.#chan.request({ type: 'lookupPath', data: { path } });
+      if (payload.payloadType === 'err') {
+        throw webRPayloadError(payload);
+      }
+      return payload.obj as FSNode;
+    },
+    mkdir: async (path: string): Promise<FSNode> => {
+      const payload = await this.#chan.request({ type: 'mkdir', data: { path } });
+      if (payload.payloadType === 'err') {
+        throw webRPayloadError(payload);
+      }
+      return payload.obj as FSNode;
+    },
+    readFile: async (path: string, flags?: string): Promise<Uint8Array> => {
+      const payload = await this.#chan.request({ type: 'readFile', data: { path, flags } });
+      if (payload.payloadType === 'err') {
+        throw webRPayloadError(payload);
+      }
+      return payload.obj as Uint8Array;
+    },
+    rmdir: async (path: string): Promise<void> => {
+      const payload = await this.#chan.request({ type: 'rmdir', data: { path } });
+      if (payload.payloadType === 'err') {
+        throw webRPayloadError(payload);
+      }
+    },
+    writeFile: async (path: string, data: ArrayBufferView, flags?: string): Promise<void> => {
+      const payload = await this.#chan.request({ type: 'writeFile', data: { path, data, flags } });
+      if (payload.payloadType === 'err') {
+        throw webRPayloadError(payload);
+      }
+    },
+    unlink: async (path: string): Promise<void> => {
+      const payload = await this.#chan.request({ type: 'unlink', data: { path } });
+      if (payload.payloadType === 'err') {
+        throw webRPayloadError(payload);
+      }
+    },
+  };
 }
