@@ -6,7 +6,7 @@ import { Module, DictEmPtrs, dictEmFree } from './emscripten';
 import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
-import { RObject, isRObject, RList, getRWorkerClass } from './robj-worker';
+import { RObject, isRObject, REnvironment, RList, getRWorkerClass } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
 
 let initialised = false;
@@ -314,7 +314,7 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
 
     let envObj = RObject.globalEnv;
     if (env) {
-      envObj = RObject.wrap(env.obj.ptr);
+      envObj = REnvironment.wrap(env.obj.ptr);
       if (envObj.type() !== 'environment') {
         throw new Error('Attempted to eval R code with an env argument with invalid SEXP type');
       }
@@ -343,7 +343,7 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
     Module._Rf_protect(capturePtr);
     ++nProt;
 
-    const capture = RObject.wrap(capturePtr) as RList;
+    const capture = RList.wrap(capturePtr);
 
     if (_options.captureConditions && _options.throwJsException) {
       const output = capture.get('output') as RList;
