@@ -375,6 +375,24 @@ export class RNull extends RObject {
 }
 
 export class RSymbol extends RObject {
+  // Note that symbols don't need to be protected. This also means
+  // that allocating symbols in loops with random data is probably a
+  // bad idea because this leaks memory.
+  constructor(x: string) {
+    if (typeof x !== 'string') {
+      super(x);
+      return;
+    }
+
+    const name = Module.allocateUTF8(x);
+
+    try {
+      super(RObject.wrap(Module._Rf_install(name)));
+    } finally {
+      Module._free(name);
+    }
+  }
+
   toTree(): WebRDataTreeSymbol {
     const obj = this.toObject();
     return {
@@ -395,6 +413,10 @@ export class RSymbol extends RObject {
       symvalue: this.symvalue().isUnbound() ? null : this.symvalue().ptr,
       internal: this.internal().isNull() ? null : this.internal().ptr,
     };
+  }
+
+  toString(): string {
+    return this.printname().toString();
   }
 
   printname(): RString {
