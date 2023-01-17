@@ -2,7 +2,7 @@ import { Module } from './emscripten';
 import { WebRPayload, isWebRPayload, isWebRPayloadPtr, isWebRPayloadRaw } from './payload';
 import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw } from './robj';
 import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
-import { parseEvalBare } from './utils-r';
+import { envPoke, parseEvalBare, protect, unprotect } from './utils-r';
 import { isWebRDataTree, WebRDataTree, WebRDataTreeAtomic, WebRDataTreeNode } from './tree';
 import { WebRDataTreeNull, WebRDataTreeString, WebRDataTreeSymbol } from './tree';
 
@@ -74,10 +74,14 @@ function newObjectFromData(obj: WebRData): RObject {
   throw new Error('Robj construction for this JS object is not yet supported');
 }
 
+// FIXME: Can we simplify this?
+// Do we need to take payloads?
+export type RObjectData = WebRPayload | WebRData;
+
 export class RObject {
   ptr: RPtr;
 
-  constructor(data: WebRPayload | WebRData) {
+  constructor(data: RObjectData) {
     this.ptr = 0;
     if (isRObject(data)) {
       this.ptr = data.ptr;
@@ -666,14 +670,15 @@ export class REnvironment extends RObject {
     return ls.toArray() as string[];
   }
 
-  bind(name: string, value: RObject | WebRDataRaw): void {
-    const namePtr = Module.allocateUTF8(name);
-    Module._Rf_defineVar(
-      Module._Rf_install(namePtr),
-      isRObject(value) ? value.ptr : new RObject({ payloadType: 'raw', obj: value }).ptr,
-      this.ptr
-    );
-    Module._free(namePtr);
+  bind(name: string, value: RObjectData): void {
+    const sym = new RSymbol(name);
+    const valueObj = protect(new RObject(value));
+
+    try {
+      envPoke(this, sym, valueObj);
+    } finally {
+      unprotect(1);
+    }
   }
 
   names(): string[] {
