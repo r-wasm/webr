@@ -3,7 +3,8 @@ import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { webRPayloadError } from './payload';
 import { newRProxy, newRClassProxy } from './proxy';
-import { isRObject, RCharacter, RComplex, RDouble, REnvironment, RInteger } from './robj-main';
+import { isRObject, RCharacter, RComplex, RDouble } from './robj-main';
+import { REnvironment, RSymbol, RInteger } from './robj-main';
 import { RList, RLogical, RNull, RObject, RPairlist, RRaw, RString } from './robj-main';
 import * as RWorker from './robj-worker';
 
@@ -64,6 +65,7 @@ export class WebR {
   RList;
   RPairlist;
   REnvironment;
+  RSymbol;
   objs: {
     baseEnv: REnvironment;
     globalEnv: REnvironment;
@@ -87,6 +89,7 @@ export class WebR {
     this.RList = newRClassProxy<typeof RWorker.RList, RList>(c, 'list');
     this.RPairlist = newRClassProxy<typeof RWorker.RPairlist, RPairlist>(c, 'pairlist');
     this.REnvironment = newRClassProxy<typeof RWorker.REnvironment, REnvironment>(c, 'environment');
+    this.RSymbol = newRClassProxy<typeof RWorker.RSymbol, RSymbol>(c, 'symbol');
     this.objs = {} as typeof this.objs;
   }
 

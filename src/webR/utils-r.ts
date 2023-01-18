@@ -1,6 +1,21 @@
 import { Module, DictEmPtrs, dictEmFree } from './emscripten';
 import { WebRData } from './robj';
-import { RObject, REnvironment } from './robj-worker';
+import { RObject, REnvironment, RHandle, handlePtr } from './robj-worker';
+
+export function protect<T extends RHandle>(x: T): T {
+  Module._Rf_protect(handlePtr(x));
+  return x;
+}
+
+export function unprotect(n: number) {
+  Module._Rf_unprotect(n);
+}
+
+// rlang convention: `env`-prefixed functions consistently take `env`
+// as first argument
+export function envPoke(env: RHandle, sym: RHandle, value: RHandle) {
+  Module._Rf_defineVar(handlePtr(sym), handlePtr(value), handlePtr(env));
+}
 
 export function parseEvalBare(code: string, env: WebRData): RObject {
   const strings: DictEmPtrs = {};

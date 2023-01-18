@@ -2,9 +2,27 @@ import { Module } from './emscripten';
 import { WebRPayload, isWebRPayload, isWebRPayloadPtr, isWebRPayloadRaw } from './payload';
 import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw } from './robj';
 import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
-import { parseEvalBare } from './utils-r';
+import { envPoke, parseEvalBare, protect, unprotect } from './utils-r';
 import { isWebRDataTree, WebRDataTree, WebRDataTreeAtomic, WebRDataTreeNode } from './tree';
 import { WebRDataTreeNull, WebRDataTreeString, WebRDataTreeSymbol } from './tree';
+
+export type RHandle = RObject | RPtr;
+
+export function handlePtr(x: RHandle): RPtr {
+  if (isRObject(x)) {
+    return x.ptr;
+  } else {
+    return x;
+  }
+}
+
+// Use this for implicit protection of objects sent to the main
+// thread. Currently uses the precious list but could use a different
+// mechanism in the future. Unprotection is explicit through
+// `RObject.free()`.
+function keep(x: RHandle) {
+  Module._R_PreserveObject(handlePtr(x));
+}
 
 export interface ToTreeOptions {
   depth: number;
@@ -64,10 +82,14 @@ function newObjectFromData(obj: WebRData): RObject {
   throw new Error('Robj construction for this JS object is not yet supported');
 }
 
+// FIXME: Can we simplify this?
+// Do we need to take payloads?
+export type RObjectData = WebRPayload | WebRData;
+
 export class RObject {
   ptr: RPtr;
 
-  constructor(data: WebRPayload | WebRData) {
+  constructor(data: RObjectData) {
     this.ptr = 0;
     if (isRObject(data)) {
       this.ptr = data.ptr;
@@ -112,18 +134,25 @@ export class RObject {
     return type as RType;
   }
 
+  // Frees objects preserved with `keep()`. This method is called by
+  // users in the main thread to release objects that were
+  // automatically protected before being sent away.
+  free(): void {
+    Module._R_ReleaseObject(this.ptr);
+  }
+
+  // TODO: Remove these
   protect(): void {
     this.ptr = Module._Rf_protect(this.ptr);
   }
-
   unprotect(): void {
     Module._Rf_unprotect_ptr(this.ptr);
   }
 
+  // TODO: Remove these
   preserve(): void {
     Module._R_PreserveObject(this.ptr);
   }
-
   release(): void {
     Module._R_ReleaseObject(this.ptr);
   }
@@ -375,6 +404,24 @@ export class RNull extends RObject {
 }
 
 export class RSymbol extends RObject {
+  // Note that symbols don't need to be protected. This also means
+  // that allocating symbols in loops with random data is probably a
+  // bad idea because this leaks memory.
+  constructor(x: string) {
+    if (typeof x !== 'string') {
+      super(x);
+      return;
+    }
+
+    const name = Module.allocateUTF8(x);
+
+    try {
+      super(RObject.wrap(Module._Rf_install(name)));
+    } finally {
+      Module._free(name);
+    }
+  }
+
   toTree(): WebRDataTreeSymbol {
     const obj = this.toObject();
     return {
@@ -395,6 +442,10 @@ export class RSymbol extends RObject {
       symvalue: this.symvalue().isUnbound() ? null : this.symvalue().ptr,
       internal: this.internal().isNull() ? null : this.internal().ptr,
     };
+  }
+
+  toString(): string {
+    return this.printname().toString();
   }
 
   printname(): RString {
@@ -613,20 +664,35 @@ export class REnvironment extends RObject {
       super(val);
       return this;
     }
-    const { names, values } = toWebRData(val);
-    const ptr = Module._Rf_protect(Module._R_NewEnv(RObject.globalEnv.ptr, 0, 0));
-    values.forEach((v, i) => {
-      const name = names ? names[i] : null;
-      if (!name) {
-        throw new Error("Can't create object in new environment with empty symbol name");
-      }
-      const namePtr = Module.allocateUTF8(name);
-      Module._Rf_defineVar(Module._Rf_install(namePtr), new RObject(v).ptr, ptr);
-      Module._free(namePtr);
-    });
-    Module._Rf_unprotect(1);
-    Module._R_PreserveObject(ptr);
-    super({ payloadType: 'ptr', obj: { ptr } });
+
+    let nProt = 0;
+
+    try {
+      const { names, values } = toWebRData(val);
+
+      const ptr = protect(Module._R_NewEnv(RObject.globalEnv.ptr, 0, 0));
+      ++nProt;
+
+      values.forEach((v, i) => {
+        const name = names ? names[i] : null;
+        if (!name) {
+          throw new Error("Can't create object in new environment with empty symbol name");
+        }
+
+        const sym = new RSymbol(name);
+        const vObj = protect(new RObject(v));
+        try {
+          envPoke(ptr, sym, vObj);
+        } finally {
+          unprotect(1);
+        }
+      });
+
+      super({ payloadType: 'ptr', obj: { ptr } });
+      keep(ptr);
+    } finally {
+      unprotect(nProt);
+    }
   }
 
   ls(all = false, sorted = true): string[] {
@@ -634,14 +700,15 @@ export class REnvironment extends RObject {
     return ls.toArray() as string[];
   }
 
-  bind(name: string, value: RObject | WebRDataRaw): void {
-    const namePtr = Module.allocateUTF8(name);
-    Module._Rf_defineVar(
-      Module._Rf_install(namePtr),
-      isRObject(value) ? value.ptr : new RObject({ payloadType: 'raw', obj: value }).ptr,
-      this.ptr
-    );
-    Module._free(namePtr);
+  bind(name: string, value: RObjectData): void {
+    const sym = new RSymbol(name);
+    const valueObj = protect(new RObject(value));
+
+    try {
+      envPoke(this, sym, valueObj);
+    } finally {
+      unprotect(1);
+    }
   }
 
   names(): string[] {
