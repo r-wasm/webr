@@ -184,16 +184,17 @@ export class RObject {
 
   setNames(values: (string | null)[] | null): this {
     let namesObj: RObject;
+
     if (values === null) {
       namesObj = RObject.null;
-      RObject.protect(namesObj);
     } else if (Array.isArray(values) && values.every((v) => typeof v === 'string' || v === null)) {
       namesObj = new RCharacter(values);
     } else {
       throw new Error('Argument to setNames must be null or an Array of strings or null');
     }
+
+    // `setAttrib()` protects its inputs
     Module._Rf_setAttrib(this.ptr, RObject.namesSymbol.ptr, namesObj.ptr);
-    RObject.unprotect(1);
     return this;
   }
 
