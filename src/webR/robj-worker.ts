@@ -454,10 +454,11 @@ export class RSymbol extends RObject {
 
 export class RPairlist extends RObject {
   constructor(val: WebRPayload | WebRData) {
-    if (isWebRPayload(val)) {
+    if (isWebRPayload(val) || isRObject(val)) {
       super(val);
       return this;
     }
+
     const { names, values } = toWebRData(val);
     const list = RPairlist.wrap(Module._Rf_allocList(values.length));
     list.preserve();
@@ -549,7 +550,7 @@ export class RPairlist extends RObject {
 
 export class RList extends RObject {
   constructor(val: WebRPayload | WebRData) {
-    if (isWebRPayload(val)) {
+    if (isWebRPayload(val) || isRObject(val)) {
       super(val);
       return this;
     }
@@ -653,7 +654,7 @@ export class RString extends RObject {
 
 export class REnvironment extends RObject {
   constructor(val: WebRPayload | WebRData = {}) {
-    if (isWebRPayload(val)) {
+    if (isWebRPayload(val) || isRObject(val)) {
       super(val);
       return this;
     }
@@ -827,7 +828,7 @@ abstract class RVectorAtomic<T extends atomicType> extends RObject {
 
 export class RLogical extends RVectorAtomic<boolean> {
   constructor(val: WebRPayload | WebRDataAtomic<boolean>) {
-    if (isWebRPayload(val)) {
+    if (isWebRPayload(val) || isRObject(val)) {
       super(val);
       return this;
     }
@@ -875,7 +876,7 @@ export class RLogical extends RVectorAtomic<boolean> {
 
 export class RInteger extends RVectorAtomic<number> {
   constructor(val: WebRPayload | WebRDataAtomic<number>) {
-    if (isWebRPayload(val)) {
+    if (isWebRPayload(val) || isRObject(val)) {
       super(val);
       return this;
     }
@@ -918,7 +919,7 @@ export class RInteger extends RVectorAtomic<number> {
 
 export class RDouble extends RVectorAtomic<number> {
   constructor(val: WebRPayload | WebRDataAtomic<number>) {
-    if (isWebRPayload(val)) {
+    if (isWebRPayload(val) || isRObject(val)) {
       super(val);
       return this;
     }
@@ -958,7 +959,7 @@ export class RDouble extends RVectorAtomic<number> {
 
 export class RComplex extends RVectorAtomic<Complex> {
   constructor(val: WebRPayload | WebRDataAtomic<Complex>) {
-    if (isWebRPayload(val)) {
+    if (isWebRPayload(val) || isRObject(val)) {
       super(val);
       return this;
     }
@@ -1011,7 +1012,7 @@ export class RComplex extends RVectorAtomic<Complex> {
 
 export class RCharacter extends RVectorAtomic<string> {
   constructor(val: WebRPayload | WebRDataAtomic<string>) {
-    if (isWebRPayload(val)) {
+    if (isWebRPayload(val) || isRObject(val)) {
       super(val);
       return this;
     }
@@ -1065,7 +1066,7 @@ export class RCharacter extends RVectorAtomic<string> {
 
 export class RRaw extends RVectorAtomic<number> {
   constructor(val: WebRPayload | WebRDataAtomic<number>) {
-    if (isWebRPayload(val)) {
+    if (isWebRPayload(val) || isRObject(val)) {
       super(val);
       return this;
     }
