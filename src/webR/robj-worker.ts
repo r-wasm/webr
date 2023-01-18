@@ -6,6 +6,16 @@ import { parseEvalBare } from './utils-r';
 import { isWebRDataTree, WebRDataTree, WebRDataTreeAtomic, WebRDataTreeNode } from './tree';
 import { WebRDataTreeNull, WebRDataTreeString, WebRDataTreeSymbol } from './tree';
 
+export type RHandle = RObject | RPtr;
+
+export function handlePtr(x: RHandle): RPtr {
+  if (isRObject(x)) {
+    return x.ptr;
+  } else {
+    return x;
+  }
+}
+
 export interface ToTreeOptions {
   depth: number;
 }
