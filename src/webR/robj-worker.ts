@@ -2,7 +2,7 @@ import { Module } from './emscripten';
 import { WebRPayload, isWebRPayload, isWebRPayloadPtr, isWebRPayloadRaw } from './payload';
 import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw } from './robj';
 import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
-import { envPoke, parseEvalBare, protect, unprotect } from './utils-r';
+import { envPoke, parseEvalBare, protect, protectInc, unprotect } from './utils-r';
 import { isWebRDataTree, WebRDataTree, WebRDataTreeAtomic, WebRDataTreeNode } from './tree';
 import { WebRDataTreeNull, WebRDataTreeString, WebRDataTreeSymbol } from './tree';
 
@@ -64,21 +64,16 @@ function newObjectFromData(obj: WebRData): RObject {
   throw new Error('Robj construction for this JS object is not yet supported');
 }
 
-function newObjectFromArray(obj: WebRData[]) {
-  let nProt = 0;
+// JS arrays are interpreted using R's c() function, so as to match
+// R's built in coercion rules
+function newObjectFromArray(arr: WebRData[]) {
+  const prot = { n: 0 };
 
   try {
-    // JS arrays are interpreted using R's c() function, so as to match
-    // R's built in coercion rules
-    const objs = obj.map((el) => {
-      const out = protect(newObjectFromData(el));
-      ++nProt;
-      return out;
-    });
+    const objs = arr.map((el) => protectInc(newObjectFromData(el), prot));
 
     const call = RPairlist.wrap(Module._Rf_allocVector(RTypeMap.call, objs.length + 1));
-    protect(call);
-    ++nProt;
+    protectInc(call, prot);
 
     call.setcar(new RSymbol('c'));
 
@@ -92,7 +87,7 @@ function newObjectFromArray(obj: WebRData[]) {
 
     return RObject.wrap(Module._Rf_eval(call.ptr, RObject.baseEnv.ptr));
   } finally {
-    unprotect(nProt);
+    unprotect(prot.n);
   }
 }
 
