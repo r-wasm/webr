@@ -199,13 +199,12 @@ export class RObject {
   }
 
   names(): (string | null)[] | null {
-    const names = RCharacter.wrap(
-      Module._Rf_protect(Module._Rf_getAttrib(this.ptr, RObject.namesSymbol.ptr))
-    );
+    const names = RCharacter.wrap(Module._Rf_getAttrib(this.ptr, RObject.namesSymbol.ptr));
     if (names.isNull()) {
       return null;
+    } else {
+      return names.toArray();
     }
-    return names.toArray();
   }
 
   includes(name: string) {
