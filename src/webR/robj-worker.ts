@@ -249,11 +249,15 @@ export class RObject {
   }
 
   pluck(...path: (string | number)[]): RObject | undefined {
+    const pLoc = Module._malloc(4);
+    Module._R_ProtectWithIndex(RObject.null.ptr, pLoc);
+
     try {
-      const result = path.reduce(
-        (obj: RObject, prop: string | number): RObject => obj.get(prop),
-        this
-      );
+      const result = path.reduce((obj: RObject, prop: string | number): RObject => {
+        const out = obj.get(prop);
+        Module._R_Reprotect(out.ptr, Module.getValue(pLoc, 'i32'));
+        return out;
+      }, this);
       return result.isNull() ? undefined : result;
     } catch (err) {
       // Deal with subscript out of bounds error
@@ -261,6 +265,9 @@ export class RObject {
         return undefined;
       }
       throw err;
+    } finally {
+      unprotect(1);
+      Module._free(pLoc);
     }
   }
 
