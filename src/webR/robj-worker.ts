@@ -221,45 +221,31 @@ export class RObject {
   }
 
   subset(prop: number | string): RObject {
-    let idx: RPtr;
-    let char: RPtr = 0;
-    if (typeof prop === 'number') {
-      idx = Module._Rf_protect(Module._Rf_ScalarInteger(prop));
-    } else {
-      char = Module.allocateUTF8(prop);
-      idx = Module._Rf_protect(Module._Rf_mkString(char));
-    }
-    const call = Module._Rf_protect(Module._Rf_lang3(RObject.bracketSymbol.ptr, this.ptr, idx));
-    const sub = RObject.wrap(Module._Rf_eval(call, RObject.baseEnv.ptr));
-    Module._Rf_unprotect(2);
-    if (char) Module._free(char);
-    return sub;
+    return this.#slice(prop, RObject.bracketSymbol.ptr);
   }
 
   get(prop: number | string): RObject {
-    let idx: RPtr;
-    let char: RPtr = 0;
-    if (typeof prop === 'number') {
-      idx = Module._Rf_protect(Module._Rf_ScalarInteger(prop));
-    } else {
-      char = Module.allocateUTF8(prop);
-      idx = Module._Rf_protect(Module._Rf_mkString(char));
-    }
-    const call = Module._Rf_protect(Module._Rf_lang3(RObject.bracket2Symbol.ptr, this.ptr, idx));
-    const sub = RObject.wrap(Module._Rf_eval(call, RObject.baseEnv.ptr));
-    Module._Rf_unprotect(2);
-    if (char) Module._free(char);
-    return sub;
+    return this.#slice(prop, RObject.bracket2Symbol.ptr);
   }
 
   getDollar(prop: string): RObject {
-    const char = Module.allocateUTF8(prop);
-    const idx = Module._Rf_protect(Module._Rf_mkString(char));
-    const call = Module._Rf_protect(Module._Rf_lang3(RObject.dollarSymbol.ptr, this.ptr, idx));
-    const sub = RObject.wrap(Module._Rf_eval(call, RObject.baseEnv.ptr));
-    Module._Rf_unprotect(2);
-    Module._free(char);
-    return sub;
+    return this.#slice(prop, RObject.dollarSymbol.ptr);
+  }
+
+  #slice(prop: number | string, op: RPtr): RObject {
+    const prot = { n: 0 };
+
+    try {
+      const idx = new RObject(prop);
+      protectInc(idx, prot);
+
+      const call = Module._Rf_lang3(op, this.ptr, idx.ptr);
+      protectInc(call, prot);
+
+      return RObject.wrap(Module._Rf_eval(call, RObject.baseEnv.ptr));
+    } finally {
+      unprotect(prot.n);
+    }
   }
 
   pluck(...path: (string | number)[]): RObject | undefined {
