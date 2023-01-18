@@ -3,6 +3,7 @@ import { WebRPayload, isWebRPayload, isWebRPayloadPtr, isWebRPayloadRaw } from '
 import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw } from './robj';
 import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
 import { envPoke, parseEvalBare, protect, protectInc, unprotect } from './utils-r';
+import { protectWithIndex, reprotect, unprotectIndex } from './utils-r';
 import { isWebRDataTree, WebRDataTree, WebRDataTreeAtomic, WebRDataTreeNode } from './tree';
 import { WebRDataTreeNull, WebRDataTreeString, WebRDataTreeSymbol } from './tree';
 
@@ -249,15 +250,15 @@ export class RObject {
   }
 
   pluck(...path: (string | number)[]): RObject | undefined {
-    const pLoc = Module._malloc(4);
-    Module._R_ProtectWithIndex(RObject.null.ptr, pLoc);
+    const index = protectWithIndex(RObject.null);
 
     try {
-      const result = path.reduce((obj: RObject, prop: string | number): RObject => {
+      const getter = (obj: RObject, prop: string | number): RObject => {
         const out = obj.get(prop);
-        Module._R_Reprotect(out.ptr, Module.getValue(pLoc, 'i32'));
-        return out;
-      }, this);
+        return reprotect(out, index);
+      };
+      const result = path.reduce(getter, this);
+
       return result.isNull() ? undefined : result;
     } catch (err) {
       // Deal with subscript out of bounds error
@@ -266,8 +267,7 @@ export class RObject {
       }
       throw err;
     } finally {
-      unprotect(1);
-      Module._free(pLoc);
+      unprotectIndex(index);
     }
   }
 
