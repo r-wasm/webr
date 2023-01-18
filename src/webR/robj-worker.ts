@@ -57,29 +57,43 @@ function newObjectFromData(obj: WebRData): RObject {
   if (isComplex(obj)) {
     return new RComplex(obj);
   }
-
-  // JS arrays are interpreted using R's c() function, so as to match
-  // R's built in coercion rules
   if (Array.isArray(obj)) {
-    const objs = obj.map((el) => newObjectFromData(el));
-    const cString = Module.allocateUTF8('c');
-    const call = RObject.protect(
-      RPairlist.wrap(Module._Rf_allocVector(RTypeMap.call, objs.length + 1))
-    );
-    call.setcar(RObject.wrap(Module._Rf_install(cString)));
+    return newObjectFromArray(obj);
+  }
+
+  throw new Error('Robj construction for this JS object is not yet supported');
+}
+
+function newObjectFromArray(obj: WebRData[]) {
+  let nProt = 0;
+
+  try {
+    // JS arrays are interpreted using R's c() function, so as to match
+    // R's built in coercion rules
+    const objs = obj.map((el) => {
+      const out = protect(newObjectFromData(el));
+      ++nProt;
+      return out;
+    });
+
+    const call = RPairlist.wrap(Module._Rf_allocVector(RTypeMap.call, objs.length + 1));
+    protect(call);
+    ++nProt;
+
+    call.setcar(new RSymbol('c'));
+
     let next = call.cdr();
     let i = 0;
+
     while (!next.isNull()) {
       next.setcar(objs[i++]);
       next = next.cdr();
     }
-    const res = RObject.wrap(Module._Rf_eval(call.ptr, RObject.baseEnv.ptr));
-    RObject.unprotect(1);
-    Module._free(cString);
-    return res;
-  }
 
-  throw new Error('Robj construction for this JS object is not yet supported');
+    return RObject.wrap(Module._Rf_eval(call.ptr, RObject.baseEnv.ptr));
+  } finally {
+    unprotect(nProt);
+  }
 }
 
 // FIXME: Can we simplify this?
