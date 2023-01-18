@@ -272,32 +272,23 @@ export class RObject {
   }
 
   set(prop: string | number, value: RObject | WebRDataRaw) {
-    let idx: RPtr;
-    let char: RPtr = 0;
-    if (typeof prop === 'number') {
-      idx = Module._Rf_protect(Module._Rf_ScalarInteger(prop));
-    } else {
-      char = Module.allocateUTF8(prop);
-      idx = Module._Rf_protect(Module._Rf_mkString(char));
+    const prot = { n: 0 };
+
+    try {
+      const idx = new RObject(prop);
+      protectInc(idx, prot);
+
+      const valueObj = new RObject(value);
+      protectInc(valueObj, prot);
+
+      const assign = new RSymbol('[[<-');
+      const call = Module._Rf_lang4(assign.ptr, this.ptr, idx.ptr, valueObj.ptr);
+      protectInc(call, prot);
+
+      return RObject.wrap(Module._Rf_eval(call, RObject.baseEnv.ptr));
+    } finally {
+      unprotect(prot.n);
     }
-
-    const valueObj = isRObject(value) ? value : new RObject({ obj: value, payloadType: 'raw' });
-
-    const assign = Module.allocateUTF8('[[<-');
-    const call = Module._Rf_protect(
-      Module._Rf_lang4(Module._Rf_install(assign), this.ptr, idx, valueObj.ptr)
-    );
-    const val = RObject.wrap(Module._Rf_eval(call, RObject.baseEnv.ptr));
-
-    Module._Rf_unprotect(2);
-    if (char) Module._free(char);
-    Module._free(assign);
-
-    if (!isRObject(value)) {
-      valueObj.release();
-    }
-
-    return val;
   }
 
   static getMethods(obj: RObject) {
