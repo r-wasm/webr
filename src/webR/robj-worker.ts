@@ -83,6 +83,15 @@ export class RObject {
     return newObjectFromData(data);
   }
 
+  static wrap<T extends typeof RObject>(this: T, ptr: RPtr): InstanceType<T> {
+    const type = Module._TYPEOF(ptr);
+
+    return new (getRWorkerClass(type as RTypeNumber))({
+      payloadType: 'ptr',
+      obj: { ptr },
+    }) as InstanceType<T>;
+  }
+
   get [Symbol.toStringTag](): string {
     return `RObject:${this.type()}`;
   }
@@ -333,11 +342,6 @@ export class RObject {
     return RSymbol.wrap(Module.getValue(Module._R_NamesSymbol, '*'));
   }
 
-  static wrap(ptr: RPtr): RObject {
-    const type = Module._TYPEOF(ptr);
-    return new (getRWorkerClass(type as RTypeNumber))({ payloadType: 'ptr', obj: { ptr } });
-  }
-
   static protect<T extends RObject>(obj: T): T {
     return RObject.wrap(Module._Rf_protect(obj.ptr)) as T;
   }
@@ -365,20 +369,12 @@ export class RNull extends RObject {
     return this;
   }
 
-  static wrap(ptr: RPtr): RNull {
-    return RObject.wrap(ptr) as RNull;
-  }
-
   toTree(): WebRDataTreeNull {
     return { type: 'null' };
   }
 }
 
 export class RSymbol extends RObject {
-  static wrap(ptr: RPtr): RSymbol {
-    return RObject.wrap(ptr) as RSymbol;
-  }
-
   toTree(): WebRDataTreeSymbol {
     const obj = this.toObject();
     return {
@@ -430,10 +426,6 @@ export class RPairlist extends RObject {
     }
     list.setNames(names);
     super({ payloadType: 'ptr', obj: { ptr: list.ptr } });
-  }
-
-  static wrap(ptr: RPtr): RPairlist {
-    return RObject.wrap(ptr) as RPairlist;
   }
 
   get length(): number {
@@ -528,10 +520,6 @@ export class RList extends RObject {
     super({ payloadType: 'ptr', obj: { ptr } });
   }
 
-  static wrap(ptr: RPtr): RList {
-    return RObject.wrap(ptr) as RList;
-  }
-
   get length(): number {
     return Module._LENGTH(this.ptr);
   }
@@ -579,10 +567,6 @@ export class RList extends RObject {
 }
 
 export class RFunction extends RObject {
-  static wrap(ptr: RPtr): RFunction {
-    return RObject.wrap(ptr) as RFunction;
-  }
-
   exec(...args: (WebRDataRaw | RObject)[]): RObject {
     const argObjs = args.map((arg) =>
       isRObject(arg) ? arg : new RObject({ obj: arg, payloadType: 'raw' })
@@ -611,10 +595,6 @@ export class RFunction extends RObject {
 }
 
 export class RString extends RObject {
-  static wrap(ptr: RPtr): RString {
-    return RObject.wrap(ptr) as RString;
-  }
-
   toString(): string {
     return Module.UTF8ToString(Module._R_CHAR(this.ptr));
   }
@@ -647,10 +627,6 @@ export class REnvironment extends RObject {
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
     super({ payloadType: 'ptr', obj: { ptr } });
-  }
-
-  static wrap(ptr: RPtr): REnvironment {
-    return RObject.wrap(ptr) as REnvironment;
   }
 
   ls(all = false, sorted = true): string[] {
@@ -807,10 +783,6 @@ export class RLogical extends RVectorAtomic<boolean> {
     super({ payloadType: 'ptr', obj: { ptr } });
   }
 
-  static wrap(ptr: RPtr): RLogical {
-    return RObject.wrap(ptr) as RLogical;
-  }
-
   getBoolean(idx: number): boolean | null {
     return this.get(idx).toArray()[0];
   }
@@ -859,10 +831,6 @@ export class RInteger extends RVectorAtomic<number> {
     super({ payloadType: 'ptr', obj: { ptr } });
   }
 
-  static wrap(ptr: RPtr): RInteger {
-    return RObject.wrap(ptr) as RInteger;
-  }
-
   getNumber(idx: number): number | null {
     return this.get(idx).toArray()[0];
   }
@@ -906,10 +874,6 @@ export class RDouble extends RVectorAtomic<number> {
     super({ payloadType: 'ptr', obj: { ptr } });
   }
 
-  static wrap(ptr: RPtr): RDouble {
-    return RObject.wrap(ptr) as RDouble;
-  }
-
   getNumber(idx: number): number | null {
     return this.get(idx).toArray()[0];
   }
@@ -951,10 +915,6 @@ export class RComplex extends RVectorAtomic<Complex> {
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
     super({ payloadType: 'ptr', obj: { ptr } });
-  }
-
-  static wrap(ptr: RPtr): RComplex {
-    return RObject.wrap(ptr) as RComplex;
   }
 
   getComplex(idx: number): Complex | null {
@@ -1012,10 +972,6 @@ export class RCharacter extends RVectorAtomic<string> {
     super({ payloadType: 'ptr', obj: { ptr } });
   }
 
-  static wrap(ptr: RPtr): RCharacter {
-    return RObject.wrap(ptr) as RCharacter;
-  }
-
   getString(idx: number): string | null {
     return this.get(idx).toArray()[0];
   }
@@ -1064,10 +1020,6 @@ export class RRaw extends RVectorAtomic<number> {
     Module._Rf_unprotect(1);
     Module._R_PreserveObject(ptr);
     super({ payloadType: 'ptr', obj: { ptr } });
-  }
-
-  static wrap(ptr: RPtr): RRaw {
-    return RObject.wrap(ptr) as RRaw;
   }
 
   getNumber(idx: number): number | null {
