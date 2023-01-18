@@ -1,6 +1,19 @@
 import { Module, DictEmPtrs, dictEmFree } from './emscripten';
-import { WebRData } from './robj';
-import { RObject, REnvironment } from './robj-worker';
+import { RPtr, WebRData } from './robj';
+import { RObject, isRObject, REnvironment } from './robj-worker';
+
+export function protect<T extends RObject | RPtr>(x: T): T {
+  if (isRObject(x)) {
+    Module._Rf_protect(x.ptr);
+  } else {
+    Module._Rf_protect(x);
+  }
+  return x;
+}
+
+export function unprotect(n: number) {
+  Module._Rf_unprotect(n);
+}
 
 export function parseEvalBare(code: string, env: WebRData): RObject {
   const strings: DictEmPtrs = {};
