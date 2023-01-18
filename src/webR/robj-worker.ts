@@ -649,20 +649,35 @@ export class REnvironment extends RObject {
       super(val);
       return this;
     }
-    const { names, values } = toWebRData(val);
-    const ptr = Module._Rf_protect(Module._R_NewEnv(RObject.globalEnv.ptr, 0, 0));
-    values.forEach((v, i) => {
-      const name = names ? names[i] : null;
-      if (!name) {
-        throw new Error("Can't create object in new environment with empty symbol name");
-      }
-      const namePtr = Module.allocateUTF8(name);
-      Module._Rf_defineVar(Module._Rf_install(namePtr), new RObject(v).ptr, ptr);
-      Module._free(namePtr);
-    });
-    Module._Rf_unprotect(1);
-    Module._R_PreserveObject(ptr);
-    super({ payloadType: 'ptr', obj: { ptr } });
+
+    let nProt = 0;
+
+    try {
+      const { names, values } = toWebRData(val);
+
+      const ptr = protect(Module._R_NewEnv(RObject.globalEnv.ptr, 0, 0));
+      ++nProt;
+
+      values.forEach((v, i) => {
+        const name = names ? names[i] : null;
+        if (!name) {
+          throw new Error("Can't create object in new environment with empty symbol name");
+        }
+
+        const sym = new RSymbol(name);
+        const vObj = protect(new RObject(v));
+        try {
+          envPoke(ptr, sym, vObj);
+        } finally {
+          unprotect(1);
+        }
+      });
+
+      super({ payloadType: 'ptr', obj: { ptr } });
+      Module._R_PreserveObject(ptr);
+    } finally {
+      unprotect(nProt);
+    }
   }
 
   ls(all = false, sorted = true): string[] {
