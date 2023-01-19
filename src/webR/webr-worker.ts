@@ -110,6 +110,7 @@ function dispatch(msg: Message): void {
             });
             break;
           }
+
           case 'captureR': {
             const data = reqMsg.data as {
               code: string;
@@ -180,12 +181,16 @@ function dispatch(msg: Message): void {
             }
             break;
           }
+
           case 'evalR': {
             const data = reqMsg.data as {
               code: string;
               env?: WebRPayloadPtr;
             };
+
             const result = evalR(data.code, data.env);
+            keep(result);
+
             write({
               obj: {
                 type: result.type(),
@@ -196,14 +201,20 @@ function dispatch(msg: Message): void {
             });
             break;
           }
+
           case 'newRObject': {
             const data = reqMsg.data as {
               obj: WebRData;
               objType: RType | 'object';
             };
-            write(newRObject(data.obj, data.objType));
+
+            const payload = newRObject(data.obj, data.objType);
+            keep(payload.obj.ptr);
+
+            write(payload);
             break;
           }
+
           case 'callRObjectMethod': {
             const data = reqMsg.data as {
               payload?: WebRPayloadPtr;
@@ -211,13 +222,22 @@ function dispatch(msg: Message): void {
               args: WebRPayload[];
             };
             const obj = data.payload ? RObject.wrap(data.payload.obj.ptr) : RObject;
-            write(callRObjectMethod(obj, data.prop, data.args));
+
+            const payload = callRObjectMethod(obj, data.prop, data.args);
+            if (isWebRPayloadPtr(payload)) {
+              keep(payload.obj.ptr);
+            }
+
+            write(payload);
             break;
           }
+
           case 'installPackage': {
             const res = evalR(
               `webr::install("${reqMsg.data.name as string}", repos="${_config.PKG_URL}")`
             );
+            keep(res);
+
             write({
               obj: {
                 type: res.type(),
