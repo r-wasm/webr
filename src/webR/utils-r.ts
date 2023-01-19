@@ -1,5 +1,5 @@
 import { Module, DictEmPtrs, dictEmFree } from './emscripten';
-import { WebRData } from './robj';
+import { WebRData, RPtr } from './robj';
 import { RObject, REnvironment, RHandle, handlePtr } from './robj-worker';
 
 export function protect<T extends RHandle>(x: T): T {
@@ -10,6 +10,27 @@ export function protect<T extends RHandle>(x: T): T {
 export function protectInc<T extends RHandle>(x: T, prot: { n: number }): T {
   Module._Rf_protect(handlePtr(x));
   ++prot.n;
+  return x;
+}
+
+export function protectWithIndex(x: RHandle): { loc: number; ptr: RPtr } {
+  // Integer size hardcoded to 4 bytes. This is fine but is there a
+  // way to call sizeof?
+  const pLoc = Module._malloc(4);
+
+  Module._R_ProtectWithIndex(handlePtr(x), pLoc);
+  const loc = Module.getValue(pLoc, 'i32');
+
+  return { loc: loc, ptr: pLoc };
+}
+
+export function unprotectIndex(index: { ptr: RPtr }): void {
+  Module._Rf_unprotect(1);
+  Module._free(index.ptr);
+}
+
+export function reprotect<T extends RHandle>(x: T, index: { loc: number; ptr: RPtr }): T {
+  Module._R_Reprotect(handlePtr(x), index.loc);
   return x;
 }
 
