@@ -2,7 +2,7 @@ import { Module } from './emscripten';
 import { WebRPayload, isWebRPayload, isWebRPayloadPtr, isWebRPayloadRaw } from './payload';
 import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw } from './robj';
 import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
-import { envPoke, parseEvalBare, protect, unprotect } from './utils-r';
+import { envPoke, parseEvalBare, protect, protectInc, unprotect } from './utils-r';
 import { isWebRDataTree, WebRDataTree, WebRDataTreeAtomic, WebRDataTreeNode } from './tree';
 import { WebRDataTreeNull, WebRDataTreeString, WebRDataTreeSymbol } from './tree';
 
@@ -57,29 +57,38 @@ function newObjectFromData(obj: WebRData): RObject {
   if (isComplex(obj)) {
     return new RComplex(obj);
   }
-
-  // JS arrays are interpreted using R's c() function, so as to match
-  // R's built in coercion rules
   if (Array.isArray(obj)) {
-    const objs = obj.map((el) => newObjectFromData(el));
-    const cString = Module.allocateUTF8('c');
-    const call = RObject.protect(
-      RPairlist.wrap(Module._Rf_allocVector(RTypeMap.call, objs.length + 1))
-    );
-    call.setcar(RObject.wrap(Module._Rf_install(cString)));
+    return newObjectFromArray(obj);
+  }
+
+  throw new Error('Robj construction for this JS object is not yet supported');
+}
+
+// JS arrays are interpreted using R's c() function, so as to match
+// R's built in coercion rules
+function newObjectFromArray(arr: WebRData[]) {
+  const prot = { n: 0 };
+
+  try {
+    const objs = arr.map((el) => protectInc(newObjectFromData(el), prot));
+
+    const call = RPairlist.wrap(Module._Rf_allocVector(RTypeMap.call, objs.length + 1));
+    protectInc(call, prot);
+
+    call.setcar(new RSymbol('c'));
+
     let next = call.cdr();
     let i = 0;
+
     while (!next.isNull()) {
       next.setcar(objs[i++]);
       next = next.cdr();
     }
-    const res = RObject.wrap(Module._Rf_eval(call.ptr, RObject.baseEnv.ptr));
-    RObject.unprotect(1);
-    Module._free(cString);
-    return res;
-  }
 
-  throw new Error('Robj construction for this JS object is not yet supported');
+    return RObject.wrap(Module._Rf_eval(call.ptr, RObject.baseEnv.ptr));
+  } finally {
+    unprotect(prot.n);
+  }
 }
 
 // FIXME: Can we simplify this?

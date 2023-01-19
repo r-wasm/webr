@@ -7,6 +7,12 @@ export function protect<T extends RHandle>(x: T): T {
   return x;
 }
 
+export function protectInc<T extends RHandle>(x: T, prot: { n: number }): T {
+  Module._Rf_protect(handlePtr(x));
+  ++prot.n;
+  return x;
+}
+
 export function unprotect(n: number) {
   Module._Rf_unprotect(n);
 }
