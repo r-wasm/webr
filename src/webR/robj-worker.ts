@@ -117,7 +117,9 @@ export class RObject {
     } finally {
       // FIXME: Shouldn't preserve in the constructor, only in channel
       // messages
-      keep(this.ptr);
+      if (this.ptr) {
+        keep(this.ptr);
+      }
     }
   }
 
