@@ -524,10 +524,10 @@ describe('Garbage collection', () => {
     const before = await ((await gc.exec(false, false, true)) as RDouble).toTypedArray();
 
     const mem = await webR.evalR('rnorm(10000,1,1)');
-    mem.preserve();
+    mem.destroy();
+
     const during = await ((await gc.exec(false, false, true)) as RDouble).toTypedArray();
 
-    mem.release();
     const after = await ((await gc.exec(false, false, true)) as RDouble).toTypedArray();
 
     expect(during[0]).toBeGreaterThan(before[0]);
