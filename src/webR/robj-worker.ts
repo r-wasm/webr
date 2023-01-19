@@ -564,15 +564,25 @@ export class RList extends RObject {
       super(val);
       return this;
     }
-    const { names, values } = toWebRData(val);
-    const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.list, values.length));
-    values.forEach((v, i) => {
-      Module._SET_VECTOR_ELT(ptr, i, new RObject(v).ptr);
-    });
-    RObject.wrap(ptr).setNames(names);
-    Module._Rf_unprotect(1);
-    Module._R_PreserveObject(ptr);
-    super({ payloadType: 'ptr', obj: { ptr } });
+
+    const prot = { n: 0 };
+
+    try {
+      const { names, values } = toWebRData(val);
+      const ptr = Module._Rf_allocVector(RTypeMap.list, values.length);
+      protectInc(ptr, prot);
+
+      values.forEach((v, i) => {
+        Module._SET_VECTOR_ELT(ptr, i, new RObject(v).ptr);
+      });
+
+      RObject.wrap(ptr).setNames(names);
+
+      super({ payloadType: 'ptr', obj: { ptr } });
+      keep(ptr);
+    } finally {
+      unprotect(prot.n);
+    }
   }
 
   get length(): number {
