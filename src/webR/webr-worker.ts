@@ -323,10 +323,8 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
     const tPtr = RObject.true.ptr;
     const fPtr = RObject.false.ptr;
 
-    strings.code = Module.allocateUTF8(code);
     strings.eval = Module.allocateUTF8('webr::eval_r');
-
-    const codeObj = new RObject({ payloadType: 'raw', obj: code });
+    const codeObj = new RObject(code);
     Module._Rf_protect(codeObj.ptr);
     ++nProt;
 

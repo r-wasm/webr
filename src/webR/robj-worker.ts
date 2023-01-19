@@ -1,5 +1,4 @@
 import { Module } from './emscripten';
-import { WebRPayload, isWebRPayload, isWebRPayloadPtr, isWebRPayloadRaw } from './payload';
 import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw } from './robj';
 import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
 import { envPoke, parseEvalBare, protect, protectInc, unprotect } from './utils-r';
@@ -92,26 +91,20 @@ function newObjectFromArray(arr: WebRData[]) {
   }
 }
 
-// FIXME: Can we simplify this?
-// Do we need to take payloads?
-export type RObjectData = WebRPayload | WebRData;
-
-export class RObject {
+export class RObjectBase {
   ptr: RPtr;
+  constructor(ptr: RPtr) {
+    this.ptr = ptr;
+  }
+}
 
-  constructor(data: RObjectData) {
-    this.ptr = 0;
+export class RObject extends RObjectBase {
+  constructor(data: WebRData) {
+    super(0);
     try {
-      if (isRObject(data)) {
+      if (data instanceof RObjectBase) {
         this.ptr = data.ptr;
         return this;
-      }
-      if (isWebRPayloadPtr(data)) {
-        this.ptr = data.obj.ptr;
-        return this;
-      }
-      if (isWebRPayloadRaw(data)) {
-        return newObjectFromData(data.obj);
       }
       return newObjectFromData(data);
     } finally {
@@ -125,11 +118,7 @@ export class RObject {
 
   static wrap<T extends typeof RObject>(this: T, ptr: RPtr): InstanceType<T> {
     const type = Module._TYPEOF(ptr);
-
-    return new (getRWorkerClass(type as RTypeNumber))({
-      payloadType: 'ptr',
-      obj: { ptr },
-    }) as InstanceType<T>;
+    return new (getRWorkerClass(type as RTypeNumber))(new RObjectBase(ptr)) as InstanceType<T>;
   }
 
   get [Symbol.toStringTag](): string {
@@ -395,7 +384,7 @@ export class RObject {
 
 export class RNull extends RObject {
   constructor() {
-    super({ payloadType: 'ptr', obj: { ptr: Module.getValue(Module._R_NilValue, '*') } });
+    super(new RObjectBase(Module.getValue(Module._R_NilValue, '*')));
     return this;
   }
 
@@ -408,16 +397,14 @@ export class RSymbol extends RObject {
   // Note that symbols don't need to be protected. This also means
   // that allocating symbols in loops with random data is probably a
   // bad idea because this leaks memory.
-  constructor(x: string) {
-    if (typeof x !== 'string') {
+  constructor(x: RObject | string) {
+    if (x instanceof RObjectBase) {
       super(x);
       return;
     }
-
     const name = Module.allocateUTF8(x);
-
     try {
-      super(RObject.wrap(Module._Rf_install(name)));
+      super(new RObjectBase(Module._Rf_install(name)));
     } finally {
       Module._free(name);
     }
@@ -461,8 +448,8 @@ export class RSymbol extends RObject {
 }
 
 export class RPairlist extends RObject {
-  constructor(val: WebRPayload | WebRData) {
-    if (isWebRPayload(val) || isRObject(val)) {
+  constructor(val: WebRData) {
+    if (val instanceof RObjectBase) {
       super(val);
       return this;
     }
@@ -484,7 +471,7 @@ export class RPairlist extends RObject {
       }
 
       list.setNames(names);
-      super({ payloadType: 'ptr', obj: { ptr: list.ptr } });
+      super(list);
     } finally {
       unprotect(prot.n);
     }
@@ -566,8 +553,8 @@ export class RPairlist extends RObject {
 }
 
 export class RList extends RObject {
-  constructor(val: WebRPayload | WebRData) {
-    if (isWebRPayload(val) || isRObject(val)) {
+  constructor(val: WebRData) {
+    if (val instanceof RObjectBase) {
       super(val);
       return this;
     }
@@ -585,7 +572,7 @@ export class RList extends RObject {
 
       RObject.wrap(ptr).setNames(names);
 
-      super({ payloadType: 'ptr', obj: { ptr } });
+      super(new RObjectBase(ptr));
     } finally {
       unprotect(prot.n);
     }
@@ -665,8 +652,8 @@ export class RFunction extends RObject {
 
 export class RString extends RObject {
   // Unlike symbols, strings are not cached and must thus be protected
-  constructor(x: WebRPayload | WebRData = {}) {
-    if (typeof x !== 'string') {
+  constructor(x: RObject | string) {
+    if (x instanceof RObjectBase) {
       super(x);
       return;
     }
@@ -674,7 +661,7 @@ export class RString extends RObject {
     const name = Module.allocateUTF8(x);
 
     try {
-      super(RObject.wrap(Module._Rf_mkChar(name)));
+      super(new RObjectBase(Module._Rf_mkChar(name)));
     } finally {
       Module._free(name);
     }
@@ -693,12 +680,11 @@ export class RString extends RObject {
 }
 
 export class REnvironment extends RObject {
-  constructor(val: WebRPayload | WebRData = {}) {
-    if (isWebRPayload(val) || isRObject(val)) {
+  constructor(val: WebRData = {}) {
+    if (val instanceof RObjectBase) {
       super(val);
       return this;
     }
-
     let nProt = 0;
 
     try {
@@ -722,7 +708,7 @@ export class REnvironment extends RObject {
         }
       });
 
-      super({ payloadType: 'ptr', obj: { ptr } });
+      super(new RObjectBase(ptr));
     } finally {
       unprotect(nProt);
     }
@@ -733,7 +719,7 @@ export class REnvironment extends RObject {
     return ls.toArray() as string[];
   }
 
-  bind(name: string, value: RObjectData): void {
+  bind(name: string, value: WebRData): void {
     const sym = new RSymbol(name);
     const valueObj = protect(new RObject(value));
 
@@ -800,11 +786,11 @@ export type atomicType = number | boolean | Complex | string;
 
 abstract class RVectorAtomic<T extends atomicType> extends RObject {
   constructor(
-    val: WebRPayload | WebRDataAtomic<T>,
+    val: WebRDataAtomic<T>,
     kind: RTypeNumber,
     newSetter: (ptr: RPtr) => (v: any, i: number) => void
   ) {
-    if (isWebRPayload(val) || isRObject(val)) {
+    if (val instanceof RObjectBase) {
       super(val);
       return this;
     }
@@ -820,7 +806,7 @@ abstract class RVectorAtomic<T extends atomicType> extends RObject {
       values.forEach(newSetter(ptr));
       RObject.wrap(ptr).setNames(names);
 
-      super({ payloadType: 'ptr', obj: { ptr } });
+      super(new RObjectBase(ptr));
     } finally {
       unprotect(prot.n);
     }
@@ -900,7 +886,7 @@ abstract class RVectorAtomic<T extends atomicType> extends RObject {
 }
 
 export class RLogical extends RVectorAtomic<boolean> {
-  constructor(val: WebRPayload | WebRDataAtomic<boolean>) {
+  constructor(val: WebRDataAtomic<boolean>) {
     super(val, RTypeMap.logical, RLogical.#newSetter);
   }
 
@@ -943,7 +929,7 @@ export class RLogical extends RVectorAtomic<boolean> {
 }
 
 export class RInteger extends RVectorAtomic<number> {
-  constructor(val: WebRPayload | WebRDataAtomic<number>) {
+  constructor(val: WebRDataAtomic<number>) {
     super(val, RTypeMap.integer, RInteger.#newSetter);
   }
 
@@ -981,7 +967,7 @@ export class RInteger extends RVectorAtomic<number> {
 }
 
 export class RDouble extends RVectorAtomic<number> {
-  constructor(val: WebRPayload | WebRDataAtomic<number>) {
+  constructor(val: WebRDataAtomic<number>) {
     super(val, RTypeMap.double, RDouble.#newSetter);
   }
 
@@ -1016,7 +1002,7 @@ export class RDouble extends RVectorAtomic<number> {
 }
 
 export class RComplex extends RVectorAtomic<Complex> {
-  constructor(val: WebRPayload | WebRDataAtomic<Complex>) {
+  constructor(val: WebRDataAtomic<Complex>) {
     super(val, RTypeMap.complex, RComplex.#newSetter);
   }
 
@@ -1062,7 +1048,7 @@ export class RComplex extends RVectorAtomic<Complex> {
 }
 
 export class RCharacter extends RVectorAtomic<string> {
-  constructor(val: WebRPayload | WebRDataAtomic<string>) {
+  constructor(val: WebRDataAtomic<string>) {
     super(val, RTypeMap.character, RCharacter.#newSetter);
   }
 
@@ -1108,7 +1094,7 @@ export class RCharacter extends RVectorAtomic<string> {
 }
 
 export class RRaw extends RVectorAtomic<number> {
-  constructor(val: WebRPayload | WebRDataAtomic<number>) {
+  constructor(val: WebRDataAtomic<number>) {
     super(val, RTypeMap.raw, RRaw.#newSetter);
   }
 
@@ -1202,5 +1188,5 @@ export function getRWorkerClass(type: RTypeNumber): typeof RObject {
  * @return {boolean} True if the object is an instance of an RObject.
  */
 export function isRObject(value: any): value is RObject {
-  return value && typeof value === 'object' && 'type' in value && 'toJs' in value;
+  return value instanceof RObject;
 }

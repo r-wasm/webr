@@ -68,6 +68,7 @@ export type NamedObject<T> = { [key: string]: T };
  */
 export type WebRData =
   | RMain.RObject
+  | RWorker.RObjectBase
   | RWorker.RObject
   | WebRDataRaw
   | WebRDataTree
