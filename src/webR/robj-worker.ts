@@ -633,29 +633,27 @@ export class RList extends RObject {
 
 export class RFunction extends RObject {
   exec(...args: (WebRDataRaw | RObject)[]): RObject {
-    const argObjs = args.map((arg) =>
-      isRObject(arg) ? arg : new RObject({ obj: arg, payloadType: 'raw' })
-    );
-    const call = RObject.protect(
-      RPairlist.wrap(Module._Rf_allocVector(RTypeMap.call, args.length + 1))
-    );
-    call.setcar(this);
-    let c = call.cdr();
-    let i = 0;
-    while (!c.isNull()) {
-      c.setcar(argObjs[i++]);
-      c = c.cdr();
-    }
-    const res = RObject.wrap(Module._Rf_eval(call.ptr, RObject.baseEnv.ptr));
-    RObject.unprotect(1);
+    const prot = { n: 0 };
 
-    argObjs.forEach((argObj, idx) => {
-      if (!isRObject(args[idx])) {
-        argObj.release();
+    try {
+      const argObjs = args.map((arg) => protectInc(new RObject(arg), prot));
+
+      const call = RPairlist.wrap(Module._Rf_allocVector(RTypeMap.call, args.length + 1));
+      protectInc(call, prot);
+
+      call.setcar(this);
+
+      let c = call.cdr();
+      let i = 0;
+      while (!c.isNull()) {
+        c.setcar(argObjs[i++]);
+        c = c.cdr();
       }
-    });
 
-    return res;
+      return RObject.wrap(Module._Rf_eval(call.ptr, RObject.baseEnv.ptr));
+    } finally {
+      unprotect(prot.n);
+    }
   }
 }
 
