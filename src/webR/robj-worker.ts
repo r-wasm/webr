@@ -795,13 +795,20 @@ abstract class RVectorAtomic<T extends atomicType> extends RObject {
   }
 
   detectMissing(): boolean[] {
-    const isna = Module.allocateUTF8('is.na');
-    const call = Module._Rf_protect(Module._Rf_lang2(Module._Rf_install(isna), this.ptr));
-    const val = RLogical.wrap(Module._Rf_protect(Module._Rf_eval(call, RObject.baseEnv.ptr)));
-    const ret = val.toTypedArray();
-    RObject.unprotect(2);
-    Module._free(isna);
-    return Array.from(ret).map((elt) => Boolean(elt));
+    const prot = { n: 0 };
+
+    try {
+      const call = Module._Rf_lang2(new RSymbol('is.na').ptr, this.ptr);
+      protectInc(call, prot);
+
+      const val = RLogical.wrap(Module._Rf_eval(call, RObject.baseEnv.ptr));
+      protectInc(val, prot);
+
+      const ret = val.toTypedArray();
+      return Array.from(ret).map((elt) => Boolean(elt));
+    } finally {
+      unprotect(prot.n);
+    }
   }
 
   abstract toTypedArray(): TypedArray;
