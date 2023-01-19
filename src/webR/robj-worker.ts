@@ -101,18 +101,24 @@ export class RObject {
 
   constructor(data: RObjectData) {
     this.ptr = 0;
-    if (isRObject(data)) {
-      this.ptr = data.ptr;
-      return this;
+    try {
+      if (isRObject(data)) {
+        this.ptr = data.ptr;
+        return this;
+      }
+      if (isWebRPayloadPtr(data)) {
+        this.ptr = data.obj.ptr;
+        return this;
+      }
+      if (isWebRPayloadRaw(data)) {
+        return newObjectFromData(data.obj);
+      }
+      return newObjectFromData(data);
+    } finally {
+      // FIXME: Shouldn't preserve in the constructor, only in channel
+      // messages
+      keep(this.ptr);
     }
-    if (isWebRPayloadPtr(data)) {
-      this.ptr = data.obj.ptr;
-      return this;
-    }
-    if (isWebRPayloadRaw(data)) {
-      return newObjectFromData(data.obj);
-    }
-    return newObjectFromData(data);
   }
 
   static wrap<T extends typeof RObject>(this: T, ptr: RPtr): InstanceType<T> {
@@ -477,7 +483,6 @@ export class RPairlist extends RObject {
 
       list.setNames(names);
       super({ payloadType: 'ptr', obj: { ptr: list.ptr } });
-      keep(this);
     } finally {
       unprotect(prot.n);
     }
@@ -579,7 +584,6 @@ export class RList extends RObject {
       RObject.wrap(ptr).setNames(names);
 
       super({ payloadType: 'ptr', obj: { ptr } });
-      keep(ptr);
     } finally {
       unprotect(prot.n);
     }
@@ -701,7 +705,6 @@ export class REnvironment extends RObject {
       });
 
       super({ payloadType: 'ptr', obj: { ptr } });
-      keep(ptr);
     } finally {
       unprotect(nProt);
     }

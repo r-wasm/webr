@@ -477,7 +477,10 @@ describe('Garbage collection', () => {
     expect(during[1]).toBeGreaterThan(before[1]);
 
     // TODO: For some reason `exec()` causes this test to fail after
-    // switching to protect()
+    // switching to protect(). Also we now temporarily call `keep()`
+    // from `new RObject()` so there's bound to be leaks until this is
+    // moved to the channel (for instance this causes new symbols to
+    // be preserved).
     expect(after[0]).toBeLessThan(during[0]);
 
     expect(after[1]).toBeLessThan(during[1]);
