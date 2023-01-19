@@ -17,9 +17,9 @@ export function protectWithIndex(x: RHandle): { loc: number; ptr: RPtr } {
   // Integer size hardcoded to 4 bytes. This is fine but is there a
   // way to call sizeof?
   const pLoc = Module._malloc(4);
-  const loc = Module.getValue(pLoc, 'i32');
 
   Module._R_ProtectWithIndex(handlePtr(x), pLoc);
+  const loc = Module.getValue(pLoc, 'i32');
 
   return { loc: loc, ptr: pLoc };
 }
@@ -30,8 +30,7 @@ export function unprotectIndex(index: { ptr: RPtr }): void {
 }
 
 export function reprotect<T extends RHandle>(x: T, index: { loc: number; ptr: RPtr }): T {
-  // Weird: Supplying `index.loc` causes an error. What did I do wrong?
-  Module._R_Reprotect(handlePtr(x), Module.getValue(index.ptr, 'i32'));
+  Module._R_Reprotect(handlePtr(x), index.loc);
   return x;
 }
 
