@@ -662,6 +662,22 @@ export class RFunction extends RObject {
 }
 
 export class RString extends RObject {
+  // Unlike symbols, strings are not cached and must thus be protected
+  constructor(x: string) {
+    if (typeof x !== 'string') {
+      super(x);
+      return;
+    }
+
+    const name = Module.allocateUTF8(x);
+
+    try {
+      super(RObject.wrap(Module._Rf_mkChar(name)));
+    } finally {
+      Module._free(name);
+    }
+  }
+
   toString(): string {
     return Module.UTF8ToString(Module._R_CHAR(this.ptr));
   }
@@ -1094,10 +1110,7 @@ export class RCharacter extends RVectorAtomic<string> {
         if (v === null) {
           Module._SET_STRING_ELT(ptr, i, RObject.naString.ptr);
         } else {
-          // TODO: Simplify with `new RString()`
-          const str = Module.allocateUTF8(String(v));
-          Module._SET_STRING_ELT(ptr, i, Module._Rf_mkChar(str));
-          Module._free(str);
+          Module._SET_STRING_ELT(ptr, i, new RString(v).ptr);
         }
       });
 
