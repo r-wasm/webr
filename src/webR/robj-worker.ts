@@ -27,7 +27,7 @@ function assertRType(obj: RObjectBase, type: RType) {
 // thread. Currently uses the precious list but could use a different
 // mechanism in the future. Unprotection is explicit through
 // `RObject.free()`.
-function keep(x: RHandle) {
+export function keep(x: RHandle) {
   Module._R_PreserveObject(handlePtr(x));
 }
 

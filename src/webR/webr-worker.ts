@@ -7,7 +7,9 @@ import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
 import { RObject, isRObject, REnvironment, RList, getRWorkerClass } from './robj-worker';
+import { RCharacter, RString, keep } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
+import { protectInc, unprotect } from './utils-r';
 
 let initialised = false;
 let chan: ChannelWorker | undefined;
@@ -114,15 +116,68 @@ function dispatch(msg: Message): void {
               env?: WebRPayloadPtr;
               options: CaptureROptions;
             };
-            const capture = captureR(data.code, data.env, data.options);
-            write({
-              obj: {
-                type: capture.type(),
-                ptr: capture.ptr,
-                methods: RObject.getMethods(capture),
-              },
-              payloadType: 'ptr',
-            });
+
+            const prot = { n: 0 };
+
+            try {
+              const capture = captureR(data.code, data.env, data.options);
+              protectInc(capture, prot);
+
+              const result = capture.get('result');
+              const outputs = capture.get(2) as RList;
+
+              keep(result);
+
+              const n = outputs.length;
+              const output: any[] = [];
+
+              for (let i = 1; i < n + 1; ++i) {
+                const out = outputs.get(i);
+                const type = (out.pluck(1, 1) as RCharacter).toString();
+                const data = out.get(2);
+
+                if (type === 'stdout' || type === 'stderr') {
+                  const msg = (data as RString).toString();
+                  output.push({ type, data: msg });
+                } else {
+                  keep(data);
+                  const payload = {
+                    obj: {
+                      ptr: data.ptr,
+                      type: data.type(),
+                      methods: RObject.getMethods(data),
+                    },
+                    payloadType: 'ptr',
+                  } as WebRPayloadPtr;
+                  output.push({ type, data: payload });
+                }
+              }
+
+              const resultPayload = {
+                payloadType: 'ptr',
+                obj: {
+                  ptr: result.ptr,
+                  type: result.type(),
+                  methods: RObject.getMethods(result),
+                },
+              } as WebRPayloadPtr;
+
+              write({
+                payloadType: 'raw',
+                obj: {
+                  result: resultPayload,
+                  output: output,
+                },
+              });
+            } catch (_e) {
+              const e = _e as Error;
+              write({
+                payloadType: 'err',
+                obj: { name: e.name, message: e.message, stack: e.stack },
+              });
+            } finally {
+              unprotect(prot.n);
+            }
             break;
           }
           case 'evalR': {
