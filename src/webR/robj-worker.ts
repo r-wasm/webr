@@ -525,7 +525,7 @@ export class RPairlist extends RObject {
         namesArray.push('');
       } else {
         hasNames = true;
-        namesArray.push(symbol.printname().toString());
+        namesArray.push(symbol.toString());
       }
       if (options.depth && depth >= options.depth) {
         values.push(next.car());
