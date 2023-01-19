@@ -459,18 +459,28 @@ export class RPairlist extends RObject {
       return this;
     }
 
-    const { names, values } = toWebRData(val);
-    const list = RPairlist.wrap(Module._Rf_allocList(values.length));
-    list.preserve();
-    for (
-      let [i, next] = [0, list as Nullable<RPairlist>];
-      !next.isNull();
-      [i, next] = [i + 1, next.cdr()]
-    ) {
-      next.setcar(new RObject(values[i]));
+    const prot = { n: 0 };
+
+    try {
+      const { names, values } = toWebRData(val);
+
+      const list = RPairlist.wrap(Module._Rf_allocList(values.length));
+      protectInc(list, prot);
+
+      for (
+        let [i, next] = [0, list as Nullable<RPairlist>];
+        !next.isNull();
+        [i, next] = [i + 1, next.cdr()]
+      ) {
+        next.setcar(new RObject(values[i]));
+      }
+
+      list.setNames(names);
+      super({ payloadType: 'ptr', obj: { ptr: list.ptr } });
+      keep(this);
+    } finally {
+      unprotect(prot.n);
     }
-    list.setNames(names);
-    super({ payloadType: 'ptr', obj: { ptr: list.ptr } });
   }
 
   get length(): number {
