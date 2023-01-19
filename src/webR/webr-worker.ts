@@ -2,14 +2,14 @@ import { loadScript } from './compat';
 import { newChannelWorker, ChannelWorker, ChannelInitMessage } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions, CaptureROptions } from './webr-main';
-import { Module, DictEmPtrs, dictEmFree } from './emscripten';
+import { Module } from './emscripten';
 import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
 import { RObject, isRObject, REnvironment, RList, getRWorkerClass } from './robj-worker';
 import { RCharacter, RString, keep } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
-import { protectInc, unprotect } from './utils-r';
+import { protectInc, unprotect, parseEvalBare } from './utils-r';
 
 let initialised = false;
 let chan: ChannelWorker | undefined;
@@ -347,13 +347,7 @@ function callRObjectMethod(
 }
 
 function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions = {}): RList {
-  /*
-    This is a sensitive area of the code where we want to be careful to avoid
-    leaking objects when an exception is thrown. Here we keep track of our use
-    of protect and ensure a balanced unprotect is called using try-finally.
-  */
-  let nProt = 0;
-  const strings: DictEmPtrs = {};
+  const prot = { n: 0 };
 
   try {
     const _options: Required<CaptureROptions> = Object.assign(
@@ -378,25 +372,24 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
     const tPtr = RObject.true.ptr;
     const fPtr = RObject.false.ptr;
 
-    strings.eval = Module.allocateUTF8('webr::eval_r');
-    const codeObj = new RObject(code);
-    Module._Rf_protect(codeObj.ptr);
-    ++nProt;
+    const fn = parseEvalBare('webr::eval_r', RObject.baseEnv);
+    protectInc(fn, prot);
 
-    const expr = Module._Rf_lang6(
-      Module._R_ParseEvalString(strings.eval, RObject.baseEnv.ptr),
+    const codeObj = new RCharacter(code);
+    protectInc(codeObj, prot);
+
+    const call = Module._Rf_lang6(
+      fn.ptr,
       codeObj.ptr,
       _options.captureConditions ? tPtr : fPtr,
       _options.captureStreams ? tPtr : fPtr,
       _options.withAutoprint ? tPtr : fPtr,
       _options.withHandlers ? tPtr : fPtr
     );
+    protectInc(call, prot);
 
-    const capturePtr = Module._Rf_eval(expr, envObj.ptr);
-    Module._Rf_protect(capturePtr);
-    ++nProt;
-
-    const capture = RList.wrap(capturePtr);
+    const capture = RList.wrap(Module._Rf_eval(call, envObj.ptr));
+    protectInc(capture, prot);
 
     if (_options.captureConditions && _options.throwJsException) {
       const output = capture.get('output') as RList;
@@ -412,8 +405,7 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
 
     return capture;
   } finally {
-    dictEmFree(strings);
-    Module._Rf_unprotect(nProt);
+    unprotect(prot.n);
   }
 }
 
