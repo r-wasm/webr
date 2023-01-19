@@ -799,6 +799,33 @@ type TypedArray =
 export type atomicType = number | boolean | Complex | string;
 
 abstract class RVectorAtomic<T extends atomicType> extends RObject {
+  constructor(
+    val: WebRPayload | WebRDataAtomic<T>,
+    kind: RTypeNumber,
+    newSetter: (ptr: RPtr) => (v: any, i: number) => void
+  ) {
+    if (isWebRPayload(val) || isRObject(val)) {
+      super(val);
+      return this;
+    }
+
+    const prot = { n: 0 };
+
+    try {
+      const { names, values } = toWebRData(val);
+
+      const ptr = Module._Rf_allocVector(kind, values.length);
+      protectInc(ptr, prot);
+
+      values.forEach(newSetter(ptr));
+      RObject.wrap(ptr).setNames(names);
+
+      super({ payloadType: 'ptr', obj: { ptr } });
+    } finally {
+      unprotect(prot.n);
+    }
+  }
+
   get length(): number {
     return Module._LENGTH(this.ptr);
   }
@@ -874,30 +901,16 @@ abstract class RVectorAtomic<T extends atomicType> extends RObject {
 
 export class RLogical extends RVectorAtomic<boolean> {
   constructor(val: WebRPayload | WebRDataAtomic<boolean>) {
-    if (isWebRPayload(val) || isRObject(val)) {
-      super(val);
-      return this;
-    }
-
-    const prot = { n: 0 };
-
-    try {
-      const { names, values } = toWebRData(val);
-
-      const ptr = Module._Rf_allocVector(RTypeMap.logical, values.length);
-      protectInc(ptr, prot);
-
-      const data = Module._LOGICAL(ptr);
-      values.forEach((v, i) =>
-        Module.setValue(data + 4 * i, v === null ? RObject.naLogical : Boolean(v), 'i32')
-      );
-
-      RObject.wrap(ptr).setNames(names);
-      super({ payloadType: 'ptr', obj: { ptr } });
-    } finally {
-      unprotect(prot.n);
-    }
+    super(val, RTypeMap.logical, RLogical.#newSetter);
   }
+
+  static #newSetter = (ptr: RPtr) => {
+    const data = Module._LOGICAL(ptr);
+
+    return (v: null | boolean, i: number) => {
+      Module.setValue(data + 4 * i, v === null ? RObject.naLogical : Boolean(v), 'i32');
+    };
+  };
 
   getBoolean(idx: number): boolean | null {
     return this.get(idx).toArray()[0];
@@ -931,31 +944,16 @@ export class RLogical extends RVectorAtomic<boolean> {
 
 export class RInteger extends RVectorAtomic<number> {
   constructor(val: WebRPayload | WebRDataAtomic<number>) {
-    if (isWebRPayload(val) || isRObject(val)) {
-      super(val);
-      return this;
-    }
-
-    const prot = { n: 0 };
-
-    try {
-      const { names, values } = toWebRData(val);
-
-      const ptr = Module._Rf_allocVector(RTypeMap.integer, values.length);
-      protectInc(ptr, prot);
-
-      const data = Module._INTEGER(ptr);
-      values.forEach((v, i) =>
-        Module.setValue(data + 4 * i, v === null ? RObject.naInteger : Math.round(Number(v)), 'i32')
-      );
-
-      RObject.wrap(ptr).setNames(names);
-
-      super({ payloadType: 'ptr', obj: { ptr } });
-    } finally {
-      unprotect(prot.n);
-    }
+    super(val, RTypeMap.integer, RInteger.#newSetter);
   }
+
+  static #newSetter = (ptr: RPtr) => {
+    const data = Module._INTEGER(ptr);
+
+    return (v: null | number, i: number) => {
+      Module.setValue(data + 4 * i, v === null ? RObject.naInteger : Math.round(Number(v)), 'i32');
+    };
+  };
 
   getNumber(idx: number): number | null {
     return this.get(idx).toArray()[0];
@@ -984,31 +982,16 @@ export class RInteger extends RVectorAtomic<number> {
 
 export class RDouble extends RVectorAtomic<number> {
   constructor(val: WebRPayload | WebRDataAtomic<number>) {
-    if (isWebRPayload(val) || isRObject(val)) {
-      super(val);
-      return this;
-    }
-
-    const prot = { n: 0 };
-
-    try {
-      const { names, values } = toWebRData(val);
-
-      const ptr = Module._Rf_allocVector(RTypeMap.double, values.length);
-      protectInc(ptr, prot);
-
-      const data = Module._REAL(ptr);
-      values.forEach((v, i) =>
-        Module.setValue(data + 8 * i, v === null ? RObject.naDouble : v, 'double')
-      );
-
-      RObject.wrap(ptr).setNames(names);
-
-      super({ payloadType: 'ptr', obj: { ptr } });
-    } finally {
-      unprotect(prot.n);
-    }
+    super(val, RTypeMap.double, RDouble.#newSetter);
   }
+
+  static #newSetter = (ptr: RPtr) => {
+    const data = Module._REAL(ptr);
+
+    return (v: null | number, i: number) => {
+      Module.setValue(data + 8 * i, v === null ? RObject.naDouble : v, 'double');
+    };
+  };
 
   getNumber(idx: number): number | null {
     return this.get(idx).toArray()[0];
@@ -1034,32 +1017,17 @@ export class RDouble extends RVectorAtomic<number> {
 
 export class RComplex extends RVectorAtomic<Complex> {
   constructor(val: WebRPayload | WebRDataAtomic<Complex>) {
-    if (isWebRPayload(val) || isRObject(val)) {
-      super(val);
-      return this;
-    }
-
-    const prot = { n: 0 };
-
-    try {
-      const { names, values } = toWebRData(val);
-
-      const ptr = Module._Rf_allocVector(RTypeMap.complex, values.length);
-      protectInc(ptr, prot);
-
-      const data = Module._COMPLEX(ptr);
-      values.forEach((v, i) => {
-        Module.setValue(data + 8 * (2 * i), v === null ? RObject.naDouble : v.re, 'double');
-        Module.setValue(data + 8 * (2 * i + 1), v === null ? RObject.naDouble : v.im, 'double');
-      });
-
-      RObject.wrap(ptr).setNames(names);
-
-      super({ payloadType: 'ptr', obj: { ptr } });
-    } finally {
-      unprotect(prot.n);
-    }
+    super(val, RTypeMap.complex, RComplex.#newSetter);
   }
+
+  static #newSetter = (ptr: RPtr) => {
+    const data = Module._COMPLEX(ptr);
+
+    return (v: null | Complex, i: number) => {
+      Module.setValue(data + 8 * (2 * i), v === null ? RObject.naDouble : v.re, 'double');
+      Module.setValue(data + 8 * (2 * i + 1), v === null ? RObject.naDouble : v.im, 'double');
+    };
+  };
 
   getComplex(idx: number): Complex | null {
     return this.get(idx).toArray()[0];
@@ -1095,34 +1063,18 @@ export class RComplex extends RVectorAtomic<Complex> {
 
 export class RCharacter extends RVectorAtomic<string> {
   constructor(val: WebRPayload | WebRDataAtomic<string>) {
-    if (isWebRPayload(val) || isRObject(val)) {
-      super(val);
-      return this;
-    }
-
-    const prot = { n: 0 };
-
-    try {
-      const { names, values } = toWebRData(val);
-
-      const ptr = Module._Rf_allocVector(RTypeMap.character, values.length);
-      protectInc(ptr, prot);
-
-      values.forEach((v, i) => {
-        if (v === null) {
-          Module._SET_STRING_ELT(ptr, i, RObject.naString.ptr);
-        } else {
-          Module._SET_STRING_ELT(ptr, i, new RString(v).ptr);
-        }
-      });
-
-      RObject.wrap(ptr).setNames(names);
-
-      super({ payloadType: 'ptr', obj: { ptr } });
-    } finally {
-      unprotect(prot.n);
-    }
+    super(val, RTypeMap.character, RCharacter.#newSetter);
   }
+
+  static #newSetter = (ptr: RPtr) => {
+    return (v: null | string, i: number) => {
+      if (v === null) {
+        Module._SET_STRING_ELT(ptr, i, RObject.naString.ptr);
+      } else {
+        Module._SET_STRING_ELT(ptr, i, new RString(v).ptr);
+      }
+    };
+  };
 
   getString(idx: number): string | null {
     return this.get(idx).toArray()[0];
@@ -1157,33 +1109,16 @@ export class RCharacter extends RVectorAtomic<string> {
 
 export class RRaw extends RVectorAtomic<number> {
   constructor(val: WebRPayload | WebRDataAtomic<number>) {
-    if (isWebRPayload(val) || isRObject(val)) {
-      super(val);
-      return this;
-    }
-
-    const prot = { n: 0 };
-
-    try {
-      const { names, values } = toWebRData(val);
-
-      if (values.some((v) => v === null || v > 255 || v < 0)) {
-        throw new Error('Cannot create new RRaw object');
-      }
-
-      const ptr = Module._Rf_allocVector(RTypeMap.raw, values.length);
-      protectInc(ptr, prot);
-
-      const data = Module._RAW(ptr);
-      values.forEach((v, i) => Module.setValue(data + i, Number(v), 'i8'));
-
-      RObject.wrap(ptr).setNames(names);
-
-      super({ payloadType: 'ptr', obj: { ptr } });
-    } finally {
-      unprotect(prot.n);
-    }
+    super(val, RTypeMap.raw, RRaw.#newSetter);
   }
+
+  static #newSetter = (ptr: RPtr) => {
+    const data = Module._RAW(ptr);
+
+    return (v: number, i: number) => {
+      Module.setValue(data + i, Number(v), 'i8');
+    };
+  };
 
   getNumber(idx: number): number | null {
     return this.get(idx).toArray()[0];
