@@ -860,16 +860,25 @@ export class RLogical extends RVectorAtomic<boolean> {
       super(val);
       return this;
     }
-    const { names, values } = toWebRData(val);
-    const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.logical, values.length));
-    const data = Module._LOGICAL(ptr);
-    values.forEach((v, i) =>
-      Module.setValue(data + 4 * i, v === null ? RObject.naLogical : Boolean(v), 'i32')
-    );
-    RObject.wrap(ptr).setNames(names);
-    Module._Rf_unprotect(1);
-    Module._R_PreserveObject(ptr);
-    super({ payloadType: 'ptr', obj: { ptr } });
+
+    const prot = { n: 0 };
+
+    try {
+      const { names, values } = toWebRData(val);
+
+      const ptr = Module._Rf_allocVector(RTypeMap.logical, values.length);
+      protectInc(ptr, prot);
+
+      const data = Module._LOGICAL(ptr);
+      values.forEach((v, i) =>
+        Module.setValue(data + 4 * i, v === null ? RObject.naLogical : Boolean(v), 'i32')
+      );
+
+      RObject.wrap(ptr).setNames(names);
+      super({ payloadType: 'ptr', obj: { ptr } });
+    } finally {
+      unprotect(prot.n);
+    }
   }
 
   getBoolean(idx: number): boolean | null {
@@ -908,16 +917,26 @@ export class RInteger extends RVectorAtomic<number> {
       super(val);
       return this;
     }
-    const { names, values } = toWebRData(val);
-    const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.integer, values.length));
-    const data = Module._INTEGER(ptr);
-    values.forEach((v, i) =>
-      Module.setValue(data + 4 * i, v === null ? RObject.naInteger : Math.round(Number(v)), 'i32')
-    );
-    RObject.wrap(ptr).setNames(names);
-    Module._Rf_unprotect(1);
-    Module._R_PreserveObject(ptr);
-    super({ payloadType: 'ptr', obj: { ptr } });
+
+    const prot = { n: 0 };
+
+    try {
+      const { names, values } = toWebRData(val);
+
+      const ptr = Module._Rf_allocVector(RTypeMap.integer, values.length);
+      protectInc(ptr, prot);
+
+      const data = Module._INTEGER(ptr);
+      values.forEach((v, i) =>
+        Module.setValue(data + 4 * i, v === null ? RObject.naInteger : Math.round(Number(v)), 'i32')
+      );
+
+      RObject.wrap(ptr).setNames(names);
+
+      super({ payloadType: 'ptr', obj: { ptr } });
+    } finally {
+      unprotect(prot.n);
+    }
   }
 
   getNumber(idx: number): number | null {
@@ -951,16 +970,26 @@ export class RDouble extends RVectorAtomic<number> {
       super(val);
       return this;
     }
-    const { names, values } = toWebRData(val);
-    const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.double, values.length));
-    const data = Module._REAL(ptr);
-    values.forEach((v, i) =>
-      Module.setValue(data + 8 * i, v === null ? RObject.naDouble : v, 'double')
-    );
-    RObject.wrap(ptr).setNames(names);
-    Module._Rf_unprotect(1);
-    Module._R_PreserveObject(ptr);
-    super({ payloadType: 'ptr', obj: { ptr } });
+
+    const prot = { n: 0 };
+
+    try {
+      const { names, values } = toWebRData(val);
+
+      const ptr = Module._Rf_allocVector(RTypeMap.double, values.length);
+      protectInc(ptr, prot);
+
+      const data = Module._REAL(ptr);
+      values.forEach((v, i) =>
+        Module.setValue(data + 8 * i, v === null ? RObject.naDouble : v, 'double')
+      );
+
+      RObject.wrap(ptr).setNames(names);
+
+      super({ payloadType: 'ptr', obj: { ptr } });
+    } finally {
+      unprotect(prot.n);
+    }
   }
 
   getNumber(idx: number): number | null {
@@ -991,19 +1020,27 @@ export class RComplex extends RVectorAtomic<Complex> {
       super(val);
       return this;
     }
-    const { names, values } = toWebRData(val);
-    const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.complex, values.length));
-    const data = Module._COMPLEX(ptr);
-    values.forEach((v, i) =>
-      Module.setValue(data + 8 * (2 * i), v === null ? RObject.naDouble : v.re, 'double')
-    );
-    values.forEach((v, i) =>
-      Module.setValue(data + 8 * (2 * i + 1), v === null ? RObject.naDouble : v.im, 'double')
-    );
-    RObject.wrap(ptr).setNames(names);
-    Module._Rf_unprotect(1);
-    Module._R_PreserveObject(ptr);
-    super({ payloadType: 'ptr', obj: { ptr } });
+
+    const prot = { n: 0 };
+
+    try {
+      const { names, values } = toWebRData(val);
+
+      const ptr = Module._Rf_allocVector(RTypeMap.complex, values.length);
+      protectInc(ptr, prot);
+
+      const data = Module._COMPLEX(ptr);
+      values.forEach((v, i) => {
+        Module.setValue(data + 8 * (2 * i), v === null ? RObject.naDouble : v.re, 'double');
+        Module.setValue(data + 8 * (2 * i + 1), v === null ? RObject.naDouble : v.im, 'double');
+      });
+
+      RObject.wrap(ptr).setNames(names);
+
+      super({ payloadType: 'ptr', obj: { ptr } });
+    } finally {
+      unprotect(prot.n);
+    }
   }
 
   getComplex(idx: number): Complex | null {
@@ -1044,21 +1081,32 @@ export class RCharacter extends RVectorAtomic<string> {
       super(val);
       return this;
     }
-    const { names, values } = toWebRData(val);
-    const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.character, values.length));
-    values.forEach((v, i) => {
-      if (v === null) {
-        Module._SET_STRING_ELT(ptr, i, RObject.naString.ptr);
-      } else {
-        const str = Module.allocateUTF8(String(v));
-        Module._SET_STRING_ELT(ptr, i, Module._Rf_mkChar(str));
-        Module._free(str);
-      }
-    });
-    RObject.wrap(ptr).setNames(names);
-    Module._Rf_unprotect(1);
-    Module._R_PreserveObject(ptr);
-    super({ payloadType: 'ptr', obj: { ptr } });
+
+    const prot = { n: 0 };
+
+    try {
+      const { names, values } = toWebRData(val);
+
+      const ptr = Module._Rf_allocVector(RTypeMap.character, values.length);
+      protectInc(ptr, prot);
+
+      values.forEach((v, i) => {
+        if (v === null) {
+          Module._SET_STRING_ELT(ptr, i, RObject.naString.ptr);
+        } else {
+          // TODO: Simplify with `new RString()`
+          const str = Module.allocateUTF8(String(v));
+          Module._SET_STRING_ELT(ptr, i, Module._Rf_mkChar(str));
+          Module._free(str);
+        }
+      });
+
+      RObject.wrap(ptr).setNames(names);
+
+      super({ payloadType: 'ptr', obj: { ptr } });
+    } finally {
+      unprotect(prot.n);
+    }
   }
 
   getString(idx: number): string | null {
@@ -1098,17 +1146,28 @@ export class RRaw extends RVectorAtomic<number> {
       super(val);
       return this;
     }
-    const { names, values } = toWebRData(val);
-    if (values.some((v) => v === null || v > 255 || v < 0)) {
-      throw new Error('Cannot create new RRaw object');
+
+    const prot = { n: 0 };
+
+    try {
+      const { names, values } = toWebRData(val);
+
+      if (values.some((v) => v === null || v > 255 || v < 0)) {
+        throw new Error('Cannot create new RRaw object');
+      }
+
+      const ptr = Module._Rf_allocVector(RTypeMap.raw, values.length);
+      protectInc(ptr, prot);
+
+      const data = Module._RAW(ptr);
+      values.forEach((v, i) => Module.setValue(data + i, Number(v), 'i8'));
+
+      RObject.wrap(ptr).setNames(names);
+
+      super({ payloadType: 'ptr', obj: { ptr } });
+    } finally {
+      unprotect(prot.n);
     }
-    const ptr = Module._Rf_protect(Module._Rf_allocVector(RTypeMap.raw, values.length));
-    const data = Module._RAW(ptr);
-    values.forEach((v, i) => Module.setValue(data + i, Number(v), 'i8'));
-    RObject.wrap(ptr).setNames(names);
-    Module._Rf_unprotect(1);
-    Module._R_PreserveObject(ptr);
-    super({ payloadType: 'ptr', obj: { ptr } });
   }
 
   getNumber(idx: number): number | null {
