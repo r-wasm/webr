@@ -665,7 +665,7 @@ export class RFunction extends RObject {
 
 export class RString extends RObject {
   // Unlike symbols, strings are not cached and must thus be protected
-  constructor(x: string) {
+  constructor(x: WebRPayload | WebRData = {}) {
     if (typeof x !== 'string') {
       super(x);
       return;
