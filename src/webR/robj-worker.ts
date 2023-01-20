@@ -79,7 +79,7 @@ function newObjectFromArray(arr: WebRData[]) {
   try {
     const call = new RCall([new RSymbol('c'), ...arr]);
     protectInc(call, prot);
-    return call.exec();
+    return call.eval();
   } finally {
     unprotect(prot.n);
   }
@@ -588,7 +588,7 @@ export class RCall extends RObject {
     return RObject.wrap(Module._CDR(this.ptr)) as Nullable<RPairlist>;
   }
 
-  exec(): RObject {
+  eval(): RObject {
     return RObject.wrap(Module._Rf_eval(this.ptr, RObject.baseEnv.ptr));
   }
 }
@@ -673,7 +673,7 @@ export class RFunction extends RObject {
     try {
       const call = new RCall([this, ...args]);
       protectInc(call, prot);
-      return call.exec();
+      return call.eval();
     } finally {
       unprotect(prot.n);
     }
