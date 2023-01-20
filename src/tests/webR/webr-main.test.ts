@@ -470,6 +470,12 @@ describe('Create R objects from JS objects using proxy constructors', () => {
     expect(await rObj.type()).toEqual('symbol');
     expect(await rObj.toString()).toEqual('foo');
   });
+
+  test('Create a string', async () => {
+    const rObj = await new webR.RString('foo');
+    expect(await rObj.type()).toEqual('string');
+    expect(await rObj.toString()).toEqual('foo');
+  });
 });
 
 describe('Serialise nested R lists, pairlists and vectors unambiguously', () => {

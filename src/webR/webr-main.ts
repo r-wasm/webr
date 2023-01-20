@@ -66,6 +66,7 @@ export class WebR {
   RPairlist;
   REnvironment;
   RSymbol;
+  RString;
   objs: {
     baseEnv: REnvironment;
     globalEnv: REnvironment;
@@ -90,6 +91,7 @@ export class WebR {
     this.RPairlist = newRClassProxy<typeof RWorker.RPairlist, RPairlist>(c, 'pairlist');
     this.REnvironment = newRClassProxy<typeof RWorker.REnvironment, REnvironment>(c, 'environment');
     this.RSymbol = newRClassProxy<typeof RWorker.RSymbol, RSymbol>(c, 'symbol');
+    this.RString = newRClassProxy<typeof RWorker.RString, RString>(c, 'string');
     this.objs = {} as typeof this.objs;
   }
 
