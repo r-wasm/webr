@@ -80,7 +80,16 @@ export type WebRData =
  * atomic vectors. The parameter T is the JavaScript scalar type associated with
  * the vector.
  */
-export type WebRDataAtomic<T> = T | (T | null)[] | WebRDataTreeAtomic<T> | NamedObject<T | null>;
+export type WebRDataAtomic<T> =
+  | WebRDataScalar<T>
+  | (T | null)[]
+  | WebRDataTreeAtomic<T>
+  | NamedObject<T | null>;
+
+/**
+ * A subset of WebRData for scalar JavaScript objects.
+ */
+export type WebRDataScalar<T> = T | RMain.RObject | RWorker.RObjectBase;
 
 /**
  * Test if an object is of type Complex

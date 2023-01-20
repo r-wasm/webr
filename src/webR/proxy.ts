@@ -185,7 +185,7 @@ export function newRClassProxy<T, R>(chan: ChannelMain, objType: RType | 'object
     ? {
         new (
           ...args: {
-            [V in keyof U]: Exclude<U[V], WebRPayload>;
+            [V in keyof U]: U[V];
           }
         ): Promise<R>;
       }

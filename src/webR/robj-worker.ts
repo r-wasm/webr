@@ -1,5 +1,5 @@
 import { Module } from './emscripten';
-import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw } from './robj';
+import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw, WebRDataScalar } from './robj';
 import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
 import { envPoke, parseEvalBare, protect, protectInc, unprotect } from './utils-r';
 import { protectWithIndex, reprotect, unprotectIndex } from './utils-r';
@@ -397,12 +397,12 @@ export class RSymbol extends RObject {
   // Note that symbols don't need to be protected. This also means
   // that allocating symbols in loops with random data is probably a
   // bad idea because this leaks memory.
-  constructor(x: RObject | string) {
+  constructor(x: WebRDataScalar<string>) {
     if (x instanceof RObjectBase) {
       super(x);
       return;
     }
-    const name = Module.allocateUTF8(x);
+    const name = Module.allocateUTF8(x as string);
     try {
       super(new RObjectBase(Module._Rf_install(name)));
     } finally {
@@ -652,13 +652,13 @@ export class RFunction extends RObject {
 
 export class RString extends RObject {
   // Unlike symbols, strings are not cached and must thus be protected
-  constructor(x: RObject | string) {
+  constructor(x: WebRDataScalar<string>) {
     if (x instanceof RObjectBase) {
       super(x);
       return;
     }
 
-    const name = Module.allocateUTF8(x);
+    const name = Module.allocateUTF8(x as string);
 
     try {
       super(new RObjectBase(Module._Rf_mkChar(name)));
