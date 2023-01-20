@@ -16,6 +16,13 @@ export function handlePtr(x: RHandle): RPtr {
   }
 }
 
+// Throw if an R object does not match a certain R type
+function assertRType(obj: RObjectBase, type: RType) {
+  if (Module._TYPEOF(obj.ptr) !== RTypeMap[type]) {
+    throw new Error(`Unexpected object type "${obj.type()}" when expecting type "${type}"`);
+  }
+}
+
 // Use this for implicit protection of objects sent to the main
 // thread. Currently uses the precious list but could use a different
 // mechanism in the future. Unprotection is explicit through
@@ -96,6 +103,14 @@ export class RObjectBase {
   constructor(ptr: RPtr) {
     this.ptr = ptr;
   }
+
+  type(): RType {
+    const typeNumber = Module._TYPEOF(this.ptr) as RTypeNumber;
+    const type = Object.keys(RTypeMap).find(
+      (typeName) => RTypeMap[typeName as RType] === typeNumber
+    );
+    return type as RType;
+  }
 }
 
 export class RObject extends RObjectBase {
@@ -131,14 +146,6 @@ export class RObject extends RObjectBase {
 
   getPropertyValue(prop: keyof this): unknown {
     return this[prop];
-  }
-
-  type(): RType {
-    const typeNumber = Module._TYPEOF(this.ptr) as RTypeNumber;
-    const type = Object.keys(RTypeMap).find(
-      (typeName) => RTypeMap[typeName as RType] === typeNumber
-    );
-    return type as RType;
   }
 
   // Frees objects preserved with `keep()`. This method is called by
@@ -399,9 +406,7 @@ export class RSymbol extends RObject {
   // bad idea because this leaks memory.
   constructor(x: WebRDataScalar<string>) {
     if (x instanceof RObjectBase) {
-      if (Module._TYPEOF(x.ptr) !== RTypeMap.symbol) {
-        throw new Error('Unexpected object type in `RSymbol` constructor');
-      }
+      assertRType(x, 'symbol');
       super(x);
       return;
     }
@@ -453,12 +458,7 @@ export class RSymbol extends RObject {
 export class RPairlist extends RObject {
   constructor(val: WebRData) {
     if (val instanceof RObjectBase) {
-      if (
-        Module._TYPEOF(val.ptr) !== RTypeMap.pairlist &&
-        Module._TYPEOF(val.ptr) !== RTypeMap.call
-      ) {
-        throw new Error('Unexpected object type in `RPairlist` constructor');
-      }
+      assertRType(val, 'pairlist');
       super(val);
       return this;
     }
@@ -564,9 +564,7 @@ export class RPairlist extends RObject {
 export class RList extends RObject {
   constructor(val: WebRData) {
     if (val instanceof RObjectBase) {
-      if (Module._TYPEOF(val.ptr) !== RTypeMap.list) {
-        throw new Error('Unexpected object type in `RList` constructor');
-      }
+      assertRType(val, 'list');
       super(val);
       return this;
     }
@@ -666,9 +664,7 @@ export class RString extends RObject {
   // Unlike symbols, strings are not cached and must thus be protected
   constructor(x: WebRDataScalar<string>) {
     if (x instanceof RObjectBase) {
-      if (Module._TYPEOF(x.ptr) !== RTypeMap.string) {
-        throw new Error('Unexpected object type in `RString` constructor');
-      }
+      assertRType(x, 'string');
       super(x);
       return;
     }
@@ -697,9 +693,7 @@ export class RString extends RObject {
 export class REnvironment extends RObject {
   constructor(val: WebRData = {}) {
     if (val instanceof RObjectBase) {
-      if (Module._TYPEOF(val.ptr) !== RTypeMap.environment) {
-        throw new Error('Unexpected object type in `REnvironment` constructor');
-      }
+      assertRType(val, 'environment');
       super(val);
       return this;
     }
@@ -805,10 +799,11 @@ export type atomicType = number | boolean | Complex | string;
 abstract class RVectorAtomic<T extends atomicType> extends RObject {
   constructor(
     val: WebRDataAtomic<T>,
-    kind: RTypeNumber,
+    kind: RType,
     newSetter: (ptr: RPtr) => (v: any, i: number) => void
   ) {
     if (val instanceof RObjectBase) {
+      assertRType(val, kind);
       super(val);
       return this;
     }
@@ -818,7 +813,7 @@ abstract class RVectorAtomic<T extends atomicType> extends RObject {
     try {
       const { names, values } = toWebRData(val);
 
-      const ptr = Module._Rf_allocVector(kind, values.length);
+      const ptr = Module._Rf_allocVector(RTypeMap[kind], values.length);
       protectInc(ptr, prot);
 
       values.forEach(newSetter(ptr));
@@ -905,10 +900,7 @@ abstract class RVectorAtomic<T extends atomicType> extends RObject {
 
 export class RLogical extends RVectorAtomic<boolean> {
   constructor(val: WebRDataAtomic<boolean>) {
-    if (val instanceof RObjectBase && Module._TYPEOF(val.ptr) !== RTypeMap.logical) {
-      throw new Error('Unexpected object type in `RLogical` constructor');
-    }
-    super(val, RTypeMap.logical, RLogical.#newSetter);
+    super(val, 'logical', RLogical.#newSetter);
   }
 
   static #newSetter = (ptr: RPtr) => {
@@ -951,10 +943,7 @@ export class RLogical extends RVectorAtomic<boolean> {
 
 export class RInteger extends RVectorAtomic<number> {
   constructor(val: WebRDataAtomic<number>) {
-    if (val instanceof RObjectBase && Module._TYPEOF(val.ptr) !== RTypeMap.integer) {
-      throw new Error('Unexpected object type in `RInteger` constructor');
-    }
-    super(val, RTypeMap.integer, RInteger.#newSetter);
+    super(val, 'integer', RInteger.#newSetter);
   }
 
   static #newSetter = (ptr: RPtr) => {
@@ -992,10 +981,7 @@ export class RInteger extends RVectorAtomic<number> {
 
 export class RDouble extends RVectorAtomic<number> {
   constructor(val: WebRDataAtomic<number>) {
-    if (val instanceof RObjectBase && Module._TYPEOF(val.ptr) !== RTypeMap.double) {
-      throw new Error('Unexpected object type in `RDouble` constructor');
-    }
-    super(val, RTypeMap.double, RDouble.#newSetter);
+    super(val, 'double', RDouble.#newSetter);
   }
 
   static #newSetter = (ptr: RPtr) => {
@@ -1030,10 +1016,7 @@ export class RDouble extends RVectorAtomic<number> {
 
 export class RComplex extends RVectorAtomic<Complex> {
   constructor(val: WebRDataAtomic<Complex>) {
-    if (val instanceof RObjectBase && Module._TYPEOF(val.ptr) !== RTypeMap.complex) {
-      throw new Error('Unexpected object type in `RComplex` constructor');
-    }
-    super(val, RTypeMap.complex, RComplex.#newSetter);
+    super(val, 'complex', RComplex.#newSetter);
   }
 
   static #newSetter = (ptr: RPtr) => {
@@ -1079,10 +1062,7 @@ export class RComplex extends RVectorAtomic<Complex> {
 
 export class RCharacter extends RVectorAtomic<string> {
   constructor(val: WebRDataAtomic<string>) {
-    if (val instanceof RObjectBase && Module._TYPEOF(val.ptr) !== RTypeMap.character) {
-      throw new Error('Unexpected object type in `RCharacter` constructor');
-    }
-    super(val, RTypeMap.character, RCharacter.#newSetter);
+    super(val, 'character', RCharacter.#newSetter);
   }
 
   static #newSetter = (ptr: RPtr) => {
@@ -1128,10 +1108,7 @@ export class RCharacter extends RVectorAtomic<string> {
 
 export class RRaw extends RVectorAtomic<number> {
   constructor(val: WebRDataAtomic<number>) {
-    if (val instanceof RObjectBase && Module._TYPEOF(val.ptr) !== RTypeMap.raw) {
-      throw new Error('Unexpected object type in `RRaw` constructor');
-    }
-    super(val, RTypeMap.raw, RRaw.#newSetter);
+    super(val, 'raw', RRaw.#newSetter);
   }
 
   static #newSetter = (ptr: RPtr) => {
