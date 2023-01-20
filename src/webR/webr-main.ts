@@ -5,7 +5,7 @@ import { webRPayloadError } from './payload';
 import { newRProxy, newRClassProxy } from './proxy';
 import { isRObject, RCharacter, RComplex, RDouble } from './robj-main';
 import { REnvironment, RSymbol, RInteger } from './robj-main';
-import { RList, RLogical, RNull, RObject, RPairlist, RRaw, RString } from './robj-main';
+import { RList, RLogical, RNull, RObject, RPairlist, RRaw, RString, RCall } from './robj-main';
 import * as RWorker from './robj-worker';
 
 export type CaptureROptions = {
@@ -67,6 +67,7 @@ export class WebR {
   REnvironment;
   RSymbol;
   RString;
+  RCall;
   objs: {
     baseEnv: REnvironment;
     globalEnv: REnvironment;
@@ -92,6 +93,7 @@ export class WebR {
     this.REnvironment = newRClassProxy<typeof RWorker.REnvironment, REnvironment>(c, 'environment');
     this.RSymbol = newRClassProxy<typeof RWorker.RSymbol, RSymbol>(c, 'symbol');
     this.RString = newRClassProxy<typeof RWorker.RString, RString>(c, 'string');
+    this.RCall = newRClassProxy<typeof RWorker.RCall, RCall>(c, 'call');
     this.objs = {} as typeof this.objs;
   }
 

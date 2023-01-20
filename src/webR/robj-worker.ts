@@ -77,22 +77,9 @@ function newObjectFromArray(arr: WebRData[]) {
   const prot = { n: 0 };
 
   try {
-    const objs = arr.map((el) => protectInc(newObjectFromData(el), prot));
-
-    const call = RPairlist.wrap(Module._Rf_allocVector(RTypeMap.call, objs.length + 1));
+    const call = new RCall([new RSymbol('c'), ...arr]);
     protectInc(call, prot);
-
-    call.setcar(new RSymbol('c'));
-
-    let next = call.cdr();
-    let i = 0;
-
-    while (!next.isNull()) {
-      next.setcar(objs[i++]);
-      next = next.cdr();
-    }
-
-    return RObject.wrap(Module._Rf_eval(call.ptr, RObject.baseEnv.ptr));
+    return call.exec();
   } finally {
     unprotect(prot.n);
   }
@@ -561,6 +548,51 @@ export class RPairlist extends RObject {
   }
 }
 
+export class RCall extends RObject {
+  constructor(val: WebRData) {
+    if (val instanceof RObjectBase) {
+      assertRType(val, 'call');
+      super(val);
+      return this;
+    }
+    const prot = { n: 0 };
+
+    try {
+      const { values } = toWebRData(val);
+      const objs = values.map((value) => protectInc(new RObject(value), prot));
+      const call = RCall.wrap(Module._Rf_allocVector(RTypeMap.call, values.length));
+      protectInc(call, prot);
+
+      for (
+        let [i, next] = [0, call as Nullable<RPairlist>];
+        !next.isNull();
+        [i, next] = [i + 1, next.cdr()]
+      ) {
+        next.setcar(objs[i]);
+      }
+      super(call);
+    } finally {
+      unprotect(prot.n);
+    }
+  }
+
+  setcar(obj: RObject): void {
+    Module._SETCAR(this.ptr, obj.ptr);
+  }
+
+  car(): RObject {
+    return RObject.wrap(Module._CAR(this.ptr));
+  }
+
+  cdr(): Nullable<RPairlist> {
+    return RObject.wrap(Module._CDR(this.ptr)) as Nullable<RPairlist>;
+  }
+
+  exec(): RObject {
+    return RObject.wrap(Module._Rf_eval(this.ptr, RObject.baseEnv.ptr));
+  }
+}
+
 export class RList extends RObject {
   constructor(val: WebRData) {
     if (val instanceof RObjectBase) {
@@ -639,21 +671,9 @@ export class RFunction extends RObject {
     const prot = { n: 0 };
 
     try {
-      const argObjs = args.map((arg) => protectInc(new RObject(arg), prot));
-
-      const call = RPairlist.wrap(Module._Rf_allocVector(RTypeMap.call, args.length + 1));
+      const call = new RCall([this, ...args]);
       protectInc(call, prot);
-
-      call.setcar(this);
-
-      let c = call.cdr();
-      let i = 0;
-      while (!c.isNull()) {
-        c.setcar(argObjs[i++]);
-        c = c.cdr();
-      }
-
-      return RObject.wrap(Module._Rf_eval(call.ptr, RObject.baseEnv.ptr));
+      return call.exec();
     } finally {
       unprotect(prot.n);
     }
@@ -1171,7 +1191,7 @@ export function getRWorkerClass(type: RTypeNumber): typeof RObject {
     [RTypeMap.pairlist]: RPairlist,
     [RTypeMap.closure]: RFunction,
     [RTypeMap.environment]: REnvironment,
-    [RTypeMap.call]: RPairlist,
+    [RTypeMap.call]: RCall,
     [RTypeMap.special]: RFunction,
     [RTypeMap.builtin]: RFunction,
     [RTypeMap.string]: RString,
