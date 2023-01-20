@@ -460,6 +460,63 @@ describe('Invoking RFunction objects', () => {
   });
 });
 
+describe('Reject incorrect object types during R object construction', () => {
+  test('Reject incorrect type in RCharacter', async () => {
+    const incorrect = new webR.RCharacter(webR.objs.null);
+    await expect(incorrect).rejects.toThrow('Unexpected object type');
+  });
+
+  test('Reject incorrect type in RComplex', async () => {
+    const incorrect = new webR.RComplex(webR.objs.null);
+    await expect(incorrect).rejects.toThrow('Unexpected object type');
+  });
+
+  test('Reject incorrect type in RDouble', async () => {
+    const incorrect = new webR.RDouble(webR.objs.null);
+    await expect(incorrect).rejects.toThrow('Unexpected object type');
+  });
+
+  test('Reject incorrect type in REnvironment', async () => {
+    const incorrect = new webR.REnvironment(webR.objs.null);
+    await expect(incorrect).rejects.toThrow('Unexpected object type');
+  });
+
+  test('Reject incorrect type in RInteger', async () => {
+    const incorrect = new webR.RInteger(webR.objs.null);
+    await expect(incorrect).rejects.toThrow('Unexpected object type');
+  });
+
+  test('Reject incorrect type in RList', async () => {
+    const incorrect = new webR.RList(webR.objs.null);
+    await expect(incorrect).rejects.toThrow('Unexpected object type');
+  });
+
+  test('Reject incorrect type in RLogical', async () => {
+    const incorrect = new webR.RLogical(webR.objs.null);
+    await expect(incorrect).rejects.toThrow('Unexpected object type');
+  });
+
+  test('Reject incorrect type in RPairlist', async () => {
+    const incorrect = new webR.RPairlist(webR.objs.null);
+    await expect(incorrect).rejects.toThrow('Unexpected object type');
+  });
+
+  test('Reject incorrect type in RRaw', async () => {
+    const incorrect = new webR.RRaw(webR.objs.null);
+    await expect(incorrect).rejects.toThrow('Unexpected object type');
+  });
+
+  test('Reject incorrect type in RString', async () => {
+    const incorrect = new webR.RString(webR.objs.null);
+    await expect(incorrect).rejects.toThrow('Unexpected object type');
+  });
+
+  test('Reject incorrect type in RSymbol', async () => {
+    const incorrect = new webR.RSymbol(webR.objs.null);
+    await expect(incorrect).rejects.toThrow('Unexpected object type');
+  });
+});
+
 describe('Garbage collection', () => {
   test.skip('Protect and release R objects', async () => {
     const gc = (await webR.evalR('gc')) as RFunction;
