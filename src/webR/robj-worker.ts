@@ -26,7 +26,7 @@ function assertRType(obj: RObjectBase, type: RType) {
 // Use this for implicit protection of objects sent to the main
 // thread. Currently uses the precious list but could use a different
 // mechanism in the future. Unprotection is explicit through
-// `RObject.free()`.
+// `RObject.destroy()`.
 export function keep(x: RHandle) {
   Module._R_PreserveObject(handlePtr(x));
 }
