@@ -30,10 +30,13 @@ webR/config.ts: webR/config.ts.in
 	sed -e "s|@@BASE_URL@@|$(BASE_URL)|" \
 	  -e "s|@@PKG_BASE_URL@@|$(PKG_BASE_URL)|" webR/config.ts.in > webR/config.ts
 
+.PHONY: lint
+lint: $(DIST)
+	npx eslint $(TS_SOURCES)
+
 .PHONY: check
 check: $(DIST)
 	npx tsc
-	npx eslint $(TS_SOURCES)
 	NODE_V8_COVERAGE=coverage npx c8 node ./node_modules/jest/bin/jest.js \
 	  --config tests/webr.config.js
 
