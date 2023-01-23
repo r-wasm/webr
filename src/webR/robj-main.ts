@@ -16,6 +16,7 @@ export type RComplex = RProxy<RWorker.RComplex>;
 export type RCharacter = RProxy<RWorker.RCharacter>;
 export type RList = RProxy<RWorker.RList>;
 export type RRaw = RProxy<RWorker.RRaw>;
+export type RCall = RProxy<RWorker.RCall>;
 // RFunction proxies are callable
 export type RFunction = RProxy<RWorker.RFunction> & ((...args: unknown[]) => Promise<unknown>);
 

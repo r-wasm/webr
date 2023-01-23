@@ -1,5 +1,5 @@
 import { Module } from './emscripten';
-import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw } from './robj';
+import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw, WebRDataScalar } from './robj';
 import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
 import { envPoke, parseEvalBare, protect, protectInc, unprotect } from './utils-r';
 import { protectWithIndex, reprotect, unprotectIndex } from './utils-r';
@@ -13,6 +13,13 @@ export function handlePtr(x: RHandle): RPtr {
     return x.ptr;
   } else {
     return x;
+  }
+}
+
+// Throw if an R object does not match a certain R type
+function assertRType(obj: RObjectBase, type: RType) {
+  if (Module._TYPEOF(obj.ptr) !== RTypeMap[type]) {
+    throw new Error(`Unexpected object type "${obj.type()}" when expecting type "${type}"`);
   }
 }
 
@@ -70,22 +77,9 @@ function newObjectFromArray(arr: WebRData[]) {
   const prot = { n: 0 };
 
   try {
-    const objs = arr.map((el) => protectInc(newObjectFromData(el), prot));
-
-    const call = RPairlist.wrap(Module._Rf_allocVector(RTypeMap.call, objs.length + 1));
+    const call = new RCall([new RSymbol('c'), ...arr]);
     protectInc(call, prot);
-
-    call.setcar(new RSymbol('c'));
-
-    let next = call.cdr();
-    let i = 0;
-
-    while (!next.isNull()) {
-      next.setcar(objs[i++]);
-      next = next.cdr();
-    }
-
-    return RObject.wrap(Module._Rf_eval(call.ptr, RObject.baseEnv.ptr));
+    return call.eval();
   } finally {
     unprotect(prot.n);
   }
@@ -95,6 +89,14 @@ export class RObjectBase {
   ptr: RPtr;
   constructor(ptr: RPtr) {
     this.ptr = ptr;
+  }
+
+  type(): RType {
+    const typeNumber = Module._TYPEOF(this.ptr) as RTypeNumber;
+    const type = Object.keys(RTypeMap).find(
+      (typeName) => RTypeMap[typeName as RType] === typeNumber
+    );
+    return type as RType;
   }
 }
 
@@ -131,14 +133,6 @@ export class RObject extends RObjectBase {
 
   getPropertyValue(prop: keyof this): unknown {
     return this[prop];
-  }
-
-  type(): RType {
-    const typeNumber = Module._TYPEOF(this.ptr) as RTypeNumber;
-    const type = Object.keys(RTypeMap).find(
-      (typeName) => RTypeMap[typeName as RType] === typeNumber
-    );
-    return type as RType;
   }
 
   // Frees objects preserved with `keep()`. This method is called by
@@ -397,12 +391,13 @@ export class RSymbol extends RObject {
   // Note that symbols don't need to be protected. This also means
   // that allocating symbols in loops with random data is probably a
   // bad idea because this leaks memory.
-  constructor(x: RObject | string) {
+  constructor(x: WebRDataScalar<string>) {
     if (x instanceof RObjectBase) {
+      assertRType(x, 'symbol');
       super(x);
       return;
     }
-    const name = Module.allocateUTF8(x);
+    const name = Module.allocateUTF8(x as string);
     try {
       super(new RObjectBase(Module._Rf_install(name)));
     } finally {
@@ -450,6 +445,7 @@ export class RSymbol extends RObject {
 export class RPairlist extends RObject {
   constructor(val: WebRData) {
     if (val instanceof RObjectBase) {
+      assertRType(val, 'pairlist');
       super(val);
       return this;
     }
@@ -552,9 +548,55 @@ export class RPairlist extends RObject {
   }
 }
 
+export class RCall extends RObject {
+  constructor(val: WebRData) {
+    if (val instanceof RObjectBase) {
+      assertRType(val, 'call');
+      super(val);
+      return this;
+    }
+    const prot = { n: 0 };
+
+    try {
+      const { values } = toWebRData(val);
+      const objs = values.map((value) => protectInc(new RObject(value), prot));
+      const call = RCall.wrap(Module._Rf_allocVector(RTypeMap.call, values.length));
+      protectInc(call, prot);
+
+      for (
+        let [i, next] = [0, call as Nullable<RPairlist>];
+        !next.isNull();
+        [i, next] = [i + 1, next.cdr()]
+      ) {
+        next.setcar(objs[i]);
+      }
+      super(call);
+    } finally {
+      unprotect(prot.n);
+    }
+  }
+
+  setcar(obj: RObject): void {
+    Module._SETCAR(this.ptr, obj.ptr);
+  }
+
+  car(): RObject {
+    return RObject.wrap(Module._CAR(this.ptr));
+  }
+
+  cdr(): Nullable<RPairlist> {
+    return RObject.wrap(Module._CDR(this.ptr)) as Nullable<RPairlist>;
+  }
+
+  eval(): RObject {
+    return RObject.wrap(Module._Rf_eval(this.ptr, RObject.baseEnv.ptr));
+  }
+}
+
 export class RList extends RObject {
   constructor(val: WebRData) {
     if (val instanceof RObjectBase) {
+      assertRType(val, 'list');
       super(val);
       return this;
     }
@@ -629,21 +671,9 @@ export class RFunction extends RObject {
     const prot = { n: 0 };
 
     try {
-      const argObjs = args.map((arg) => protectInc(new RObject(arg), prot));
-
-      const call = RPairlist.wrap(Module._Rf_allocVector(RTypeMap.call, args.length + 1));
+      const call = new RCall([this, ...args]);
       protectInc(call, prot);
-
-      call.setcar(this);
-
-      let c = call.cdr();
-      let i = 0;
-      while (!c.isNull()) {
-        c.setcar(argObjs[i++]);
-        c = c.cdr();
-      }
-
-      return RObject.wrap(Module._Rf_eval(call.ptr, RObject.baseEnv.ptr));
+      return call.eval();
     } finally {
       unprotect(prot.n);
     }
@@ -652,13 +682,14 @@ export class RFunction extends RObject {
 
 export class RString extends RObject {
   // Unlike symbols, strings are not cached and must thus be protected
-  constructor(x: RObject | string) {
+  constructor(x: WebRDataScalar<string>) {
     if (x instanceof RObjectBase) {
+      assertRType(x, 'string');
       super(x);
       return;
     }
 
-    const name = Module.allocateUTF8(x);
+    const name = Module.allocateUTF8(x as string);
 
     try {
       super(new RObjectBase(Module._Rf_mkChar(name)));
@@ -682,6 +713,7 @@ export class RString extends RObject {
 export class REnvironment extends RObject {
   constructor(val: WebRData = {}) {
     if (val instanceof RObjectBase) {
+      assertRType(val, 'environment');
       super(val);
       return this;
     }
@@ -787,10 +819,11 @@ export type atomicType = number | boolean | Complex | string;
 abstract class RVectorAtomic<T extends atomicType> extends RObject {
   constructor(
     val: WebRDataAtomic<T>,
-    kind: RTypeNumber,
+    kind: RType,
     newSetter: (ptr: RPtr) => (v: any, i: number) => void
   ) {
     if (val instanceof RObjectBase) {
+      assertRType(val, kind);
       super(val);
       return this;
     }
@@ -800,7 +833,7 @@ abstract class RVectorAtomic<T extends atomicType> extends RObject {
     try {
       const { names, values } = toWebRData(val);
 
-      const ptr = Module._Rf_allocVector(kind, values.length);
+      const ptr = Module._Rf_allocVector(RTypeMap[kind], values.length);
       protectInc(ptr, prot);
 
       values.forEach(newSetter(ptr));
@@ -887,7 +920,7 @@ abstract class RVectorAtomic<T extends atomicType> extends RObject {
 
 export class RLogical extends RVectorAtomic<boolean> {
   constructor(val: WebRDataAtomic<boolean>) {
-    super(val, RTypeMap.logical, RLogical.#newSetter);
+    super(val, 'logical', RLogical.#newSetter);
   }
 
   static #newSetter = (ptr: RPtr) => {
@@ -930,7 +963,7 @@ export class RLogical extends RVectorAtomic<boolean> {
 
 export class RInteger extends RVectorAtomic<number> {
   constructor(val: WebRDataAtomic<number>) {
-    super(val, RTypeMap.integer, RInteger.#newSetter);
+    super(val, 'integer', RInteger.#newSetter);
   }
 
   static #newSetter = (ptr: RPtr) => {
@@ -968,7 +1001,7 @@ export class RInteger extends RVectorAtomic<number> {
 
 export class RDouble extends RVectorAtomic<number> {
   constructor(val: WebRDataAtomic<number>) {
-    super(val, RTypeMap.double, RDouble.#newSetter);
+    super(val, 'double', RDouble.#newSetter);
   }
 
   static #newSetter = (ptr: RPtr) => {
@@ -1003,7 +1036,7 @@ export class RDouble extends RVectorAtomic<number> {
 
 export class RComplex extends RVectorAtomic<Complex> {
   constructor(val: WebRDataAtomic<Complex>) {
-    super(val, RTypeMap.complex, RComplex.#newSetter);
+    super(val, 'complex', RComplex.#newSetter);
   }
 
   static #newSetter = (ptr: RPtr) => {
@@ -1049,7 +1082,7 @@ export class RComplex extends RVectorAtomic<Complex> {
 
 export class RCharacter extends RVectorAtomic<string> {
   constructor(val: WebRDataAtomic<string>) {
-    super(val, RTypeMap.character, RCharacter.#newSetter);
+    super(val, 'character', RCharacter.#newSetter);
   }
 
   static #newSetter = (ptr: RPtr) => {
@@ -1095,7 +1128,7 @@ export class RCharacter extends RVectorAtomic<string> {
 
 export class RRaw extends RVectorAtomic<number> {
   constructor(val: WebRDataAtomic<number>) {
-    super(val, RTypeMap.raw, RRaw.#newSetter);
+    super(val, 'raw', RRaw.#newSetter);
   }
 
   static #newSetter = (ptr: RPtr) => {
@@ -1158,7 +1191,7 @@ export function getRWorkerClass(type: RTypeNumber): typeof RObject {
     [RTypeMap.pairlist]: RPairlist,
     [RTypeMap.closure]: RFunction,
     [RTypeMap.environment]: REnvironment,
-    [RTypeMap.call]: RPairlist,
+    [RTypeMap.call]: RCall,
     [RTypeMap.special]: RFunction,
     [RTypeMap.builtin]: RFunction,
     [RTypeMap.string]: RString,
