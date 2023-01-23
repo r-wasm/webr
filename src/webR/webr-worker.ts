@@ -170,12 +170,6 @@ function dispatch(msg: Message): void {
                   output: output,
                 },
               });
-            } catch (_e) {
-              const e = _e as Error;
-              write({
-                payloadType: 'err',
-                obj: { name: e.name, message: e.message, stack: e.stack },
-              });
             } finally {
               unprotect(prot.n);
             }
