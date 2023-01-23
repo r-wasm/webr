@@ -102,20 +102,11 @@ export class RObjectBase {
 
 export class RObject extends RObjectBase {
   constructor(data: WebRData) {
-    super(0);
-    try {
-      if (data instanceof RObjectBase) {
-        this.ptr = data.ptr;
-        return this;
-      }
+    if (!(data instanceof RObjectBase)) {
       return newObjectFromData(data);
-    } finally {
-      // FIXME: Shouldn't preserve in the constructor, only in channel
-      // messages
-      if (this.ptr) {
-        keep(this.ptr);
-      }
     }
+
+    super(data.ptr);
   }
 
   static wrap<T extends typeof RObject>(this: T, ptr: RPtr): InstanceType<T> {
