@@ -55,6 +55,8 @@ const defaultOptions = {
 
 export class WebR {
   #chan: ChannelMain;
+  #shelter!: Shelter;
+
   RObject;
   RLogical;
   RInteger;
@@ -99,6 +101,7 @@ export class WebR {
 
   async init() {
     const init = await this.#chan.initialised;
+
     this.objs = {
       baseEnv: (await this.RObject.getStaticPropertyValue('baseEnv')) as REnvironment,
       globalEnv: (await this.RObject.getStaticPropertyValue('globalEnv')) as REnvironment,
@@ -107,6 +110,9 @@ export class WebR {
       false: (await this.RObject.getStaticPropertyValue('false')) as RLogical,
       na: (await this.RObject.getStaticPropertyValue('logicalNA')) as RLogical,
     };
+
+    this.#shelter = new Shelter(this.#chan);
+
     return init;
   }
 
@@ -148,64 +154,11 @@ export class WebR {
     result: RObject;
     output: unknown[];
   }> {
-    if (env && !isRObject(env)) {
-      throw new Error('Attempted to evaluate R code with invalid environment object');
-    }
-
-    const payload = await this.#chan.request({
-      type: 'captureR',
-      data: {
-        code: code,
-        env: env?._payload,
-        options: options,
-      },
-    });
-
-    switch (payload.payloadType) {
-      case 'ptr':
-        throw new Error('Unexpected ptr payload type returned from evalR');
-
-      case 'err': {
-        throw webRPayloadError(payload);
-      }
-
-      case 'raw': {
-        const data = payload.obj as {
-          result: WebRPayloadPtr;
-          output: { type: string; data: any }[];
-        };
-        const result = newRProxy(this.#chan, data.result);
-        const output = data.output;
-
-        for (let i = 0; i < output.length; ++i) {
-          if (output[i].type !== 'stdout' && output[i].type !== 'stderr') {
-            output[i].data = newRProxy(this.#chan, output[i].data as WebRPayloadPtr);
-          }
-        }
-
-        return { result, output };
-      }
-    }
+    return this.#shelter.captureR(code, env, options);
   }
 
   async evalR(code: string, env?: REnvironment): Promise<RObject> {
-    if (env && !isRObject(env)) {
-      throw new Error('Attempted to evaluate R code with invalid environment object');
-    }
-
-    const payload = await this.#chan.request({
-      type: 'evalR',
-      data: { code: code, env: env?._payload },
-    });
-
-    switch (payload.payloadType) {
-      case 'raw':
-        throw new Error('Unexpected raw payload type returned from evalR');
-      case 'err':
-        throw webRPayloadError(payload);
-      default:
-        return newRProxy(this.#chan, payload);
-    }
+    return this.#shelter.evalR(code, env);
   }
 
   FS = {
@@ -249,4 +202,91 @@ export class WebR {
       }
     },
   };
+}
+
+export class Shelter {
+  #id = '';
+  #chan: ChannelMain;
+
+  constructor(chan: ChannelMain) {
+    this.#chan = chan;
+  }
+
+  async init() {
+    const payload = await this.#chan.request({ type: 'newShelter' });
+    this.#id = payload.obj as string;
+  }
+
+  async evalR(code: string, env?: REnvironment): Promise<RObject> {
+    await this.init();
+
+    if (env && !isRObject(env)) {
+      throw new Error('Attempted to evaluate R code with invalid environment object');
+    }
+
+    const payload = await this.#chan.request({
+      type: 'evalR',
+      data: { code: code, env: env?._payload, shelter: this.#id },
+    });
+
+    switch (payload.payloadType) {
+      case 'raw':
+        throw new Error('Unexpected raw payload type returned from evalR');
+      case 'err':
+        throw webRPayloadError(payload);
+      default:
+        return newRProxy(this.#chan, payload);
+    }
+  }
+
+  async captureR(
+    code: string,
+    env?: REnvironment,
+    options: CaptureROptions = {}
+  ): Promise<{
+    result: RObject;
+    output: unknown[];
+  }> {
+    await this.init();
+
+    if (env && !isRObject(env)) {
+      throw new Error('Attempted to evaluate R code with invalid environment object');
+    }
+
+    const payload = await this.#chan.request({
+      type: 'captureR',
+      data: {
+        code: code,
+        env: env?._payload,
+        options: options,
+        shelter: this.#id,
+      },
+    });
+
+    switch (payload.payloadType) {
+      case 'ptr':
+        throw new Error('Unexpected ptr payload type returned from evalR');
+
+      case 'err': {
+        throw webRPayloadError(payload);
+      }
+
+      case 'raw': {
+        const data = payload.obj as {
+          result: WebRPayloadPtr;
+          output: { type: string; data: any }[];
+        };
+        const result = newRProxy(this.#chan, data.result);
+        const output = data.output;
+
+        for (let i = 0; i < output.length; ++i) {
+          if (output[i].type !== 'stdout' && output[i].type !== 'stderr') {
+            output[i].data = newRProxy(this.#chan, output[i].data as WebRPayloadPtr);
+          }
+        }
+
+        return { result, output };
+      }
+    }
+  }
 }

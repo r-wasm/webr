@@ -5,6 +5,7 @@ import { envPoke, parseEvalBare, protect, protectInc, unprotect } from './utils-
 import { protectWithIndex, reprotect, unprotectIndex } from './utils-r';
 import { isWebRDataTree, WebRDataTree, WebRDataTreeAtomic, WebRDataTreeNode } from './tree';
 import { WebRDataTreeNull, WebRDataTreeString, WebRDataTreeSymbol } from './tree';
+import { isUUID, UUID } from './chan/task-common';
 
 export type RHandle = RObject | RPtr;
 
@@ -23,12 +24,30 @@ function assertRType(obj: RObjectBase, type: RType) {
   }
 }
 
+export type Shelter = null | UUID;
+
 // Use this for implicit protection of objects sent to the main
 // thread. Currently uses the precious list but could use a different
 // mechanism in the future. Unprotection is explicit through
 // `RObject.destroy()`.
-export function keep(x: RHandle) {
+export function keep(shelter: Shelter, x: RHandle) {
+  if (shelter === null) {
+    return;
+  }
+
   Module._R_PreserveObject(handlePtr(x));
+
+  // TODO: Remove when shelter transition is complete
+  if (shelter === undefined) {
+    return;
+  }
+
+  if (isUUID(shelter)) {
+    // TODO
+    return;
+  }
+
+  throw new Error('Unexpected shelter type ' + typeof shelter);
 }
 
 export interface ToTreeOptions {
