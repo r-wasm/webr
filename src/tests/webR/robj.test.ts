@@ -518,28 +518,21 @@ describe('Reject incorrect object types during R object construction', () => {
 });
 
 describe('Garbage collection', () => {
-  test.skip('Protect and release R objects', async () => {
+  test('Protect and release R objects', async () => {
     const gc = (await webR.evalR('gc')) as RFunction;
     await gc.exec(false, false, true);
     const before = await ((await gc.exec(false, false, true)) as RDouble).toTypedArray();
 
     const mem = await webR.evalR('rnorm(10000,1,1)');
-    mem.preserve();
     const during = await ((await gc.exec(false, false, true)) as RDouble).toTypedArray();
 
-    mem.release();
+    mem.destroy();
     const after = await ((await gc.exec(false, false, true)) as RDouble).toTypedArray();
 
     expect(during[0]).toBeGreaterThan(before[0]);
     expect(during[1]).toBeGreaterThan(before[1]);
 
-    // TODO: For some reason `exec()` causes this test to fail after
-    // switching to protect(). Also we now temporarily call `keep()`
-    // from `new RObject()` so there's bound to be leaks until this is
-    // moved to the channel (for instance this causes new symbols to
-    // be preserved).
     expect(after[0]).toBeLessThan(during[0]);
-
     expect(after[1]).toBeLessThan(during[1]);
   });
 });

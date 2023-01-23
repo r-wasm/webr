@@ -26,7 +26,8 @@ function resizeTerm() {
   (async () => {
     await webR.init();
     const dims = fitAddon.proposeDimensions();
-    webR.evalR(`options(width=${dims ? dims.cols : 80})`);
+    // TODO: Replace by void version of `evalR()`
+    (await webR.evalR(`options(width=${dims ? dims.cols : 80})`)).destroy();
   })();
   fitAddon.fit();
 }
@@ -77,7 +78,11 @@ const webR = new WebR({
 
   readline.setCtrlCHandler(() => webR.interrupt());
 
-  webR.captureR('webr::global_prompt_install()', undefined, { withHandlers: false });
+  // TODO: Replace by void version of `evalR()`
+  const out = await webR.captureR('webr::global_prompt_install()', undefined, {
+    withHandlers: false,
+  });
+  out.result.destroy();
 
   // Clear the loading message
   term.write('\x1b[2K\r');

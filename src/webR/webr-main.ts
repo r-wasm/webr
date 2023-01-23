@@ -1,7 +1,7 @@
 import { newChannelMain, ChannelMain, ChannelType } from './chan/channel';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
-import { webRPayloadError } from './payload';
+import { WebRPayloadPtr, webRPayloadError } from './payload';
 import { newRProxy, newRClassProxy } from './proxy';
 import { isRObject, RCharacter, RComplex, RDouble } from './robj-main';
 import { REnvironment, RSymbol, RInteger } from './robj-main';
@@ -162,26 +162,27 @@ export class WebR {
     });
 
     switch (payload.payloadType) {
-      case 'raw':
-        throw new Error('Unexpected raw payload type returned from evalR');
-      case 'err':
+      case 'ptr':
+        throw new Error('Unexpected ptr payload type returned from evalR');
+
+      case 'err': {
         throw webRPayloadError(payload);
-      default: {
-        const obj = newRProxy(this.#chan, payload);
-        obj.preserve();
-        const result = await obj.get(1);
-        const outList = (await obj.get(2)) as RList;
-        const output: any[] = [];
-        for await (const out of outList) {
-          const type = await ((await out.pluck(1, 1)) as RCharacter).toString();
-          const data = await out.get(2);
-          if (type === 'stdout' || type === 'stderr') {
-            output.push({ type, data: await (data as RString).toString() });
-          } else {
-            output.push({ type, data });
+      }
+
+      case 'raw': {
+        const data = payload.obj as {
+          result: WebRPayloadPtr;
+          output: { type: string; data: any }[];
+        };
+        const result = newRProxy(this.#chan, data.result);
+        const output = data.output;
+
+        for (let i = 0; i < output.length; ++i) {
+          if (output[i].type !== 'stdout' && output[i].type !== 'stderr') {
+            output[i].data = newRProxy(this.#chan, output[i].data as WebRPayloadPtr);
           }
         }
-        obj.release();
+
         return { result, output };
       }
     }

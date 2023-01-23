@@ -26,8 +26,8 @@ function assertRType(obj: RObjectBase, type: RType) {
 // Use this for implicit protection of objects sent to the main
 // thread. Currently uses the precious list but could use a different
 // mechanism in the future. Unprotection is explicit through
-// `RObject.free()`.
-function keep(x: RHandle) {
+// `RObject.destroy()`.
+export function keep(x: RHandle) {
   Module._R_PreserveObject(handlePtr(x));
 }
 
@@ -102,20 +102,11 @@ export class RObjectBase {
 
 export class RObject extends RObjectBase {
   constructor(data: WebRData) {
-    super(0);
-    try {
-      if (data instanceof RObjectBase) {
-        this.ptr = data.ptr;
-        return this;
-      }
+    if (!(data instanceof RObjectBase)) {
       return newObjectFromData(data);
-    } finally {
-      // FIXME: Shouldn't preserve in the constructor, only in channel
-      // messages
-      if (this.ptr) {
-        keep(this.ptr);
-      }
     }
+
+    super(data.ptr);
   }
 
   static wrap<T extends typeof RObject>(this: T, ptr: RPtr): InstanceType<T> {
@@ -138,23 +129,7 @@ export class RObject extends RObjectBase {
   // Frees objects preserved with `keep()`. This method is called by
   // users in the main thread to release objects that were
   // automatically protected before being sent away.
-  free(): void {
-    Module._R_ReleaseObject(this.ptr);
-  }
-
-  // TODO: Remove these
-  protect(): void {
-    this.ptr = Module._Rf_protect(this.ptr);
-  }
-  unprotect(): void {
-    Module._Rf_unprotect_ptr(this.ptr);
-  }
-
-  // TODO: Remove these
-  preserve(): void {
-    Module._R_PreserveObject(this.ptr);
-  }
-  release(): void {
+  destroy(): void {
     Module._R_ReleaseObject(this.ptr);
   }
 
@@ -353,26 +328,6 @@ export class RObject extends RObjectBase {
 
   static get namesSymbol(): RSymbol {
     return RSymbol.wrap(Module.getValue(Module._R_NamesSymbol, '*'));
-  }
-
-  static protect<T extends RObject>(obj: T): T {
-    return RObject.wrap(Module._Rf_protect(obj.ptr)) as T;
-  }
-
-  static unprotect(n: number): void {
-    Module._Rf_unprotect(n);
-  }
-
-  static unprotectPtr(obj: RObject): void {
-    Module._Rf_unprotect_ptr(obj.ptr);
-  }
-
-  static preserveObject(obj: RObject): void {
-    Module._R_PreserveObject(obj.ptr);
-  }
-
-  static releaseObject(obj: RObject): void {
-    Module._R_ReleaseObject(obj.ptr);
   }
 }
 

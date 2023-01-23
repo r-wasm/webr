@@ -46,12 +46,11 @@ export function envPoke(env: RHandle, sym: RHandle, value: RHandle) {
 
 export function parseEvalBare(code: string, env: WebRData): RObject {
   const strings: DictEmPtrs = {};
-  let nProt = 0;
+  const prot = { n: 0 };
 
   try {
     const envObj = new REnvironment(env);
-    envObj.protect();
-    ++nProt;
+    protectInc(envObj, prot);
 
     strings.code = Module.allocateUTF8(code);
 
@@ -59,6 +58,6 @@ export function parseEvalBare(code: string, env: WebRData): RObject {
     return RObject.wrap(out);
   } finally {
     dictEmFree(strings);
-    Module._Rf_unprotect(nProt);
+    unprotect(prot.n);
   }
 }
