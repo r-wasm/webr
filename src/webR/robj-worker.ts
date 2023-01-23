@@ -25,6 +25,7 @@ function assertRType(obj: RObjectBase, type: RType) {
 }
 
 export type Shelter = null | UUID;
+export const shelters = new Map<UUID, RPtr[]>();
 
 // Use this for implicit protection of objects sent to the main
 // thread. Currently uses the precious list but could use a different
@@ -35,7 +36,8 @@ export function keep(shelter: Shelter, x: RHandle) {
     return;
   }
 
-  Module._R_PreserveObject(handlePtr(x));
+  const ptr = handlePtr(x);
+  Module._R_PreserveObject(ptr);
 
   // TODO: Remove when shelter transition is complete
   if (shelter === undefined) {
@@ -43,7 +45,7 @@ export function keep(shelter: Shelter, x: RHandle) {
   }
 
   if (isUUID(shelter)) {
-    // TODO
+    shelters.get(shelter)!.push(ptr);
     return;
   }
 

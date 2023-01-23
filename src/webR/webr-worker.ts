@@ -7,7 +7,7 @@ import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
 import { RObject, isRObject, REnvironment, RList, getRWorkerClass } from './robj-worker';
-import { RCharacter, RString, keep, Shelter } from './robj-worker';
+import { RCharacter, RString, keep, Shelter, shelters } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
 import { protectInc, unprotect, parseEvalBare } from './utils-r';
 import { generateUUID, UUID } from './chan/task-common';
@@ -42,7 +42,6 @@ type XHRResponse = {
 };
 
 let _config: Required<WebROptions>;
-const shelters = new Map<UUID, RObject[]>();
 
 function dispatch(msg: Message): void {
   switch (msg.type) {
@@ -121,6 +120,14 @@ function dispatch(msg: Message): void {
               payloadType: 'raw',
               obj: id,
             });
+            break;
+          }
+
+          case 'shelterSize': {
+            const id = reqMsg.data as UUID;
+            const size = shelters.get(id)!.length;
+
+            write({ payloadType: 'raw', obj: size });
             break;
           }
 

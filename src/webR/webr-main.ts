@@ -7,6 +7,7 @@ import { isRObject, RCharacter, RComplex, RDouble } from './robj-main';
 import { REnvironment, RSymbol, RInteger } from './robj-main';
 import { RList, RLogical, RNull, RObject, RPairlist, RRaw, RString, RCall } from './robj-main';
 import * as RWorker from './robj-worker';
+import { promiseHandles } from './utils';
 
 export type CaptureROptions = {
   captureStreams?: boolean;
@@ -55,7 +56,7 @@ const defaultOptions = {
 
 export class WebR {
   #chan: ChannelMain;
-  #shelter!: Shelter;
+  shelter!: Shelter;
 
   RObject;
   RLogical;
@@ -111,7 +112,7 @@ export class WebR {
       na: (await this.RObject.getStaticPropertyValue('logicalNA')) as RLogical,
     };
 
-    this.#shelter = new Shelter(this.#chan);
+    this.shelter = new Shelter(this.#chan);
 
     return init;
   }
@@ -154,11 +155,11 @@ export class WebR {
     result: RObject;
     output: unknown[];
   }> {
-    return this.#shelter.captureR(code, env, options);
+    return this.shelter.captureR(code, env, options);
   }
 
   async evalR(code: string, env?: REnvironment): Promise<RObject> {
-    return this.#shelter.evalR(code, env);
+    return this.shelter.evalR(code, env);
   }
 
   FS = {
@@ -207,18 +208,37 @@ export class WebR {
 export class Shelter {
   #id = '';
   #chan: ChannelMain;
+  #initialised = false;
 
   constructor(chan: ChannelMain) {
     this.#chan = chan;
+    this.#init();
   }
 
-  async init() {
+  // FIXME: could be called multiple times
+  async #init() {
+    if (this.#initialised) {
+      return;
+    }
+
     const payload = await this.#chan.request({ type: 'newShelter' });
     this.#id = payload.obj as string;
+    this.#initialised = true;
+  }
+
+  async size(): Promise<number> {
+    await this.#init();
+
+    const payload = await this.#chan.request({
+      type: 'shelterSize',
+      data: this.#id,
+    });
+
+    return payload.obj as number;
   }
 
   async evalR(code: string, env?: REnvironment): Promise<RObject> {
-    await this.init();
+    await this.#init();
 
     if (env && !isRObject(env)) {
       throw new Error('Attempted to evaluate R code with invalid environment object');
@@ -247,7 +267,7 @@ export class Shelter {
     result: RObject;
     output: unknown[];
   }> {
-    await this.init();
+    await this.#init();
 
     if (env && !isRObject(env)) {
       throw new Error('Attempted to evaluate R code with invalid environment object');
