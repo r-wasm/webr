@@ -79,6 +79,8 @@ export class WebR {
     na: RLogical;
   };
 
+  Shelter;
+
   constructor(options: WebROptions = {}) {
     const config: Required<WebROptions> = Object.assign(defaultOptions, options);
     const c = (this.#chan = newChannelMain(config));
@@ -97,6 +99,8 @@ export class WebR {
     this.RString = newRClassProxy<typeof RWorker.RString, RString>(c, 'string');
     this.RCall = newRClassProxy<typeof RWorker.RCall, RCall>(c, 'call');
     this.objs = {} as typeof this.objs;
+
+    this.Shelter = newShelterProxy(this.#chan);
   }
 
   async init() {
@@ -111,7 +115,7 @@ export class WebR {
       na: (await this.RObject.getStaticPropertyValue('logicalNA')) as RLogical,
     };
 
-    this.shelter = new Shelter(this.#chan);
+    this.shelter = await new this.Shelter();
 
     return init;
   }
@@ -215,11 +219,9 @@ export class Shelter {
 
   constructor(chan: ChannelMain) {
     this.#chan = chan;
-    this.#init();
   }
 
-  // FIXME: could be called multiple times
-  async #init() {
+  async init() {
     if (this.#initialised) {
       return;
     }
@@ -230,8 +232,6 @@ export class Shelter {
   }
 
   async destroy(x: RObject) {
-    await this.#init();
-
     const payload = await this.#chan.request({
       type: 'shelterDestroy',
       data: { id: this.#id, obj: x._payload },
@@ -244,8 +244,6 @@ export class Shelter {
   }
 
   async size(): Promise<number> {
-    await this.#init();
-
     const payload = await this.#chan.request({
       type: 'shelterSize',
       data: this.#id,
@@ -255,8 +253,6 @@ export class Shelter {
   }
 
   async evalR(code: string, env?: REnvironment): Promise<RObject> {
-    await this.#init();
-
     if (env && !isRObject(env)) {
       throw new Error('Attempted to evaluate R code with invalid environment object');
     }
@@ -284,8 +280,6 @@ export class Shelter {
     result: RObject;
     output: unknown[];
   }> {
-    await this.#init();
-
     if (env && !isRObject(env)) {
       throw new Error('Attempted to evaluate R code with invalid environment object');
     }
@@ -326,4 +320,16 @@ export class Shelter {
       }
     }
   }
+}
+
+function newShelterProxy(chan: ChannelMain) {
+  return new Proxy(Shelter, {
+    construct: async () => {
+      const out = new Shelter(chan);
+      await out.init();
+      return out;
+    },
+  }) as unknown as {
+    new (): Promise<Shelter>;
+  };
 }

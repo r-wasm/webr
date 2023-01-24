@@ -560,6 +560,49 @@ describe('Garbage collection', () => {
 
     await expect(webR.destroy(x)).rejects.toThrow("Can't find object in shelter");
   });
+
+  test('Objects managed in shelter', async () => {
+    const globalSize = await webR.shelter.size();
+
+    const shelter = await new webR.Shelter();
+    expect(await shelter.size()).toEqual(0);
+
+    const x = await shelter.evalR('1');
+    const y = await shelter.evalR('1');
+    expect(await shelter.size()).toEqual(2);
+    expect(await webR.shelter.size()).toEqual(globalSize);
+
+    await shelter.destroy(x);
+    expect(await shelter.size()).toEqual(1);
+
+    await shelter.destroy(y);
+    expect(await shelter.size()).toEqual(0);
+
+    await expect(shelter.destroy(x)).rejects.toThrow("Can't find object in shelter");
+  });
+
+  test('Shelter.CaptureR() protects', async () => {
+    const shelter = await new webR.Shelter();
+
+    const out = await shelter.captureR('1');
+    expect(await shelter.size()).toEqual(1);
+
+    await shelter.destroy(out.result);
+    expect(await shelter.size()).toEqual(0);
+
+    // FIXME: Capturing a message in tests fails (with
+    // `webR.captureR()` too)
+
+    // out = await shelter.captureR('message("foo")');
+    // expect(await shelter.size()).toEqual(2);
+
+    // await shelter.destroy(out.result);
+
+    // const output = out.output as { type: string, data: RObject }[];
+    // await shelter.destroy(output[0].data);
+
+    // expect(await shelter.size()).toEqual(0);
+  });
 });
 
 afterAll(() => {
