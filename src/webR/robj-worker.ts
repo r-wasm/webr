@@ -25,18 +25,14 @@ function assertRType(obj: RObjectBase, type: RType) {
 }
 
 // TODO: Shelter should be a dictionary not an array
-export type Shelter = null | UUID;
-export const shelters = new Map<UUID, RPtr[]>();
+export type Shelter = UUID;
+export const shelters = new Map<Shelter, RPtr[]>();
 
 // Use this for implicit protection of objects sent to the main
 // thread. Currently uses the precious list but could use a different
 // mechanism in the future. Unprotection is explicit through
 // `Shelter.destroy()`.
 export function keep(shelter: Shelter, x: RHandle) {
-  if (shelter === null) {
-    return;
-  }
-
   const ptr = handlePtr(x);
   Module._R_PreserveObject(ptr);
 
@@ -57,10 +53,6 @@ export function keep(shelter: Shelter, x: RHandle) {
 // users in the main thread to release objects that were automatically
 // protected before being sent away.
 export function destroy(shelter: Shelter, x: RHandle) {
-  if (shelter === null) {
-    throw new Error('TODO');
-  }
-
   const ptr = handlePtr(x);
   Module._R_ReleaseObject(ptr);
 

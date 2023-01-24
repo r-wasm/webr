@@ -132,7 +132,7 @@ function dispatch(msg: Message): void {
           }
 
           case 'shelterDestroy': {
-            const data = reqMsg.data as { id: null | UUID; obj: WebRPayloadPtr };
+            const data = reqMsg.data as { id: Shelter; obj: WebRPayloadPtr };
             destroy(data.id, data.obj.obj.ptr);
 
             write({ payloadType: 'raw', obj: null });
