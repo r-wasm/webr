@@ -7,7 +7,6 @@ import { isRObject, RCharacter, RComplex, RDouble } from './robj-main';
 import { REnvironment, RSymbol, RInteger } from './robj-main';
 import { RList, RLogical, RNull, RObject, RPairlist, RRaw, RString, RCall } from './robj-main';
 import * as RWorker from './robj-worker';
-import { promiseHandles } from './utils';
 
 export type CaptureROptions = {
   captureStreams?: boolean;
@@ -147,6 +146,10 @@ export class WebR {
     }
   }
 
+  async destroy(x: RObject) {
+    await this.shelter.destroy(x);
+  }
+
   async captureR(
     code: string,
     env?: REnvironment,
@@ -224,6 +227,20 @@ export class Shelter {
     const payload = await this.#chan.request({ type: 'newShelter' });
     this.#id = payload.obj as string;
     this.#initialised = true;
+  }
+
+  async destroy(x: RObject) {
+    await this.#init();
+
+    const payload = await this.#chan.request({
+      type: 'shelterDestroy',
+      data: { id: this.#id, obj: x._payload },
+    });
+
+    // FIXME: Should be thrown by the channel
+    if (payload.payloadType === 'err') {
+      throw webRPayloadError(payload);
+    }
   }
 
   async size(): Promise<number> {

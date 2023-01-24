@@ -7,7 +7,7 @@ import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
 import { RObject, isRObject, REnvironment, RList, getRWorkerClass } from './robj-worker';
-import { RCharacter, RString, keep, Shelter, shelters } from './robj-worker';
+import { RCharacter, RString, keep, destroy, Shelter, shelters } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
 import { protectInc, unprotect, parseEvalBare } from './utils-r';
 import { generateUUID, UUID } from './chan/task-common';
@@ -128,6 +128,14 @@ function dispatch(msg: Message): void {
             const size = shelters.get(id)!.length;
 
             write({ payloadType: 'raw', obj: size });
+            break;
+          }
+
+          case 'shelterDestroy': {
+            const data = reqMsg.data as { id: null | UUID; obj: WebRPayloadPtr };
+            destroy(data.id, data.obj.obj.ptr);
+
+            write({ payloadType: 'raw', obj: null });
             break;
           }
 

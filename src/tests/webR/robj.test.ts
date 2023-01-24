@@ -21,8 +21,17 @@ const webR = new WebR({
   RArgs: ['--quiet'],
 });
 
+let initShelterSize = -1;
+
 beforeAll(async () => {
   await webR.init();
+  initShelterSize = await webR.shelter.size();
+});
+
+// We don't destroy objects during unit tests but when webR starts
+// the count should be zero
+test('Initial shelter size', async () => {
+  expect(initShelterSize).toEqual(0);
 });
 
 test('Convert an RNull value to JS', async () => {
@@ -526,7 +535,7 @@ describe('Garbage collection', () => {
     const mem = await webR.evalR('rnorm(10000,1,1)');
     const during = await ((await gc.exec(false, false, true)) as RDouble).toTypedArray();
 
-    mem.destroy();
+    webR.destroy(mem);
     const after = await ((await gc.exec(false, false, true)) as RDouble).toTypedArray();
 
     expect(during[0]).toBeGreaterThan(before[0]);
@@ -534,6 +543,22 @@ describe('Garbage collection', () => {
 
     expect(after[0]).toBeLessThan(during[0]);
     expect(after[1]).toBeLessThan(during[1]);
+  });
+
+  test('Objects are protected and destroyed', async () => {
+    const size = await webR.shelter.size();
+
+    const x = await webR.evalR('1');
+    const y = await webR.evalR('1');
+    expect(await webR.shelter.size()).toEqual(size + 2);
+
+    await webR.destroy(x);
+    expect(await webR.shelter.size()).toEqual(size + 1);
+
+    await webR.shelter.destroy(y);
+    expect(await webR.shelter.size()).toEqual(size);
+
+    await expect(webR.destroy(x)).rejects.toThrow("Can't find object in shelter");
   });
 });
 
