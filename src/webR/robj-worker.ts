@@ -66,6 +66,20 @@ export function destroy(shelter: Shelter, x: RHandle) {
   objs.splice(loc, 1);
 }
 
+export function purge(shelter: Shelter) {
+  const ptrs: RPtr[] = shelters.get(shelter)!;
+
+  for (const ptr of ptrs) {
+    try {
+      Module._R_ReleaseObject(ptr);
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  shelters.set(shelter, []);
+}
+
 export interface ToTreeOptions {
   depth: number;
 }

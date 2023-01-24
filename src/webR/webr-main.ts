@@ -231,6 +231,18 @@ export class Shelter {
     this.#initialised = true;
   }
 
+  async purge() {
+    const payload = await this.#chan.request({
+      type: 'shelterPurge',
+      data: this.#id,
+    });
+
+    // FIXME: Should be thrown by the channel
+    if (payload.payloadType === 'err') {
+      throw webRPayloadError(payload);
+    }
+  }
+
   async destroy(x: RObject) {
     const payload = await this.#chan.request({
       type: 'shelterDestroy',

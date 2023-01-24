@@ -603,6 +603,17 @@ describe('Garbage collection', () => {
 
     // expect(await shelter.size()).toEqual(0);
   });
+
+  test('Can purge shelters', async () => {
+    const shelter = await new webR.Shelter();
+
+    await shelter.captureR('1');
+    await shelter.captureR('1');
+    expect(await shelter.size()).toEqual(2);
+
+    await shelter.purge();
+    expect(await shelter.size()).toEqual(0);
+  });
 });
 
 afterAll(() => {
