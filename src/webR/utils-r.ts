@@ -1,4 +1,4 @@
-import { Module, DictEmPtrs, dictEmFree } from './emscripten';
+import { Module, DictEmPtrs, dictEmFree, EmPtr } from './emscripten';
 import { WebRData, RPtr } from './robj';
 import { RObject, REnvironment, RHandle, handlePtr } from './robj-worker';
 
@@ -60,4 +60,43 @@ export function parseEvalBare(code: string, env: WebRData): RObject {
     dictEmFree(strings);
     unprotect(prot.n);
   }
+}
+
+let evalBodyPtr: EmPtr | undefined;
+let evalHandlerPtr: EmPtr | undefined;
+let evalErrorMessage: string | undefined;
+
+function evalCallBody(data: EmPtr): RPtr {
+  const call = Module.getValue(data, 'i32');
+  const env = Module.getValue(data + 4, 'i32');
+  return Module._Rf_eval(call, env);
+}
+
+function evalCallHandler(cond: RPtr, _: EmPtr) {
+  evalErrorMessage = RObject.wrap(cond).get(1).toString();
+  return 0;
+}
+
+export function evalCall(call: RHandle, env: RHandle): RPtr {
+  if (!evalBodyPtr) {
+    evalBodyPtr = Module.addFunction(evalCallBody, 'ii');
+  }
+  if (!evalHandlerPtr) {
+    evalHandlerPtr = Module.addFunction(evalCallHandler, 'iii');
+  }
+
+  const dataPtr = Module._malloc(8);
+
+  Module.setValue(dataPtr, handlePtr(call), '*');
+  Module.setValue(dataPtr + 4, handlePtr(env), '*');
+
+  // In case of an error ensure that the stack is unwound only as far as this
+  // function, rather than up to top level, before throwing a JS error.
+  const res = Module._R_tryCatchError(evalBodyPtr, dataPtr, evalHandlerPtr, 0);
+  if (!res) {
+    throw new Error(evalErrorMessage);
+  }
+
+  Module._free(dataPtr);
+  return res;
 }

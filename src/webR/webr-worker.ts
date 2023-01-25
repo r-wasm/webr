@@ -436,6 +436,7 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
     );
     protectInc(call, prot);
 
+    // Call Rf_eval directly here so as to support the option withHandlers: false
     const capture = RList.wrap(Module._Rf_eval(call, envObj.ptr));
     protectInc(capture, prot);
 
@@ -558,6 +559,7 @@ function init(config: Required<WebROptions>) {
         Module._free(stop);
         Module._free(msg);
 
+        // Call Rf_eval directly here since JS errors are recaptured by R rather than thrown
         Module._Rf_eval(call, RObject.baseEnv.ptr);
       }
       throwUnreachable();

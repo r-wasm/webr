@@ -2,7 +2,7 @@ import { Module } from './emscripten';
 import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw, WebRDataScalar } from './robj';
 import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
 import { envPoke, parseEvalBare, protect, protectInc, unprotect } from './utils-r';
-import { protectWithIndex, reprotect, unprotectIndex } from './utils-r';
+import { protectWithIndex, reprotect, unprotectIndex, evalCall } from './utils-r';
 import { ShelterID, isShelterID } from './webr-chan';
 import { isWebRDataTree, WebRDataTree, WebRDataTreeAtomic, WebRDataTreeNode } from './tree';
 import { WebRDataTreeNull, WebRDataTreeString, WebRDataTreeSymbol } from './tree';
@@ -250,7 +250,7 @@ export class RObject extends RObjectBase {
       const call = Module._Rf_lang3(op, this.ptr, idx.ptr);
       protectInc(call, prot);
 
-      return RObject.wrap(Module._Rf_eval(call, RObject.baseEnv.ptr));
+      return RObject.wrap(evalCall(call, RObject.baseEnv));
     } finally {
       unprotect(prot.n);
     }
@@ -267,9 +267,10 @@ export class RObject extends RObjectBase {
       const result = path.reduce(getter, this);
 
       return result.isNull() ? undefined : result;
-    } catch (err) {
+    } catch (_e) {
+      const err = _e as Error;
       // Deal with subscript out of bounds error
-      if (err === Infinity) {
+      if (err.message === 'subscript out of bounds') {
         return undefined;
       }
       throw err;
@@ -292,7 +293,7 @@ export class RObject extends RObjectBase {
       const call = Module._Rf_lang4(assign.ptr, this.ptr, idx.ptr, valueObj.ptr);
       protectInc(call, prot);
 
-      return RObject.wrap(Module._Rf_eval(call, RObject.baseEnv.ptr));
+      return RObject.wrap(evalCall(call, RObject.baseEnv));
     } finally {
       unprotect(prot.n);
     }
@@ -585,7 +586,7 @@ export class RCall extends RObject {
   }
 
   eval(): RObject {
-    return RObject.wrap(Module._Rf_eval(this.ptr, RObject.baseEnv.ptr));
+    return RObject.wrap(evalCall(this.ptr, RObject.baseEnv));
   }
 }
 
@@ -864,7 +865,7 @@ abstract class RVectorAtomic<T extends atomicType> extends RObject {
       const call = Module._Rf_lang2(new RSymbol('is.na').ptr, this.ptr);
       protectInc(call, prot);
 
-      const val = RLogical.wrap(Module._Rf_eval(call, RObject.baseEnv.ptr));
+      const val = RLogical.wrap(evalCall(call, RObject.baseEnv));
       protectInc(val, prot);
 
       const ret = val.toTypedArray();

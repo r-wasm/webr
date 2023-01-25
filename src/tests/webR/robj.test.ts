@@ -14,6 +14,7 @@ import {
   REnvironment,
   RCharacter,
   isRObject,
+  RObject,
 } from '../../webR/robj-main';
 
 const webR = new WebR({
@@ -584,24 +585,20 @@ describe('Garbage collection', () => {
   test('Shelter.CaptureR() protects', async () => {
     const shelter = await new webR.Shelter();
 
-    const out = await shelter.captureR('1');
+    let out = await shelter.captureR('1');
     expect(await shelter.size()).toEqual(1);
 
     await shelter.destroy(out.result);
     expect(await shelter.size()).toEqual(0);
 
-    // FIXME: Capturing a message in tests fails (with
-    // `webR.captureR()` too)
+    out = await shelter.captureR('message("foo")');
+    expect(await shelter.size()).toEqual(2);
 
-    // out = await shelter.captureR('message("foo")');
-    // expect(await shelter.size()).toEqual(2);
+    await shelter.destroy(out.result);
 
-    // await shelter.destroy(out.result);
-
-    // const output = out.output as { type: string, data: RObject }[];
-    // await shelter.destroy(output[0].data);
-
-    // expect(await shelter.size()).toEqual(0);
+    const output = out.output as { type: string; data: RObject }[];
+    await shelter.destroy(output[0].data);
+    expect(await shelter.size()).toEqual(0);
   });
 
   test('Can purge shelters', async () => {

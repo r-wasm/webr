@@ -22,6 +22,7 @@ export interface Module extends EmscriptenModule {
     response: string | ArrayBuffer;
   };
   // Exported Emscripten JS API
+  addFunction: typeof addFunction;
   allocateUTF8: typeof allocateUTF8;
   getValue: typeof getValue;
   setValue: typeof setValue;
@@ -55,6 +56,7 @@ export interface Module extends EmscriptenModule {
   _R_ParseEvalString: (code: number, env: RPtr) => RPtr;
   _R_PreserveObject: (ptr: RPtr) => void;
   _R_ReleaseObject: (ptr: RPtr) => void;
+  _R_tryCatchError: (body: RPtr, data: EmPtr, handler: EmPtr, hdata: EmPtr) => RPtr;
   _Rf_ScalarReal: (n: number) => RPtr;
   _Rf_ScalarLogical: (l: number) => RPtr;
   _Rf_ScalarInteger: (n: number) => RPtr;
@@ -112,7 +114,7 @@ export interface Module extends EmscriptenModule {
 
 export const Module = {} as Module;
 
-type EmPtr = ReturnType<typeof Module.allocateUTF8>;
+export type EmPtr = ReturnType<typeof Module.allocateUTF8>;
 
 export interface DictEmPtrs {
   [key: string]: EmPtr;
