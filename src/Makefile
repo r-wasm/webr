@@ -13,7 +13,7 @@ TS_SOURCES = $(shell find . -name '*.ts' -not -path './node_modules/*')
 -include ~/.webr-config.mk
 
 BASE_URL ?= "./"
-PKG_BASE_URL ?= "https://repo.webr.workers.dev/"
+PKG_BASE_URL ?= "https://repo.r-wasm.org"
 
 HTML_DIST = $(addprefix $(DIST)/,$(HTML_TEMPLATES))
 $(DIST): $(TS_SOURCES) $(HTML_DIST) \

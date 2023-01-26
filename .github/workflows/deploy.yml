@@ -10,6 +10,7 @@ on:
 
 jobs:
   build:
+    name: Build webR
     runs-on: ubuntu-latest
     container: georgestagg/webr-flang:latest
     steps:
@@ -25,7 +26,7 @@ jobs:
       - name: Setup Emscripten PATH
         run: echo "/opt/emsdk:/opt/emsdk/upstream/emscripten" >> $GITHUB_PATH
       - name: Set the webR CDN URL as the BASE_URL
-        run: echo "BASE_URL=https://cdn.webr.workers.dev/${{ github.ref_name }}/" > "$HOME/.webr-config.mk"
+        run: echo "BASE_URL=https://webr.r-wasm.org/${{ github.ref_name }}/" > "$HOME/.webr-config.mk"
         shell: bash
       - name: Build webR
         env:
@@ -47,23 +48,24 @@ jobs:
           name: webr-dist
           path: |
             dist
-            !dist/index.html
   deploy:
+    name: Deploy to S3
     needs: build
     runs-on: ubuntu-latest
     environment: deploy
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Download build archive
         uses: actions/download-artifact@v3
         with:
           name: webr-dist
-      - uses: jakejarvis/s3-sync-action@master
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          args: --follow-symlinks
-        env:
-          AWS_S3_BUCKET: ${{ secrets.R2_BUCKET }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_S3_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
-          SOURCE_DIR: .
-          DEST_DIR: ${{ github.ref_name }}/
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Upload files to S3 bucket
+        run: |
+          aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }}/_webr/${{ github.ref_name }}/

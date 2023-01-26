@@ -12,7 +12,7 @@ beforeAll(async () => {
 
 describe('Download and install binary webR packages', () => {
   test('Install packages via evalR', async () => {
-    await webR.evalR('webr::install("cli", repos="https://repo.webr.workers.dev/")');
+    await webR.evalR('webr::install("cli", repos="https://repo.r-wasm.org/")');
     const pkg = (await webR.evalR('"cli" %in% library(cli)')) as RLogical;
     expect(await pkg.toBoolean()).toEqual(true);
   });

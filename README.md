@@ -41,7 +41,7 @@ the following extra setup must be done before starting the build process,
 
 ## Demo
 
-A demo of the resulting R REPL can be found at https://webr.gwstagg.co.uk/
+A demo of the resulting R REPL can be found at https://webr.r-wasm.org/latest/
 
 Loading the page will initally result in a black screen. Please be patient as the WASM
 runtime downloads and executes. R will display a banner message when it is ready to use.
