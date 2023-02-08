@@ -7,9 +7,10 @@ import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
 import { RObject, isRObject, REnvironment, RList, getRWorkerClass } from './robj-worker';
-import { RCharacter, RString, keep, destroy, purge, ShelterID, shelters } from './robj-worker';
+import { RCharacter, RString, keep, destroy, purge, shelters } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
 import { protectInc, unprotect, parseEvalBare } from './utils-r';
+import { ShelterID } from './webr-chan';
 import { generateUUID, UUID } from './chan/task-common';
 
 let initialised = false;

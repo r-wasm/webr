@@ -3,9 +3,9 @@ import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw, WebRDataSca
 import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
 import { envPoke, parseEvalBare, protect, protectInc, unprotect } from './utils-r';
 import { protectWithIndex, reprotect, unprotectIndex } from './utils-r';
+import { ShelterID, isShelterID } from './webr-chan';
 import { isWebRDataTree, WebRDataTree, WebRDataTreeAtomic, WebRDataTreeNode } from './tree';
 import { WebRDataTreeNull, WebRDataTreeString, WebRDataTreeSymbol } from './tree';
-import { isUUID, UUID } from './chan/task-common';
 
 export type RHandle = RObject | RPtr;
 
@@ -25,7 +25,6 @@ function assertRType(obj: RObjectBase, type: RType) {
 }
 
 // TODO: Shelter should be a dictionary not an array
-export type ShelterID = UUID;
 export const shelters = new Map<ShelterID, RPtr[]>();
 
 // Use this for implicit protection of objects sent to the main
@@ -41,7 +40,7 @@ export function keep(shelter: ShelterID, x: RHandle) {
     return;
   }
 
-  if (isUUID(shelter)) {
+  if (isShelterID(shelter)) {
     shelters.get(shelter)!.push(ptr);
     return;
   }
