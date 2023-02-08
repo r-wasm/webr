@@ -243,9 +243,8 @@ function dispatch(msg: Message): void {
           case 'newRObject': {
             const msg = reqMsg as NewRObjectMessage;
 
-            // TODO: Remove `!`
             const payload = newRObject(msg.data.obj, msg.data.objType);
-            keep(msg.data.shelter!, payload.obj.ptr);
+            keep(msg.data.shelter, payload.obj.ptr);
 
             write(payload);
             break;
