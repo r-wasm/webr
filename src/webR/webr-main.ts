@@ -238,42 +238,16 @@ export class Shelter {
     const payload = await this.#chan.request(msg);
     this.#id = payload.obj as string;
 
-    // FIXME: Suboptimal style enforced by prettier
-
     this.RObject = newRClassProxy<typeof RWorker.RObject, RObject>(this.#chan, this.#id, 'object');
-    this.RLogical = newRClassProxy<typeof RWorker.RLogical, RLogical>(
-      this.#chan,
-      this.#id,
-      'logical'
-    );
-    this.RInteger = newRClassProxy<typeof RWorker.RInteger, RInteger>(
-      this.#chan,
-      this.#id,
-      'integer'
-    );
+    this.RLogical = newRClassProxy<typeof RWorker.RLogical, RLogical>(this.#chan, this.#id, 'logical');
+    this.RInteger = newRClassProxy<typeof RWorker.RInteger, RInteger>(this.#chan, this.#id, 'integer');
     this.RDouble = newRClassProxy<typeof RWorker.RDouble, RDouble>(this.#chan, this.#id, 'double');
-    this.RComplex = newRClassProxy<typeof RWorker.RComplex, RComplex>(
-      this.#chan,
-      this.#id,
-      'complex'
-    );
-    this.RCharacter = newRClassProxy<typeof RWorker.RCharacter, RCharacter>(
-      this.#chan,
-      this.#id,
-      'character'
-    );
+    this.RComplex = newRClassProxy<typeof RWorker.RComplex, RComplex>(this.#chan, this.#id, 'complex');
+    this.RCharacter = newRClassProxy<typeof RWorker.RCharacter, RCharacter>(this.#chan, this.#id, 'character');
     this.RRaw = newRClassProxy<typeof RWorker.RRaw, RRaw>(this.#chan, this.#id, 'raw');
     this.RList = newRClassProxy<typeof RWorker.RList, RList>(this.#chan, this.#id, 'list');
-    this.RPairlist = newRClassProxy<typeof RWorker.RPairlist, RPairlist>(
-      this.#chan,
-      this.#id,
-      'pairlist'
-    );
-    this.REnvironment = newRClassProxy<typeof RWorker.REnvironment, REnvironment>(
-      this.#chan,
-      this.#id,
-      'environment'
-    );
+    this.RPairlist = newRClassProxy<typeof RWorker.RPairlist, RPairlist>(this.#chan, this.#id, 'pairlist');
+    this.REnvironment = newRClassProxy<typeof RWorker.REnvironment, REnvironment>(this.#chan, this.#id, 'environment');
     this.RSymbol = newRClassProxy<typeof RWorker.RSymbol, RSymbol>(this.#chan, this.#id, 'symbol');
     this.RString = newRClassProxy<typeof RWorker.RString, RString>(this.#chan, this.#id, 'string');
     this.RCall = newRClassProxy<typeof RWorker.RCall, RCall>(this.#chan, this.#id, 'call');
