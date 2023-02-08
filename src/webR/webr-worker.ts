@@ -1,16 +1,29 @@
 import { loadScript } from './compat';
 import { newChannelWorker, ChannelWorker, ChannelInitMessage } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
-import { FSNode, WebROptions, CaptureROptions } from './webr-main';
+import { FSNode, WebROptions } from './webr-main';
 import { Module } from './emscripten';
 import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
 import { RObject, isRObject, REnvironment, RList, getRWorkerClass } from './robj-worker';
-import { RCharacter, RString, keep, destroy, purge, Shelter, shelters } from './robj-worker';
+import { RCharacter, RString, keep, destroy, purge, shelters } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
 import { protectInc, unprotect, parseEvalBare } from './utils-r';
-import { generateUUID, UUID } from './chan/task-common';
+import { generateUUID } from './chan/task-common';
+
+import {
+  CallRObjectMethodMessage,
+  CaptureRMessage,
+  CaptureROptions,
+  EvalRMessage,
+  FSMessage,
+  FSReadFileMessage,
+  FSWriteFileMessage,
+  NewRObjectMessage,
+  ShelterMessage,
+  ShelterDestroyMessage,
+} from './webr-chan';
 
 let initialised = false;
 let chan: ChannelWorker | undefined;
@@ -54,7 +67,8 @@ function dispatch(msg: Message): void {
       try {
         switch (reqMsg.type) {
           case 'lookupPath': {
-            const node = Module.FS.lookupPath(reqMsg.data.path as string, {}).node;
+            const msg = reqMsg as FSMessage;
+            const node = Module.FS.lookupPath(msg.data.path, {}).node;
             write({
               obj: copyFSNode(node as FSNode),
               payloadType: 'raw',
@@ -62,17 +76,16 @@ function dispatch(msg: Message): void {
             break;
           }
           case 'mkdir': {
+            const msg = reqMsg as FSMessage;
             write({
-              obj: copyFSNode(Module.FS.mkdir(reqMsg.data.path as string) as FSNode),
+              obj: copyFSNode(Module.FS.mkdir(msg.data.path) as FSNode),
               payloadType: 'raw',
             });
             break;
           }
           case 'readFile': {
-            const reqData = reqMsg.data as {
-              path: string;
-              flags?: string;
-            };
+            const msg = reqMsg as FSReadFileMessage;
+            const reqData = msg.data;
             const out = {
               obj: Module.FS.readFile(reqData.path, {
                 encoding: 'binary',
@@ -84,18 +97,16 @@ function dispatch(msg: Message): void {
             break;
           }
           case 'rmdir': {
+            const msg = reqMsg as FSMessage;
             write({
-              obj: Module.FS.rmdir(reqMsg.data.path as string),
+              obj: Module.FS.rmdir(msg.data.path),
               payloadType: 'raw',
             });
             break;
           }
           case 'writeFile': {
-            const reqData = reqMsg.data as {
-              path: string;
-              data: ArrayBufferView;
-              flags?: string;
-            };
+            const msg = reqMsg as FSWriteFileMessage;
+            const reqData = msg.data;
             // FIXME: Use a replacer + reviver to transfer Uint8Array
             const data = Uint8Array.from(Object.values(reqData.data));
             write({
@@ -105,8 +116,9 @@ function dispatch(msg: Message): void {
             break;
           }
           case 'unlink': {
+            const msg = reqMsg as FSMessage;
             write({
-              obj: Module.FS.unlink(reqMsg.data.path as string),
+              obj: Module.FS.unlink(msg.data.path),
               payloadType: 'raw',
             });
             break;
@@ -124,36 +136,32 @@ function dispatch(msg: Message): void {
           }
 
           case 'shelterSize': {
-            const id = reqMsg.data as UUID;
-            const size = shelters.get(id)!.length;
+            const msg = reqMsg as ShelterMessage;
+            const size = shelters.get(msg.data)!.length;
 
             write({ payloadType: 'raw', obj: size });
             break;
           }
 
           case 'shelterPurge': {
-            const shelter = reqMsg.data as Shelter;
-            purge(shelter);
+            const msg = reqMsg as ShelterMessage;
+            purge(msg.data);
 
             write({ payloadType: 'raw', obj: null });
             break;
           }
 
           case 'shelterDestroy': {
-            const data = reqMsg.data as { id: Shelter; obj: WebRPayloadPtr };
-            destroy(data.id, data.obj.obj.ptr);
+            const msg = reqMsg as ShelterDestroyMessage;
+            destroy(msg.data.id, msg.data.obj.obj.ptr);
 
             write({ payloadType: 'raw', obj: null });
             break;
           }
 
           case 'captureR': {
-            const data = reqMsg.data as {
-              code: string;
-              env?: WebRPayloadPtr;
-              options: CaptureROptions;
-              shelter: Shelter;
-            };
+            const msg = reqMsg as CaptureRMessage;
+            const data = msg.data;
 
             const shelter = data.shelter;
             const prot = { n: 0 };
@@ -215,14 +223,10 @@ function dispatch(msg: Message): void {
           }
 
           case 'evalR': {
-            const data = reqMsg.data as {
-              code: string;
-              env?: WebRPayloadPtr;
-              shelter: Shelter;
-            };
+            const msg = reqMsg as EvalRMessage;
 
-            const result = evalR(data.code, data.env);
-            keep(data.shelter, result);
+            const result = evalR(msg.data.code, msg.data.env);
+            keep(msg.data.shelter, result);
 
             write({
               obj: {
@@ -236,31 +240,25 @@ function dispatch(msg: Message): void {
           }
 
           case 'newRObject': {
-            const data = reqMsg.data as {
-              obj: WebRData;
-              objType: RType | 'object';
-              shelter: Shelter;
-            };
+            const msg = reqMsg as NewRObjectMessage;
 
-            const payload = newRObject(data.obj, data.objType);
-            keep(data.shelter, payload.obj.ptr);
+            // TODO: Remove `!`
+            const payload = newRObject(msg.data.obj, msg.data.objType);
+            keep(msg.data.shelter!, payload.obj.ptr);
 
             write(payload);
             break;
           }
 
           case 'callRObjectMethod': {
-            const data = reqMsg.data as {
-              payload?: WebRPayloadPtr;
-              prop: string;
-              args: WebRPayload[];
-              shelter: Shelter;
-            };
+            const msg = reqMsg as CallRObjectMethodMessage;
+            const data = msg.data;
             const obj = data.payload ? RObject.wrap(data.payload.obj.ptr) : RObject;
 
             const payload = callRObjectMethod(obj, data.prop, data.args);
             if (isWebRPayloadPtr(payload)) {
-              keep(data.shelter, payload.obj.ptr);
+              // TODO: Remove `!`
+              keep(data.shelter!, payload.obj.ptr);
             }
 
             write(payload);

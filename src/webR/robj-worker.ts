@@ -3,9 +3,9 @@ import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw, WebRDataSca
 import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
 import { envPoke, parseEvalBare, protect, protectInc, unprotect } from './utils-r';
 import { protectWithIndex, reprotect, unprotectIndex } from './utils-r';
+import { ShelterID, isShelterID } from './webr-chan';
 import { isWebRDataTree, WebRDataTree, WebRDataTreeAtomic, WebRDataTreeNode } from './tree';
 import { WebRDataTreeNull, WebRDataTreeString, WebRDataTreeSymbol } from './tree';
-import { isUUID, UUID } from './chan/task-common';
 
 export type RHandle = RObject | RPtr;
 
@@ -25,14 +25,13 @@ function assertRType(obj: RObjectBase, type: RType) {
 }
 
 // TODO: Shelter should be a dictionary not an array
-export type Shelter = UUID;
-export const shelters = new Map<Shelter, RPtr[]>();
+export const shelters = new Map<ShelterID, RPtr[]>();
 
 // Use this for implicit protection of objects sent to the main
 // thread. Currently uses the precious list but could use a different
 // mechanism in the future. Unprotection is explicit through
 // `Shelter.destroy()`.
-export function keep(shelter: Shelter, x: RHandle) {
+export function keep(shelter: ShelterID, x: RHandle) {
   const ptr = handlePtr(x);
   Module._R_PreserveObject(ptr);
 
@@ -41,7 +40,7 @@ export function keep(shelter: Shelter, x: RHandle) {
     return;
   }
 
-  if (isUUID(shelter)) {
+  if (isShelterID(shelter)) {
     shelters.get(shelter)!.push(ptr);
     return;
   }
@@ -52,7 +51,7 @@ export function keep(shelter: Shelter, x: RHandle) {
 // Frees objects preserved with `keep()`. This method is called by
 // users in the main thread to release objects that were automatically
 // protected before being sent away.
-export function destroy(shelter: Shelter, x: RHandle) {
+export function destroy(shelter: ShelterID, x: RHandle) {
   const ptr = handlePtr(x);
   Module._R_ReleaseObject(ptr);
 
@@ -66,7 +65,7 @@ export function destroy(shelter: Shelter, x: RHandle) {
   objs.splice(loc, 1);
 }
 
-export function purge(shelter: Shelter) {
+export function purge(shelter: ShelterID) {
   const ptrs: RPtr[] = shelters.get(shelter)!;
 
   for (const ptr of ptrs) {
