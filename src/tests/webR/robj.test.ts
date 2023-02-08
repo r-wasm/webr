@@ -111,8 +111,16 @@ describe('Working with R lists and vectors', () => {
     const vector = await webR.evalR('list(a=1, b=list(d="x",e="y",f=list(g=4,h=5,i=c(6,7))), c=3)');
     const value = (await vector.pluck('b', 'f', 'i', 2)) as RDouble;
     expect(await value.toNumber()).toEqual(7);
-    const oob = vector.pluck('b', 'f', 'i', 10);
+  });
+
+  test('Throw an error when out of bounds using the pluck method', async () => {
+    const vector = await webR.evalR('list(a=1, b=2, c=3)');
+    const oob = vector.pluck(10);
     await expect(oob).rejects.toThrow('non-local transfer of control occured');
+
+    const lastMsg = (await webR.flush()).pop();
+    expect(lastMsg!.type).toEqual('stderr');
+    expect(lastMsg!.data).toContain('subscript out of bounds');
   });
 
   test('Set an item using the set method', async () => {
