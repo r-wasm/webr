@@ -1,10 +1,11 @@
 import { AsyncQueue } from './queue';
-import { promiseHandles, ResolveFn, newCrossOriginWorker, isCrossOrigin } from '../utils';
+import { promiseHandles, ResolveFn, RejectFn, newCrossOriginWorker, isCrossOrigin } from '../utils';
 import { Message, newRequest, Response, SyncRequest } from './message';
 import { Endpoint } from './task-common';
 import { syncResponse } from './task-main';
 import { ChannelType, ChannelMain, ChannelWorker } from './channel';
 import { WebROptions } from '../webr-main';
+import { WebRPayload, webRPayloadError } from '../payload';
 
 import { IN_NODE } from '../compat';
 import type { Worker as NodeWorker } from 'worker_threads';
@@ -23,7 +24,7 @@ export class SharedBufferChannelMain implements ChannelMain {
   resolve: (_?: unknown) => void;
   close = () => {};
 
-  #parked = new Map<string, ResolveFn>();
+  #parked = new Map<string, { resolve: ResolveFn; reject: RejectFn }>();
 
   constructor(config: Required<WebROptions>) {
     const initWorker = (worker: Worker) => {
@@ -74,20 +75,26 @@ export class SharedBufferChannelMain implements ChannelMain {
   async request(msg: Message, transferables?: [Transferable]): Promise<any> {
     const req = newRequest(msg, transferables);
 
-    const { resolve: resolve, promise: prom } = promiseHandles();
-    this.#parked.set(req.data.uuid, resolve);
+    const { resolve, reject, promise } = promiseHandles();
+    this.#parked.set(req.data.uuid, { resolve, reject });
 
     this.write(req);
-    return prom;
+    return promise;
   }
 
   #resolveResponse(msg: Response) {
     const uuid = msg.data.uuid;
-    const resolve = this.#parked.get(uuid);
+    const handles = this.#parked.get(uuid);
 
-    if (resolve) {
+    if (handles) {
+      const payload = msg.data.resp as WebRPayload;
       this.#parked.delete(uuid);
-      resolve(msg.data.resp);
+
+      if (payload.payloadType === 'err') {
+        handles.reject(webRPayloadError(payload));
+      } else {
+        handles.resolve(payload);
+      }
     } else {
       console.warn("Can't find request.");
     }
