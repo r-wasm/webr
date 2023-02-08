@@ -1,7 +1,7 @@
 import { ChannelMain } from './chan/channel';
 import { replaceInObject } from './utils';
 import { isWebRPayloadPtr, webRPayloadError, WebRPayloadPtr, WebRPayload } from './payload';
-import { RType, WebRDataRaw } from './robj';
+import { RType, WebRData, WebRDataRaw } from './robj';
 import { isRObject, RObject, isRFunction } from './robj-main';
 import * as RWorker from './robj-worker';
 
@@ -131,17 +131,21 @@ export function targetMethod(chan: ChannelMain, prop: string, payload?: WebRPayl
   };
 }
 
+import { NewRObjectMessage } from './webr-chan';
+
 /* Proxy the RWorker.RObject class constructors. This allows us to create a new
  * R object on the worker thread from a given JS object.
  */
-async function newRObject(chan: ChannelMain, objType: RType | 'object', value: unknown) {
-  const payload = await chan.request({
+async function newRObject(chan: ChannelMain, objType: RType | 'object', value: WebRData) {
+  const msg: NewRObjectMessage = {
     type: 'newRObject',
     data: {
       objType,
       obj: replaceInObject(value, isRObject, (obj: RObject) => obj._payload),
+      shelter: undefined, // TODO: Pass shelter
     },
-  });
+  };
+  const payload = await chan.request(msg);
   switch (payload.payloadType) {
     case 'raw':
       throw new Error('Unexpected raw payload type returned from newRObject');
@@ -177,7 +181,7 @@ export function newRProxy(chan: ChannelMain, payload: WebRPayloadPtr): RProxy<RW
 
 export function newRClassProxy<T, R>(chan: ChannelMain, objType: RType | 'object') {
   return new Proxy(RWorker.RObject, {
-    construct: (_, args: [unknown]) => newRObject(chan, objType, ...args),
+    construct: (_, args: [WebRData]) => newRObject(chan, objType, ...args),
     get: (_, prop: string | number | symbol) => {
       return targetMethod(chan, prop.toString());
     },

@@ -44,7 +44,12 @@ type XHRResponse = {
 
 let _config: Required<WebROptions>;
 
-import { EvalRMessage, ShelterMessage, ShelterDestroyMessage } from './webr-chan';
+import {
+  EvalRMessage,
+  NewRObjectMessage,
+  ShelterMessage,
+  ShelterDestroyMessage,
+} from './webr-chan';
 
 function dispatch(msg: Message): void {
   switch (msg.type) {
@@ -235,14 +240,11 @@ function dispatch(msg: Message): void {
           }
 
           case 'newRObject': {
-            const data = reqMsg.data as {
-              obj: WebRData;
-              objType: RType | 'object';
-              shelter: ShelterID;
-            };
+            const msg = reqMsg as NewRObjectMessage;
 
-            const payload = newRObject(data.obj, data.objType);
-            keep(data.shelter, payload.obj.ptr);
+            // TODO: Remove `!`
+            const payload = newRObject(msg.data.obj, msg.data.objType);
+            keep(msg.data.shelter!, payload.obj.ptr);
 
             write(payload);
             break;

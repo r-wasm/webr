@@ -23,24 +23,26 @@ export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function replaceInObject(
-  obj: unknown,
+export function replaceInObject<T>(
+  obj: T | T[],
   test: (obj: any) => boolean,
   replacer: (obj: any, ...replacerArgs: any[]) => unknown,
   ...replacerArgs: unknown[]
-): unknown {
+): T | T[] {
   if (obj === null || typeof obj !== 'object') {
     return obj;
   }
   if (test(obj)) {
-    return replacer(obj, ...replacerArgs);
+    return replacer(obj, ...replacerArgs) as T;
   }
   if (Array.isArray(obj) || ArrayBuffer.isView(obj)) {
-    return (obj as unknown[]).map((v) => replaceInObject(v, test, replacer, ...replacerArgs));
+    return (obj as unknown[]).map((v) =>
+      replaceInObject(v, test, replacer, ...replacerArgs)
+    ) as T[];
   }
   return Object.fromEntries(
     Object.entries(obj).map(([k, v], i) => [k, replaceInObject(v, test, replacer, ...replacerArgs)])
-  );
+  ) as T;
 }
 
 /* Workaround for loading a cross-origin script.
