@@ -8,6 +8,16 @@ import { REnvironment, RSymbol, RInteger } from './robj-main';
 import { RList, RLogical, RNull, RObject, RPairlist, RRaw, RString, RCall } from './robj-main';
 import * as RWorker from './robj-worker';
 
+import {
+  EvalRMessage,
+  FSMessage,
+  FSReadFileMessage,
+  FSWriteFileMessage,
+  NewShelterMessage,
+  ShelterMessage,
+  ShelterDestroyMessage,
+} from './webr-chan';
+
 export type CaptureROptions = {
   captureStreams?: boolean;
   captureConditions?: boolean;
@@ -171,53 +181,52 @@ export class WebR {
 
   FS = {
     lookupPath: async (path: string): Promise<FSNode> => {
-      const payload = await this.#chan.request({ type: 'lookupPath', data: { path } });
+      const msg: FSMessage = { type: 'lookupPath', data: { path } };
+      const payload = await this.#chan.request(msg);
       if (payload.payloadType === 'err') {
         throw webRPayloadError(payload);
       }
       return payload.obj as FSNode;
     },
     mkdir: async (path: string): Promise<FSNode> => {
-      const payload = await this.#chan.request({ type: 'mkdir', data: { path } });
+      const msg: FSMessage = { type: 'mkdir', data: { path } };
+      const payload = await this.#chan.request(msg);
       if (payload.payloadType === 'err') {
         throw webRPayloadError(payload);
       }
       return payload.obj as FSNode;
     },
     readFile: async (path: string, flags?: string): Promise<Uint8Array> => {
-      const payload = await this.#chan.request({ type: 'readFile', data: { path, flags } });
+      const msg: FSReadFileMessage = { type: 'readFile', data: { path, flags } };
+      const payload = await this.#chan.request(msg);
       if (payload.payloadType === 'err') {
         throw webRPayloadError(payload);
       }
       return payload.obj as Uint8Array;
     },
     rmdir: async (path: string): Promise<void> => {
-      const payload = await this.#chan.request({ type: 'rmdir', data: { path } });
+      const msg: FSMessage = { type: 'rmdir', data: { path } };
+      const payload = await this.#chan.request(msg);
       if (payload.payloadType === 'err') {
         throw webRPayloadError(payload);
       }
     },
     writeFile: async (path: string, data: ArrayBufferView, flags?: string): Promise<void> => {
-      const payload = await this.#chan.request({ type: 'writeFile', data: { path, data, flags } });
+      const msg: FSWriteFileMessage = { type: 'writeFile', data: { path, data, flags } };
+      const payload = await this.#chan.request(msg);
       if (payload.payloadType === 'err') {
         throw webRPayloadError(payload);
       }
     },
     unlink: async (path: string): Promise<void> => {
-      const payload = await this.#chan.request({ type: 'unlink', data: { path } });
+      const msg: FSMessage = { type: 'unlink', data: { path } };
+      const payload = await this.#chan.request(msg);
       if (payload.payloadType === 'err') {
         throw webRPayloadError(payload);
       }
     },
   };
 }
-
-import {
-  EvalRMessage,
-  NewShelterMessage,
-  ShelterMessage,
-  ShelterDestroyMessage,
-} from './webr-chan';
 
 export class Shelter {
   #id = '';

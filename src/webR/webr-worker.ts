@@ -47,6 +47,9 @@ let _config: Required<WebROptions>;
 import {
   CallRObjectMethodMessage,
   EvalRMessage,
+  FSMessage,
+  FSReadFileMessage,
+  FSWriteFileMessage,
   NewRObjectMessage,
   ShelterMessage,
   ShelterDestroyMessage,
@@ -63,7 +66,8 @@ function dispatch(msg: Message): void {
       try {
         switch (reqMsg.type) {
           case 'lookupPath': {
-            const node = Module.FS.lookupPath(reqMsg.data.path as string, {}).node;
+            const msg = reqMsg as FSMessage;
+            const node = Module.FS.lookupPath(msg.data.path, {}).node;
             write({
               obj: copyFSNode(node as FSNode),
               payloadType: 'raw',
@@ -71,17 +75,16 @@ function dispatch(msg: Message): void {
             break;
           }
           case 'mkdir': {
+            const msg = reqMsg as FSMessage;
             write({
-              obj: copyFSNode(Module.FS.mkdir(reqMsg.data.path as string) as FSNode),
+              obj: copyFSNode(Module.FS.mkdir(msg.data.path) as FSNode),
               payloadType: 'raw',
             });
             break;
           }
           case 'readFile': {
-            const reqData = reqMsg.data as {
-              path: string;
-              flags?: string;
-            };
+            const msg = reqMsg as FSReadFileMessage;
+            const reqData = msg.data;
             const out = {
               obj: Module.FS.readFile(reqData.path, {
                 encoding: 'binary',
@@ -93,18 +96,16 @@ function dispatch(msg: Message): void {
             break;
           }
           case 'rmdir': {
+            const msg = reqMsg as FSMessage;
             write({
-              obj: Module.FS.rmdir(reqMsg.data.path as string),
+              obj: Module.FS.rmdir(msg.data.path),
               payloadType: 'raw',
             });
             break;
           }
           case 'writeFile': {
-            const reqData = reqMsg.data as {
-              path: string;
-              data: ArrayBufferView;
-              flags?: string;
-            };
+            const msg = reqMsg as FSWriteFileMessage;
+            const reqData = msg.data;
             // FIXME: Use a replacer + reviver to transfer Uint8Array
             const data = Uint8Array.from(Object.values(reqData.data));
             write({
@@ -114,8 +115,9 @@ function dispatch(msg: Message): void {
             break;
           }
           case 'unlink': {
+            const msg = reqMsg as FSMessage;
             write({
-              obj: Module.FS.unlink(reqMsg.data.path as string),
+              obj: Module.FS.unlink(msg.data.path),
               payloadType: 'raw',
             });
             break;

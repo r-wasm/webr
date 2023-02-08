@@ -24,6 +24,28 @@ export interface EvalRMessage extends Message {
   };
 }
 
+export interface FSMessage extends Message {
+  type: 'lookupPath' | 'mkdir' | 'rmdir' | 'unlink';
+  data: { path: string };
+}
+
+export interface FSReadFileMessage extends Message {
+  type: 'readFile';
+  data: {
+    path: string;
+    flags?: string;
+  };
+}
+
+export interface FSWriteFileMessage extends Message {
+  type: 'writeFile';
+  data: {
+    path: string;
+    data: ArrayBufferView;
+    flags?: string;
+  };
+}
+
 export interface NewRObjectMessage extends Message {
   type: 'newRObject';
   data: {
