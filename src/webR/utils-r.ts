@@ -1,4 +1,4 @@
-import { Module, DictEmPtrs, dictEmFree, EmPtr } from './emscripten';
+import { Module, DictEmPtrs, dictEmFree } from './emscripten';
 import { WebRData, RPtr } from './robj';
 import { RObject, REnvironment, RHandle, handlePtr } from './robj-worker';
 
@@ -71,39 +71,9 @@ export class UnwindProtectException extends Error {
   }
 }
 
-let evalBodyPtr: EmPtr | undefined;
-let evalCleanupPtr: EmPtr | undefined;
-
-function safeEvalBody(data: EmPtr): RPtr {
-  const call = Module.getValue(data, 'i32');
-  const env = Module.getValue(data + 4, 'i32');
-  return Module._Rf_eval(call, env);
-}
-
-function safeEvalCleanup(cont: RPtr, jump: number): number {
-  if (jump) {
-    throw new UnwindProtectException('Unwind protection from safeEval invocation', cont);
-  }
-  return 0;
-}
-
 export function safeEval(call: RHandle, env: RHandle): RPtr {
-  if (!evalBodyPtr) {
-    evalBodyPtr = Module.addFunction(safeEvalBody, 'ii');
-  }
-  if (!evalCleanupPtr) {
-    evalCleanupPtr = Module.addFunction(safeEvalCleanup, 'iii');
-  }
-
-  const dataPtr = Module._malloc(8);
-
-  Module.setValue(dataPtr, handlePtr(call), '*');
-  Module.setValue(dataPtr + 4, handlePtr(env), '*');
-
-  const cont = Module._Rf_protect(Module._R_MakeUnwindCont());
-  const res = Module._R_UnwindProtect(evalBodyPtr, dataPtr, evalCleanupPtr, cont, cont);
-  unprotect(1);
-
-  Module._free(dataPtr);
-  return res;
+  return Module.LDSO.loadedLibsByName['/usr/lib/R/library/webr/libs/webr.so'].module.ffi_safe_eval(
+    handlePtr(call),
+    handlePtr(env)
+  );
 }

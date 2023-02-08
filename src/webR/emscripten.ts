@@ -1,4 +1,5 @@
 import type { RPtr, RTypeNumber } from './robj';
+import type { UnwindProtectException } from './utils-r';
 
 export interface Module extends EmscriptenModule {
   /* Add mkdirTree to FS namespace, missing from @types/emscripten at the
@@ -8,6 +9,10 @@ export interface Module extends EmscriptenModule {
     mkdirTree(path: string): void;
   };
   ENV: { [key: string]: string };
+  LDSO: {
+    loadedLibsByName: { [key: string]: any };
+    loadedLibsByHandle: { [key: number]: any };
+  };
   monitorRunDependencies: (n: number) => void;
   noImageDecoding: boolean;
   noAudioDecoding: boolean;
@@ -22,7 +27,6 @@ export interface Module extends EmscriptenModule {
     response: string | ArrayBuffer;
   };
   // Exported Emscripten JS API
-  addFunction: typeof addFunction;
   allocateUTF8: typeof allocateUTF8;
   getValue: typeof getValue;
   setValue: typeof setValue;
@@ -56,7 +60,6 @@ export interface Module extends EmscriptenModule {
   _R_ParseEvalString: (code: number, env: RPtr) => RPtr;
   _R_PreserveObject: (ptr: RPtr) => void;
   _R_ReleaseObject: (ptr: RPtr) => void;
-  _R_tryCatchError: (body: RPtr, data: EmPtr, handler: EmPtr, hdata: EmPtr) => RPtr;
   _Rf_ScalarReal: (n: number) => RPtr;
   _Rf_ScalarLogical: (l: number) => RPtr;
   _Rf_ScalarInteger: (n: number) => RPtr;
@@ -81,10 +84,8 @@ export interface Module extends EmscriptenModule {
   _Rf_onintr: () => void;
   _Rf_protect: (ptr: RPtr) => RPtr;
   _R_ContinueUnwind: (cont: RPtr) => never;
-  _R_MakeUnwindCont: () => RPtr;
   _R_ProtectWithIndex: (ptr1: RPtr, ptr2: RPtr) => void;
   _R_Reprotect: (ptr1: RPtr, ptr2: RPtr) => void;
-  _R_UnwindProtect: (fun: RPtr, data: EmPtr, clean: EmPtr, cdata: EmPtr, cont: RPtr) => RPtr;
   _Rf_setAttrib: (ptr1: RPtr, ptr2: RPtr, ptr3: RPtr) => RPtr;
   _Rf_unprotect: (n: number) => void;
   _Rf_unprotect_ptr: (ptr: RPtr) => void;
@@ -108,6 +109,7 @@ export interface Module extends EmscriptenModule {
   _SET_VECTOR_ELT: (ptr: RPtr, idx: number, val: RPtr) => void;
   // TODO: Namespace all webR properties
   webr: {
+    UnwindProtectException: typeof UnwindProtectException;
     readConsole: () => number;
     resolveInit: () => void;
     handleEvents: () => void;
@@ -117,7 +119,7 @@ export interface Module extends EmscriptenModule {
 
 export const Module = {} as Module;
 
-export type EmPtr = ReturnType<typeof Module.allocateUTF8>;
+type EmPtr = ReturnType<typeof Module.allocateUTF8>;
 
 export interface DictEmPtrs {
   [key: string]: EmPtr;

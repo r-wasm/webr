@@ -2,6 +2,7 @@
 
 #include <R.h>
 #include <Rinternals.h>
+#include "decl/webr-decl.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -22,6 +23,46 @@ SEXP ffi_eval_js(SEXP code) {
   char eval_script[BUFSIZE];
   snprintf(eval_script, BUFSIZE, eval_template, R_CHAR(STRING_ELT(code, 0)));
   return Rf_ScalarInteger(emscripten_run_script_int(eval_script));
+#else
+    Rf_error("Function must be running under Emscripten.");
+#endif
+}
+
+struct safe_eval_data {
+  SEXP call;
+  SEXP env;
+};
+
+SEXP ffi_safe_eval(SEXP call, SEXP env) {
+  struct safe_eval_data* data = malloc(sizeof(struct safe_eval_data));
+  data->call = call;
+  data->env = env;
+
+  SEXP cont = PROTECT(R_MakeUnwindCont());
+  SEXP res = R_UnwindProtect(safe_eval_body, data, safe_eval_cleanup, cont, cont);
+
+  UNPROTECT(1);
+  free(data);
+  return res;
+}
+
+static
+SEXP safe_eval_body(void* data) {
+  struct safe_eval_data* ctx = (struct safe_eval_data *) data;
+  return Rf_eval(ctx->call, ctx->env);
+}
+
+static
+void safe_eval_cleanup(void* cdata, Rboolean jump) {
+#ifdef __EMSCRIPTEN__
+  if (jump) {
+    EM_ASM({
+      throw new globalThis.Module.webr.UnwindProtectException(
+        'A non-local transfer of control occured during evaluation',
+        $0
+      );
+    }, cdata);
+  }
 #else
     Rf_error("Function must be running under Emscripten.");
 #endif

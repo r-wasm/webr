@@ -281,13 +281,18 @@ function dispatch(msg: Message): void {
         }
       } catch (_e) {
         const e = _e as Error;
-        if (e instanceof UnwindProtectException) {
-          throw e;
-        }
         write({
           payloadType: 'err',
           obj: { name: e.name, message: e.message, stack: e.stack },
         });
+
+        /* Re-throw `UnwindProtectException` after sending a message to the main
+         * thread resolving the request's promise, so that `R_ContinueUnwind()`
+         * is invoked as the stack unwinds.
+         */
+        if (e instanceof UnwindProtectException) {
+          throw e;
+        }
       }
       break;
     }
@@ -530,6 +535,7 @@ function init(config: Required<WebROptions>) {
   };
 
   Module.webr = {
+    UnwindProtectException: UnwindProtectException,
     resolveInit: () => {
       chan?.setInterrupt(Module._Rf_onintr);
       Module.setValue(Module._R_Interactive, _config.interactive, '*');
@@ -546,6 +552,7 @@ function init(config: Required<WebROptions>) {
       } catch (e) {
         if (e instanceof UnwindProtectException) {
           Module._R_ContinueUnwind(e.cont);
+          throwUnreachable();
         }
         throw e;
       }

@@ -109,10 +109,10 @@ describe('Working with R lists and vectors', () => {
 
   test('Get an item using the pluck method', async () => {
     const vector = await webR.evalR('list(a=1, b=list(d="x",e="y",f=list(g=4,h=5,i=c(6,7))), c=3)');
-    let value = (await vector.pluck('b', 'f', 'i', 2)) as RDouble;
+    const value = (await vector.pluck('b', 'f', 'i', 2)) as RDouble;
     expect(await value.toNumber()).toEqual(7);
-    value = (await vector.pluck('b', 'f', 'i', 10)) as RDouble;
-    expect(await value).toBeUndefined();
+    const oob = vector.pluck('b', 'f', 'i', 10);
+    await expect(oob).rejects.toThrow('non-local transfer of control occured');
   });
 
   test('Set an item using the set method', async () => {
