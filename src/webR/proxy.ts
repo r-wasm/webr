@@ -4,6 +4,7 @@ import { isWebRPayloadPtr, webRPayloadError, WebRPayloadPtr, WebRPayload } from 
 import { RType, WebRData, WebRDataRaw } from './robj';
 import { isRObject, RObject, isRFunction } from './robj-main';
 import * as RWorker from './robj-worker';
+import { CallRObjectMethodMessage, NewRObjectMessage } from './webr-chan';
 
 /** Obtain a union of the keys corresponding to methods of a given class T
  */
@@ -65,14 +66,16 @@ function empty() {}
 function targetAsyncIterator(chan: ChannelMain, proxy: RProxy<RWorker.RObject>) {
   return async function* () {
     // Get the R object's length
-    const reply = await chan.request({
+    const msg: CallRObjectMethodMessage = {
       type: 'callRObjectMethod',
       data: {
         payload: proxy._payload,
         prop: 'getPropertyValue',
         args: [{ payloadType: 'raw', obj: 'length' }],
+        shelter: undefined, // TODO
       },
-    });
+    };
+    const reply = await chan.request(msg);
 
     // Throw an error if there was some problem accessing the object length
     if (reply.payloadType === 'err') {
@@ -108,10 +111,11 @@ export function targetMethod(chan: ChannelMain, prop: string, payload?: WebRPayl
       };
     });
 
-    const reply = await chan.request({
+    const msg: CallRObjectMethodMessage = {
       type: 'callRObjectMethod',
-      data: { payload, prop, args },
-    });
+      data: { payload, prop, args: args as WebRPayload[] },
+    };
+    const reply = await chan.request(msg);
 
     switch (reply.payloadType) {
       case 'ptr':
@@ -130,8 +134,6 @@ export function targetMethod(chan: ChannelMain, prop: string, payload?: WebRPayl
     }
   };
 }
-
-import { NewRObjectMessage } from './webr-chan';
 
 /* Proxy the RWorker.RObject class constructors. This allows us to create a new
  * R object on the worker thread from a given JS object.

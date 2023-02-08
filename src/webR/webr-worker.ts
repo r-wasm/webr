@@ -45,6 +45,7 @@ type XHRResponse = {
 let _config: Required<WebROptions>;
 
 import {
+  CallRObjectMethodMessage,
   EvalRMessage,
   NewRObjectMessage,
   ShelterMessage,
@@ -251,17 +252,14 @@ function dispatch(msg: Message): void {
           }
 
           case 'callRObjectMethod': {
-            const data = reqMsg.data as {
-              payload?: WebRPayloadPtr;
-              prop: string;
-              args: WebRPayload[];
-              shelter: ShelterID;
-            };
+            const msg = reqMsg as CallRObjectMethodMessage;
+            const data = msg.data;
             const obj = data.payload ? RObject.wrap(data.payload.obj.ptr) : RObject;
 
             const payload = callRObjectMethod(obj, data.prop, data.args);
             if (isWebRPayloadPtr(payload)) {
-              keep(data.shelter, payload.obj.ptr);
+              // TODO: Remove `!`
+              keep(data.shelter!, payload.obj.ptr);
             }
 
             write(payload);
