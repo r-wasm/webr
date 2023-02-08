@@ -9,6 +9,8 @@ import { RList, RLogical, RNull, RObject, RPairlist, RRaw, RString, RCall } from
 import * as RWorker from './robj-worker';
 
 import {
+  CaptureRMessage,
+  CaptureROptions,
   EvalRMessage,
   FSMessage,
   FSReadFileMessage,
@@ -17,14 +19,6 @@ import {
   ShelterMessage,
   ShelterDestroyMessage,
 } from './webr-chan';
-
-export type CaptureROptions = {
-  captureStreams?: boolean;
-  captureConditions?: boolean;
-  withAutoprint?: boolean;
-  throwJsException?: boolean;
-  withHandlers?: boolean;
-};
 
 export { Console, ConsoleCallbacks } from '../console/console';
 
@@ -317,7 +311,7 @@ export class Shelter {
       throw new Error('Attempted to evaluate R code with invalid environment object');
     }
 
-    const payload = await this.#chan.request({
+    const msg: CaptureRMessage = {
       type: 'captureR',
       data: {
         code: code,
@@ -325,7 +319,8 @@ export class Shelter {
         options: options,
         shelter: this.#id,
       },
-    });
+    };
+    const payload = await this.#chan.request(msg);
 
     switch (payload.payloadType) {
       case 'ptr':

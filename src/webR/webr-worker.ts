@@ -1,7 +1,7 @@
 import { loadScript } from './compat';
 import { newChannelWorker, ChannelWorker, ChannelInitMessage } from './chan/channel';
 import { Message, Request, newResponse } from './chan/message';
-import { FSNode, WebROptions, CaptureROptions } from './webr-main';
+import { FSNode, WebROptions } from './webr-main';
 import { Module } from './emscripten';
 import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
@@ -10,8 +10,20 @@ import { RObject, isRObject, REnvironment, RList, getRWorkerClass } from './robj
 import { RCharacter, RString, keep, destroy, purge, shelters } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
 import { protectInc, unprotect, parseEvalBare } from './utils-r';
-import { ShelterID } from './webr-chan';
 import { generateUUID } from './chan/task-common';
+
+import {
+  CallRObjectMethodMessage,
+  CaptureRMessage,
+  CaptureROptions,
+  EvalRMessage,
+  FSMessage,
+  FSReadFileMessage,
+  FSWriteFileMessage,
+  NewRObjectMessage,
+  ShelterMessage,
+  ShelterDestroyMessage,
+} from './webr-chan';
 
 let initialised = false;
 let chan: ChannelWorker | undefined;
@@ -43,17 +55,6 @@ type XHRResponse = {
 };
 
 let _config: Required<WebROptions>;
-
-import {
-  CallRObjectMethodMessage,
-  EvalRMessage,
-  FSMessage,
-  FSReadFileMessage,
-  FSWriteFileMessage,
-  NewRObjectMessage,
-  ShelterMessage,
-  ShelterDestroyMessage,
-} from './webr-chan';
 
 function dispatch(msg: Message): void {
   switch (msg.type) {
@@ -159,12 +160,8 @@ function dispatch(msg: Message): void {
           }
 
           case 'captureR': {
-            const data = reqMsg.data as {
-              code: string;
-              env?: WebRPayloadPtr;
-              options: CaptureROptions;
-              shelter: ShelterID;
-            };
+            const msg = reqMsg as CaptureRMessage;
+            const data = msg.data;
 
             const shelter = data.shelter;
             const prot = { n: 0 };

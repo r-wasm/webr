@@ -15,6 +15,24 @@ export interface CallRObjectMethodMessage extends Message {
   };
 }
 
+export type CaptureROptions = {
+  captureStreams?: boolean;
+  captureConditions?: boolean;
+  withAutoprint?: boolean;
+  throwJsException?: boolean;
+  withHandlers?: boolean;
+};
+
+export interface CaptureRMessage extends Message {
+  type: 'captureR';
+  data: {
+    code: string;
+    env?: WebRPayloadPtr;
+    options: CaptureROptions;
+    shelter: ShelterID;
+  };
+}
+
 export interface EvalRMessage extends Message {
   type: 'evalR';
   data: {
