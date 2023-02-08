@@ -62,27 +62,37 @@ export function parseEvalBare(code: string, env: WebRData): RObject {
   }
 }
 
-let evalBodyPtr: EmPtr | undefined;
-let evalHandlerPtr: EmPtr | undefined;
-let evalErrorMessage: string | undefined;
+export class UnwindProtectException extends Error {
+  cont: RPtr;
+  constructor(message: string, cont: RPtr) {
+    super(message);
+    this.name = 'UnwindProtectException';
+    this.cont = cont;
+  }
+}
 
-function evalCallBody(data: EmPtr): RPtr {
+let evalBodyPtr: EmPtr | undefined;
+let evalCleanupPtr: EmPtr | undefined;
+
+function safeEvalBody(data: EmPtr): RPtr {
   const call = Module.getValue(data, 'i32');
   const env = Module.getValue(data + 4, 'i32');
   return Module._Rf_eval(call, env);
 }
 
-function evalCallHandler(cond: RPtr, _: EmPtr) {
-  evalErrorMessage = RObject.wrap(cond).get(1).toString();
+function safeEvalCleanup(cont: RPtr, jump: number): number {
+  if (jump) {
+    throw new UnwindProtectException('Unwind protection from safeEval invocation', cont);
+  }
   return 0;
 }
 
-export function evalCall(call: RHandle, env: RHandle): RPtr {
+export function safeEval(call: RHandle, env: RHandle): RPtr {
   if (!evalBodyPtr) {
-    evalBodyPtr = Module.addFunction(evalCallBody, 'ii');
+    evalBodyPtr = Module.addFunction(safeEvalBody, 'ii');
   }
-  if (!evalHandlerPtr) {
-    evalHandlerPtr = Module.addFunction(evalCallHandler, 'iii');
+  if (!evalCleanupPtr) {
+    evalCleanupPtr = Module.addFunction(safeEvalCleanup, 'iii');
   }
 
   const dataPtr = Module._malloc(8);
@@ -90,12 +100,9 @@ export function evalCall(call: RHandle, env: RHandle): RPtr {
   Module.setValue(dataPtr, handlePtr(call), '*');
   Module.setValue(dataPtr + 4, handlePtr(env), '*');
 
-  // In case of an error ensure that the stack is unwound only as far as this
-  // function, rather than up to top level, before throwing a JS error.
-  const res = Module._R_tryCatchError(evalBodyPtr, dataPtr, evalHandlerPtr, 0);
-  if (!res) {
-    throw new Error(evalErrorMessage);
-  }
+  const cont = Module._Rf_protect(Module._R_MakeUnwindCont());
+  const res = Module._R_UnwindProtect(evalBodyPtr, dataPtr, evalCleanupPtr, cont, cont);
+  unprotect(1);
 
   Module._free(dataPtr);
   return res;

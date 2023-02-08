@@ -80,8 +80,11 @@ export interface Module extends EmscriptenModule {
   _Rf_mkString: (ptr: number) => RPtr;
   _Rf_onintr: () => void;
   _Rf_protect: (ptr: RPtr) => RPtr;
+  _R_ContinueUnwind: (cont: RPtr) => never;
+  _R_MakeUnwindCont: () => RPtr;
   _R_ProtectWithIndex: (ptr1: RPtr, ptr2: RPtr) => void;
   _R_Reprotect: (ptr1: RPtr, ptr2: RPtr) => void;
+  _R_UnwindProtect: (fun: RPtr, data: EmPtr, clean: EmPtr, cdata: EmPtr, cont: RPtr) => RPtr;
   _Rf_setAttrib: (ptr1: RPtr, ptr2: RPtr, ptr3: RPtr) => RPtr;
   _Rf_unprotect: (n: number) => void;
   _Rf_unprotect_ptr: (ptr: RPtr) => void;

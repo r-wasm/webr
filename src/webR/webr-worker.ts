@@ -10,7 +10,7 @@ import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
 import { RObject, isRObject, REnvironment, RList, getRWorkerClass } from './robj-worker';
 import { RCharacter, RString, keep, destroy, purge, shelters } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
-import { protectInc, unprotect, parseEvalBare } from './utils-r';
+import { protectInc, unprotect, parseEvalBare, UnwindProtectException } from './utils-r';
 import { generateUUID } from './chan/task-common';
 
 import {
@@ -281,6 +281,9 @@ function dispatch(msg: Message): void {
         }
       } catch (_e) {
         const e = _e as Error;
+        if (e instanceof UnwindProtectException) {
+          throw e;
+        }
         write({
           payloadType: 'err',
           obj: { name: e.name, message: e.message, stack: e.stack },
@@ -538,7 +541,14 @@ function init(config: Required<WebROptions>) {
       if (!chan) {
         throw new Error("Can't read console input without a communication channel");
       }
-      return chan.inputOrDispatch();
+      try {
+        return chan.inputOrDispatch();
+      } catch (e) {
+        if (e instanceof UnwindProtectException) {
+          Module._R_ContinueUnwind(e.cont);
+        }
+        throw e;
+      }
     },
 
     handleEvents: () => {
