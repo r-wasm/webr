@@ -11,7 +11,7 @@ import { RCharacter, RString, keep, destroy, purge, shelters } from './robj-work
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
 import { protectInc, unprotect, parseEvalBare } from './utils-r';
 import { ShelterID } from './webr-chan';
-import { generateUUID, UUID } from './chan/task-common';
+import { generateUUID } from './chan/task-common';
 
 let initialised = false;
 let chan: ChannelWorker | undefined;
@@ -43,6 +43,8 @@ type XHRResponse = {
 };
 
 let _config: Required<WebROptions>;
+
+import { EvalRMessage, ShelterMessage, ShelterDestroyMessage } from './webr-chan';
 
 function dispatch(msg: Message): void {
   switch (msg.type) {
@@ -125,24 +127,24 @@ function dispatch(msg: Message): void {
           }
 
           case 'shelterSize': {
-            const id = reqMsg.data as UUID;
-            const size = shelters.get(id)!.length;
+            const msg = reqMsg as ShelterMessage;
+            const size = shelters.get(msg.data)!.length;
 
             write({ payloadType: 'raw', obj: size });
             break;
           }
 
           case 'shelterPurge': {
-            const shelter = reqMsg.data as ShelterID;
-            purge(shelter);
+            const msg = reqMsg as ShelterMessage;
+            purge(msg.data);
 
             write({ payloadType: 'raw', obj: null });
             break;
           }
 
           case 'shelterDestroy': {
-            const data = reqMsg.data as { id: ShelterID; obj: WebRPayloadPtr };
-            destroy(data.id, data.obj.obj.ptr);
+            const msg = reqMsg as ShelterDestroyMessage;
+            destroy(msg.data.id, msg.data.obj.obj.ptr);
 
             write({ payloadType: 'raw', obj: null });
             break;
@@ -216,14 +218,10 @@ function dispatch(msg: Message): void {
           }
 
           case 'evalR': {
-            const data = reqMsg.data as {
-              code: string;
-              env?: WebRPayloadPtr;
-              shelter: ShelterID;
-            };
+            const msg = reqMsg as EvalRMessage;
 
-            const result = evalR(data.code, data.env);
-            keep(data.shelter, result);
+            const result = evalR(msg.data.code, msg.data.env);
+            keep(msg.data.shelter, result);
 
             write({
               obj: {
