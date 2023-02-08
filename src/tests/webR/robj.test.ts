@@ -25,7 +25,7 @@ let initShelterSize = -1;
 
 beforeAll(async () => {
   await webR.init();
-  initShelterSize = await webR.shelter.size();
+  initShelterSize = await webR.globalShelter.size();
 });
 
 // We don't destroy objects during unit tests but when webR starts
@@ -546,23 +546,23 @@ describe('Garbage collection', () => {
   });
 
   test('Objects are protected and destroyed', async () => {
-    const size = await webR.shelter.size();
+    const size = await webR.globalShelter.size();
 
     const x = await webR.evalR('1');
     const y = await webR.evalR('1');
-    expect(await webR.shelter.size()).toEqual(size + 2);
+    expect(await webR.globalShelter.size()).toEqual(size + 2);
 
     await webR.destroy(x);
-    expect(await webR.shelter.size()).toEqual(size + 1);
+    expect(await webR.globalShelter.size()).toEqual(size + 1);
 
-    await webR.shelter.destroy(y);
-    expect(await webR.shelter.size()).toEqual(size);
+    await webR.globalShelter.destroy(y);
+    expect(await webR.globalShelter.size()).toEqual(size);
 
     await expect(webR.destroy(x)).rejects.toThrow("Can't find object in shelter");
   });
 
   test('Objects managed in shelter', async () => {
-    const globalSize = await webR.shelter.size();
+    const globalSize = await webR.globalShelter.size();
 
     const shelter = await new webR.Shelter();
     expect(await shelter.size()).toEqual(0);
@@ -570,7 +570,7 @@ describe('Garbage collection', () => {
     const x = await shelter.evalR('1');
     const y = await shelter.evalR('1');
     expect(await shelter.size()).toEqual(2);
-    expect(await webR.shelter.size()).toEqual(globalSize);
+    expect(await webR.globalShelter.size()).toEqual(globalSize);
 
     await shelter.destroy(x);
     expect(await shelter.size()).toEqual(1);

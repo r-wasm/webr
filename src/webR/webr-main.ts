@@ -55,7 +55,7 @@ const defaultOptions = {
 
 export class WebR {
   #chan: ChannelMain;
-  shelter!: Shelter;
+  globalShelter!: Shelter;
 
   RObject;
   RLogical;
@@ -115,7 +115,7 @@ export class WebR {
       na: (await this.RObject.getStaticPropertyValue('logicalNA')) as RLogical,
     };
 
-    this.shelter = await new this.Shelter();
+    this.globalShelter = await new this.Shelter();
 
     return init;
   }
@@ -151,7 +151,7 @@ export class WebR {
   }
 
   async destroy(x: RObject) {
-    await this.shelter.destroy(x);
+    await this.globalShelter.destroy(x);
   }
 
   async captureR(
@@ -162,11 +162,11 @@ export class WebR {
     result: RObject;
     output: unknown[];
   }> {
-    return this.shelter.captureR(code, env, options);
+    return this.globalShelter.captureR(code, env, options);
   }
 
   async evalR(code: string, env?: REnvironment): Promise<RObject> {
-    return this.shelter.evalR(code, env);
+    return this.globalShelter.evalR(code, env);
   }
 
   FS = {
