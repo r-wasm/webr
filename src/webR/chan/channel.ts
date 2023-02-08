@@ -58,7 +58,7 @@ export type ChannelInitMessage = {
   data: {
     config: Required<WebROptions>;
     channelType: Exclude<
-      typeof ChannelType[keyof typeof ChannelType],
+      (typeof ChannelType)[keyof typeof ChannelType],
       typeof ChannelType.Automatic
     >;
     clientId?: string;

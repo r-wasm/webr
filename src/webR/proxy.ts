@@ -196,6 +196,6 @@ export function newRClassProxy<T, R>(chan: ChannelMain, objType: RType | 'object
         ): Promise<R>;
       }
     : never) & {
-    [P in Methods<typeof RWorker.RObject>]: RProxify<typeof RWorker.RObject[P]>;
+    [P in Methods<typeof RWorker.RObject>]: RProxify<(typeof RWorker.RObject)[P]>;
   };
 }
