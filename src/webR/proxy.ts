@@ -100,7 +100,7 @@ function targetAsyncIterator(chan: ChannelMain, proxy: RProxy<RWorker.RObject>) 
 export function targetMethod(chan: ChannelMain, prop: string): any;
 export function targetMethod(chan: ChannelMain, prop: string, payload: WebRPayloadPtr): any;
 export function targetMethod(chan: ChannelMain, prop: string, payload?: WebRPayloadPtr): any {
-  return async (..._args: unknown[]) => {
+  return async (..._args: WebRData[]) => {
     const args = _args.map((arg) => {
       if (isRObject(arg)) {
         return arg._payload;
@@ -108,12 +108,12 @@ export function targetMethod(chan: ChannelMain, prop: string, payload?: WebRPayl
       return {
         obj: replaceInObject(arg, isRObject, (obj: RObject) => obj._payload),
         payloadType: 'raw',
-      };
+      } as WebRPayload;
     });
 
     const msg: CallRObjectMethodMessage = {
       type: 'callRObjectMethod',
-      data: { payload, prop, args: args as WebRPayload[] },
+      data: { payload, prop, args: args },
     };
     const reply = await chan.request(msg);
 
