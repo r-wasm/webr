@@ -73,7 +73,7 @@ export function purge(shelter: Shelter) {
     try {
       Module._R_ReleaseObject(ptr);
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
