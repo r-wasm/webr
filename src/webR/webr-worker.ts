@@ -7,9 +7,10 @@ import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
 import { RObject, isRObject, REnvironment, RList, getRWorkerClass } from './robj-worker';
-import { RCharacter, RString, keep } from './robj-worker';
+import { RCharacter, RString, keep, destroy, purge, Shelter, shelters } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
 import { protectInc, unprotect, parseEvalBare } from './utils-r';
+import { generateUUID, UUID } from './chan/task-common';
 
 let initialised = false;
 let chan: ChannelWorker | undefined;
@@ -111,13 +112,50 @@ function dispatch(msg: Message): void {
             break;
           }
 
+          case 'newShelter': {
+            const id = generateUUID();
+            shelters.set(id, []);
+
+            write({
+              payloadType: 'raw',
+              obj: id,
+            });
+            break;
+          }
+
+          case 'shelterSize': {
+            const id = reqMsg.data as UUID;
+            const size = shelters.get(id)!.length;
+
+            write({ payloadType: 'raw', obj: size });
+            break;
+          }
+
+          case 'shelterPurge': {
+            const shelter = reqMsg.data as Shelter;
+            purge(shelter);
+
+            write({ payloadType: 'raw', obj: null });
+            break;
+          }
+
+          case 'shelterDestroy': {
+            const data = reqMsg.data as { id: Shelter; obj: WebRPayloadPtr };
+            destroy(data.id, data.obj.obj.ptr);
+
+            write({ payloadType: 'raw', obj: null });
+            break;
+          }
+
           case 'captureR': {
             const data = reqMsg.data as {
               code: string;
               env?: WebRPayloadPtr;
               options: CaptureROptions;
+              shelter: Shelter;
             };
 
+            const shelter = data.shelter;
             const prot = { n: 0 };
 
             try {
@@ -127,7 +165,7 @@ function dispatch(msg: Message): void {
               const result = capture.get('result');
               const outputs = capture.get(2) as RList;
 
-              keep(result);
+              keep(shelter, result);
 
               const n = outputs.length;
               const output: any[] = [];
@@ -141,7 +179,7 @@ function dispatch(msg: Message): void {
                   const msg = (data as RString).toString();
                   output.push({ type, data: msg });
                 } else {
-                  keep(data);
+                  keep(shelter, data);
                   const payload = {
                     obj: {
                       ptr: data.ptr,
@@ -180,10 +218,11 @@ function dispatch(msg: Message): void {
             const data = reqMsg.data as {
               code: string;
               env?: WebRPayloadPtr;
+              shelter: Shelter;
             };
 
             const result = evalR(data.code, data.env);
-            keep(result);
+            keep(data.shelter, result);
 
             write({
               obj: {
@@ -200,10 +239,11 @@ function dispatch(msg: Message): void {
             const data = reqMsg.data as {
               obj: WebRData;
               objType: RType | 'object';
+              shelter: Shelter;
             };
 
             const payload = newRObject(data.obj, data.objType);
-            keep(payload.obj.ptr);
+            keep(data.shelter, payload.obj.ptr);
 
             write(payload);
             break;
@@ -214,12 +254,13 @@ function dispatch(msg: Message): void {
               payload?: WebRPayloadPtr;
               prop: string;
               args: WebRPayload[];
+              shelter: Shelter;
             };
             const obj = data.payload ? RObject.wrap(data.payload.obj.ptr) : RObject;
 
             const payload = callRObjectMethod(obj, data.prop, data.args);
             if (isWebRPayloadPtr(payload)) {
-              keep(payload.obj.ptr);
+              keep(data.shelter, payload.obj.ptr);
             }
 
             write(payload);
@@ -227,18 +268,12 @@ function dispatch(msg: Message): void {
           }
 
           case 'installPackage': {
-            const res = evalR(
-              `webr::install("${reqMsg.data.name as string}", repos="${_config.PKG_URL}")`
-            );
-            keep(res);
+            // TODO: Use `evalRVoid()`
+            evalR(`webr::install("${reqMsg.data.name as string}", repos="${_config.PKG_URL}")`);
 
             write({
-              obj: {
-                type: res.type(),
-                ptr: res.ptr,
-                methods: RObject.getMethods(res),
-              },
-              payloadType: 'ptr',
+              obj: true,
+              payloadType: 'raw',
             });
             break;
           }
@@ -424,7 +459,7 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
 }
 
 function evalR(code: string, env?: WebRPayloadPtr): RObject {
-  const capture = captureR(code, env);
+  const capture = captureR(code, env, undefined);
   Module._Rf_protect(capture.ptr);
 
   try {

@@ -31,6 +31,10 @@ export function transfer<T>(obj: T, transfers: Transferable[]): T {
 
 export type UUID = string;
 
+export function isUUID(x: any): x is UUID {
+  return typeof x === 'string' && x.length === UUID_LENGTH;
+}
+
 export const UUID_LENGTH = 63;
 
 export function generateUUID(): UUID {
