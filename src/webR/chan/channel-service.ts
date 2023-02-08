@@ -1,5 +1,4 @@
-import { AsyncQueue } from './queue';
-import { promiseHandles, ResolveFn, newCrossOriginWorker, isCrossOrigin } from '../utils';
+import { promiseHandles, newCrossOriginWorker, isCrossOrigin } from '../utils';
 import {
   Message,
   newRequest,
@@ -10,7 +9,8 @@ import {
   decodeData,
 } from './message';
 import { Endpoint } from './task-common';
-import { ChannelType, ChannelMain, ChannelWorker } from './channel';
+import { ChannelMain, ChannelWorker } from './channel';
+import { ChannelType } from './channel-common';
 import { WebROptions } from '../webr-main';
 
 import { IN_NODE } from '../compat';
@@ -21,20 +21,18 @@ if (IN_NODE) {
 
 // Main ----------------------------------------------------------------
 
-export class ServiceWorkerChannelMain implements ChannelMain {
-  inputQueue = new AsyncQueue<Message>();
-  outputQueue = new AsyncQueue<Message>();
-
+export class ServiceWorkerChannelMain extends ChannelMain {
   initialised: Promise<unknown>;
+
   resolve: (_?: unknown) => void;
   close = () => {};
 
-  #parked = new Map<string, ResolveFn>();
   #syncMessageCache = new Map<string, Message>();
   #registration?: ServiceWorkerRegistration;
   #interrupted = false;
 
   constructor(config: Required<WebROptions>) {
+    super();
     const initWorker = (worker: Worker) => {
       this.#handleEventsFromWorker(worker);
       this.close = () => worker.terminate();
@@ -71,34 +69,8 @@ export class ServiceWorkerChannelMain implements ChannelMain {
     return this.#registration.active;
   }
 
-  async read() {
-    return await this.outputQueue.get();
-  }
-
-  async flush() {
-    const msg: Message[] = [];
-    while (!this.outputQueue.isEmpty()) {
-      msg.push(await this.read());
-    }
-    return msg;
-  }
-
   interrupt() {
     this.#interrupted = true;
-  }
-
-  write(msg: Message) {
-    this.inputQueue.put(msg);
-  }
-
-  async request(msg: Message, transferables?: [Transferable]): Promise<any> {
-    const req = newRequest(msg, transferables);
-
-    const { resolve: resolve, promise: prom } = promiseHandles();
-    this.#parked.set(req.data.uuid, resolve);
-
-    this.write(req);
-    return prom;
   }
 
   async #registerServiceWorker(url: string): Promise<string> {
@@ -165,18 +137,6 @@ export class ServiceWorkerChannelMain implements ChannelMain {
     }
   }
 
-  #resolveResponse(msg: Response) {
-    const uuid = msg.data.uuid;
-    const resolve = this.#parked.get(uuid);
-
-    if (resolve) {
-      this.#parked.delete(uuid);
-      resolve(msg.data.resp);
-    } else {
-      console.warn("Can't find request.");
-    }
-  }
-
   #handleEventsFromWorker(worker: Worker) {
     if (IN_NODE) {
       (worker as unknown as NodeWorker).on('message', (message: Message) => {
@@ -199,7 +159,7 @@ export class ServiceWorkerChannelMain implements ChannelMain {
         return;
 
       case 'response':
-        this.#resolveResponse(message as Response);
+        this.resolveResponse(message as Response);
         return;
 
       default:

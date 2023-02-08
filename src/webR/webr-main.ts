@@ -1,4 +1,5 @@
-import { newChannelMain, ChannelMain, ChannelType } from './chan/channel';
+import { ChannelMain } from './chan/channel';
+import { newChannelMain, ChannelType } from './chan/channel-common';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { WebRPayloadPtr, webRPayloadError } from './payload';

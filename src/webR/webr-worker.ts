@@ -1,5 +1,6 @@
 import { loadScript } from './compat';
-import { newChannelWorker, ChannelWorker, ChannelInitMessage } from './chan/channel';
+import { ChannelWorker } from './chan/channel';
+import { newChannelWorker, ChannelInitMessage } from './chan/channel-common';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions } from './webr-main';
 import { Module } from './emscripten';

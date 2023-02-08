@@ -1,11 +1,10 @@
-import { AsyncQueue } from './queue';
-import { promiseHandles, ResolveFn, RejectFn, newCrossOriginWorker, isCrossOrigin } from '../utils';
-import { Message, newRequest, Response, SyncRequest } from './message';
+import { promiseHandles, newCrossOriginWorker, isCrossOrigin } from '../utils';
+import { Message, Response, SyncRequest } from './message';
 import { Endpoint } from './task-common';
 import { syncResponse } from './task-main';
-import { ChannelType, ChannelMain, ChannelWorker } from './channel';
+import { ChannelMain, ChannelWorker } from './channel';
+import { ChannelType } from './channel-common';
 import { WebROptions } from '../webr-main';
-import { WebRPayload, webRPayloadError } from '../payload';
 
 import { IN_NODE } from '../compat';
 import type { Worker as NodeWorker } from 'worker_threads';
@@ -15,18 +14,15 @@ if (IN_NODE) {
 
 // Main ----------------------------------------------------------------
 
-export class SharedBufferChannelMain implements ChannelMain {
-  inputQueue = new AsyncQueue<Message>();
-  outputQueue = new AsyncQueue<Message>();
+export class SharedBufferChannelMain extends ChannelMain {
   #interruptBuffer?: Int32Array;
 
   initialised: Promise<unknown>;
   resolve: (_?: unknown) => void;
   close = () => {};
 
-  #parked = new Map<string, { resolve: ResolveFn; reject: RejectFn }>();
-
   constructor(config: Required<WebROptions>) {
+    super();
     const initWorker = (worker: Worker) => {
       this.#handleEventsFromWorker(worker);
       this.close = () => worker.terminate();
@@ -49,55 +45,11 @@ export class SharedBufferChannelMain implements ChannelMain {
     ({ resolve: this.resolve, promise: this.initialised } = promiseHandles());
   }
 
-  async read() {
-    return await this.outputQueue.get();
-  }
-
-  async flush() {
-    const msg: Message[] = [];
-    while (!this.outputQueue.isEmpty()) {
-      msg.push(await this.read());
-    }
-    return msg;
-  }
-
   interrupt() {
     if (!this.#interruptBuffer) {
       throw new Error('Failed attempt to interrupt before initialising interruptBuffer');
     }
     this.#interruptBuffer[0] = 1;
-  }
-
-  write(msg: Message) {
-    this.inputQueue.put(msg);
-  }
-
-  async request(msg: Message, transferables?: [Transferable]): Promise<any> {
-    const req = newRequest(msg, transferables);
-
-    const { resolve, reject, promise } = promiseHandles();
-    this.#parked.set(req.data.uuid, { resolve, reject });
-
-    this.write(req);
-    return promise;
-  }
-
-  #resolveResponse(msg: Response) {
-    const uuid = msg.data.uuid;
-    const handles = this.#parked.get(uuid);
-
-    if (handles) {
-      const payload = msg.data.resp as WebRPayload;
-      this.#parked.delete(uuid);
-
-      if (payload.payloadType === 'err') {
-        handles.reject(webRPayloadError(payload));
-      } else {
-        handles.resolve(payload);
-      }
-    } else {
-      console.warn("Can't find request.");
-    }
   }
 
   #handleEventsFromWorker(worker: Worker) {
@@ -123,7 +75,7 @@ export class SharedBufferChannelMain implements ChannelMain {
         return;
 
       case 'response':
-        this.#resolveResponse(message as Response);
+        this.resolveResponse(message as Response);
         return;
 
       default:
