@@ -7,7 +7,7 @@ import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
 import { RObject, isRObject, REnvironment, RList, getRWorkerClass } from './robj-worker';
-import { RCharacter, RString, keep, destroy, purge, Shelter, shelters } from './robj-worker';
+import { RCharacter, RString, keep, destroy, purge, ShelterID, shelters } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
 import { protectInc, unprotect, parseEvalBare } from './utils-r';
 import { generateUUID, UUID } from './chan/task-common';
@@ -132,7 +132,7 @@ function dispatch(msg: Message): void {
           }
 
           case 'shelterPurge': {
-            const shelter = reqMsg.data as Shelter;
+            const shelter = reqMsg.data as ShelterID;
             purge(shelter);
 
             write({ payloadType: 'raw', obj: null });
@@ -140,7 +140,7 @@ function dispatch(msg: Message): void {
           }
 
           case 'shelterDestroy': {
-            const data = reqMsg.data as { id: Shelter; obj: WebRPayloadPtr };
+            const data = reqMsg.data as { id: ShelterID; obj: WebRPayloadPtr };
             destroy(data.id, data.obj.obj.ptr);
 
             write({ payloadType: 'raw', obj: null });
@@ -152,7 +152,7 @@ function dispatch(msg: Message): void {
               code: string;
               env?: WebRPayloadPtr;
               options: CaptureROptions;
-              shelter: Shelter;
+              shelter: ShelterID;
             };
 
             const shelter = data.shelter;
@@ -218,7 +218,7 @@ function dispatch(msg: Message): void {
             const data = reqMsg.data as {
               code: string;
               env?: WebRPayloadPtr;
-              shelter: Shelter;
+              shelter: ShelterID;
             };
 
             const result = evalR(data.code, data.env);
@@ -239,7 +239,7 @@ function dispatch(msg: Message): void {
             const data = reqMsg.data as {
               obj: WebRData;
               objType: RType | 'object';
-              shelter: Shelter;
+              shelter: ShelterID;
             };
 
             const payload = newRObject(data.obj, data.objType);
@@ -254,7 +254,7 @@ function dispatch(msg: Message): void {
               payload?: WebRPayloadPtr;
               prop: string;
               args: WebRPayload[];
-              shelter: Shelter;
+              shelter: ShelterID;
             };
             const obj = data.payload ? RObject.wrap(data.payload.obj.ptr) : RObject;
 
