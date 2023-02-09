@@ -1,10 +1,7 @@
-import { Message } from './message';
-import { SharedBufferChannelMain, SharedBufferChannelWorker } from './channel-shared';
-import { ServiceWorkerChannelMain, ServiceWorkerChannelWorker } from './channel-service';
-import { WebROptions } from '../webr-main';
-import { isCrossOrigin } from '../utils';
-import { IN_NODE } from '../compat';
-import { WebRPayload } from '../payload';
+import { promiseHandles, ResolveFn, RejectFn } from '../utils';
+import { AsyncQueue } from './queue';
+import { Message, newRequest, Response } from './message';
+import { WebRPayload, webRPayloadError } from '../payload';
 
 // The channel structure is asymetric:
 //
@@ -26,14 +23,59 @@ import { WebRPayload } from '../payload';
 //   serialised. There is no structured cloning involved, and
 //   ArrayBuffers can't be transferred, only copied.
 
-export interface ChannelMain {
-  initialised: Promise<unknown>;
-  close(): void;
-  read(): Promise<Message>;
-  flush(): Promise<Message[]>;
-  write(msg: Message): void;
-  request(msg: Message, transferables?: [Transferable]): Promise<WebRPayload>;
-  interrupt(): void;
+export abstract class ChannelMain {
+  inputQueue = new AsyncQueue<Message>();
+  outputQueue = new AsyncQueue<Message>();
+
+  #parked = new Map<string, { resolve: ResolveFn; reject: RejectFn }>();
+
+  abstract initialised: Promise<unknown>;
+  abstract close(): void;
+  abstract interrupt(): void;
+
+  async read(): Promise<Message> {
+    return await this.outputQueue.get();
+  }
+
+  async flush(): Promise<Message[]> {
+    const msg: Message[] = [];
+    while (!this.outputQueue.isEmpty()) {
+      msg.push(await this.read());
+    }
+    return msg;
+  }
+
+  write(msg: Message): void {
+    this.inputQueue.put(msg);
+  }
+
+  async request(msg: Message, transferables?: [Transferable]): Promise<WebRPayload> {
+    const req = newRequest(msg, transferables);
+
+    const { resolve, reject, promise } = promiseHandles();
+    this.#parked.set(req.data.uuid, { resolve, reject });
+
+    this.write(req);
+    return promise as Promise<WebRPayload>;
+  }
+
+  protected resolveResponse(msg: Response) {
+    const uuid = msg.data.uuid;
+    const handles = this.#parked.get(uuid);
+
+    if (handles) {
+      const payload = msg.data.resp as WebRPayload;
+      this.#parked.delete(uuid);
+
+      if (payload.payloadType === 'err') {
+        handles.reject(webRPayloadError(payload));
+      } else {
+        handles.resolve(payload);
+      }
+    } else {
+      console.warn("Can't find request.");
+    }
+  }
 }
 
 export interface ChannelWorker {
@@ -45,57 +87,4 @@ export interface ChannelWorker {
   run(args: string[]): void;
   inputOrDispatch: () => number;
   setDispatchHandler: (dispatch: (msg: Message) => void) => void;
-}
-
-export const ChannelType = {
-  Automatic: 0,
-  SharedArrayBuffer: 1,
-  ServiceWorker: 2,
-} as const;
-
-export type ChannelInitMessage = {
-  type: string;
-  data: {
-    config: Required<WebROptions>;
-    channelType: Exclude<
-      (typeof ChannelType)[keyof typeof ChannelType],
-      typeof ChannelType.Automatic
-    >;
-    clientId?: string;
-    location?: string;
-  };
-};
-
-export function newChannelMain(data: Required<WebROptions>) {
-  switch (data.channelType) {
-    case ChannelType.SharedArrayBuffer:
-      return new SharedBufferChannelMain(data);
-    case ChannelType.ServiceWorker:
-      return new ServiceWorkerChannelMain(data);
-    case ChannelType.Automatic:
-    default:
-      if (IN_NODE || crossOriginIsolated) {
-        return new SharedBufferChannelMain(data);
-      }
-      /*
-       * TODO: If we are not cross-origin isolated but we can still use service
-       * workers, we could setup a service worker to inject the relevant headers
-       * to enable cross-origin isolation.
-       */
-      if ('serviceWorker' in navigator && !isCrossOrigin(data.SW_URL)) {
-        return new ServiceWorkerChannelMain(data);
-      }
-      throw new Error("Can't initialise main thread communication channel");
-  }
-}
-
-export function newChannelWorker(msg: ChannelInitMessage) {
-  switch (msg.data.channelType) {
-    case ChannelType.SharedArrayBuffer:
-      return new SharedBufferChannelWorker();
-    case ChannelType.ServiceWorker:
-      return new ServiceWorkerChannelWorker(msg.data);
-    default:
-      throw new Error('Unknown worker channel type recieved');
-  }
 }

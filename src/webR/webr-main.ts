@@ -1,4 +1,5 @@
-import { newChannelMain, ChannelMain, ChannelType } from './chan/channel';
+import { ChannelMain } from './chan/channel';
+import { newChannelMain, ChannelType } from './chan/channel-common';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
 import { WebRPayloadPtr, webRPayloadError } from './payload';
@@ -177,47 +178,29 @@ export class WebR {
     lookupPath: async (path: string): Promise<FSNode> => {
       const msg: FSMessage = { type: 'lookupPath', data: { path } };
       const payload = await this.#chan.request(msg);
-      if (payload.payloadType === 'err') {
-        throw webRPayloadError(payload);
-      }
       return payload.obj as FSNode;
     },
     mkdir: async (path: string): Promise<FSNode> => {
       const msg: FSMessage = { type: 'mkdir', data: { path } };
       const payload = await this.#chan.request(msg);
-      if (payload.payloadType === 'err') {
-        throw webRPayloadError(payload);
-      }
       return payload.obj as FSNode;
     },
     readFile: async (path: string, flags?: string): Promise<Uint8Array> => {
       const msg: FSReadFileMessage = { type: 'readFile', data: { path, flags } };
       const payload = await this.#chan.request(msg);
-      if (payload.payloadType === 'err') {
-        throw webRPayloadError(payload);
-      }
       return payload.obj as Uint8Array;
     },
     rmdir: async (path: string): Promise<void> => {
       const msg: FSMessage = { type: 'rmdir', data: { path } };
-      const payload = await this.#chan.request(msg);
-      if (payload.payloadType === 'err') {
-        throw webRPayloadError(payload);
-      }
+      await this.#chan.request(msg);
     },
     writeFile: async (path: string, data: ArrayBufferView, flags?: string): Promise<void> => {
       const msg: FSWriteFileMessage = { type: 'writeFile', data: { path, data, flags } };
-      const payload = await this.#chan.request(msg);
-      if (payload.payloadType === 'err') {
-        throw webRPayloadError(payload);
-      }
+      await this.#chan.request(msg);
     },
     unlink: async (path: string): Promise<void> => {
       const msg: FSMessage = { type: 'unlink', data: { path } };
-      const payload = await this.#chan.request(msg);
-      if (payload.payloadType === 'err') {
-        throw webRPayloadError(payload);
-      }
+      await this.#chan.request(msg);
     },
   };
 }
@@ -247,12 +230,7 @@ export class Shelter {
       type: 'shelterPurge',
       data: this.#id,
     };
-    const payload = await this.#chan.request(msg);
-
-    // FIXME: Should be thrown by the channel
-    if (payload.payloadType === 'err') {
-      throw webRPayloadError(payload);
-    }
+    await this.#chan.request(msg);
   }
 
   async destroy(x: RObject) {
@@ -260,12 +238,7 @@ export class Shelter {
       type: 'shelterDestroy',
       data: { id: this.#id, obj: x._payload },
     };
-    const payload = await this.#chan.request(msg);
-
-    // FIXME: Should be thrown by the channel
-    if (payload.payloadType === 'err') {
-      throw webRPayloadError(payload);
-    }
+    await this.#chan.request(msg);
   }
 
   async size(): Promise<number> {
@@ -274,7 +247,6 @@ export class Shelter {
       data: this.#id,
     };
     const payload = await this.#chan.request(msg);
-
     return payload.obj as number;
   }
 
