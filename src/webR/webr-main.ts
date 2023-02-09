@@ -360,6 +360,15 @@ export class WebR {
     }
   }
 
+  async invokeWasmFunction(ptr: EmPtr, data: EmPtr): Promise<EmPtr> {
+    const msg = {
+      type: 'invokeWasmFunction',
+      data: { ptr, data },
+    } as InvokeWasmFunctionMessage;
+    const resp = await this.#chan.request(msg);
+    return resp.obj as EmPtr;
+  }
+
   FS = {
     lookupPath: async (path: string): Promise<FSNode> => {
       const msg: FSMessage = { type: 'lookupPath', data: { path } };

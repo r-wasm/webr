@@ -3,7 +3,7 @@ import { ChannelWorker } from './chan/channel';
 import { newChannelWorker, ChannelInitMessage } from './chan/channel-common';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions } from './webr-main';
-import { Module } from './emscripten';
+import { EmPtr, Module } from './emscripten';
 import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadRaw, WebRPayloadPtr, WebRPayloadWorker, isWebRPayloadPtr } from './payload';
@@ -23,6 +23,7 @@ import {
   FSMessage,
   FSReadFileMessage,
   FSWriteFileMessage,
+  InvokeWasmFunctionMessage,
   NewRObjectMessage,
   ShelterMessage,
   ShelterDestroyMessage,
@@ -373,6 +374,17 @@ function dispatch(msg: Message): void {
             }
 
             write(payload);
+            break;
+          }
+
+          case 'invokeWasmFunction': {
+            const msg = reqMsg as InvokeWasmFunctionMessage;
+            // Wasm function has expected signature `ii`
+            const res = Module.getWasmTableEntry(msg.data.ptr)(msg.data.data) as number;
+            write({
+              payloadType: 'raw',
+              obj: res,
+            });
             break;
           }
 

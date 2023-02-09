@@ -617,6 +617,17 @@ describe('Evaluate objects without shelters', () => {
   });
 });
 
+test('Invoke a wasm function from the main thread', async () => {
+  const fn = (await webR.evalR(`
+    webr::eval_js("
+      Module.addFunction((x) => x + 1, 'ii')
+    ")
+  `)) as RDouble;
+  const ptr = await fn.toNumber();
+  const ret = await webR.invokeWasmFunction(ptr, 667430);
+  expect(ret).toEqual(667431);
+});
+
 beforeEach(() => {
   jest.restoreAllMocks();
 });

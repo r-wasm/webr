@@ -33,6 +33,7 @@ export interface Module extends EmscriptenModule {
   setValue: typeof setValue;
   UTF8ToString: typeof UTF8ToString;
   callMain: (args: string[]) => void;
+  getWasmTableEntry: (entry: number) => Function;
   // R symbols from Rinternals.h
   _ATTRIB: (ptr: RPtr) => RPtr;
   _CAR: (ptr: RPtr) => RPtr;
@@ -121,7 +122,7 @@ export interface Module extends EmscriptenModule {
 
 export const Module = {} as Module;
 
-type EmPtr = ReturnType<typeof Module.allocateUTF8>;
+export type EmPtr = ReturnType<typeof Module.allocateUTF8>;
 
 export interface DictEmPtrs {
   [key: string]: EmPtr;
