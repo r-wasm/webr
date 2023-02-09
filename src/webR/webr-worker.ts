@@ -567,19 +567,10 @@ function init(config: Required<WebROptions>) {
           Module._R_ContinueUnwind(e.cont);
           throwUnreachable();
         }
-
-        const stop = Module.allocateUTF8('stop');
-        const msg = Module.allocateUTF8(
+        const msg = Module.allocateUTF8OnStack(
           `An error occured during JavaScript evaluation:\n  ${(e as { message: string }).message}`
         );
-
-        const ffiMsg = Module._Rf_protect(Module._Rf_mkString(msg));
-        const call = Module._Rf_protect(Module._Rf_lang2(Module._Rf_install(stop), ffiMsg));
-        Module._free(stop);
-        Module._free(msg);
-
-        // Call Rf_eval directly here since JS errors are recaptured by R rather than thrown
-        Module._Rf_eval(call, RObject.baseEnv.ptr);
+        Module._Rf_error(msg);
       }
       throwUnreachable();
       return 0;

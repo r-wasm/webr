@@ -28,6 +28,7 @@ export interface Module extends EmscriptenModule {
   };
   // Exported Emscripten JS API
   allocateUTF8: typeof allocateUTF8;
+  allocateUTF8OnStack: typeof allocateUTF8OnStack;
   getValue: typeof getValue;
   setValue: typeof setValue;
   UTF8ToString: typeof UTF8ToString;
@@ -67,6 +68,7 @@ export interface Module extends EmscriptenModule {
   _Rf_allocList: (len: number) => RPtr;
   _Rf_allocVector: (type: RTypeNumber, len: number) => RPtr;
   _Rf_defineVar: (symbol: RPtr, value: RPtr, env: RPtr) => void;
+  _Rf_error: (msg: EmPtr) => void;
   _Rf_eval: (call: RPtr, env: RPtr) => RPtr;
   _Rf_findVarInFrame: (rho: RPtr, symbol: RPtr) => RPtr;
   _Rf_listAppend: (source: RPtr, target: RPtr) => RPtr;
