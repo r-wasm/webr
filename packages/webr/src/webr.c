@@ -34,12 +34,14 @@ struct safe_eval_data {
 };
 
 SEXP ffi_safe_eval(SEXP call, SEXP env) {
+  // Unprotected in the R_UnwindProtect cleanup callback
   SEXP data = PROTECT(Rf_allocVector(RAWSXP, sizeof(struct safe_eval_data)));
 
   struct safe_eval_data* ctx = (struct safe_eval_data *) RAW(data);
   ctx->call = call;
   ctx->env = env;
 
+  // Unprotected in the R_UnwindProtect cleanup callback
   SEXP cont = PROTECT(R_MakeUnwindCont());
   SEXP res = R_UnwindProtect(safe_eval_body, data, safe_eval_cleanup, cont, cont);
   return res;
