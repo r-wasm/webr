@@ -34,27 +34,27 @@ struct safe_eval_data {
 };
 
 SEXP ffi_safe_eval(SEXP call, SEXP env) {
-  struct safe_eval_data* data = malloc(sizeof(struct safe_eval_data));
-  data->call = call;
-  data->env = env;
+  SEXP data = PROTECT(Rf_allocVector(RAWSXP, sizeof(struct safe_eval_data)));
+
+  struct safe_eval_data* ctx = (struct safe_eval_data *) RAW(data);
+  ctx->call = call;
+  ctx->env = env;
 
   SEXP cont = PROTECT(R_MakeUnwindCont());
   SEXP res = R_UnwindProtect(safe_eval_body, data, safe_eval_cleanup, cont, cont);
-
-  UNPROTECT(1);
-  free(data);
   return res;
 }
 
 static
 SEXP safe_eval_body(void* data) {
-  struct safe_eval_data* ctx = (struct safe_eval_data *) data;
+  struct safe_eval_data* ctx = (struct safe_eval_data *) RAW(data);
   return Rf_eval(ctx->call, ctx->env);
 }
 
 static
 void safe_eval_cleanup(void* cdata, Rboolean jump) {
 #ifdef __EMSCRIPTEN__
+  UNPROTECT(2);
   if (jump) {
     EM_ASM({
       throw new globalThis.Module.webr.UnwindProtectException(
