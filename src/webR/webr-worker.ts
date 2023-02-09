@@ -286,12 +286,14 @@ function dispatch(msg: Message): void {
           obj: { name: e.name, message: e.message, stack: e.stack },
         });
 
-        /* Re-throw `UnwindProtectException` after sending a message to the main
-         * thread resolving the request's promise, so that `R_ContinueUnwind()`
-         * is invoked as the stack unwinds.
+        /* Capture continuation token and resume R's non-local transfer.
+         * If the exception has reached this point there should no longer be
+         * any `evalJs()` calls on the stack. As such, we assume there are no R
+         * calls above us and it is safe to `longjmp` from here.
          */
         if (e instanceof UnwindProtectException) {
-          throw e;
+          Module._R_ContinueUnwind(e.cont);
+          throwUnreachable();
         }
       }
       break;
@@ -546,15 +548,7 @@ function init(config: Required<WebROptions>) {
       if (!chan) {
         throw new Error("Can't read console input without a communication channel");
       }
-      try {
-        return chan.inputOrDispatch();
-      } catch (e) {
-        if (e instanceof UnwindProtectException) {
-          Module._R_ContinueUnwind(e.cont);
-          throwUnreachable();
-        }
-        throw e;
-      }
+      return chan.inputOrDispatch();
     },
 
     handleEvents: () => {
@@ -565,6 +559,15 @@ function init(config: Required<WebROptions>) {
       try {
         return (0, eval)(Module.UTF8ToString(code));
       } catch (e) {
+        /* Capture continuation token and resume R's non-local transfer here.
+         * By resuming here we avoid potentially unwinding a target intermediate
+         * R stack on the way up to the top level.
+         */
+        if (e instanceof UnwindProtectException) {
+          Module._R_ContinueUnwind(e.cont);
+          throwUnreachable();
+        }
+
         const stop = Module.allocateUTF8('stop');
         const msg = Module.allocateUTF8(
           `An error occured during JavaScript evaluation:\n  ${(e as { message: string }).message}`
