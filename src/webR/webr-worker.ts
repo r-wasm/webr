@@ -10,7 +10,7 @@ import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
 import { RObject, isRObject, REnvironment, RList, getRWorkerClass } from './robj-worker';
 import { RCharacter, RString, keep, destroy, purge, shelters } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
-import { protectInc, unprotect, parseEvalBare, UnwindProtectException } from './utils-r';
+import { protectInc, unprotect, parseEvalBare, UnwindProtectException, safeEval } from './utils-r';
 import { generateUUID } from './chan/task-common';
 
 import {
@@ -444,8 +444,7 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
     );
     protectInc(call, prot);
 
-    // Call Rf_eval directly here so as to support the option withHandlers: false
-    const capture = RList.wrap(Module._Rf_eval(call, envObj.ptr));
+    const capture = RList.wrap(safeEval(call, envObj.ptr));
     protectInc(capture, prot);
 
     if (_options.captureConditions && _options.throwJsException) {
