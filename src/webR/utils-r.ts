@@ -61,3 +61,19 @@ export function parseEvalBare(code: string, env: WebRData): RObject {
     unprotect(prot.n);
   }
 }
+
+export class UnwindProtectException extends Error {
+  cont: RPtr;
+  constructor(message: string, cont: RPtr) {
+    super(message);
+    this.name = 'UnwindProtectException';
+    this.cont = cont;
+  }
+}
+
+export function safeEval(call: RHandle, env: RHandle): RPtr {
+  return Module.LDSO.loadedLibsByName['/usr/lib/R/library/webr/libs/webr.so'].module.ffi_safe_eval(
+    handlePtr(call),
+    handlePtr(env)
+  );
+}

@@ -10,7 +10,7 @@ import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
 import { RObject, isRObject, REnvironment, RList, getRWorkerClass } from './robj-worker';
 import { RCharacter, RString, keep, destroy, purge, shelters } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
-import { protectInc, unprotect, parseEvalBare } from './utils-r';
+import { protectInc, unprotect, parseEvalBare, UnwindProtectException, safeEval } from './utils-r';
 import { generateUUID } from './chan/task-common';
 
 import {
@@ -285,6 +285,16 @@ function dispatch(msg: Message): void {
           payloadType: 'err',
           obj: { name: e.name, message: e.message, stack: e.stack },
         });
+
+        /* Capture continuation token and resume R's non-local transfer.
+         * If the exception has reached this point there should no longer be
+         * any `evalJs()` calls on the stack. As such, we assume there are no R
+         * calls above us and it is safe to `longjmp` from here.
+         */
+        if (e instanceof UnwindProtectException) {
+          Module._R_ContinueUnwind(e.cont);
+          throwUnreachable();
+        }
       }
       break;
     }
@@ -436,7 +446,7 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
     );
     protectInc(call, prot);
 
-    const capture = RList.wrap(Module._Rf_eval(call, envObj.ptr));
+    const capture = RList.wrap(safeEval(call, envObj.ptr));
     protectInc(capture, prot);
 
     if (_options.captureConditions && _options.throwJsException) {
@@ -526,6 +536,7 @@ function init(config: Required<WebROptions>) {
   };
 
   Module.webr = {
+    UnwindProtectException: UnwindProtectException,
     resolveInit: () => {
       chan?.setInterrupt(Module._Rf_onintr);
       Module.setValue(Module._R_Interactive, _config.interactive, '*');
@@ -548,6 +559,15 @@ function init(config: Required<WebROptions>) {
       try {
         return (0, eval)(Module.UTF8ToString(code));
       } catch (e) {
+        /* Capture continuation token and resume R's non-local transfer here.
+         * By resuming here we avoid potentially unwinding a target intermediate
+         * R stack on the way up to the top level.
+         */
+        if (e instanceof UnwindProtectException) {
+          Module._R_ContinueUnwind(e.cont);
+          throwUnreachable();
+        }
+
         const stop = Module.allocateUTF8('stop');
         const msg = Module.allocateUTF8(
           `An error occured during JavaScript evaluation:\n  ${(e as { message: string }).message}`
@@ -558,6 +578,7 @@ function init(config: Required<WebROptions>) {
         Module._free(stop);
         Module._free(msg);
 
+        // Call Rf_eval directly here since JS errors are recaptured by R rather than thrown
         Module._Rf_eval(call, RObject.baseEnv.ptr);
       }
       throwUnreachable();
