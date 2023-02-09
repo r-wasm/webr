@@ -117,6 +117,7 @@ export interface Module extends EmscriptenModule {
     resolveInit: () => void;
     handleEvents: () => void;
     evalJs: (code: RPtr) => number;
+    setTimeoutWasm: (ptr: EmPtr, data: EmPtr, delay: number) => void;
   };
 }
 

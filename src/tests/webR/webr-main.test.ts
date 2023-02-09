@@ -628,6 +628,25 @@ test('Invoke a wasm function from the main thread', async () => {
   expect(ret).toEqual(667431);
 });
 
+test('Invoke a wasm function after a delay', async () => {
+  const fn = (await webR.evalR(`
+    webr::eval_js("
+      Module.addFunction(() => {
+        const str = Module.allocateUTF8('Hello, World!\\\\n');
+        Module._printf(str);
+        Module._free(str);
+        return 0;
+      }, 'ii')
+    ")
+  `)) as RDouble;
+  const ptr = await fn.toNumber();
+  await webR.flush();
+  await webR.evalR(`
+    webr::eval_js("Module.webr.setTimeoutWasm(${ptr}, 0, 500)")
+  `);
+  expect((await webR.read()).data).toBe('Hello, World!');
+});
+
 beforeEach(() => {
   jest.restoreAllMocks();
 });

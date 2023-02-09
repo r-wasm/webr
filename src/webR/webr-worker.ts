@@ -705,6 +705,10 @@ function init(config: Required<WebROptions>) {
       throwUnreachable();
       return 0;
     },
+
+    setTimeoutWasm: (ptr: EmPtr, data: EmPtr, delay: number): void => {
+      chan?.write({ type: 'setTimeoutWasm', data: { ptr, data, delay } });
+    },
   };
 
   Module.locateFile = (path: string) => _config.baseUrl + path;

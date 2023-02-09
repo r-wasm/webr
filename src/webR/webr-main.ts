@@ -7,6 +7,7 @@ import { ChannelMain } from './chan/channel';
 import { newChannelMain, ChannelType } from './chan/channel-common';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
+import { EmPtr } from './emscripten';
 import { WebRPayloadPtr } from './payload';
 import { newRProxy, newRClassProxy } from './proxy';
 import { isRObject, RCharacter, RComplex, RDouble } from './robj-main';
@@ -24,6 +25,7 @@ import {
   FSMessage,
   FSReadFileMessage,
   FSWriteFileMessage,
+  InvokeWasmFunctionMessage,
   NewShelterMessage,
   ShelterDestroyMessage,
   ShelterMessage,
@@ -247,7 +249,26 @@ export class WebR {
    * @returns {Promise<Message>} The output message
    */
   async read(): Promise<Message> {
-    return await this.#chan.read();
+    let msg = await this.#chan.read();
+
+    /* Handle any output messages requesting a delayed invocation of a wasm
+     * function. Otherwise, return messages to the application.
+     * TODO: Reimplement without using the main thread once it is possible to
+     *       yield in the worker thread.
+     */
+    while (msg.type === 'setTimeoutWasm') {
+      setTimeout(
+        (ptr: EmPtr, data: EmPtr) => {
+          this.invokeWasmFunction(ptr, data);
+        },
+        msg.data.delay as number,
+        msg.data.ptr,
+        msg.data.data
+      );
+      msg = await this.#chan.read();
+    }
+
+    return msg;
   }
 
   /**
