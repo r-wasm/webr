@@ -47,8 +47,10 @@ export type WebRDataRaw =
   | boolean
   | undefined
   | null
+  | void
   | Complex
   | Error
+  | Uint8Array
   | ArrayBuffer
   | ArrayBufferView
   | Array<WebRDataRaw>

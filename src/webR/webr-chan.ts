@@ -1,6 +1,6 @@
 import { Message } from './chan/message';
 import { UUID as ShelterID } from './chan/task-common';
-import { WebRPayload, WebRPayloadPtr } from './payload';
+import { WebRPayloadWorker, WebRPayloadPtr } from './payload';
 import { RType, WebRData } from './robj';
 
 export { isUUID as isShelterID, UUID as ShelterID } from './chan/task-common';
@@ -10,7 +10,7 @@ export interface CallRObjectMethodMessage extends Message {
   data: {
     payload?: WebRPayloadPtr;
     prop: string;
-    args: WebRPayload[];
+    args: WebRPayloadWorker[];
     shelter?: ShelterID; // TODO: Remove undefined
   };
 }

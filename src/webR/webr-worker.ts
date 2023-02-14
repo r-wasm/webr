@@ -6,7 +6,7 @@ import { FSNode, WebROptions } from './webr-main';
 import { Module } from './emscripten';
 import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
-import { WebRPayloadPtr, WebRPayload, isWebRPayloadPtr } from './payload';
+import { WebRPayloadRaw, WebRPayloadPtr, WebRPayloadWorker, isWebRPayloadPtr } from './payload';
 import { RObject, isRObject, REnvironment, RList, getRWorkerClass } from './robj-worker';
 import { RCharacter, RString, keep, destroy, purge, shelters } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
@@ -63,7 +63,7 @@ function dispatch(msg: Message): void {
       const req = msg as Request;
       const reqMsg = req.data.msg;
 
-      const write = (resp: any, transferables?: [Transferable]) =>
+      const write = (resp: WebRPayloadWorker, transferables?: [Transferable]) =>
         chan?.write(newResponse(req.data.uuid, resp, transferables));
       try {
         switch (reqMsg.type) {
@@ -94,7 +94,7 @@ function dispatch(msg: Message): void {
               }),
               payloadType: 'raw',
             };
-            write(out, [out.obj.buffer]);
+            write(out as WebRPayloadRaw, [out.obj.buffer]);
             break;
           }
           case 'rmdir': {
@@ -370,8 +370,8 @@ function newRObject(data: WebRData, objType: RType | 'object'): WebRPayloadPtr {
 function callRObjectMethod(
   obj: RObject | typeof RObject,
   prop: string,
-  args: WebRPayload[]
-): WebRPayload {
+  args: WebRPayloadWorker[]
+): WebRPayloadWorker {
   if (!(prop in obj)) {
     throw new ReferenceError(`${prop} is not defined`);
   }
