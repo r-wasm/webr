@@ -30,11 +30,9 @@ module.exports = {
      "@typescript-eslint/no-floating-promises": "off",
      "@typescript-eslint/no-unused-vars": "off",
      "@typescript-eslint/no-implied-eval": "off",
+     "@typescript-eslint/semi": ["error", "always"],
      "new-cap": ["error", { "capIsNewExceptions": ["UTF8ToString"] }],
      "require-jsdoc": "off",
-     'prettier/prettier': [
-       'error',
-       { singleQuote: true, 'printWidth': 100},
-     ]
+     'prettier/prettier': 0
   }
 };

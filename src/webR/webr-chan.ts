@@ -69,7 +69,7 @@ export interface NewRObjectMessage extends Message {
   data: {
     obj: WebRData;
     objType: RType | 'object';
-    shelter?: ShelterID; // TODO: Remove undefined
+    shelter: ShelterID;
   };
 }
 

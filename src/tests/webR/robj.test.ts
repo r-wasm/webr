@@ -588,6 +588,28 @@ describe('Garbage collection', () => {
     expect(await shelter.size()).toEqual(0);
 
     await expect(shelter.destroy(x)).rejects.toThrow("Can't find object in shelter");
+
+    const objs = await Promise.all([
+      new shelter.RObject(true),
+      new shelter.RLogical(true),
+      new shelter.RInteger(1),
+      new shelter.RDouble(1),
+      new shelter.RCharacter('foo'),
+      new shelter.RComplex({ re: 1, im: 1 }),
+      new shelter.RRaw(1),
+      new shelter.RList(1),
+      new shelter.RPairlist(1),
+      new shelter.REnvironment({ x: 1 }),
+      new shelter.RSymbol('foo'),
+      new shelter.RString('foo'),
+      new shelter.RCall('foo')
+    ]);
+    expect(await shelter.size()).toEqual(objs.length);
+
+    for (const obj of objs) {
+      await shelter.destroy(obj);
+    }
+    expect(await shelter.size()).toEqual(0);
   });
 
   test('Shelter.CaptureR() protects', async () => {

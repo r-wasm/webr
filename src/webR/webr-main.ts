@@ -59,22 +59,23 @@ const defaultOptions = {
 };
 
 export class WebR {
-  #chan: ChannelMain;
+  #chan!: ChannelMain;
   globalShelter!: Shelter;
 
-  RObject;
-  RLogical;
-  RInteger;
-  RDouble;
-  RCharacter;
-  RComplex;
-  RRaw;
-  RList;
-  RPairlist;
-  REnvironment;
-  RSymbol;
-  RString;
-  RCall;
+  RObject!: ReturnType<typeof newRClassProxy<typeof RWorker.RObject, RObject>>;
+  RLogical!: ReturnType<typeof newRClassProxy<typeof RWorker.RLogical, RLogical>>;
+  RInteger!: ReturnType<typeof newRClassProxy<typeof RWorker.RInteger, RInteger>>;
+  RDouble!: ReturnType<typeof newRClassProxy<typeof RWorker.RDouble, RDouble>>;
+  RCharacter!: ReturnType<typeof newRClassProxy<typeof RWorker.RCharacter, RCharacter>>;
+  RComplex!: ReturnType<typeof newRClassProxy<typeof RWorker.RComplex, RComplex>>;
+  RRaw!: ReturnType<typeof newRClassProxy<typeof RWorker.RRaw, RRaw>>;
+  RList!: ReturnType<typeof newRClassProxy<typeof RWorker.RList, RList>>;
+  RPairlist!: ReturnType<typeof newRClassProxy<typeof RWorker.RPairlist, RPairlist>>;
+  REnvironment!: ReturnType<typeof newRClassProxy<typeof RWorker.REnvironment, REnvironment>>;
+  RSymbol!: ReturnType<typeof newRClassProxy<typeof RWorker.RSymbol, RSymbol>>;
+  RString!: ReturnType<typeof newRClassProxy<typeof RWorker.RString, RString>>;
+  RCall!: ReturnType<typeof newRClassProxy<typeof RWorker.RCall, RCall>>;
+
   objs: {
     baseEnv: REnvironment;
     globalEnv: REnvironment;
@@ -88,28 +89,30 @@ export class WebR {
 
   constructor(options: WebROptions = {}) {
     const config: Required<WebROptions> = Object.assign(defaultOptions, options);
-    const c = (this.#chan = newChannelMain(config));
+    this.#chan = newChannelMain(config);
 
-    this.RObject = newRClassProxy<typeof RWorker.RObject, RObject>(c, 'object');
-    this.RLogical = newRClassProxy<typeof RWorker.RLogical, RLogical>(c, 'logical');
-    this.RInteger = newRClassProxy<typeof RWorker.RInteger, RInteger>(c, 'integer');
-    this.RDouble = newRClassProxy<typeof RWorker.RDouble, RDouble>(c, 'double');
-    this.RComplex = newRClassProxy<typeof RWorker.RComplex, RComplex>(c, 'complex');
-    this.RCharacter = newRClassProxy<typeof RWorker.RCharacter, RCharacter>(c, 'character');
-    this.RRaw = newRClassProxy<typeof RWorker.RRaw, RRaw>(c, 'raw');
-    this.RList = newRClassProxy<typeof RWorker.RList, RList>(c, 'list');
-    this.RPairlist = newRClassProxy<typeof RWorker.RPairlist, RPairlist>(c, 'pairlist');
-    this.REnvironment = newRClassProxy<typeof RWorker.REnvironment, REnvironment>(c, 'environment');
-    this.RSymbol = newRClassProxy<typeof RWorker.RSymbol, RSymbol>(c, 'symbol');
-    this.RString = newRClassProxy<typeof RWorker.RString, RString>(c, 'string');
-    this.RCall = newRClassProxy<typeof RWorker.RCall, RCall>(c, 'call');
     this.objs = {} as typeof this.objs;
-
     this.Shelter = newShelterProxy(this.#chan);
   }
 
   async init() {
     const init = await this.#chan.initialised;
+
+    this.globalShelter = await new this.Shelter();
+
+    this.RObject = this.globalShelter.RObject;
+    this.RLogical = this.globalShelter.RLogical;
+    this.RInteger = this.globalShelter.RInteger;
+    this.RDouble = this.globalShelter.RDouble;
+    this.RComplex = this.globalShelter.RComplex;
+    this.RCharacter = this.globalShelter.RCharacter;
+    this.RRaw = this.globalShelter.RRaw;
+    this.RList = this.globalShelter.RList;
+    this.RPairlist = this.globalShelter.RPairlist;
+    this.REnvironment = this.globalShelter.REnvironment;
+    this.RSymbol = this.globalShelter.RSymbol;
+    this.RString = this.globalShelter.RString;
+    this.RCall = this.globalShelter.RCall;
 
     this.objs = {
       baseEnv: (await this.RObject.getStaticPropertyValue('baseEnv')) as REnvironment,
@@ -119,8 +122,6 @@ export class WebR {
       false: (await this.RObject.getStaticPropertyValue('false')) as RLogical,
       na: (await this.RObject.getStaticPropertyValue('logicalNA')) as RLogical,
     };
-
-    this.globalShelter = await new this.Shelter();
 
     return init;
   }
@@ -210,6 +211,20 @@ export class Shelter {
   #chan: ChannelMain;
   #initialised = false;
 
+  RObject!: ReturnType<typeof newRClassProxy<typeof RWorker.RObject, RObject>>;
+  RLogical!: ReturnType<typeof newRClassProxy<typeof RWorker.RLogical, RLogical>>;
+  RInteger!: ReturnType<typeof newRClassProxy<typeof RWorker.RInteger, RInteger>>;
+  RDouble!: ReturnType<typeof newRClassProxy<typeof RWorker.RDouble, RDouble>>;
+  RCharacter!: ReturnType<typeof newRClassProxy<typeof RWorker.RCharacter, RCharacter>>;
+  RComplex!: ReturnType<typeof newRClassProxy<typeof RWorker.RComplex, RComplex>>;
+  RRaw!: ReturnType<typeof newRClassProxy<typeof RWorker.RRaw, RRaw>>;
+  RList!: ReturnType<typeof newRClassProxy<typeof RWorker.RList, RList>>;
+  RPairlist!: ReturnType<typeof newRClassProxy<typeof RWorker.RPairlist, RPairlist>>;
+  REnvironment!: ReturnType<typeof newRClassProxy<typeof RWorker.REnvironment, REnvironment>>;
+  RSymbol!: ReturnType<typeof newRClassProxy<typeof RWorker.RSymbol, RSymbol>>;
+  RString!: ReturnType<typeof newRClassProxy<typeof RWorker.RString, RString>>;
+  RCall!: ReturnType<typeof newRClassProxy<typeof RWorker.RCall, RCall>>;
+
   constructor(chan: ChannelMain) {
     this.#chan = chan;
   }
@@ -222,6 +237,21 @@ export class Shelter {
     const msg = { type: 'newShelter' } as NewShelterMessage;
     const payload = await this.#chan.request(msg);
     this.#id = payload.obj as string;
+
+    this.RObject = newRClassProxy<typeof RWorker.RObject, RObject>(this.#chan, this.#id, 'object');
+    this.RLogical = newRClassProxy<typeof RWorker.RLogical, RLogical>(this.#chan, this.#id, 'logical');
+    this.RInteger = newRClassProxy<typeof RWorker.RInteger, RInteger>(this.#chan, this.#id, 'integer');
+    this.RDouble = newRClassProxy<typeof RWorker.RDouble, RDouble>(this.#chan, this.#id, 'double');
+    this.RComplex = newRClassProxy<typeof RWorker.RComplex, RComplex>(this.#chan, this.#id, 'complex');
+    this.RCharacter = newRClassProxy<typeof RWorker.RCharacter, RCharacter>(this.#chan, this.#id, 'character');
+    this.RRaw = newRClassProxy<typeof RWorker.RRaw, RRaw>(this.#chan, this.#id, 'raw');
+    this.RList = newRClassProxy<typeof RWorker.RList, RList>(this.#chan, this.#id, 'list');
+    this.RPairlist = newRClassProxy<typeof RWorker.RPairlist, RPairlist>(this.#chan, this.#id, 'pairlist');
+    this.REnvironment = newRClassProxy<typeof RWorker.REnvironment, REnvironment>(this.#chan, this.#id, 'environment');
+    this.RSymbol = newRClassProxy<typeof RWorker.RSymbol, RSymbol>(this.#chan, this.#id, 'symbol');
+    this.RString = newRClassProxy<typeof RWorker.RString, RString>(this.#chan, this.#id, 'string');
+    this.RCall = newRClassProxy<typeof RWorker.RCall, RCall>(this.#chan, this.#id, 'call');
+
     this.#initialised = true;
   }
 
