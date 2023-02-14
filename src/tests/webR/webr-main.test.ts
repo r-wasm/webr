@@ -558,6 +558,12 @@ describe('Access R objects via the main thread object cache', () => {
   });
 });
 
+describe('Evaluate objects without shelters', () => {
+  test('evalRVoid()', async () => {
+    expect(await webR.evalRVoid('NULL')).toEqual(undefined);
+  })
+})
+
 beforeEach(() => {
   jest.restoreAllMocks();
 });

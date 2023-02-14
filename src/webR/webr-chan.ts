@@ -39,6 +39,18 @@ export interface EvalRMessage extends Message {
     code: string;
     env?: WebRPayloadPtr;
     shelter: ShelterID;
+    outputType?: EvalRMessageOutputType
+  };
+}
+
+export type EvalRMessageOutputType = 'void';
+
+export interface EvalRMessageRaw extends Message {
+  type: 'evalRRaw';
+  data: {
+    code: string;
+    env?: WebRPayloadPtr;
+    outputType: EvalRMessageOutputType
   };
 }
 

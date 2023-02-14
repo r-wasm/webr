@@ -18,6 +18,7 @@ import {
   CaptureRMessage,
   CaptureROptions,
   EvalRMessage,
+  EvalRMessageRaw,
   FSMessage,
   FSReadFileMessage,
   FSWriteFileMessage,
@@ -236,6 +237,25 @@ function dispatch(msg: Message): void {
                 methods: RObject.getMethods(result),
               },
               payloadType: 'ptr',
+            });
+            break;
+          }
+
+          case 'evalRRaw': {
+            const msg = reqMsg as EvalRMessageRaw;
+            evalR(msg.data.code, msg.data.env);
+
+            let out = undefined;
+            switch (msg.data.outputType) {
+              case 'void':
+                break;
+              default:
+                throw new Error('Unexpected output type in `evalRRaw().');
+            }
+
+            write({
+              obj: out,
+              payloadType: 'raw',
             });
             break;
           }
