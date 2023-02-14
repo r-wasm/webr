@@ -9,8 +9,9 @@ import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadRaw, WebRPayloadPtr, WebRPayloadWorker, isWebRPayloadPtr } from './payload';
 import { RObject, isRObject, REnvironment, RList, getRWorkerClass } from './robj-worker';
 import { RCharacter, RString, keep, destroy, purge, shelters } from './robj-worker';
+import { RLogical, RInteger, RDouble } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
-import { protectInc, unprotect, parseEvalBare, UnwindProtectException, safeEval } from './utils-r';
+import { protect, protectInc, unprotect, parseEvalBare, UnwindProtectException, safeEval } from './utils-r';
 import { generateUUID } from './chan/task-common';
 
 import {
@@ -243,21 +244,65 @@ function dispatch(msg: Message): void {
 
           case 'evalRRaw': {
             const msg = reqMsg as EvalRMessageRaw;
-            evalR(msg.data.code, msg.data.env);
+            const result = evalR(msg.data.code, msg.data.env);
 
-            let out = undefined;
-            switch (msg.data.outputType) {
-              case 'void':
-                break;
-              default:
-                throw new Error('Unexpected output type in `evalRRaw().');
+            protect(result);
+
+            const throwType = () => {
+              throw new Error(`Can't convert object of type ${result.type()} to ${msg.data.outputType}.`);
+            };
+
+            try {
+              let out: WebRDataRaw = undefined;
+              switch (msg.data.outputType) {
+                case 'void':
+                  break;
+                case 'boolean':
+                  switch (result.type()) {
+                    case 'logical':
+                      out = (result as RLogical).toBoolean();
+                      break;
+                    default:
+                      throwType();
+                  }
+                  break;
+                case 'number':
+                  switch (result.type()) {
+                    case 'logical':
+                      out = (result as RLogical).toBoolean();
+                      out = +out;
+                      break;
+                    case 'integer':
+                      out = (result as RInteger).toNumber();
+                      break;
+                    case 'double':
+                      out = (result as RDouble).toNumber();
+                      break;
+                    default:
+                      throwType();
+                  }
+                  break;
+                case 'string':
+                  switch (result.type()) {
+                    case 'character':
+                      out = (result as RCharacter).toString();
+                      break;
+                    default:
+                      throwType();
+                  }
+                  break;
+                default:
+                  throw new Error('Unexpected output type in `evalRRaw().');
+              }
+
+              write({
+                obj: out,
+                payloadType: 'raw',
+              });
+              break;
+            } finally {
+              unprotect(1);
             }
-
-            write({
-              obj: out,
-              payloadType: 'raw',
-            });
-            break;
           }
 
           case 'newRObject': {

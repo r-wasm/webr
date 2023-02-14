@@ -181,6 +181,18 @@ export class WebR {
     return this.#evalRRaw(code, env, 'void');
   }
 
+  async evalRBoolean(code: string, env?: REnvironment) {
+    return this.#evalRRaw(code, env, 'boolean');
+  }
+
+  async evalRNumber(code: string, env?: REnvironment) {
+    return this.#evalRRaw(code, env, 'number');
+  }
+
+  async evalRString(code: string, env?: REnvironment) {
+    return this.#evalRRaw(code, env, 'string');
+  }
+
   async #evalRRaw(
     code: string,
     env: REnvironment | undefined,

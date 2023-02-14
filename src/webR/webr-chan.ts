@@ -43,7 +43,7 @@ export interface EvalRMessage extends Message {
   };
 }
 
-export type EvalRMessageOutputType = 'void';
+export type EvalRMessageOutputType = 'void' | 'boolean' | 'number' | 'string';
 
 export interface EvalRMessageRaw extends Message {
   type: 'evalRRaw';
