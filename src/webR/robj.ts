@@ -50,7 +50,6 @@ export type WebRDataRaw =
   | void
   | Complex
   | Error
-  | Uint8Array
   | ArrayBuffer
   | ArrayBufferView
   | Array<WebRDataRaw>
