@@ -270,7 +270,7 @@ function dispatch(msg: Message): void {
                   switch (result.type()) {
                     case 'logical':
                       out = (result as RLogical).toBoolean();
-                      out = +out;
+                      out = Number(out);
                       break;
                     case 'integer':
                       out = (result as RInteger).toNumber();
