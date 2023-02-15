@@ -22,7 +22,11 @@ export type WebRPayloadErr = {
   };
   payloadType: 'err';
 };
-export type WebRPayload = WebRPayloadRaw | WebRPayloadPtr | WebRPayloadErr;
+
+// On the main side we shouldn't see any error payload as these are
+// rethrown as JS exceptions
+export type WebRPayload = WebRPayloadRaw | WebRPayloadPtr;
+export type WebRPayloadWorker = WebRPayloadRaw | WebRPayloadPtr | WebRPayloadErr;
 
 export function webRPayloadError(payload: WebRPayloadErr): Error {
   const e = new Error(payload.obj.message);

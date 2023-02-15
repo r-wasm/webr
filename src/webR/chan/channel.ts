@@ -1,7 +1,7 @@
 import { promiseHandles, ResolveFn, RejectFn } from '../utils';
 import { AsyncQueue } from './queue';
 import { Message, newRequest, Response } from './message';
-import { WebRPayload, webRPayloadError } from '../payload';
+import { WebRPayload, WebRPayloadWorker, webRPayloadError } from '../payload';
 
 // The channel structure is asymetric:
 //
@@ -64,7 +64,7 @@ export abstract class ChannelMain {
     const handles = this.#parked.get(uuid);
 
     if (handles) {
-      const payload = msg.data.resp as WebRPayload;
+      const payload = msg.data.resp as WebRPayloadWorker;
       this.#parked.delete(uuid);
 
       if (payload.payloadType === 'err') {

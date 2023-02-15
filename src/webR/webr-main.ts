@@ -2,7 +2,7 @@ import { ChannelMain } from './chan/channel';
 import { newChannelMain, ChannelType } from './chan/channel-common';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
-import { WebRPayloadPtr, webRPayloadError } from './payload';
+import { WebRPayloadPtr } from './payload';
 import { newRProxy, newRClassProxy } from './proxy';
 import { isRObject, RCharacter, RComplex, RDouble } from './robj-main';
 import { REnvironment, RSymbol, RInteger } from './robj-main';
@@ -293,9 +293,7 @@ export class Shelter {
 
     switch (payload.payloadType) {
       case 'raw':
-        throw new Error('Unexpected raw payload type returned from evalR');
-      case 'err':
-        throw webRPayloadError(payload);
+        throw new Error('Unexpected payload type returned from evalR');
       default:
         return newRProxy(this.#chan, payload);
     }
@@ -326,11 +324,7 @@ export class Shelter {
 
     switch (payload.payloadType) {
       case 'ptr':
-        throw new Error('Unexpected ptr payload type returned from evalR');
-
-      case 'err': {
-        throw webRPayloadError(payload);
-      }
+        throw new Error('Unexpected payload type returned from evalR');
 
       case 'raw': {
         const data = payload.obj as {

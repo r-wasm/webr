@@ -47,6 +47,7 @@ export type WebRDataRaw =
   | boolean
   | undefined
   | null
+  | void
   | Complex
   | Error
   | ArrayBuffer
