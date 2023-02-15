@@ -178,19 +178,19 @@ export class WebR {
   }
 
   async evalRVoid(code: string, env?: REnvironment) {
-    return this.#evalRRaw(code, env, 'void');
+    return this.#evalRRaw(code, env, 'void') as Promise<void>;
   }
 
   async evalRBoolean(code: string, env?: REnvironment) {
-    return this.#evalRRaw(code, env, 'boolean');
+    return this.#evalRRaw(code, env, 'boolean') as Promise<boolean>;
   }
 
   async evalRNumber(code: string, env?: REnvironment) {
-    return this.#evalRRaw(code, env, 'number');
+    return this.#evalRRaw(code, env, 'number') as Promise<number>;
   }
 
   async evalRString(code: string, env?: REnvironment) {
-    return this.#evalRRaw(code, env, 'string');
+    return this.#evalRRaw(code, env, 'string') as Promise<string>;
   }
 
   async #evalRRaw(
