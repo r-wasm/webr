@@ -124,7 +124,7 @@ export interface FSWriteFileMessage extends Message {
 /** @internal */
 export interface InvokeWasmFunctionMessage extends Message {
   type: 'invokeWasmFunction';
-  data: { ptr: EmPtr; data: EmPtr };
+  data: { ptr: EmPtr; args: number[] };
 }
 
 /** @internal */

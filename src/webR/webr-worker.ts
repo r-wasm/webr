@@ -379,8 +379,7 @@ function dispatch(msg: Message): void {
 
           case 'invokeWasmFunction': {
             const msg = reqMsg as InvokeWasmFunctionMessage;
-            // Wasm function has expected signature `ii`
-            const res = Module.getWasmTableEntry(msg.data.ptr)(msg.data.data) as number;
+            const res = Module.getWasmTableEntry(msg.data.ptr)(...msg.data.args) as number;
             write({
               payloadType: 'raw',
               obj: res,
@@ -706,8 +705,8 @@ function init(config: Required<WebROptions>) {
       return 0;
     },
 
-    setTimeoutWasm: (ptr: EmPtr, data: EmPtr, delay: number): void => {
-      chan?.write({ type: 'setTimeoutWasm', data: { ptr, data, delay } });
+    setTimeoutWasm: (ptr: EmPtr, delay: number, ...args: number[]): void => {
+      chan?.write({ type: 'setTimeoutWasm', data: { ptr, delay, args } });
     },
   };
 

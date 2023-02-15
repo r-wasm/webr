@@ -618,31 +618,28 @@ describe('Evaluate objects without shelters', () => {
 });
 
 test('Invoke a wasm function from the main thread', async () => {
-  const fn = (await webR.evalR(`
+  const ptr = (await webR.evalRNumber(`
     webr::eval_js("
-      Module.addFunction((x) => x + 1, 'ii')
+      Module.addFunction((x, y) => x + y, 'iii')
     ")
-  `)) as RDouble;
-  const ptr = await fn.toNumber();
-  const ret = await webR.invokeWasmFunction(ptr, 667430);
-  expect(ret).toEqual(667431);
+  `));
+  const ret = await webR.invokeWasmFunction(ptr, 667430, 5);
+  expect(ret).toEqual(667435);
 });
 
 test('Invoke a wasm function after a delay', async () => {
-  const fn = (await webR.evalR(`
+  const ptr = (await webR.evalRNumber(`
     webr::eval_js("
       Module.addFunction(() => {
         const str = Module.allocateUTF8('Hello, World!\\\\n');
         Module._printf(str);
         Module._free(str);
-        return 0;
-      }, 'ii')
+      }, 'vi')
     ")
-  `)) as RDouble;
-  const ptr = await fn.toNumber();
+  `));
   await webR.flush();
   await webR.evalR(`
-    webr::eval_js("Module.webr.setTimeoutWasm(${ptr}, 0, 500)")
+    webr::eval_js("Module.webr.setTimeoutWasm(${ptr}, 500)")
   `);
   expect((await webR.read()).data).toBe('Hello, World!');
 });

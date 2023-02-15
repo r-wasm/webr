@@ -258,12 +258,12 @@ export class WebR {
      */
     while (msg.type === 'setTimeoutWasm') {
       setTimeout(
-        (ptr: EmPtr, data: EmPtr) => {
-          this.invokeWasmFunction(ptr, data);
+        (ptr: EmPtr, args: number[]) => {
+          this.invokeWasmFunction(ptr, ...args);
         },
         msg.data.delay as number,
         msg.data.ptr,
-        msg.data.data
+        msg.data.args
       );
       msg = await this.#chan.read();
     }
@@ -381,10 +381,10 @@ export class WebR {
     }
   }
 
-  async invokeWasmFunction(ptr: EmPtr, data: EmPtr): Promise<EmPtr> {
+  async invokeWasmFunction(ptr: EmPtr, ...args: number[]): Promise<EmPtr> {
     const msg = {
       type: 'invokeWasmFunction',
-      data: { ptr, data },
+      data: { ptr, args },
     } as InvokeWasmFunctionMessage;
     const resp = await this.#chan.request(msg);
     return resp.obj as EmPtr;
