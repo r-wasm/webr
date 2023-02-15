@@ -13,9 +13,11 @@ import {
   CaptureRMessage,
   CaptureROptions,
   EvalRMessage,
+  EvalRMessageRaw,
   FSMessage,
   FSReadFileMessage,
   FSWriteFileMessage,
+  EvalRMessageOutputType,
   NewShelterMessage,
   ShelterMessage,
   ShelterDestroyMessage,
@@ -173,6 +175,45 @@ export class WebR {
 
   async evalR(code: string, env?: REnvironment): Promise<RObject> {
     return this.globalShelter.evalR(code, env);
+  }
+
+  async evalRVoid(code: string, env?: REnvironment) {
+    return this.#evalRRaw(code, env, 'void');
+  }
+
+  async evalRBoolean(code: string, env?: REnvironment) {
+    return this.#evalRRaw(code, env, 'boolean');
+  }
+
+  async evalRNumber(code: string, env?: REnvironment) {
+    return this.#evalRRaw(code, env, 'number');
+  }
+
+  async evalRString(code: string, env?: REnvironment) {
+    return this.#evalRRaw(code, env, 'string');
+  }
+
+  async #evalRRaw(
+    code: string,
+    env: REnvironment | undefined,
+    outputType: EvalRMessageOutputType
+  ) {
+    if (env && !isRObject(env)) {
+      throw new Error('Attempted to evaluate R code with invalid environment object');
+    }
+
+    const msg: EvalRMessageRaw = {
+      type: 'evalRRaw',
+      data: { code: code, env: env?._payload, outputType: outputType },
+    };
+    const payload = await this.#chan.request(msg);
+
+    switch (payload.payloadType) {
+      case 'raw':
+        return payload.obj;
+      case 'ptr':
+        throw new Error('Unexpected ptr payload type returned from evalRVoid');
+    }
   }
 
   FS = {

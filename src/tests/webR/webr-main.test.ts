@@ -558,6 +558,38 @@ describe('Access R objects via the main thread object cache', () => {
   });
 });
 
+describe('Evaluate objects without shelters', () => {
+  test('no return', async () => {
+    expect(await webR.evalRVoid('NULL')).toEqual(undefined);
+    expect(await webR.evalRVoid('10')).toEqual(undefined);
+  });
+
+  test('boolean return', async () => {
+    expect(await webR.evalRBoolean('TRUE')).toEqual(true);
+    expect(await webR.evalRBoolean('FALSE')).toEqual(false);
+    expect(webR.evalRBoolean('NULL')).rejects.toThrow("Can't convert");
+    expect(webR.evalRBoolean('NA')).rejects.toThrow("Can't convert");
+  });
+
+  test('numeric return', async () => {
+    expect(await webR.evalRNumber('TRUE')).toEqual(1);
+    expect(await webR.evalRNumber('FALSE')).toEqual(0);
+    expect(await webR.evalRNumber('1L')).toEqual(1);
+    expect(await webR.evalRNumber('1.5')).toEqual(1.5);
+    expect(webR.evalRNumber('NULL')).rejects.toThrow("Can't convert");
+    expect(webR.evalRNumber('NA')).rejects.toThrow("Can't convert");
+    expect(webR.evalRNumber('NA_integer_')).rejects.toThrow("Can't convert");
+  });
+
+  test('string return', async () => {
+    expect(await webR.evalRString('"foo"')).toEqual('foo');
+    expect(await webR.evalRString('""')).toEqual('');
+    expect(webR.evalRString('NULL')).rejects.toThrow("Can't convert");
+    expect(webR.evalRString('NA')).rejects.toThrow("Can't convert");
+    expect(webR.evalRString('NA_character_')).rejects.toThrow("Can't convert");
+  });
+});
+
 beforeEach(() => {
   jest.restoreAllMocks();
 });
