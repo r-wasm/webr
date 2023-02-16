@@ -9,19 +9,17 @@ EMFC_FILES = $(EMFC) $(FORTRAN_WASM_LIB)
 
 # Build webR and install the web app in `./dist`
 .PHONY: webr
-webr: $(EMFC_FILES)
+webr: $(EMFC_FILES) libs
 	cd R && $(MAKE) && $(MAKE) install
 	cd src && $(MAKE)
 
 $(EMFC_FILES):
 	cd $(EMFC_DIR) && $(MAKE) && $(MAKE) install
 
-
-# Supporting libs for packages of webr-repo
+# Supporting libs for webr
 .PHONY: libs
 libs:
 	cd libs && $(MAKE)
-
 
 # Build webR in a temporary docker container
 .PHONY: docker-webr
