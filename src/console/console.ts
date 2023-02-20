@@ -67,6 +67,7 @@ export class Console {
     options: WebROptions = {
       REnv: {
         R_HOME: '/usr/lib/R',
+        FONTCONFIG_PATH: '/etc/fonts',
         R_ENABLE_JIT: '0',
         R_DEFAULT_DEVICE: 'canvas',
       },
