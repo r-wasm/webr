@@ -44,13 +44,18 @@ check-pr:
 	cd src && $(MAKE) lint && $(MAKE) check && $(MAKE) check-packages
 
 .PHONY: clean
-clean: clean-webr
+clean: clean-wasm
 	cd tools/dragonegg && $(MAKE) clean
 	cd tools/flang && $(MAKE) clean
 
+.PHONY: clean-wasm
+clean-wasm: clean-webr
+	rm -rf wasm
+	cd libs && $(MAKE) clean
+
 .PHONY: clean-webr
 clean-webr:
-	rm -rf host wasm
+	rm -rf host
 	cd R && $(MAKE) clean
 
 .PHONY: distclean
