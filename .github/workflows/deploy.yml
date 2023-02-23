@@ -8,6 +8,9 @@ on:
       - "v*.*"
   workflow_dispatch:
 
+env:
+  QUARTO_URL: https://github.com/quarto-dev/quarto-cli/releases/download/v1.2.335/quarto-1.2.335-linux-amd64.deb
+
 jobs:
   build:
     name: Build webR
@@ -19,6 +22,10 @@ jobs:
           node-version: 'lts/*'
           registry-url: 'https://registry.npmjs.org'
       - uses: actions/checkout@v3
+      - name: Install Quarto
+        run: |
+          wget -O /tmp/quarto-linux-amd64.deb $QUARTO_URL
+          dpkg -i /tmp/quarto-linux-amd64.deb
       - name: Configure webR for flang
         run: ./configure
       - name: Copy flang into webR tree
@@ -32,6 +39,9 @@ jobs:
         env:
           EMSDK: /opt/emsdk
         run: make && make check-pr
+        shell: bash
+      - name: Build webR documentation
+        run: cd src/docs && make
         shell: bash
       - name: Report code coverage
         uses: codecov/codecov-action@v3
@@ -48,8 +58,14 @@ jobs:
           name: webr-dist
           path: |
             dist
+      - name: Archive webR documentation artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: webr-docs
+          path: |
+            src/docs/_site
   deploy:
-    name: Deploy to S3
+    name: Deploy webR to S3
     needs: build
     runs-on: ubuntu-latest
     environment: deploy
@@ -69,3 +85,24 @@ jobs:
       - name: Upload files to S3 bucket
         run: |
           aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }}/_webr/${{ github.ref_name }}/
+  deploy_docs:
+    name: Deploy webR documentation to S3
+    needs: build
+    runs-on: ubuntu-latest
+    environment: deploy
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Download docs archive
+        uses: actions/download-artifact@v3
+        with:
+          name: webr-docs
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Upload files to S3 bucket
+        run: |
+          aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }}/_docs/webr/${{ github.ref_name }}/
