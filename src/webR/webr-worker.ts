@@ -570,6 +570,12 @@ function evalR(code: string, env?: WebRPayloadPtr): RObject {
 function init(config: Required<WebROptions>) {
   _config = config;
 
+  const env = { ...config.REnv };
+  if (!env.TZ) {
+    const fmt = new Intl.DateTimeFormat();
+    env.TZ = fmt.resolvedOptions().timeZone;
+  }
+
   Module.preRun = [];
   Module.arguments = _config.RArgs;
   Module.noExitRuntime = true;
@@ -590,7 +596,8 @@ function init(config: Required<WebROptions>) {
     Module.FS.mkdirTree(_config.homedir);
     Module.ENV.HOME = _config.homedir;
     Module.FS.chdir(_config.homedir);
-    Module.ENV = Object.assign(Module.ENV, _config.REnv);
+
+    Module.ENV = Object.assign(Module.ENV, env);
   });
 
   chan?.setDispatchHandler(dispatch);

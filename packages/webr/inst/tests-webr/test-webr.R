@@ -13,3 +13,25 @@ webr:::sandbox({
     identical(system2("cmd"), "foo")
   )
 })
+
+"timezone is set"
+webr:::sandbox({
+  tz <- Sys.timezone()
+
+  # Used to be NA
+  stopifnot(
+    is.character(tz) && length(tz) == 1 && !is.na(tz)
+  )
+})
+
+"POSIXlt supports time zones"
+webr:::sandbox({
+  out <- as.POSIXlt("2013-06-17 22:33:44", tz = "Australia/Darwin")
+
+  stopifnot(
+    identical(
+      unclass(out)$zone,
+      "ACST"
+    )
+  )
+})
