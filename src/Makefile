@@ -2,6 +2,7 @@ WEBR_ROOT = $(abspath ..)
 DIST = $(WEBR_ROOT)/dist
 
 ROOT = $(abspath .)
+PKG_DIST = $(ROOT)/dist
 
 HTML_TEMPLATES = console.html repl.html
 ENTRY_POINTS = console/console.ts repl/repl.ts webR/webr-worker.ts
@@ -23,6 +24,7 @@ $(DIST): $(TS_SOURCES) $(HTML_DIST) \
   Makefile webR/config.ts node_modules esbuild.js
 	cp $(DIST)/$(HTML_INDEX) $(DIST)/index.html
 	npm run build
+	rm -rf "$(DIST)/tests"
 	touch $@
 
 $(DIST)/%.html: templates/%.html
@@ -39,7 +41,6 @@ lint: $(DIST)
 
 .PHONY: check
 check: $(DIST)
-	npx tsc
 	NODE_V8_COVERAGE=coverage npx c8 node ./node_modules/jest/bin/jest.js \
 	  --config tests/webr.config.js
 
@@ -57,9 +58,15 @@ serve:
 
 package: Makefile webR/config.ts node_modules esbuild.js
 	npm run build
+# Cleanup npm package files for distribution
+	cp -r "$(DIST)/." "$(PKG_DIST)"
+	rm -rf "$(PKG_DIST)"/*.wasm "$(PKG_DIST)"/R.bin.* "$(PKG_DIST)"/*.so \
+	  "$(PKG_DIST)"/*.html
 	npm pack
+	rm -rf "$(PKG_DIST)"
 
 clean:
+	rm -rf "$(PKG_DIST)"
 	rm -f webR/config.ts
 
 # Print Makefile variable

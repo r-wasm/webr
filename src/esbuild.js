@@ -36,7 +36,7 @@ function build({ input, output, platform, minify }) {
   },
   {
     input: "webR/chan/serviceworker.ts",
-    output: "../dist/webr-serviceworker.js",
+    output: "webr-serviceworker.js",
     platform: 'node',
     minify: false,
   },
