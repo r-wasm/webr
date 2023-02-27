@@ -2,12 +2,16 @@ WEBR_ROOT = $(abspath ..)
 DIST = $(WEBR_ROOT)/dist
 
 ROOT = $(abspath .)
+PKG_DIST = $(ROOT)/dist
 
 HTML_TEMPLATES = console.html repl.html
 ENTRY_POINTS = console/console.ts repl/repl.ts webR/webr-worker.ts
 HTML_INDEX = repl.html
 
-TS_SOURCES = $(shell find . -name '*.ts' -not -path './node_modules/*')
+TS_SOURCES = $(shell find $(ROOT) \
+  -not \( -path '$(ROOT)/node_modules' -prune \) \
+  -not \( -path '$(PKG_DIST)' -prune \) \
+  -name '*.ts')
 
 # Configure your local environment in this file
 -include ~/.webr-config.mk
@@ -20,6 +24,7 @@ $(DIST): $(TS_SOURCES) $(HTML_DIST) \
   Makefile webR/config.ts node_modules esbuild.js
 	cp $(DIST)/$(HTML_INDEX) $(DIST)/index.html
 	npm run build
+	rm -rf "$(DIST)/tests"
 	touch $@
 
 $(DIST)/%.html: templates/%.html
@@ -36,7 +41,6 @@ lint: $(DIST)
 
 .PHONY: check
 check: $(DIST)
-	npx tsc
 	NODE_V8_COVERAGE=coverage npx c8 node ./node_modules/jest/bin/jest.js \
 	  --config tests/webr.config.js
 
@@ -52,5 +56,19 @@ node_modules: package.json
 serve:
 	cd $(DIST) && $(ROOT)/serve.py
 
+package: Makefile webR/config.ts node_modules esbuild.js
+	npm run build
+# Cleanup npm package files for distribution
+	cp -r "$(DIST)/." "$(PKG_DIST)"
+	rm -rf "$(PKG_DIST)"/*.wasm "$(PKG_DIST)"/R.bin.* "$(PKG_DIST)"/*.so \
+	  "$(PKG_DIST)"/*.html
+	npm pack
+	rm -rf "$(PKG_DIST)"
+
 clean:
+	rm -rf "$(PKG_DIST)"
 	rm -f webR/config.ts
+
+# Print Makefile variable
+.PHONY: print-%
+print-%  : ; @echo $* = $($*)

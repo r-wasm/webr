@@ -1,4 +1,55 @@
 {
+  "name": "@r-wasm/webr",
+  "version": "0.1.0-alpha.10",
+  "description": "The statistical programming langauge R compiled into WASM for use in a web browser and node.",
+  "keywords": [
+    "webR",
+    "wasm",
+    "R",
+    "statistics",
+    "programming",
+    "webassembly",
+    "emscripten"
+  ],
+  "homepage": "https://github.com/georgestagg/webR",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:georgestagg/webR.git"
+  },
+  "bugs": {
+    "url": "https://github.com/georgestagg/webR/issues"
+  },
+  "license": "SEE LICENSE IN LICENCE.md",
+  "contributors": [
+    {
+      "name": "George Stagg",
+      "email": "george.stagg@posit.co"
+    },
+    {
+      "name": "Lionel Henry",
+      "email": "lionel@posit.co"
+    }
+  ],
+  "files": [
+    "templates",
+    "dist"
+  ],
+  "main": "dist/webr.mjs",
+  "types": "webr-main.d.ts",
+  "exports": {
+    ".": "./dist/webr.mjs",
+    "./console": "./dist/console.mjs",
+    "./repl": "./dist/repl.mjs"
+  },
+  "typesVersions": {
+    "*": {
+      "repl": ["dist/repl/repl"],
+      "repl/*": ["dist/repl/*"],
+      "console": ["dist/console/console"],
+      "console/*": ["dist/console/*"],
+      "*": ["dist/webR/*"]
+    }
+  },
   "engines": {
     "node": ">=14.0.0"
   },
@@ -33,6 +84,8 @@
     "typescript": "^4.9.5"
   },
   "scripts": {
-    "build": "node ./esbuild.js"
+    "build": "node ./esbuild.js && tsc --emitDeclarationOnly",
+    "prepack": "cp ../LICENCE.md ../README.md .",
+    "postpack": "rm LICENCE.md README.md"
   }
 }

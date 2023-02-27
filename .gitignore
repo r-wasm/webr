@@ -13,6 +13,8 @@
 /R/build
 /src/coverage
 /src/webR/config.[jt]s
+/src/dist
+/src/*webr-*.tgz
 /packages/**/*.so
 /packages/**/*.o
 node_modules

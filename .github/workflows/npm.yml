@@ -1,0 +1,23 @@
+name: Publish npm package
+on:
+  push:
+    tags:
+      - "v*.*"
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: deploy
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 'lts/*'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Set the webR CDN URL as the BASE_URL
+        run: echo "BASE_URL=https://webr.r-wasm.org/${{ github.ref_name }}/" > "$HOME/.webr-config.mk"
+        shell: bash
+      - run: cd src && make package
+      - run: cd src && npm publish --access=public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
