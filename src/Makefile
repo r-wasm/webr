@@ -61,7 +61,7 @@ package: Makefile webR/config.ts node_modules esbuild.js
 # Cleanup npm package files for distribution
 	cp -r "$(DIST)/." "$(PKG_DIST)"
 	rm -rf "$(PKG_DIST)"/*.wasm "$(PKG_DIST)"/R.bin.* "$(PKG_DIST)"/*.so \
-	  "$(PKG_DIST)"/*.html
+	  "$(PKG_DIST)"/*.html "$(PKG_DIST)"/tests
 	npm pack
 	rm -rf "$(PKG_DIST)"
 
