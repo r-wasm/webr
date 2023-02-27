@@ -5,12 +5,11 @@ The following external software is included either directly as part of this repo
  * [R](https://www.r-project.org) - GNU GPL Version 2 & GNU GPL Version 3
  * [PCRE2](https://github.com/PCRE2Project/pcre2) - BSD Licence
  * [XZ Utils](https://tukaani.org/xz/) - liblzma is in the public domain
- * [jQuery Terminal](https://terminal.jcubic.pl) - MIT Licence
  * [jsTree](https://www.jstree.com) - MIT Licence
- * [jcubic's Emscripten PoC](https://gist.github.com/jcubic/87f2b4c5ef567be43796e179ca08c0da) - CC-BY-SA
  * [libgfortran](https://gcc.gnu.org) - GNU GPL Version 2 & GNU GPL Version 3
  * [Dragonegg](https://dragonegg.llvm.org) - GNU GPL Version 2
  * [LLVM Flang](https://github.com/flang-compiler/f18-llvm-project) - Apache Licence Version 2
+ * [xterm.js](https://xtermjs.org/) - MIT Licence
 
 The webR distribution binaries also contain copies of several of the above software. To remain compatible with the GPL, the webR binaries are distributed under the GNU GPL Version 3 Licence (copied below).
 

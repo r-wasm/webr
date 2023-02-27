@@ -1,13 +1,17 @@
+/**
+ * Types for serialising R objects into a JavaScript representation.
+ * @module Tree
+ */
 import * as RWorker from './robj-worker';
 import * as RMain from './robj-worker';
 import { WebRDataRaw, RPtr, RTypeMap } from './robj';
 
 /**
- * WebRDataTree objects form a tree structure, used when serialising
+ * `WebRDataTree` objects form a tree structure, used when serialising
  * R objects into a JavaScript respresentation.
  *
- * Nested R objects are serialised using the WebRDataTreeNode type, forming
- * branches in the resulting tree structure, with leaves formed by the
+ * Nested R objects are serialised using the {@link WebRDataTreeNode} type,
+ * forming branches in the resulting tree structure, with leaves formed by the
  * remaining types.
  */
 export type WebRDataTree =
@@ -42,10 +46,10 @@ export type WebRDataTreeAtomic<T> = {
 };
 
 /**
- * Test for a WebRDataTree instance
+ * Test for a {@link WebRDataTree} instance
  *
  * @param {any} value The object to test.
- * @return {boolean} True if the object is an instance of a WebRDataTree.
+ * @return {boolean} True if the object is an instance of a {@link WebRDataTree}.
  */
 export function isWebRDataTree(value: any): value is WebRDataTree {
   return value && typeof value === 'object' && Object.keys(RTypeMap).includes(value.type as string);

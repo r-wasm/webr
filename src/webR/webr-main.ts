@@ -1,3 +1,8 @@
+/**
+ * The webR JavaScript API.
+ * @module WebR
+ */
+
 import { ChannelMain } from './chan/channel';
 import { newChannelMain, ChannelType } from './chan/channel-common';
 import { Message } from './chan/message';
@@ -25,6 +30,51 @@ import {
 
 export { Console, ConsoleCallbacks } from '../console/console';
 
+/**
+ * The webR FS API for interacting with the Emscripten Virtual File System.
+ */
+export interface WebRFS {
+  /**
+   * Lookup information about a file or directory node in the Emscripten
+   * virtual file system.
+   * @param {string} path Path to the requested node.
+   * @return {Promise<FSNode>} The requested node.
+   */
+  lookupPath: (path: string) => Promise<FSNode>;
+  /**
+   * Create a directory on the Emscripten virtual file system.
+   * @param {string} path Path of the directory to create.
+   * @return {Promise<FSNode>} The newly created directory node.
+   */
+  mkdir: (path: string) => Promise<FSNode>;
+  /**
+   * Get the content of a file on the Emscripten virtual file system.
+   * @param {string} path Path of the file to read.
+   * @param {string} [flags] Open the file with the specified flags.
+   * @return {Promise<Uint8Array>} The content of the requested file.
+   */
+  readFile: (path: string, flags?: string) => Promise<Uint8Array>;
+  /**
+   * Remove a directory on the Emscripten virtual file system.
+   * @param {string} path Path of the directory to remove.
+   */
+  rmdir: (path: string) => Promise<void>;
+  /**
+   * Write a new file to the Emscripten virtual file system.
+   * @param {string} path Path of the new file.
+   * @param {Uint8Array} data The content of the new file.
+   * @param {string} [flags] Open the file with the specified flags.
+   */
+  writeFile: (path: string, data: ArrayBufferView, flags?: string) => Promise<void>;
+  /**
+   * Unlink a node on the Emscripten virtual file system. If that node was the
+   * last link to a file it is is deleted.
+   * @param {string} path Path of the target node.
+   */
+  unlink: (path: string) => Promise<void>;
+}
+
+/** A filesystem entry in the Emscripten Virtual File System */
 export type FSNode = {
   id: number;
   name: string;
@@ -33,14 +83,49 @@ export type FSNode = {
   contents: { [key: string]: FSNode };
 };
 
+/**
+ * The configuration settings to be used when starting webR.
+ */
 export interface WebROptions {
+  /** Command line arguments to be passed to R.
+   * Default: `[]`.
+   */
   RArgs?: string[];
+
+  /** Environment variables to be made available for the R process.
+   * Default: `{ R_HOME: '/usr/lib/R', R_ENABLE_JIT: 0 }`.
+   */
   REnv?: { [key: string]: string };
+
+  /** The base URL used for downloading R WebAssembly binaries.
+   *  Default: `'https://webr.r-wasm.org/[version]/'`
+   */
   WEBR_URL?: string;
+
+  /** The repo URL to use when downloading R WebAssembly packages.
+   * Default: `'https://repo.r-wasm.org/`
+   */
   PKG_URL?: string;
+
+  /** The base URL from where to load JavaScript worker scripts when loading
+   * webR with the ServiceWorker communication channel mode.
+   * Default: `''`
+   */
   SW_URL?: string;
+
+  /** The WebAssembly user's home directory and initial working directory.
+   * Default: `'/home/web_user'`
+   */
   homedir?: string;
+
+  /** Start R in interactive mode?
+   * Default: `true`.
+   */
   interactive?: boolean;
+
+  /** Set the communication channel type to be used.
+   * Deafult: `channelType.Automatic`
+   */
   channelType?: (typeof ChannelType)[keyof typeof ChannelType];
 }
 
@@ -60,6 +145,13 @@ const defaultOptions = {
   channelType: ChannelType.Automatic,
 };
 
+/**
+ * The webR class is used to initialize and interact with the webR system.
+ *
+ * Start webR by constructing an instance of the WebR class, optionally passing
+ * an options argument of type {@link WebROptions}. WebR will begin to download
+ * and start a version of R built for WebAssembly in a worker thread.
+ */
 export class WebR {
   #chan!: ChannelMain;
   globalShelter!: Shelter;
@@ -97,6 +189,10 @@ export class WebR {
     this.Shelter = newShelterProxy(this.#chan);
   }
 
+  /**
+   * @return {Promise<void>} A promise that resolves once webR has been
+   * intialised.
+   */
   async init() {
     const init = await this.#chan.initialised;
 
@@ -128,29 +224,57 @@ export class WebR {
     return init;
   }
 
+  /**
+   * Close the communication channel between the main thread and the worker
+   * thread cleanly. Once this has been executed, webR will be unable to
+   * continue.
+   */
   close() {
-    return this.#chan.close();
+    this.#chan.close();
   }
 
+  /**
+   * Read from the communication channel and return an output message.
+   * @return {Promise<Message>}
+   */
   async read(): Promise<Message> {
     return await this.#chan.read();
   }
 
+  /**
+   * Flush the output queue in the communication channel and return all output
+   * messages.
+   * @return {Promise<Message[]>}
+   */
   async flush(): Promise<Message[]> {
     return await this.#chan.flush();
   }
 
+  /**
+   * Send a message to the communication channel input queue.
+   * @param {Message} msg Message to be added to the input queue.
+   */
   write(msg: Message) {
     this.#chan.write(msg);
   }
+
+  /**
+   * Send a line of standard input to the communication channel input queue.
+   * @param {string} input Message to be added to the input queue.
+   */
   writeConsole(input: string) {
     this.write({ type: 'stdin', data: input + '\n' });
   }
 
+  /** Attempt to interrupt a running R computation. */
   interrupt() {
     this.#chan.interrupt();
   }
 
+  /**
+   * Install a list of R packages from the default webR CRAN-like repo.
+   * @param {string[]} packages An array of R pacakge names.
+   */
   async installPackages(packages: string[]) {
     for (const pkg of packages) {
       const msg = { type: 'installPackage', data: { name: pkg } };
@@ -158,10 +282,29 @@ export class WebR {
     }
   }
 
+  /**
+   * Destroy an R object reference.
+   * @param {RObject} x An R object reference.
+   */
   async destroy(x: RObject) {
     await this.globalShelter.destroy(x);
   }
 
+  /**
+   * Evaluate the given R code, optionally within a given R environment.
+   *
+   * Stream outputs and conditions raised during exectution are by default
+   * captured and returned as part of the output of this function.
+   *
+   * See {@link evalR} for a simpler version of this function that uses the
+   * default options and simply returns the result of the computation.
+   *
+   * @param {string} code The R code to evaluate.
+   * @param {RObject} [env] The R environment to evaluate within.
+   * @param {CaptureROptions} [options] Options for the execution environment.
+   * @return {Promise<{result: RObject, output: unknown[]}>} An object
+   * containing the result of the computation and and array of captured output.
+   */
   async captureR(
     code: string,
     env?: REnvironment,
@@ -173,6 +316,20 @@ export class WebR {
     return this.globalShelter.captureR(code, env, options);
   }
 
+  /**
+   * Evaluate the given R code, optionally within a given R environment.
+   *
+   * Stream outputs and any conditions raised during exectution are written to
+   * the JavaScript console.
+   *
+   * See {@link captureR} for a version of this function that allows for
+   * configuration of advanced options and for returning outputs as part of the
+   * result.
+   *
+   * @param {string} code The R code to evaluate.
+   * @param {RObject} [env] The R environment to evaluate within.
+   * @return {Promise<RObject>} The result of the computation.
+   */
   async evalR(code: string, env?: REnvironment): Promise<RObject> {
     return this.globalShelter.evalR(code, env);
   }
@@ -247,6 +404,7 @@ export class WebR {
   };
 }
 
+/** WebR shelters provide fine-grained control over the lifetime of R objects. */
 export class Shelter {
   #id = '';
   #chan: ChannelMain;

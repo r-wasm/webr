@@ -1,13 +1,27 @@
+[![Build, test and deploy webR](https://github.com/georgestagg/webR/actions/workflows/deploy.yml/badge.svg)](https://github.com/georgestagg/webR/actions/workflows/deploy.yml) [![codecov](https://codecov.io/gh/georgestagg/webR/branch/main/graph/badge.svg)](https://codecov.io/gh/georgestagg/webR)
+
 # WebR - R in the Browser
 
 This project aims to compile the statistical language R (https://www.r-project.org/) into WASM for
 use with a browser, via Emscripten (https://emscripten.org/).
 
-Included in the repo is a `Dockerfile` which can be optionally used to setup an environment and
-toolchain for compiling R's source code and supporting libraries, written in both C and Fortran.
-If you are compiling webR without Docker, ensure that you first have the
-[Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html) installed, along with
-some required prerequisites:
+## Documentation
+
+Documentation showing how to use webR in your own projects can be found at
+https://docs.r-wasm.org/webr/latest/
+
+## Downloading webR
+
+The webR JavaScript package is available for download through [npm](https://www.npmjs.com/package/@r-wasm/webr) and on [CDN](https://docs.r-wasm.org/webr/latest/downloading.html#download-from-cdn).
+
+Complete release packages, including R WebAssembly binaries, are available to download for self hosting in the [GitHub Releases section](https://github.com/georgestagg/webR/releases).
+
+## Building webR from Source
+Included in the source repository is a `Dockerfile` which can be optionally used to setup an
+environment and toolchain for compiling R's source code and supporting libraries, written in
+both C and Fortran. If you are compiling webR without Docker, ensure that you first have the
+[Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html) installed, along
+with some required prerequisites:
  * cmake
  * wget
  * quilt
@@ -19,11 +33,11 @@ R's Fortran source files can be compiled with either a
 [custom development version of flang](https://github.com/lionel-/f18-llvm-project/commits/fix-webr)
 (the default) or with gfortran and Dragonegg (using the `--with-dragonegg` configure option).
 
-The repo includes patches for R's source code so that it can work in the browser environment provided
-by Emscripten. The patches also tweak R's interactive mode so as to provide a web-based REPL through
-the use of [jQuery Terminal](https://terminal.jcubic.pl/).
+The repo includes patches for R's source code so that it can work in the browser environment
+provided by Emscripten. The patches also tweak R's interactive mode so as to provide a web-based
+REPL through the use of [xterm.js](https://xtermjs.org/).
 
-## Instructions
+### Build Instructions
 
 Clone the repo into a new directory, `cd` into the directory, then run `./configure && make`.
 You can configure `make` variables in a `~/.webr-config.mk` file.
@@ -43,5 +57,5 @@ the following extra setup must be done before starting the build process,
 
 A demo of the resulting R REPL can be found at https://webr.r-wasm.org/latest/
 
-Loading the page will initally result in a black screen. Please be patient as the WASM
-runtime downloads and executes. R will display a banner message when it is ready to use.
+Please be patient as the WASM runtime downloads and executes. R will display a
+banner message when it is ready to use.

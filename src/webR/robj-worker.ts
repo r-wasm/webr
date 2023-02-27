@@ -1,3 +1,7 @@
+/**
+ * Module for working with R objects on the worker thead.
+ * @module RWorker
+ */
 import { Module } from './emscripten';
 import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw, WebRDataScalar } from './robj';
 import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
@@ -83,7 +87,7 @@ export interface ToTreeOptions {
   depth: number;
 }
 
-type Nullable<T> = T | RNull;
+export type Nullable<T> = T | RNull;
 
 function newObjectFromData(obj: WebRData): RObject {
   // Conversion of WebRDataTree type JS objects

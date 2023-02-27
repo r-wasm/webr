@@ -1,0 +1,149 @@
+---
+title: "Create R Objects from JavaScript"
+format: html
+toc: true
+---
+
+Once webR has been loaded into a web page, new R objects can be created from the
+JavaScript environment. For example, it is possible to construct an R object
+using data provided as a JavaScript array, and then perform some computation in
+R with that data.
+
+## Creating new R objects
+
+New R objects can be created from the main JavaScript thread by using the `new`
+operator with proxy classes on an initialised instance of the
+[`WebR`](api/js/classes/WebR.WebR.md) class.
+
+When an R object is instantiated in this way, webR communicates with the worker
+thread to orchestrate object creation in WebAssembly memory. As such, new R
+objects can only be created once communication with the worker thread has been
+established and the promise returned by
+[`WebR.init()`](api/js/classes/WebR.WebR.md#init) has resolved.
+
+Once the object has been created on the worker thread, a promise is returned
+resolving as a reference to the new R object [in the form of an
+`RObject`](objects.qmd). In a modern asynchronous JavaScript environment,
+the `await` and `new` keywords can be combined.
+
+``` javascript
+await webR.init();
+let d = await new webR.RObject([2, 4, 6]);
+await d.toArray();
+```
+
+    [2, 4, 6]
+
+In addition to explicitly constructing an R object with `await new`, new R
+object construction is also performed automatically when [executing R functions
+with JavaScript arguments](convert-r-to-js.qmd#exec-r).
+
+Newly created `RObject` references are protected by the
+[default shelter](objects.qmd#the-default-shelter) unless
+[otherwise specified](objects.html#working-with-multiple-shelters).
+
+::: callout-warning
+`RObject` references that have been created from JavaScript objects are subject
+to R [memory management](objects.qmd#memory-management) and should be destroyed
+when no longer in use.
+:::
+
+### Constructing R objects from JavaScript objects
+
+The [`WebR` proxy classes](api/js/classes/WebR.WebR.md#properties) take a single
+JavaScript argument in their constructor functions which will be used for the
+content of the new R object. JavaScript objects that are able to be converted
+for use as R objects have type [`WebRData`](api/js/modules/RObject.md#webrdata).
+
+The resulting R object type is chosen based on the contents of the JavaScript
+argument provided. When there is ambiguity, the following conversion rules are
+used,
+
+| Constructor Argument                                                    | R Type                                                                                                     |
+|------------------------------------|--------------------------------------------|
+| `null`                                                                  | Logical `NA`                                                                                               |
+| `boolean`                                                               | Logical atomic vector                                                                                      |
+| `number`                                                                | Double atomic vector                                                                                       |
+| `{ re: 1, im: 2 }`                                                      | Complex atomic vector                                                                                      |
+| `string`                                                                | Character atomic vector                                                                                    |
+| JavaScript array                                                        | An atomic vector with type based on the above rules and following the coercion rules of R's `c()` function |
+| [Object of type `WebRDataTree`](convert-r-to-js.qmd#serialising-r-objects) | An R object type given by the `type` property in the provided object                                       |
+| Other JavaScript object                                                 | Reserved for future use                                                                                    |
+
+In the case of R lists provided as an
+[`WebRDataTree`](api/js/modules/Tree.md#webrdatatree), the above rules are
+applied recursively to also construct the objects provided within the list.
+
+### Creating an R object with specific type
+
+As an alternative to constructing an
+[`WebRDataTree`](api/js/modules/Tree.md#webrdatatree) with an explicit `type`
+property, several class proxies of different type are available on the
+[`WebR`](api/js/classes/WebR.WebR.md) instance. For example, the
+[`WebR.RList`](api/js/classes/WebR.WebR.md#rlist) class proxy can be used to
+specifically construct an R list object, rather than an atomic vector, using a
+JavaScript array of values.
+
+To see how this can be useful, consider the difference in structure between the
+following two R object construction examples, using the same JavaScript object
+as the constructor argument,
+
+``` javascript
+let foo = await new webR.RObject([123, 'abc']);
+await foo.toJs();
+```
+
+    { type: 'character', names: null, values: ['123', 'abc'] }
+
+``` javascript
+let foo = await new webR.RList([123, 'abc']);
+await foo.toJs();
+```
+
+    {
+      type: 'list',
+      names: null,
+      values: [
+        { type: 'double', names: null, values: [ 123 ] },
+        { type: 'character', names: null, values: ['abc'] }
+      ]
+    }
+
+### Creating objects using `RObject` references
+
+An [`RObject`](api/js/classes/RWorker.RObject.md) can be used as part of R
+object construction, either on its own, included in a JavaScript array, or as
+the values in an [`WebRDataTree`](api/js/modules/Tree.md#webrdatatree).
+
+In such cases a new `RObject` instance will be created, but the R object will
+not be copied as part of construction. The resulting `RObject` will be a
+reference to the same point in WebAssembly memory as the source object.
+
+This mechanism can be useful for creating new R lists or environments, or when
+re-constructing partially serialised objects in the form of an
+[`WebRDataTree`](api/js/modules/Tree.md#webrdatatree).
+
+## Binding objects to an R environment
+
+The `globalEnv` property, one of [webR's cached R
+objects](convert-r-to-js.qmd#cached-r-objects), can be used to quickly bind
+JavaScript objects to variables in the global R environment,
+
+``` javascript
+await webR.objs.globalEnv.bind('foo', ['x', 'y', 'z'])
+await webR.evalR('print(foo)');
+```
+
+    [1] "x" "y" "z"
+
+Alternatively, and to avoid adding to the global scope, a new environment can be
+directly constructed to be used with
+[`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr),
+
+``` javascript
+let arr = await new webR.RObject([10, 21, 32]);
+let env = await new webR.REnvironment({ foo: arr });
+await webR.evalR('print(foo)', env);
+```
+
+    [1] 10 21 32

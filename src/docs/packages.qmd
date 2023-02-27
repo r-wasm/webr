@@ -1,0 +1,119 @@
+---
+title: "R Packages"
+format: html
+toc: true
+---
+
+WebR supports the loading of R packages that have been pre-compiled targeting
+WebAssembly and for use with webR.
+
+WebR packages must be installed before use, which in practice means copying
+binaries into the webR virtual filesystem in some way, either as part of the
+webR build process or during runtime by downloading packages from a repository.
+
+## Downloading packages from a webR binary repository
+
+A collection of supported packages are publicly hosted via a CDN in a CRAN-like
+repository with URL,
+
+    https://repo.r-wasm.org/
+
+The public CDN build of webR has been distributed with a pre-installed [webr
+support package](rapi). This R package provides a helper function
+[`install()`](api/r.qmd#install-one-or-more-packages-from-a-webr-binary-package-repo),
+which can be used to install further R packages from a compatible webR binary
+repository.
+
+The repository URL is set using the `repos` argument and the public build of
+webR defaults the `repo` argument to the repository URL shown above.
+
+### Example: Installing the Matrix package
+
+Run the following R code in a running webR session, such as the [webR REPL
+demo](https://webr.r-wasm.org/latest/),
+
+```{r eval=FALSE}
+webr::install("Matrix")
+```
+
+If the package is available for webR and downloads successfully, you can then
+load the package in the usual way.
+
+```{r eval=FALSE}
+library("Matrix")
+```
+
+## Interactively installing packages
+
+As part of startup, the [webR REPL demo](https://webr.r-wasm.org/latest/) website
+runs the following R code:
+
+```{r eval=FALSE}
+webr::global_prompt_install()
+```
+
+This function, also provided by the pre-installed [webr support
+package](api/r.qmd), installs a global handler that will show an interactive
+prompt whenever loading a library fails, asking the user if they would like to
+try downloading the package from the configured default webR binary package
+repository.
+
+Once the global handler has been installed in this way, it is possible to
+install and load packages interactively via a prompt. The process is as follows,
+
+``` r
+library(Matrix)
+```
+
+    Failed to load package "Matrix". Do you want to try downloading
+    it from the webR binary repo?
+      1: Yes
+      2: No
+    Selection: 1
+    Downloading webR package: lattice
+    Downloading webR package: Matrix
+
+Once the package has been downloaded in this way, the next call to `library()`
+will load the package as usual.
+
+## Installing packages from JavaScript
+
+The webR JavaScript API provides the function
+[`WebR.installpackages()`](api/js/classes/WebR.WebR.md#installpackages). This
+convenience function takes an array of packages as its only argument and for
+each calls
+[`install()`](api/r.qmd#install-one-or-more-packages-from-a-webr-binary-package-repo)
+with the default webR binary package repository.
+
+``` javascript
+await webR.installPackages(['Matrix', 'cli'])
+```
+
+Once the promise returned by
+[`WebR.installPackages()`](api/js/classes/WebR.WebR.md#installpackages) has
+resolved, the packages can be loaded in the usual way using `library()`.
+
+## Building R packages for webR
+
+::: callout-note
+It is not possible to install packages from source in webR. This is not likely
+to change in the near future, as such a process would require an entire C and
+Fortran compiler toolchain to run inside the browser. For the moment, providing
+pre-compiled WebAssembly binaries is the only supported way to install R
+packages in webR.
+:::
+
+Many R packages contain C or C++ code and so must be compiled for WebAssembly
+(along with any prerequisite system libraries) before they can be loaded in
+webR. One way to do this is by using the
+[`Makevars`](https://cran.r-project.org/doc/manuals/r-devel/R-exts.html#Using-Makevars)
+system to instruct R to compile R packages with the
+[Emscripten](https://emscripten.org/index.html) compiler toolchain, setting
+variables such as `CC` and `CXX` to point to the relevant Emscripten compilers.
+
+Once the R package has been compiled and binaries targeting WebAssembly are
+available, they can be loaded into webR by providing a CRAN-like repo to the
+`webr::install()` command.
+
+More detailed information about the repository and package building process will
+be made available in the future, when the infrastructure is more stable.

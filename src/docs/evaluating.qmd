@@ -1,0 +1,129 @@
+---
+title: "Evaluating R Code"
+format: html
+toc: true
+---
+
+## Evaluating R code with `evalR`
+
+The [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) method can be used to
+evaluate R code and retrieve the result of the computation. The method takes two
+arguments,
+
+-   `code` - The R code to evaluate.
+-   `env` - Optional: The environment to evaluate in. Default:
+    [`RObject.globalEnv()`](api/js/classes/RWorker.RObject.md#globalenv).
+
+The `env` argument can be set when you wish to evaluate the R code within an R
+environment, rather than the default global environment. This could be used, for
+example, to avoid variable name clashes when evaluating multiple unrelated
+objects.
+
+[`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) returns a promise resolving
+to a reference to the result of the computation, given as an
+[`RObject`](api/js/modules/RMain.md#robject) proxy.
+
+If any error conditions are raised during evaluation, they will be re-thrown as
+JavaScript exceptions. Other conditions and stream output is written to the
+JavaScript console.
+
+::: callout-warning
+`RObject` references returned by `evalR()` and other methods are subject to R
+[memory management](objects.qmd#memory-management) and should be destroyed when
+no longer in use.
+:::
+
+### Returning JavaScript values when evaluating R code
+
+A selection of convenience methods are provided that return the result of
+evaluating R code as a promise resolving to a JavaScript object, rather than an
+`RObject` reference. The benefit is that since the returned object is of a
+native JavaScript type, it does not need to be memory managed like an `RObject`
+result.
+
+| Method                                                            | Returned object type |
+|--------------------------------------------------------|------------------------|
+| [`WebR.evalRBoolean()`](api/js/classes/WebR.WebR.md#evalrboolean) | `boolean`            |
+| [`WebR.evalRNumber()`](api/js/classes/WebR.WebR.md#evalrnumber)   | `number`             |
+| [`WebR.evalRString()`](api/js/classes/WebR.WebR.md#evalrstring)   | `string`             |
+| [`WebR.evalRVoid()`](api/js/classes/WebR.WebR.md#evalrvoid)       | No return value      |
+
+## Evaluating R code and capturing output with `captureR`
+
+The [`WebR.captureR()`](api/js/classes/WebR.WebR.md#capturer) method can be used
+to both evaluate R code and retrieve the result of the computation, and capture
+any stream output or conditions raised. The method takes three arguments,
+
+-   `code` - The R code to evaluate
+-   `env` - Optional: The environment to evaluate in. Default:
+    [`RObject.globalEnv()`](api/js/classes/RWorker.RObject.md#globalenv).
+-   `options` - Optional: Advanced control how the code is evaluated.
+
+[`WebR.captureR()`](api/js/classes/WebR.WebR.md#capturer) returns a promise
+resolving to a JavaScript object with two properties,
+
+-   `result` - The result of the computation, as an
+    [`RObject`](api/js/modules/RMain.md#robject) proxy.
+-   `output` - Output captured during execution, an array of objects with
+    properties `type` and `data`.
+
+Stream output is returned as elements of `output` with a `type` property of
+`stdout` or `stderr`. The line of output is returned in the form of a JavaScript
+string in the `data` property.
+
+Any raised conditions are also included as elements of `output` with a `type`
+property of `message`, `warning`, or `error`. A reference to the condition is
+returned in the form of an [`RObject`](api/js/modules/RMain.md#robject) proxy in
+the `data` property.
+
+The `options` argument, with a type of
+[CaptureROptions](api/js/interfaces/WebRChan.CaptureROptions.md), provides
+advanced control over how the R code is evaluated and captured. For example,
+this can be used to enable R's
+[autoprint](https://cran.r-project.org/doc/manuals/r-release/R-ints.html#Autoprinting)
+feature.
+
+## Setting up an R REPL with `Console` {#console}
+
+The [`Console`](api/js/classes/WebR.Console.md) class, in combination with
+JavaScript callback functions, can be used as an alternative way to use the R
+REPL without directly issuing messages to the webR communication channel.
+
+The issuing of input messages and the consumption of output messages over the
+communication channel between the webR worker thread and the main thead is
+handled by [`Console`](api/js/classes/WebR.Console.md), invoking the relevant
+callbacks provided.
+
+The [`Console`](api/js/classes/WebR.Console.md) class constructor takes two
+arguments,
+
+-   `callbacks` - A list of webR console callbacks to be used for this console.
+-   `options` - The startup options to be provided to webR.
+
+The [`Console.run()`](api/js/classes/WebR.Console.md#run) method is used to
+start the R console. Callback functions `stdout` and `stderr` are called with a
+single line of output as the first argument when the R REPL produces standard
+stream output. The default implementation of `stdout` and `stderr` writes to the
+console using `console.log` and `console.error`.
+
+R code can be sent as input by calling the
+[`Console.stdin()`](api/js/classes/WebR.Console.md#stdin) method.
+
+A long running R computation can be interrupted by calling the
+[`Console.interrupt()`](api/js/classes/WebR.Console.md#interrupt) method.
+
+The `prompt` callback function is called when webR produces a prompt at the REPL
+and is awaiting user input. The prompt character (usually `>` or `+`) is given
+as the first argument to the callback function. The default implementation of
+`prompt` shows a JavaScript prompt asking the user for input, and then sends the
+user input to `stdin`.
+
+The `canvasExec` callback function is called when webR writes plots to the
+built-in HTML canvas graphics device. Once the default HTML canvas has been
+written to (e.g. by plotting something in R), the HTML canvas element can be
+accessed with the [`Console.canvas`](api/js/classes/WebR.Console.html#canvas)
+instance property.
+
+See the [Example Usage](examples.qmd) page to see a worked example of a HTML web
+page loading webR and starting a `Console`, creating an interactive R REPL
+directly in the page.

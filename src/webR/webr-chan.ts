@@ -1,3 +1,6 @@
+/**
+ * @module WebRChan
+ */
 import { Message } from './chan/message';
 import { UUID as ShelterID } from './chan/task-common';
 import { WebRPayloadWorker, WebRPayloadPtr } from './payload';
@@ -15,13 +18,36 @@ export interface CallRObjectMethodMessage extends Message {
   };
 }
 
-export type CaptureROptions = {
+/**
+ * The configuration settings used when evaluating R code.
+ */
+export interface CaptureROptions {
+  /**
+   * Should the stdout and stderr output streams be captured and returned?
+   * Deafult: `true`.
+   */
   captureStreams?: boolean;
+  /**
+   * Should conditions raised during execution be captured and returned?
+   * Default: `true`.
+   */
   captureConditions?: boolean;
+  /**
+   * Should the code automatically print output as if it were written at an R console?
+   * Default: `false`.
+   */
   withAutoprint?: boolean;
+  /**
+   * Should an R error condition be re-thrown as a JavaScript exception?
+   * Deafult: `true`.
+   */
   throwJsException?: boolean;
+  /**
+   * Should the code be executed using a `tryCatch` with handlers in place?
+   * Deafult: `true`.
+   */
   withHandlers?: boolean;
-};
+}
 
 export interface CaptureRMessage extends Message {
   type: 'captureR';

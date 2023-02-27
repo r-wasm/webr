@@ -1,0 +1,21 @@
+---
+title: "R API"
+format: html
+toc: true
+---
+
+The webR R API is provided via a pre-installed `webr` support package.
+
+````{=html}
+```{r, echo=FALSE, results='asis'}
+library(rvest)
+files <- list.files(path="../../../packages/webr/man/", pattern="*.Rd", full.names=TRUE)
+for (f in files) {
+  capture.output(tools::Rd2HTML(f)) |>
+  paste(collapse = '\n') |>
+  minimal_html() |>
+  html_elements(xpath="//*[contains(@class, 'container')]/*[position() >= 2]") |>
+  paste(collapse='') |>
+  writeLines()
+}
+```

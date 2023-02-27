@@ -1,4 +1,12 @@
 // From https://stackoverflow.com/questions/47157428/how-to-implement-a-pseudo-blocking-async-queue-in-js-ts
+/**
+ * @module Queue
+ */
+
+/**
+ * Asynchronous queue mechanism to be used by the communication channels.
+ * @typeParam T The type of item to be stored in the queue.
+ */
 export class AsyncQueue<T> {
   #promises: Promise<T>[];
   #resolvers: ((t: T) => void)[];

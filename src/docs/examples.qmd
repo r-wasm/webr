@@ -1,0 +1,297 @@
+---
+title: "Examples using WebR"
+format: html
+toc: true
+---
+
+## Starting webR
+
+Once webR has been [downloaded](downloading.qmd) and made available for use, it
+can be initialised by creating a new instance of the
+[`WebR`](api/js/classes/WebR.WebR.md) class.
+
+``` javascript
+const webR = new WebR();
+```
+
+A configuration object of type
+[`WebROptions`](api/js/interfaces/WebR.WebROptions.md) can be passed to the
+above constructor. This optional argument provides access to advanced webR
+settings such as WebAssembly binary URLs, communication channel settings, and
+control over the Emscripten environment that the WebAssembly binaries are to be
+executed in.
+
+### Awaiting initialisation
+
+WebR is ready to use once the promise returned by
+[`WebR.init()`](api/js/classes/WebR.WebR.md#init) resolves. In a modern
+asynchronous JavaScript environment (e.g. within an
+[`async function`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)),
+the
+[`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await)
+keyword can be used to ensure webR has finished starting before continuing.
+
+``` javascript
+await webR.init();
+```
+
+## Example Snippets
+
+### Evaluating R code and retrieving results
+
+This example demonstrates running R code with
+[`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) and getting the result [in
+the form of an `RObject` proxy](objects.qmd). The result is then
+[converted into a JavaScript object](convert-r-to-js.qmd) before being output to
+the JavaScript console.
+
+``` javascript
+let result = await webR.evalR('rnorm(10,5,1)');
+let output = await result.toArray();
+
+console.log('Result of running `rnorm` from webR: ', output);
+```
+
+    Result of running `rnorm` from webR: [4.811743371393964,
+    3.9713199286446246, 5.752161964201946, 4.699964764731866,
+    6.793839154500917, 5.80036239061935, 5.342100112394279,
+    5.555879371932934, 4.314676418095938, 5.113592217724398]
+
+### Capturing console output from R code
+
+The following snippet demonstrates capturing R output during evaluation using
+[`WebR.captureR()`](api/js/classes/WebR.WebR.md#capturer). This differs
+from the example above in that the output is retrieved in the form of lines of
+text from the `stdout` stream, rather than a reference to an R object [in the
+form of an `RObject` proxy](objects.qmd).
+
+``` javascript
+let result = await webR.captureR('print(rnorm(10,5,1))');
+
+console.log('Output obtained from running `rnorm` from webR:')
+console.log(result.output);
+```
+
+    Output obtained from running `rnorm` from webR:
+    [
+      {type: 'stdout', data: ' [1] 5.322551 6.924352 4.592612 6.357413 7.198339 5.152446 4.185396'}
+      {type: 'stdout', data: ' [8] 4.995504 6.034569 6.295957'}
+    ]
+
+The optional arguments of
+[`WebR.captureR()`](api/js/classes/WebR.WebR.md#capturer) have been designed so
+that the defaults are sufficient for general R evaluation and output capture.
+However, the default behaviour can be changed by passing an `options` argument
+of type [`CaptureROptions`](api/js/interfaces/WebRChan.CaptureROptions.md), if
+required.
+
+### Executing an R function from JavaScript
+
+The following snippet demonstrates executing an R function from JavaScript. A
+reference to the R function is first obtained as an
+[`RFunction`](api/js/modules/RMain.md#rfunction) JavaScript proxy, and then
+executed in a similar way to a normal JavaScript function.
+
+``` javascript
+let sin = await webR.evalR('sin');
+let result = await sin([1,2,3]);
+
+console.log('Result of running `await sin([1,2,3])`:')
+console.log(result.values);
+```
+
+    Result of running `await sin([1,2,3])`:
+    [0.8414709848078965, 0.9092974268256817, 0.1411200080598672]
+
+
+### Bind a JavaScript object into the R global environment
+
+The following snippet demonstrates binding a JavaScript object into the R global
+environment. The JavaScript object is automatically converted into an R object,
+and the value is then used in the subsequent R evaluation.
+
+``` javascript
+await webR.objs.globalEnv.bind('arr', [2,4,6,8,9]);
+let result = await webR.evalR('sample(arr, 3)');
+let output = await result.toArray();
+
+console.log(output);
+```
+
+    [2, 9, 6]
+
+### Cleaning up after an R object is no longer in use
+R object references in the form of an `RObject` are subject to
+[memory management](objects.qmd#memory-management) and should be destroyed when
+they are no longer required. This signals to R that the object referenced may be
+deleted by the garbage collector.
+
+``` javascript
+let result = await webR.evalR('rnorm(3,5,1)');
+let output = await result.toArray();
+console.log(output);
+
+webR.destroy(result);
+```
+
+    [5.373198157561013, 4.493213148077507, 5.134879842881727]
+
+## Fully worked examples
+
+### Creating an interactive webR REPL console
+
+The following HTML document loads webR from CDN and creates a simple interactive
+R console. This demonstrates using the
+[`Console`](api/js/classes/WebR.Console.md) class with JavaScript callbacks to
+interface with the built-in R REPL.
+
+``` html
+<html>
+  <head>
+    <title>WebR Test Console</title>
+  </head>
+  <body>
+    <div>
+      <pre><code id="out">Loading webR, please wait...</code></pre>
+      <input spellcheck="false" autocomplete="off" id="input" type="text">
+      <button onclick="globalThis.sendInput()" id="run">Run</button>
+    </div>
+    
+    <script type="module">
+      /* Create a webR console using the Console helper class */
+      import { Console } from 'https://webr.r-wasm.org/latest/webr.mjs';
+      const webRConsole = new Console({
+        stdout: line => document.getElementById('out').append(line + '\n'),
+        stderr: line => document.getElementById('out').append(line + '\n'),
+        prompt: p => document.getElementById('out').append(p),
+      });
+      webRConsole.run();
+      
+      /* Write to the webR console using the ``stdin()`` method */
+      let input = document.getElementById('input');
+      globalThis.sendInput = () => {
+        webRConsole.stdin(input.value);
+        document.getElementById('out').append(input.value + '\n');
+        input.value = "";
+      }
+      
+      /* Send input on Enter key */
+      input.addEventListener(
+        "keydown",
+        (evt) => {if(evt.keyCode === 13) globalThis.sendInput()}
+      );
+    </script>
+  </body>
+</html>
+```
+
+After loading, the resulting web page should present an interactive R console
+similar to the following,
+
+```{=html}
+<div style="border: solid #333 1px; padding: 5px;">
+  <pre id="loading"><code>Loading webR, please wait...</code></pre>
+  <pre id="container" style="max-height: 400px"><code id="out"></code></pre>
+  <div class="input-group mb-3">
+    <span class="input-group-text" id="prompt">></span>
+    <input spellcheck="false" autocomplete="off" id="input" type="text">
+    <button type="button" class="btn btn-secondary" onclick="globalThis.sendInput()" id="run">Run</button>
+  </div>
+</div>
+<script type="module">
+  import { Console } from 'https://webr.r-wasm.org/v0.1.0/webr.mjs';
+  const webRConsole = new Console({
+    stdout: line => document.getElementById('out').append(line + '\n'),
+    stderr: line => document.getElementById('out').append(line + '\n'),
+    prompt: p => {
+      const pre = document.getElementById('container');
+      pre.scrollTop = pre.scrollHeight; 
+      document.getElementById('prompt').innerText = p;
+    }
+  });
+  webRConsole.run();
+  webRConsole.webR.init().then(() => document.getElementById('loading').remove());
+  
+  let input = document.getElementById('input');
+  globalThis.sendInput = () => {
+    webRConsole.stdin(input.value);
+    document.getElementById('out').append(
+      document.getElementById('prompt').innerText + ' ' + input.value + '\n'
+    );
+    input.value = "";
+  }
+  input.addEventListener(
+    "keydown",
+    (evt) => {if(evt.keyCode === 13) globalThis.sendInput()}
+  );
+</script>
+```
+### Creating a webR React app using `create-react-app`
+
+A simple React app incorporating webR can be bootstrapped using
+`create-react-app`. First, ensure `create-react-app` is available. For example,
+install it with npm using,
+
+``` bash
+npm i -g create-react-app
+```
+
+Next, bootstrap a new React app with `create-react-app`. Enter the new app
+directory and install webR using npm.
+
+``` bash
+npx create-react-app my-app
+cd my-app
+npm i @r-wasm/webr
+```
+
+Next, set up a middleware for the app's Express instance so that the app is
+served with the required [cross-origin isolation headers](serving.qmd). To do
+this, create the following JavaScript file with the path
+`my-app/src/setupProxy.js`,
+
+``` javascript
+module.exports = function (app) {
+    app.use(function (req, res, next) {
+        res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+        res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+        next();
+    });
+};
+```
+
+Finally, update `src/App.js` to load and use webR,
+
+``` javascript
+import './App.css';
+import React, { useEffect, useState } from 'react'
+import { WebR } from '@r-wasm/webr';
+const webR = new WebR();
+
+function App() {
+  const [ result, updateResult ] = useState(['Loading webR...']);
+  useEffect(() => {
+    async function runRCode() {
+      await webR.init();
+      const rnorm = await webR.evalR('rnorm(5,1,1)');
+      try {
+        const result = await rnorm.toArray();
+        updateResult(result);
+      } finally {
+        webR.destroy(rnorm);
+      }
+    }
+    runRCode();
+  }, []);
+  return (
+    <div className="App">
+      <p>Result of running R code: {result.join(',')}</p>
+    </div>
+  );
+}
+
+export default App;
+```
+
+Test the new app by running `npm start`. The app should automatically open in
+your browser and show the result of evaluating R code.

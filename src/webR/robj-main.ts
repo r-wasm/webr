@@ -1,3 +1,7 @@
+/**
+ * Module for working with R objects on the main thead through JavaScript proxies.
+ * @module RMain
+ */
 import type { RProxy } from './proxy';
 import { isWebRPayloadPtr } from './payload';
 import * as RWorker from './robj-worker';

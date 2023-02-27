@@ -1,3 +1,8 @@
+/**
+ * Types containing references to R objects, raw data or errors over the webR
+ * communication channel.
+ * @module Payload
+ */
 import { WebRDataRaw, RPtr, RType } from './robj';
 
 export type WebRPayloadRaw = {
