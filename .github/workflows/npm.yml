@@ -17,7 +17,6 @@ jobs:
       - name: Set the webR CDN URL as the BASE_URL
         run: echo "BASE_URL=https://webr.r-wasm.org/${{ github.ref_name }}/" > "$HOME/.webr-config.mk"
         shell: bash
-      - run: cd src && make package
-      - run: cd src && npm publish --access=public
+      - run: cd src && make publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

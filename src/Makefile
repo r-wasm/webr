@@ -56,14 +56,22 @@ node_modules: package.json
 serve:
 	cd $(DIST) && $(ROOT)/serve.py
 
-package: Makefile webR/config.ts node_modules esbuild.js
+.PHONY: package
+package: $(PKG_DIST)
+	npm pack
+	rm -rf "$(PKG_DIST)"
+
+.PHONY: publish
+publish: $(PKG_DIST)
+	npm publish --access=public
+
+$(PKG_DIST): Makefile webR/config.ts node_modules esbuild.js
 	npm run build
 # Cleanup npm package files for distribution
 	cp -r "$(DIST)/." "$(PKG_DIST)"
 	rm -rf "$(PKG_DIST)"/*.wasm "$(PKG_DIST)"/R.bin.* "$(PKG_DIST)"/*.so \
 	  "$(PKG_DIST)"/*.html "$(PKG_DIST)"/tests
-	npm pack
-	rm -rf "$(PKG_DIST)"
+	touch $@
 
 clean:
 	rm -rf "$(PKG_DIST)"
