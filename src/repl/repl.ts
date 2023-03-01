@@ -78,7 +78,7 @@ const webR = new WebR({
   readline.setCtrlCHandler(() => webR.interrupt());
 
   // TODO: Replace by void version of `evalR()` once we forward an options object
-  const out = await webR.captureR('webr::global_prompt_install()', undefined, {
+  const out = await webR.captureR('webr::global_prompt_install()', {
     withHandlers: false,
   });
   await webR.destroy(out.result);

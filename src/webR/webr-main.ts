@@ -12,6 +12,7 @@ import { newRProxy, newRClassProxy } from './proxy';
 import { isRObject, RCharacter, RComplex, RDouble } from './robj-main';
 import { REnvironment, RSymbol, RInteger } from './robj-main';
 import { RList, RLogical, RNull, RObject, RPairlist, RRaw, RString, RCall } from './robj-main';
+import { replaceInObject } from './utils';
 import * as RWorker from './robj-worker';
 
 import {
@@ -300,20 +301,15 @@ export class WebR {
    * default options and simply returns the result of the computation.
    *
    * @param {string} code The R code to evaluate.
-   * @param {RObject} [env] The R environment to evaluate within.
    * @param {CaptureROptions} [options] Options for the execution environment.
    * @return {Promise<{result: RObject, output: unknown[]}>} An object
    * containing the result of the computation and and array of captured output.
    */
-  async captureR(
-    code: string,
-    env?: REnvironment,
-    options: CaptureROptions = {}
-  ): Promise<{
+  async captureR(code: string, options: CaptureROptions = {}): Promise<{
     result: RObject;
     output: unknown[];
   }> {
-    return this.globalShelter.captureR(code, env, options);
+    return this.globalShelter.captureR(code, options);
   }
 
   /**
@@ -498,24 +494,16 @@ export class Shelter {
     }
   }
 
-  async captureR(
-    code: string,
-    env?: REnvironment,
-    options: CaptureROptions = {}
-  ): Promise<{
+  async captureR(code: string, options: CaptureROptions = {}): Promise<{
     result: RObject;
     output: unknown[];
   }> {
-    if (env && !isRObject(env)) {
-      throw new Error('Attempted to evaluate R code with invalid environment object');
-    }
-
+    const opts = replaceInObject(options, isRObject, (obj: RObject) => obj._payload);
     const msg: CaptureRMessage = {
       type: 'captureR',
       data: {
         code: code,
-        env: env?._payload,
-        options: options,
+        options: opts as CaptureROptions,
         shelter: this.#id,
       },
     };
