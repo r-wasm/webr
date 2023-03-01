@@ -67,7 +67,7 @@ export interface EvalRMessage extends Message {
   type: 'evalR';
   data: {
     code: string;
-    env?: WebRPayloadPtr;
+    options: CaptureROptions;
     shelter: ShelterID;
     outputType?: EvalRMessageOutputType
   };
@@ -79,7 +79,7 @@ export interface EvalRMessageRaw extends Message {
   type: 'evalRRaw';
   data: {
     code: string;
-    env?: WebRPayloadPtr;
+    options: CaptureROptions;
     outputType: EvalRMessageOutputType
   };
 }

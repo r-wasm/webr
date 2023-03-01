@@ -431,7 +431,7 @@ describe('Working with R environments', () => {
 
   test('Evaluating R code in an environment', async () => {
     const env = (await webR.evalR('x<-new.env();x$a=1;x$b=2;x$.c=3;x')) as REnvironment;
-    const value = (await webR.evalR('b', env)) as RDouble;
+    const value = (await webR.evalR('b', { env })) as RDouble;
     expect(await value.toNumber()).toEqual(2);
   });
 });

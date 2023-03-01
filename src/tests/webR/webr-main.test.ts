@@ -54,16 +54,14 @@ describe('Evaluate R code', () => {
     await expect(result).resolves.not.toThrow();
   });
 
-  test('Throw an error if passed an invalid environment', async () => {
-    // @ts-expect-error Deliberate type error to test Error thrown
-    const promise = webR.evalR('3.14159', { env: 42 });
-    await expect(promise).rejects.toThrow('invalid environment object');
+  test('Throw an error if passed invalid environment data', async () => {
+    const promise = webR.evalR('3.14159', { env: ['invalid', 'environment'] });
+    await expect(promise).rejects.toThrow("Can't create object in new environment");
   });
 
   test('Throw an error if passed an invalid environment object type', async () => {
     const euler = await webR.evalR('0.57722');
-    // @ts-expect-error Deliberate type error to test Error thrown
-    await expect(webR.evalR('x', euler)).rejects.toThrow('Unexpected object type');
+    await expect(webR.evalR('x', { env: euler })).rejects.toThrow('Unexpected object type');
   });
 
   test('Handle syntax errors in evalR', async () => {
@@ -500,7 +498,7 @@ describe('Serialise nested R lists, pairlists and vectors unambiguously', () => 
     const jsObj = await rObj.toTree();
     const newRObj = (await new webR.RObject(jsObj)) as RList;
     const env = await new webR.REnvironment({ newRObj, rObj });
-    const identical = (await webR.evalR('identical(rObj, newRObj)', env)) as RLogical;
+    const identical = (await webR.evalR('identical(rObj, newRObj)', { env })) as RLogical;
     expect(await rObj.type()).toEqual('list');
     expect(await identical.toBoolean()).toEqual(true);
   });
@@ -512,7 +510,7 @@ describe('Serialise nested R lists, pairlists and vectors unambiguously', () => 
     const jsObj = await rObj.toTree({ depth: 1 });
     const newRObj = (await new webR.RObject(jsObj)) as RList;
     const env = await new webR.REnvironment({ newRObj, rObj });
-    const identical = (await webR.evalR('identical(rObj, newRObj)', env)) as RLogical;
+    const identical = (await webR.evalR('identical(rObj, newRObj)', { env })) as RLogical;
     expect(await rObj.type()).toEqual('list');
     expect(await identical.toBoolean()).toEqual(true);
   });

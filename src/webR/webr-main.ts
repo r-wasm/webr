@@ -323,41 +323,38 @@ export class WebR {
    * result.
    *
    * @param {string} code The R code to evaluate.
-   * @param {RObject} [env] The R environment to evaluate within.
+   * @param {CaptureROptions} [options] Options for the execution environment.
    * @return {Promise<RObject>} The result of the computation.
    */
-  async evalR(code: string, env?: REnvironment): Promise<RObject> {
-    return this.globalShelter.evalR(code, env);
+  async evalR(code: string, options?: CaptureROptions): Promise<RObject> {
+    return this.globalShelter.evalR(code, options);
   }
 
-  async evalRVoid(code: string, env?: REnvironment) {
-    return this.#evalRRaw(code, env, 'void') as Promise<void>;
+  async evalRVoid(code: string, options?: CaptureROptions) {
+    return this.#evalRRaw(code, options, 'void') as Promise<void>;
   }
 
-  async evalRBoolean(code: string, env?: REnvironment) {
-    return this.#evalRRaw(code, env, 'boolean') as Promise<boolean>;
+  async evalRBoolean(code: string, options?: CaptureROptions) {
+    return this.#evalRRaw(code, options, 'boolean') as Promise<boolean>;
   }
 
-  async evalRNumber(code: string, env?: REnvironment) {
-    return this.#evalRRaw(code, env, 'number') as Promise<number>;
+  async evalRNumber(code: string, options?: CaptureROptions) {
+    return this.#evalRRaw(code, options, 'number') as Promise<number>;
   }
 
-  async evalRString(code: string, env?: REnvironment) {
-    return this.#evalRRaw(code, env, 'string') as Promise<string>;
+  async evalRString(code: string, options?: CaptureROptions) {
+    return this.#evalRRaw(code, options, 'string') as Promise<string>;
   }
 
   async #evalRRaw(
     code: string,
-    env: REnvironment | undefined,
+    options: CaptureROptions = {},
     outputType: EvalRMessageOutputType
   ) {
-    if (env && !isRObject(env)) {
-      throw new Error('Attempted to evaluate R code with invalid environment object');
-    }
-
+    const opts = replaceInObject(options, isRObject, (obj: RObject) => obj._payload);
     const msg: EvalRMessageRaw = {
       type: 'evalRRaw',
-      data: { code: code, env: env?._payload, outputType: outputType },
+      data: { code: code, options: opts as CaptureROptions, outputType: outputType },
     };
     const payload = await this.#chan.request(msg);
 
@@ -475,14 +472,11 @@ export class Shelter {
     return payload.obj as number;
   }
 
-  async evalR(code: string, env?: REnvironment): Promise<RObject> {
-    if (env && !isRObject(env)) {
-      throw new Error('Attempted to evaluate R code with invalid environment object');
-    }
-
+  async evalR(code: string, options: CaptureROptions = {}): Promise<RObject> {
+    const opts = replaceInObject(options, isRObject, (obj: RObject) => obj._payload);
     const msg: EvalRMessage = {
       type: 'evalR',
-      data: { code: code, env: env?._payload, shelter: this.#id },
+      data: { code: code, options: opts as CaptureROptions, shelter: this.#id },
     };
     const payload = await this.#chan.request(msg);
 

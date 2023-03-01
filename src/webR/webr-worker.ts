@@ -228,7 +228,7 @@ function dispatch(msg: Message): void {
           case 'evalR': {
             const msg = reqMsg as EvalRMessage;
 
-            const result = evalR(msg.data.code, msg.data.env);
+            const result = evalR(msg.data.code, msg.data.options);
             keep(msg.data.shelter, result);
 
             write({
@@ -244,7 +244,7 @@ function dispatch(msg: Message): void {
 
           case 'evalRRaw': {
             const msg = reqMsg as EvalRMessageRaw;
-            const result = evalR(msg.data.code, msg.data.env);
+            const result = evalR(msg.data.code, msg.data.options);
 
             protect(result);
 
@@ -531,8 +531,8 @@ function captureR(code: string, options: CaptureROptions = {}): RList {
   }
 }
 
-function evalR(code: string, env?: WebRPayloadPtr): RObject {
-  const capture = captureR(code, { env });
+function evalR(code: string, options: CaptureROptions = {}): RObject {
+  const capture = captureR(code, options);
   Module._Rf_protect(capture.ptr);
 
   try {
