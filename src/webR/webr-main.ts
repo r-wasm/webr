@@ -292,13 +292,13 @@ export class WebR {
   }
 
   /**
-   * Evaluate the given R code, optionally within a given R environment.
+   * Evaluate the given R code, capturing output.
    *
    * Stream outputs and conditions raised during exectution are by default
    * captured and returned as part of the output of this function.
    *
-   * See {@link evalR} for a simpler version of this function that uses the
-   * default options and simply returns the result of the computation.
+   * See {@link evalR} for a simpler version of this function that returns only
+   * the result of the computation.
    *
    * @param {string} code The R code to evaluate.
    * @param {CaptureROptions} [options] Options for the execution environment.
@@ -313,14 +313,13 @@ export class WebR {
   }
 
   /**
-   * Evaluate the given R code, optionally within a given R environment.
+   * Evaluate the given R code.
    *
    * Stream outputs and any conditions raised during exectution are written to
    * the JavaScript console.
    *
    * See {@link captureR} for a version of this function that allows for
-   * configuration of advanced options and for returning outputs as part of the
-   * result.
+   * capturing and returning outputs as part of the result.
    *
    * @param {string} code The R code to evaluate.
    * @param {CaptureROptions} [options] Options for the execution environment.

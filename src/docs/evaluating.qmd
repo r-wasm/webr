@@ -11,17 +11,21 @@ evaluate R code and retrieve the result of the computation. The method takes two
 arguments,
 
 -   `code` - The R code to evaluate.
--   `env` - Optional: The environment to evaluate in. Default:
-    [`RObject.globalEnv()`](api/js/classes/RWorker.RObject.md#globalenv).
-
-The `env` argument can be set when you wish to evaluate the R code within an R
-environment, rather than the default global environment. This could be used, for
-example, to avoid variable name clashes when evaluating multiple unrelated
-objects.
+-   `options` - Optional: A
+    [`CaptureROptions`](api/js/interfaces/WebRChan.CaptureROptions.md) object
+    controlling how the code is evaluated.
 
 [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) returns a promise resolving
 to a reference to the result of the computation, given as an
 [`RObject`](api/js/modules/RMain.md#robject) proxy.
+
+The `options` argument provides advanced control over how the R code is
+evaluated and captured. For example, this can be used to enable R's
+[autoprint](https://cran.r-project.org/doc/manuals/r-release/R-ints.html#Autoprinting)
+feature. The `env` property of the `options` argument can be set when you wish
+to evaluate the R code within an R environment, rather than the default global
+environment. This could be used, for example, to avoid variable name clashes
+when evaluating multiple unrelated objects.
 
 If any error conditions are raised during evaluation, they will be re-thrown as
 JavaScript exceptions. Other conditions and stream output is written to the
@@ -42,7 +46,7 @@ native JavaScript type, it does not need to be memory managed like an `RObject`
 result.
 
 | Method                                                            | Returned object type |
-|--------------------------------------------------------|------------------------|
+|-----------------------------------------------------|--------------------------|
 | [`WebR.evalRBoolean()`](api/js/classes/WebR.WebR.md#evalrboolean) | `boolean`            |
 | [`WebR.evalRNumber()`](api/js/classes/WebR.WebR.md#evalrnumber)   | `number`             |
 | [`WebR.evalRString()`](api/js/classes/WebR.WebR.md#evalrstring)   | `string`             |
@@ -52,12 +56,12 @@ result.
 
 The [`WebR.captureR()`](api/js/classes/WebR.WebR.md#capturer) method can be used
 to both evaluate R code and retrieve the result of the computation, and capture
-any stream output or conditions raised. The method takes three arguments,
+any stream output or conditions raised. The method takes two arguments,
 
 -   `code` - The R code to evaluate
--   `env` - Optional: The environment to evaluate in. Default:
-    [`RObject.globalEnv()`](api/js/classes/RWorker.RObject.md#globalenv).
--   `options` - Optional: Advanced control how the code is evaluated.
+-   `options` - Optional: A
+    [`CaptureROptions`](api/js/interfaces/WebRChan.CaptureROptions.md) object
+    controlling how the code is evaluated.
 
 [`WebR.captureR()`](api/js/classes/WebR.WebR.md#capturer) returns a promise
 resolving to a JavaScript object with two properties,
@@ -75,13 +79,6 @@ Any raised conditions are also included as elements of `output` with a `type`
 property of `message`, `warning`, or `error`. A reference to the condition is
 returned in the form of an [`RObject`](api/js/modules/RMain.md#robject) proxy in
 the `data` property.
-
-The `options` argument, with a type of
-[CaptureROptions](api/js/interfaces/WebRChan.CaptureROptions.md), provides
-advanced control over how the R code is evaluated and captured. For example,
-this can be used to enable R's
-[autoprint](https://cran.r-project.org/doc/manuals/r-release/R-ints.html#Autoprinting)
-feature.
 
 ## Setting up an R REPL with `Console` {#console}
 

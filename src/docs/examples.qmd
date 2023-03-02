@@ -104,6 +104,22 @@ console.log(result.values);
     [0.8414709848078965, 0.9092974268256817, 0.1411200080598672]
 
 
+### Evaluating R code within an environment
+
+The `options` argument of [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr)
+can be used to control how R code is executed. In this example the options
+argument is used to create a new environment for the R code to be evaluated in.
+
+``` javascript
+let result = await webR.evalR('foo + bar', { env: { foo: 1234, bar: 1 } });
+let output = await result.toNumber();
+
+console.log(output);
+```
+
+    1235
+
+
 ### Bind a JavaScript object into the R global environment
 
 The following snippet demonstrates binding a JavaScript object into the R global
