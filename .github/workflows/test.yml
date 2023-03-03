@@ -19,7 +19,10 @@ jobs:
       - name: Configure webR for flang
         run: ./configure
       - name: Copy flang into webR tree
-        run: cp -r /opt/flang/wasm . && cp -r /opt/flang/host . && cp /opt/flang/emfc ./tools/flang
+        run: |
+          cp -r /opt/flang/wasm .
+          cp -r /opt/flang/host .
+          cp /opt/flang/emfc ./host/bin/emfc
       - name: Setup Emscripten PATH
         run: echo "/opt/emsdk:/opt/emsdk/upstream/emscripten" >> $GITHUB_PATH
       - name: Build webR
