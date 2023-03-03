@@ -1,0 +1,43 @@
+Index: R-4.2.2/src/main/eval.c
+===================================================================
+--- R-4.2.2.orig/src/main/eval.c
++++ R-4.2.2/src/main/eval.c
+@@ -1865,6 +1865,7 @@ static R_INLINE SEXP R_execClosure(SEXP call, SEXP new
+     begincontext(&cntxt, CTXT_RETURN, call, newrho, sysparent, arglist, op);
+ 
+     body = BODY(op);
++    #ifndef __EMSCRIPTEN__
+     if (R_CheckJIT(op)) {
+ 	int old_enabled = R_jit_enabled;
+ 	R_jit_enabled = 0;
+@@ -1872,6 +1873,7 @@ static R_INLINE SEXP R_execClosure(SEXP call, SEXP new
+ 	body = BODY(op);
+ 	R_jit_enabled = old_enabled;
+     }
++    #endif
+ 
+     /* Get the srcref record from the closure object. The old srcref was
+        saved in cntxt. */
+@@ -3930,6 +3932,10 @@ static SEXP R_ConstantsRegistry = NULL;
+    instead of a weak reference, stays in the list forever, and is a GC root.*/
+ static SEXP R_ConstantsRegistry = NULL;
+ 
++#ifdef __EMSCRIPTEN__
++#define NO_THREADED_CODE
++#endif
++
+ #if defined(__GNUC__) && ! defined(BC_PROFILING) && (! defined(NO_THREADED_CODE))
+ # define THREADED_CODE
+ #endif
+@@ -6510,6 +6516,11 @@ static SEXP bcEval(SEXP body, SEXP rho, Rboolean useCa
+   INITIALIZE_MACHINE();
+   codebase = pc = BCCODE(body);
+   constants = BCCONSTS(body);
++
++#ifdef __EMSCRIPTEN__
++  /* Disable bytecode at all times in emscripten */
++  return eval(bytecodeExpr(body), rho);
++#endif
+ 
+   /* allow bytecode to be disabled for testing */
+   if (R_disable_bytecode)

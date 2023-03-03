@@ -1,0 +1,68 @@
+Index: R-4.2.2/src/unix/sys-std.c
+===================================================================
+--- R-4.2.2.orig/src/unix/sys-std.c
++++ R-4.2.2/src/unix/sys-std.c
+@@ -61,6 +61,7 @@
+ 
+ #ifdef __EMSCRIPTEN__
+ #include <ctype.h>              /* for isspace */
++#include "Parse.h"
+ #endif
+ 
+ extern SA_TYPE SaveAction;
+@@ -325,8 +326,17 @@ static void nop(void){}
+ 
+ static void nop(void){}
+ 
++#ifdef __EMSCRIPTEN__
++#include <emscripten.h>
++static void handleEvents(void){
++	EM_ASM(globalThis.Module.webr.handleEvents());
++}
++void (* R_PolledEvents)(void) = handleEvents;
++int R_wait_usec = 100000;
++#else
+ void (* R_PolledEvents)(void) = nop;
+ int R_wait_usec = 0; /* 0 means no timeout */
++#endif
+ 
+ /* For X11 devices */
+ void (* Rg_PolledEvents)(void) = nop;
+@@ -1043,8 +1052,12 @@ Rstd_ReadConsole(const char *prompt, unsigned char *bu
+ 	else
+ #endif /* HAVE_LIBREADLINE */
+ 	{
++#ifdef __EMSCRIPTEN__
++        EM_ASM(globalThis.Module.setPrompt(UTF8ToString($0)), prompt);
++#else
+ 	    fputs(prompt, stdout);
+ 	    fflush(stdout);
++#endif
+ 	}
+ 
+ 	if(R_InputHandlers == NULL)
+@@ -1102,10 +1115,24 @@ Rstd_ReadConsole(const char *prompt, unsigned char *bu
+ 		else
+ #endif /* HAVE_LIBREADLINE */
+ 		{
++#ifdef __EMSCRIPTEN__
++		    static int initialised = 0;
++		    if (!initialised) {
++			EM_ASM(globalThis.Module.webr.resolveInit());
++			initialised = 1;
++		    }
++		    const char* input = (const char*) EM_ASM_INT(return globalThis.Module.webr.readConsole());
++
++		    strncpy((char*) buf, input, len);
++		    free((void*) input);
++
++		    return 1;
++#else
+ 		    if(fgets((char *)buf, len, stdin) == NULL)
+ 			return 0;
+ 		    else
+ 			return 1;
++#endif
+ 		}
+ 	    }
+ 	}

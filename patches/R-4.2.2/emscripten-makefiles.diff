@@ -1,0 +1,57 @@
+Index: R-4.2.2/Makefile.in
+===================================================================
+--- R-4.2.2.orig/Makefile.in
++++ R-4.2.2/Makefile.in
+@@ -90,6 +90,13 @@ javaconf: R
+ javaconf: R
+ 	@$(MAKE) stamp-java
+ 
++install-wasm:
++	@mkdir -p "$(prefix)/lib/R/doc/html"
++	@for d in $(SUBDIRS); do \
++	  (cd $${d} && $(MAKE) install) \
++	done
++	-@(cd share && $(MAKE) install-zoneinfo)
++	-@(cd src/main && $(MAKE) $@)
+ 
+ install install-strip: installdirs svnonly
+ 	@for d in $(SUBDIRS); do \
+Index: R-4.2.2/src/main/Makefile.in
+===================================================================
+--- R-4.2.2.orig/src/main/Makefile.in
++++ R-4.2.2/src/main/Makefile.in
+@@ -149,6 +149,34 @@ $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
+ $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
+ 	$(MAIN_LINK) -o $@ $(R_bin_OBJECTS) $(R_bin_LDADD)
+ 
++MAIN_WEBR_LDADD  = --use-preload-plugins
++MAIN_WEBR_LDADD += --preload-file "$(prefix)/tmp/lib@/usr/lib"
++
++ifdef WEBR_REPO
++MAIN_WEBR_LDADD += --preload-file "$(WEBR_REPO)@/repo"
++endif
++
++ifdef WEBR_LIB
++MAIN_WEBR_LDADD += --preload-file "${WEBR_LIB}@/usr/lib/R/library"
++endif
++
++$(R_binary).js: $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
++	@rm -rf "$(prefix)/tmp" && mkdir -p "$(prefix)/tmp"
++	@cp -a "$(prefix)/lib" "$(prefix)/tmp/"
++	@rm -r "$(prefix)/tmp/lib/R/library/translations"
++	@rm -r "$(prefix)/tmp/lib/R/library/tcltk"
++	@rm -r "$(prefix)/tmp/lib/R/bin"
++	@rm -r "$(prefix)/tmp/lib/R/include"
++	$(MAIN_LINK) $(MAIN_WEBR_LDADD) \
++	-o $(prefix)/dist/$(R_binary).js \
++	$(R_bin_OBJECTS) -lRlapack $(FORTRAN_WASM_LDADD) $(R_bin_LDADD)
++
++install-wasm: $(R_bin_DEPENDENCIES)
++	@$(MKINSTALLDIRS) "$(prefix)/dist"
++	@cp "$(Rexeclibdir)/libRblas.so" "$(prefix)/dist/libRblas.so"
++	@cp "$(Rexeclibdir)/libRlapack.so" "$(prefix)/dist/libRlapack.so"
++	@$(MAKE) $(R_binary).js
++
+ libR.a: $(OBJECTS) $(STATIC_LIBS)
+ 	-@mkdir libs
+ 	@(cd libs; for l in $(STATIC_LIBS); do $(AR) -x ../$$l; done)
