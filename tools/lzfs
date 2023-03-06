@@ -1,0 +1,111 @@
+#!/bin/bash
+set -eu
+
+usage() {
+    cat << EOF
+Create pre.js file setting up a lazy filesystem for Emscripten.
+
+Usage:
+  lzfs [-v] [-u URL] [-d dest] [-o file] -f path1@parent1 [-f path2@parent2] [...]
+
+Arguments:
+  -d, --dest      If provided, copy source files to destination vfs directory.
+  -f path@parent  Add all files under the directory 'path' to the Emscripten
+                  filesystem as lazy files, under the directory 'parent'.
+  -h, --help      Display this help message.
+  -o file         If provided, write output to 'file'. Otherwise write to stdout.
+  -u, --URL       If provided, set a prefix for backing URLs.
+  -v, --verbose   Verbose mode. Ouptut directory names as they are handled.
+EOF
+    exit 1
+}
+
+die() {
+    echo $1 1>&2
+    exit 1
+}
+
+write() {
+    if [[ -n "${OUT}" ]]; then
+        echo $@ >> "${OUT}"
+    else
+        echo $@
+    fi
+}
+
+URL="."
+DEST=""
+PARR=()
+OUT=""
+VERBOSE=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --help|-h)
+            usage
+            ;;
+        --URL|-u)
+            URL="$2"
+            shift 2
+            ;;
+        --dest|-d)
+            DEST="$2"
+            shift 2
+            ;;
+        --verbose|-v)
+            VERBOSE=1
+            shift
+            ;;
+        -o)
+            OUT="$2"
+            shift 2
+            ;;
+        -f)
+            PARR+=("$2")
+            shift 2
+            ;;
+        -?*)
+            echo "Unknown option: $1"
+            echo ""
+            usage
+            ;;
+    esac
+done
+
+if [[ -n "${OUT}" ]]; then
+    echo "" > "${OUT}"
+fi
+
+write "var Module = globalThis.Module;"
+write "Module.createLazyFilesystem = function () {"
+write "var loadFile = ENVIRONMENT_IS_NODE
+    ? function (...args) {
+        args[2] = __dirname + '/' + args[2];
+        FS.createPreloadedFile(...args);
+    }
+    : FS.createLazyFile;
+"
+if [[ ${#PARR[@]} -gt 0 ]]; then
+    for i in "${PARR[@]}"; do
+        PATHS=(${i//@/ })
+        [[ -d "${PATHS[0]}" ]] || continue
+        [[ -n "$VERBOSE" ]] && echo "Adding ${PATHS[1]}" 1>&2
+        # Create directory structure
+        (cd ${PATHS[0]} && find . -type d -print0) | while read -d $'\0' d; do
+            NEWDIR="${PATHS[1]}${d#.}"
+            write "try{FS.stat('${NEWDIR}')} catch {FS.mkdirTree('${NEWDIR}')}"
+            [[ -n "$DEST" ]] && mkdir -p "${DEST}${NEWDIR}"
+        done
+        # Create lazy files
+        (cd ${PATHS[0]} && find . \( -type f -o -type l \) -print0) | while read -d $'\0' f; do
+            DIR="$(dirname "${f}")"
+            FILE="$(basename "${f}")"
+            PARENT=`echo "${PATHS[1]}${DIR#.}"| tr -s /`
+            write "loadFile('${PARENT}','${FILE}','${URL%/}/${PARENT#/}/${FILE}',true,true);"
+            [[ -n "$DEST" ]] && cp "${PATHS[0]}/$f" "${DEST}${PARENT}/${FILE}"
+        done
+    done
+fi
+write "}"
+
+exit 0
