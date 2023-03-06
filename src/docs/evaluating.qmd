@@ -22,10 +22,14 @@ to a reference to the result of the computation, given as an
 The `options` argument provides advanced control over how the R code is
 evaluated and captured. For example, this can be used to enable R's
 [autoprint](https://cran.r-project.org/doc/manuals/r-release/R-ints.html#Autoprinting)
-feature. The `env` property of the `options` argument can be set when you wish
+feature.
+
+The `env` property of the `options` argument can be set when you wish
 to evaluate the R code within an R environment, rather than the default global
-environment. This could be used, for example, to avoid variable name clashes
-when evaluating multiple unrelated objects.
+environment. This could be used, for example, to sandbox an evaluation in a
+local environment to avoid `<-` creating variables in the global environment.
+Providing an environment is also a convenient way to pass data from Javascript
+to the R process.
 
 If any error conditions are raised during evaluation, they will be re-thrown as
 JavaScript exceptions. Other conditions and stream output is written to the
