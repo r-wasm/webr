@@ -575,6 +575,13 @@ describe('Evaluate objects without shelters', () => {
     await expect(webR.evalRBoolean('NA')).rejects.toThrow("Can't convert");
   });
 
+  test('boolean array return', async () => {
+    expect(await webR.evalRRaw('c(TRUE, FALSE)', 'boolean[]')).toEqual([true, false]);
+    expect(await webR.evalRRaw('TRUE', 'boolean[]')).toEqual([true]);
+    await expect(webR.evalRRaw('c(TRUE, FALSE, NA)', 'boolean[]')).rejects.toThrow("Can't convert");
+    await expect(webR.evalRRaw('10', 'boolean[]')).rejects.toThrow("Can't convert");
+  });
+
   test('numeric return', async () => {
     expect(await webR.evalRNumber('TRUE')).toEqual(1);
     expect(await webR.evalRNumber('FALSE')).toEqual(0);
@@ -585,12 +592,28 @@ describe('Evaluate objects without shelters', () => {
     await expect(webR.evalRNumber('NA_integer_')).rejects.toThrow("Can't convert");
   });
 
+  test('numeric array return', async () => {
+    expect(await webR.evalRRaw('c(TRUE, FALSE)', 'number[]')).toEqual([1, 0]);
+    expect(await webR.evalRRaw('c(1L, 10L, 100L)', 'number[]')).toEqual([1, 10, 100]);
+    expect(await webR.evalRRaw('c(1.5, 3.5, 7.5)', 'number[]')).toEqual([1.5, 3.5, 7.5]);
+    expect(await webR.evalRRaw('1.5', 'number[]')).toEqual([1.5]);
+    await expect(webR.evalRRaw('NA', 'number[]')).rejects.toThrow("Can't convert");
+    await expect(webR.evalRRaw('"foo"', 'number[]')).rejects.toThrow("Can't convert");
+  });
+
   test('string return', async () => {
     expect(await webR.evalRString('"foo"')).toEqual('foo');
     expect(await webR.evalRString('""')).toEqual('');
     await expect(webR.evalRString('NULL')).rejects.toThrow("Can't convert");
     await expect(webR.evalRString('NA')).rejects.toThrow("Can't convert");
     await expect(webR.evalRString('NA_character_')).rejects.toThrow("Can't convert");
+  });
+
+  test('string array return', async () => {
+    expect(await webR.evalRRaw('c("foo", "bar")', 'string[]')).toEqual(['foo', 'bar']);
+    expect(await webR.evalRRaw('"foo"', 'string[]')).toEqual(['foo']);
+    await expect(webR.evalRRaw('10', 'string[]')).rejects.toThrow("Can't convert");
+    await expect(webR.evalRRaw('NULL', 'string[]')).rejects.toThrow("Can't convert");
   });
 });
 

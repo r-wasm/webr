@@ -331,8 +331,11 @@ export class WebR {
     */
   async evalRRaw(code: string, outputType: 'void', options?: EvalROptions): Promise<void>;
   async evalRRaw(code: string, outputType: 'boolean', options?: EvalROptions): Promise<boolean>;
+  async evalRRaw(code: string, outputType: 'boolean[]', options?: EvalROptions): Promise<boolean[]>;
   async evalRRaw(code: string, outputType: 'number', options?: EvalROptions): Promise<number>;
+  async evalRRaw(code: string, outputType: 'number[]', options?: EvalROptions): Promise<number[]>;
   async evalRRaw(code: string, outputType: 'string', options?: EvalROptions): Promise<string>;
+  async evalRRaw(code: string, outputType: 'string[]', options?: EvalROptions): Promise<string[]>;
   async evalRRaw(code: string, outputType: EvalRMessageOutputType, options: EvalROptions = {}) {
     const opts = replaceInObject(options, isRObject, (obj: RObject) => obj._payload);
     const msg: EvalRMessageRaw = {

@@ -266,6 +266,18 @@ function dispatch(msg: Message): void {
                       throwType();
                   }
                   break;
+                case 'boolean[]':
+                  switch (result.type()) {
+                    case 'logical':
+                      out = (result as RLogical).toArray();
+                      if (out.some((i) => i === null)) {
+                        throwType();
+                      }
+                      break;
+                    default:
+                      throwType();
+                  }
+                  break;
                 case 'number':
                   switch (result.type()) {
                     case 'logical':
@@ -282,10 +294,44 @@ function dispatch(msg: Message): void {
                       throwType();
                   }
                   break;
+                case 'number[]':
+                  switch (result.type()) {
+                    case 'logical':
+                      out = (result as RLogical).toArray();
+                      out = out.map((i) => i === null ? throwType() : Number(i));
+                      break;
+                    case 'integer':
+                      out = (result as RInteger).toArray();
+                      if (out.some((i) => i === null)) {
+                        throwType();
+                      }
+                      break;
+                    case 'double':
+                      out = (result as RDouble).toArray();
+                      if (out.some((i) => i === null)) {
+                        throwType();
+                      }
+                      break;
+                    default:
+                      throwType();
+                  }
+                  break;
                 case 'string':
                   switch (result.type()) {
                     case 'character':
                       out = (result as RCharacter).toString();
+                      break;
+                    default:
+                      throwType();
+                  }
+                  break;
+                case 'string[]':
+                  switch (result.type()) {
+                    case 'character':
+                      out = (result as RCharacter).toArray();
+                      if (out.some((i) => i === null)) {
+                        throwType();
+                      }
                       break;
                     default:
                       throwType();

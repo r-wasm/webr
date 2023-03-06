@@ -43,11 +43,11 @@ automatically manage returned R objects using a webR
 
 ### Returning JavaScript values when evaluating R code
 
-A selection of convenience methods are provided that return the result of
-evaluating R code as a promise resolving to a JavaScript object, rather than an
-`RObject` reference. The benefit is that since the returned object is of a
-native JavaScript type, it does not need to be memory managed like an `RObject`
-result.
+A selection of convenience methods are available that return the result of
+evaluating R code as a promise resolving to a JavaScript object, rather than
+an `RObject` reference. The benefit is that since the returned object is of a
+raw JavaScript type, it does not need to be memory managed like an `RObject`
+result would be.
 
 | Method                                                            | Returned object type |
 |-----------------------------------------------------|--------------------------|
@@ -55,6 +55,28 @@ result.
 | [`WebR.evalRNumber()`](api/js/classes/WebR.WebR.md#evalrnumber)   | `number`             |
 | [`WebR.evalRString()`](api/js/classes/WebR.WebR.md#evalrstring)   | `string`             |
 | [`WebR.evalRVoid()`](api/js/classes/WebR.WebR.md#evalrvoid)       | No return value      |
+
+The methods in the table above are shortcuts to the more general
+[`WebR.evalRRaw()`](api/js/classes/WebR.WebR.md#evalrraw) method. This takes an
+additional `outputType` argument, which determines the type of raw JavaScript
+object returned. Using the `evalRRaw()` method additionally allows for the
+return of JavaScript `Array` objects.
+
+| `objectType` argument value    | Returned object type |
+|--------------------------------|----------------------|
+| `'boolean'`   | `boolean` |
+| `'number'`    | `number`  |
+| `'string'`    | `string`  |
+| `'boolean[]'` | Array of `boolean` values     |
+| `'number[]'`  | Array of `number` values      |
+| `'string[]'`  | Array of `string` values      |
+| `'void'`      | No return value |
+
+::: callout-warning
+The `evalRRaw()` method and its related convenience methods require that the
+result of the R code evaluation is a vector of type `logical`, `integer`,
+`double` or `character` and must not contain missing values.
+:::
 
 ## Evaluating R code and capturing output with `captureR`
 
