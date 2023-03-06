@@ -12,20 +12,21 @@ import { newRProxy, newRClassProxy } from './proxy';
 import { isRObject, RCharacter, RComplex, RDouble } from './robj-main';
 import { REnvironment, RSymbol, RInteger } from './robj-main';
 import { RList, RLogical, RNull, RObject, RPairlist, RRaw, RString, RCall } from './robj-main';
+import { replaceInObject } from './utils';
 import * as RWorker from './robj-worker';
 
 import {
   CaptureRMessage,
-  CaptureROptions,
   EvalRMessage,
+  EvalRMessageOutputType,
   EvalRMessageRaw,
+  EvalROptions,
   FSMessage,
   FSReadFileMessage,
   FSWriteFileMessage,
-  EvalRMessageOutputType,
   NewShelterMessage,
-  ShelterMessage,
   ShelterDestroyMessage,
+  ShelterMessage,
 } from './webr-chan';
 
 export { Console, ConsoleCallbacks } from '../console/console';
@@ -291,77 +292,68 @@ export class WebR {
   }
 
   /**
-   * Evaluate the given R code, optionally within a given R environment.
+   * Evaluate the given R code, capturing output.
    *
    * Stream outputs and conditions raised during exectution are by default
    * captured and returned as part of the output of this function.
    *
-   * See {@link evalR} for a simpler version of this function that uses the
-   * default options and simply returns the result of the computation.
+   * See {@link evalR} for a simpler version of this function that returns only
+   * the result of the computation.
    *
    * @param {string} code The R code to evaluate.
-   * @param {RObject} [env] The R environment to evaluate within.
-   * @param {CaptureROptions} [options] Options for the execution environment.
+   * @param {EvalROptions} [options] Options for the execution environment.
    * @return {Promise<{result: RObject, output: unknown[]}>} An object
    * containing the result of the computation and and array of captured output.
    */
-  async captureR(
-    code: string,
-    env?: REnvironment,
-    options: CaptureROptions = {}
-  ): Promise<{
+  async captureR(code: string, options: EvalROptions = {}): Promise<{
     result: RObject;
     output: unknown[];
   }> {
-    return this.globalShelter.captureR(code, env, options);
+    return this.globalShelter.captureR(code, options);
   }
 
   /**
-   * Evaluate the given R code, optionally within a given R environment.
+   * Evaluate the given R code.
    *
    * Stream outputs and any conditions raised during exectution are written to
    * the JavaScript console.
    *
    * See {@link captureR} for a version of this function that allows for
-   * configuration of advanced options and for returning outputs as part of the
-   * result.
+   * capturing and returning outputs as part of the result.
    *
    * @param {string} code The R code to evaluate.
-   * @param {RObject} [env] The R environment to evaluate within.
+   * @param {EvalROptions} [options] Options for the execution environment.
    * @return {Promise<RObject>} The result of the computation.
    */
-  async evalR(code: string, env?: REnvironment): Promise<RObject> {
-    return this.globalShelter.evalR(code, env);
+  async evalR(code: string, options?: EvalROptions): Promise<RObject> {
+    return this.globalShelter.evalR(code, options);
   }
 
-  async evalRVoid(code: string, env?: REnvironment) {
-    return this.#evalRRaw(code, env, 'void') as Promise<void>;
+  async evalRVoid(code: string, options?: EvalROptions) {
+    return this.#evalRRaw(code, options, 'void') as Promise<void>;
   }
 
-  async evalRBoolean(code: string, env?: REnvironment) {
-    return this.#evalRRaw(code, env, 'boolean') as Promise<boolean>;
+  async evalRBoolean(code: string, options?: EvalROptions) {
+    return this.#evalRRaw(code, options, 'boolean') as Promise<boolean>;
   }
 
-  async evalRNumber(code: string, env?: REnvironment) {
-    return this.#evalRRaw(code, env, 'number') as Promise<number>;
+  async evalRNumber(code: string, options?: EvalROptions) {
+    return this.#evalRRaw(code, options, 'number') as Promise<number>;
   }
 
-  async evalRString(code: string, env?: REnvironment) {
-    return this.#evalRRaw(code, env, 'string') as Promise<string>;
+  async evalRString(code: string, options?: EvalROptions) {
+    return this.#evalRRaw(code, options, 'string') as Promise<string>;
   }
 
   async #evalRRaw(
     code: string,
-    env: REnvironment | undefined,
+    options: EvalROptions = {},
     outputType: EvalRMessageOutputType
   ) {
-    if (env && !isRObject(env)) {
-      throw new Error('Attempted to evaluate R code with invalid environment object');
-    }
-
+    const opts = replaceInObject(options, isRObject, (obj: RObject) => obj._payload);
     const msg: EvalRMessageRaw = {
       type: 'evalRRaw',
-      data: { code: code, env: env?._payload, outputType: outputType },
+      data: { code: code, options: opts as EvalROptions, outputType: outputType },
     };
     const payload = await this.#chan.request(msg);
 
@@ -479,14 +471,11 @@ export class Shelter {
     return payload.obj as number;
   }
 
-  async evalR(code: string, env?: REnvironment): Promise<RObject> {
-    if (env && !isRObject(env)) {
-      throw new Error('Attempted to evaluate R code with invalid environment object');
-    }
-
+  async evalR(code: string, options: EvalROptions = {}): Promise<RObject> {
+    const opts = replaceInObject(options, isRObject, (obj: RObject) => obj._payload);
     const msg: EvalRMessage = {
       type: 'evalR',
-      data: { code: code, env: env?._payload, shelter: this.#id },
+      data: { code: code, options: opts as EvalROptions, shelter: this.#id },
     };
     const payload = await this.#chan.request(msg);
 
@@ -498,24 +487,16 @@ export class Shelter {
     }
   }
 
-  async captureR(
-    code: string,
-    env?: REnvironment,
-    options: CaptureROptions = {}
-  ): Promise<{
+  async captureR(code: string, options: EvalROptions = {}): Promise<{
     result: RObject;
     output: unknown[];
   }> {
-    if (env && !isRObject(env)) {
-      throw new Error('Attempted to evaluate R code with invalid environment object');
-    }
-
+    const opts = replaceInObject(options, isRObject, (obj: RObject) => obj._payload);
     const msg: CaptureRMessage = {
       type: 'captureR',
       data: {
         code: code,
-        env: env?._payload,
-        options: options,
+        options: opts as EvalROptions,
         shelter: this.#id,
       },
     };

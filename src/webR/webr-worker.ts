@@ -17,7 +17,7 @@ import { generateUUID } from './chan/task-common';
 import {
   CallRObjectMethodMessage,
   CaptureRMessage,
-  CaptureROptions,
+  EvalROptions,
   EvalRMessage,
   EvalRMessageRaw,
   FSMessage,
@@ -170,7 +170,7 @@ function dispatch(msg: Message): void {
             const prot = { n: 0 };
 
             try {
-              const capture = captureR(data.code, data.env, data.options);
+              const capture = captureR(data.code, data.options);
               protectInc(capture, prot);
 
               const result = capture.get('result');
@@ -228,7 +228,7 @@ function dispatch(msg: Message): void {
           case 'evalR': {
             const msg = reqMsg as EvalRMessage;
 
-            const result = evalR(msg.data.code, msg.data.env);
+            const result = evalR(msg.data.code, msg.data.options);
             keep(msg.data.shelter, result);
 
             write({
@@ -244,7 +244,7 @@ function dispatch(msg: Message): void {
 
           case 'evalRRaw': {
             const msg = reqMsg as EvalRMessageRaw;
-            const result = evalR(msg.data.code, msg.data.env);
+            const result = evalR(msg.data.code, msg.data.options);
 
             protect(result);
 
@@ -468,27 +468,27 @@ function callRObjectMethod(
   return { obj: ret, payloadType: 'raw' };
 }
 
-function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions = {}): RList {
+function captureR(code: string, options: EvalROptions = {}): RList {
   const prot = { n: 0 };
-
   try {
-    const _options: Required<CaptureROptions> = Object.assign(
+    const _options: Required<EvalROptions> = Object.assign(
       {
+        env: RObject.globalEnv,
         captureStreams: true,
         captureConditions: true,
         withAutoprint: false,
         throwJsException: true,
         withHandlers: true,
       },
-      options
+      replaceInObject(options, isWebRPayloadPtr, (t: WebRPayloadPtr) =>
+        RObject.wrap(t.obj.ptr)
+      )
     );
 
-    let envObj = RObject.globalEnv;
-    if (env) {
-      envObj = REnvironment.wrap(env.obj.ptr);
-      if (envObj.type() !== 'environment') {
-        throw new Error('Attempted to eval R code with an env argument with invalid SEXP type');
-      }
+    const envObj = new REnvironment(_options.env);
+    protectInc(envObj, prot);
+    if (envObj.type() !== 'environment') {
+      throw new Error('Attempted to evaluate R code with invalid environment object');
     }
 
     const tPtr = RObject.true.ptr;
@@ -510,7 +510,7 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
     );
     protectInc(call, prot);
 
-    const capture = RList.wrap(safeEval(call, envObj.ptr));
+    const capture = RList.wrap(safeEval(call, envObj));
     protectInc(capture, prot);
 
     if (_options.captureConditions && _options.throwJsException) {
@@ -531,8 +531,8 @@ function captureR(code: string, env?: WebRPayloadPtr, options: CaptureROptions =
   }
 }
 
-function evalR(code: string, env?: WebRPayloadPtr): RObject {
-  const capture = captureR(code, env, undefined);
+function evalR(code: string, options: EvalROptions = {}): RObject {
+  const capture = captureR(code, options);
   Module._Rf_protect(capture.ptr);
 
   try {

@@ -77,11 +77,7 @@ const webR = new WebR({
 
   readline.setCtrlCHandler(() => webR.interrupt());
 
-  // TODO: Replace by void version of `evalR()` once we forward an options object
-  const out = await webR.captureR('webr::global_prompt_install()', undefined, {
-    withHandlers: false,
-  });
-  await webR.destroy(out.result);
+  await webR.evalRVoid('webr::global_prompt_install()', { withHandlers: false });
 
   // Clear the loading message
   term.write('\x1b[2K\r');

@@ -82,7 +82,7 @@ The optional arguments of
 [`WebR.captureR()`](api/js/classes/WebR.WebR.md#capturer) have been designed so
 that the defaults are sufficient for general R evaluation and output capture.
 However, the default behaviour can be changed by passing an `options` argument
-of type [`CaptureROptions`](api/js/interfaces/WebRChan.CaptureROptions.md), if
+of type [`EvalROptions`](api/js/interfaces/WebRChan.EvalROptions.md), if
 required.
 
 ### Executing an R function from JavaScript
@@ -102,6 +102,22 @@ console.log(result.values);
 
     Result of running `await sin([1,2,3])`:
     [0.8414709848078965, 0.9092974268256817, 0.1411200080598672]
+
+
+### Evaluating R code within an environment
+
+The `options` argument of [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr)
+can be used to control how R code is executed. In this example the options
+argument is used to create a new environment for the R code to be evaluated in.
+
+``` javascript
+let result = await webR.evalR('foo + bar', { env: { foo: 1234, bar: 1 } });
+let output = await result.toNumber();
+
+console.log(output);
+```
+
+    1235
 
 
 ### Bind a JavaScript object into the R global environment

@@ -48,22 +48,20 @@ describe('Test webR simple console input/output', () => {
 
 describe('Evaluate R code', () => {
   test('Evaluate R code without setting up error handlers', async () => {
-    const result = webR.captureR('webr::global_prompt_install()', undefined, {
+    const result = webR.captureR('webr::global_prompt_install()', {
       withHandlers: false,
     });
     await expect(result).resolves.not.toThrow();
   });
 
-  test('Throw an error if passed an invalid environment', async () => {
-    // @ts-expect-error Deliberate type error to test Error thrown
-    const promise = webR.evalR('3.14159', { env: 42 });
-    await expect(promise).rejects.toThrow('invalid environment object');
+  test('Throw an error if passed invalid environment data', async () => {
+    const promise = webR.evalR('3.14159', { env: ['invalid', 'environment'] });
+    await expect(promise).rejects.toThrow("Can't create object in new environment");
   });
 
   test('Throw an error if passed an invalid environment object type', async () => {
     const euler = await webR.evalR('0.57722');
-    // @ts-expect-error Deliberate type error to test Error thrown
-    await expect(webR.evalR('x', euler)).rejects.toThrow('env argument with invalid SEXP type');
+    await expect(webR.evalR('x', { env: euler })).rejects.toThrow('Unexpected object type');
   });
 
   test('Handle syntax errors in evalR', async () => {
@@ -73,7 +71,7 @@ describe('Evaluate R code', () => {
 
   test('Write to stdout while evaluating R code', async () => {
     await webR.flush();
-    const res = webR.captureR('print("Hello, stdout!")', undefined, {
+    const res = webR.captureR('print("Hello, stdout!")', {
       captureStreams: false,
     });
     await expect(res).resolves.not.toThrow();
@@ -82,7 +80,7 @@ describe('Evaluate R code', () => {
 
   test('Write to stderr while evaluating R code', async () => {
     await webR.flush();
-    const res = webR.captureR('message("Hello, stderr!")', undefined, {
+    const res = webR.captureR('message("Hello, stderr!")', {
       captureStreams: false,
       captureConditions: false,
     });
@@ -129,7 +127,7 @@ describe('Evaluate R code', () => {
   });
 
   test('Capture stdout while capturing R code', async () => {
-    const composite = await webR.captureR('c(1, 2, 4, 6, 12, 24, 36, 48)', undefined, {
+    const composite = await webR.captureR('c(1, 2, 4, 6, 12, 24, 36, 48)', {
       withAutoprint: true,
       captureStreams: true,
     });
@@ -137,7 +135,7 @@ describe('Evaluate R code', () => {
   });
 
   test('Capture stderr while capturing R code', async () => {
-    const res = await webR.captureR('message("Hello, stderr!")', undefined, {
+    const res = await webR.captureR('message("Hello, stderr!")', {
       captureStreams: true,
       captureConditions: false,
     });
@@ -145,7 +143,7 @@ describe('Evaluate R code', () => {
   });
 
   test('Capture conditions while capturing R code', async () => {
-    const res = await webR.captureR('warning("This is a warning message")', undefined, {
+    const res = await webR.captureR('warning("This is a warning message")', {
       captureConditions: true,
     });
     const cond = res.output as { type: string; data: RList }[];
@@ -500,7 +498,7 @@ describe('Serialise nested R lists, pairlists and vectors unambiguously', () => 
     const jsObj = await rObj.toTree();
     const newRObj = (await new webR.RObject(jsObj)) as RList;
     const env = await new webR.REnvironment({ newRObj, rObj });
-    const identical = (await webR.evalR('identical(rObj, newRObj)', env)) as RLogical;
+    const identical = (await webR.evalR('identical(rObj, newRObj)', { env })) as RLogical;
     expect(await rObj.type()).toEqual('list');
     expect(await identical.toBoolean()).toEqual(true);
   });
@@ -512,7 +510,7 @@ describe('Serialise nested R lists, pairlists and vectors unambiguously', () => 
     const jsObj = await rObj.toTree({ depth: 1 });
     const newRObj = (await new webR.RObject(jsObj)) as RList;
     const env = await new webR.REnvironment({ newRObj, rObj });
-    const identical = (await webR.evalR('identical(rObj, newRObj)', env)) as RLogical;
+    const identical = (await webR.evalR('identical(rObj, newRObj)', { env })) as RLogical;
     expect(await rObj.type()).toEqual('list');
     expect(await identical.toBoolean()).toEqual(true);
   });

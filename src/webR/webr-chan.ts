@@ -21,7 +21,12 @@ export interface CallRObjectMethodMessage extends Message {
 /**
  * The configuration settings used when evaluating R code.
  */
-export interface CaptureROptions {
+export interface EvalROptions {
+  /**
+   * The R environment to evaluate within.
+   * Deafult: The global environment.
+   */
+  env?: WebRData;
   /**
    * Should the stdout and stderr output streams be captured and returned?
    * Deafult: `true`.
@@ -53,8 +58,7 @@ export interface CaptureRMessage extends Message {
   type: 'captureR';
   data: {
     code: string;
-    env?: WebRPayloadPtr;
-    options: CaptureROptions;
+    options: EvalROptions;
     shelter: ShelterID;
   };
 }
@@ -63,7 +67,7 @@ export interface EvalRMessage extends Message {
   type: 'evalR';
   data: {
     code: string;
-    env?: WebRPayloadPtr;
+    options: EvalROptions;
     shelter: ShelterID;
     outputType?: EvalRMessageOutputType
   };
@@ -75,7 +79,7 @@ export interface EvalRMessageRaw extends Message {
   type: 'evalRRaw';
   data: {
     code: string;
-    env?: WebRPayloadPtr;
+    options: EvalROptions;
     outputType: EvalRMessageOutputType
   };
 }
