@@ -15,9 +15,8 @@ arguments,
     [`EvalROptions`](api/js/interfaces/WebRChan.EvalROptions.md) object
     controlling how the code is evaluated.
 
-[`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) returns a promise resolving
-to a reference to the result of the computation, given as an
-[`RObject`](api/js/modules/RMain.md#robject) proxy.
+A promise is returned resolving to a reference to the result of the computation,
+given as an [`RObject`](api/js/modules/RMain.md#robject) proxy.
 
 The `options` argument provides advanced control over how the R code is
 evaluated and captured. For example, this can be used to enable R's
@@ -59,20 +58,26 @@ result.
 
 ## Evaluating R code and capturing output with `captureR`
 
-Once a webR [shelter](objects.qmd#shelter) has been created for the purposes of
-[memory management](objects.qmd#memory-management), the
-[`Shelter.captureR()`](api/js/classes/WebR.Shelter.md#capturer) method can be
-used to evaluate R code and capture any stream output or conditions raised in
-addition to returning the result of the computation. The method takes two
-arguments,
+The [`Shelter.captureR()`](api/js/classes/WebR.Shelter.md#capturer) method can
+be used to evaluate R code and capture any stream output or conditions raised in
+addition to returning the result of the computation.
+
+Unlike `evalR()` which only returns one R object, `captureR()` returns a
+variable number of objects when R conditions are captured. This makes memory
+management of individual objects unwieldy. For this reason, `captureR()`
+requires the [shelter](objects.qmd#shelter) approach to
+[memory management](objects.qmd#memory-management), where all the sheltered
+objects are destroyed at once.
+
+The method takes two arguments,
 
 -   `code` - The R code to evaluate
 -   `options` - Optional: A
     [`EvalROptions`](api/js/interfaces/WebRChan.EvalROptions.md) object
     controlling how the code is evaluated.
 
-[`Shelter.captureR()`](api/js/classes/WebR.Shelter.md#capturer) returns a
-promise resolving to a JavaScript object with two properties,
+A promise is returned resolving resolving to a JavaScript object with two
+properties,
 
 -   `result` - The result of the computation, as an
     [`RObject`](api/js/modules/RMain.md#robject) proxy.
