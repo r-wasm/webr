@@ -17,16 +17,16 @@ import * as RWorker from './robj-worker';
 
 import {
   CaptureRMessage,
-  CaptureROptions,
   EvalRMessage,
+  EvalRMessageOutputType,
   EvalRMessageRaw,
+  EvalROptions,
   FSMessage,
   FSReadFileMessage,
   FSWriteFileMessage,
-  EvalRMessageOutputType,
   NewShelterMessage,
-  ShelterMessage,
   ShelterDestroyMessage,
+  ShelterMessage,
 } from './webr-chan';
 
 export { Console, ConsoleCallbacks } from '../console/console';
@@ -301,11 +301,11 @@ export class WebR {
    * the result of the computation.
    *
    * @param {string} code The R code to evaluate.
-   * @param {CaptureROptions} [options] Options for the execution environment.
+   * @param {EvalROptions} [options] Options for the execution environment.
    * @return {Promise<{result: RObject, output: unknown[]}>} An object
    * containing the result of the computation and and array of captured output.
    */
-  async captureR(code: string, options: CaptureROptions = {}): Promise<{
+  async captureR(code: string, options: EvalROptions = {}): Promise<{
     result: RObject;
     output: unknown[];
   }> {
@@ -322,38 +322,38 @@ export class WebR {
    * capturing and returning outputs as part of the result.
    *
    * @param {string} code The R code to evaluate.
-   * @param {CaptureROptions} [options] Options for the execution environment.
+   * @param {EvalROptions} [options] Options for the execution environment.
    * @return {Promise<RObject>} The result of the computation.
    */
-  async evalR(code: string, options?: CaptureROptions): Promise<RObject> {
+  async evalR(code: string, options?: EvalROptions): Promise<RObject> {
     return this.globalShelter.evalR(code, options);
   }
 
-  async evalRVoid(code: string, options?: CaptureROptions) {
+  async evalRVoid(code: string, options?: EvalROptions) {
     return this.#evalRRaw(code, options, 'void') as Promise<void>;
   }
 
-  async evalRBoolean(code: string, options?: CaptureROptions) {
+  async evalRBoolean(code: string, options?: EvalROptions) {
     return this.#evalRRaw(code, options, 'boolean') as Promise<boolean>;
   }
 
-  async evalRNumber(code: string, options?: CaptureROptions) {
+  async evalRNumber(code: string, options?: EvalROptions) {
     return this.#evalRRaw(code, options, 'number') as Promise<number>;
   }
 
-  async evalRString(code: string, options?: CaptureROptions) {
+  async evalRString(code: string, options?: EvalROptions) {
     return this.#evalRRaw(code, options, 'string') as Promise<string>;
   }
 
   async #evalRRaw(
     code: string,
-    options: CaptureROptions = {},
+    options: EvalROptions = {},
     outputType: EvalRMessageOutputType
   ) {
     const opts = replaceInObject(options, isRObject, (obj: RObject) => obj._payload);
     const msg: EvalRMessageRaw = {
       type: 'evalRRaw',
-      data: { code: code, options: opts as CaptureROptions, outputType: outputType },
+      data: { code: code, options: opts as EvalROptions, outputType: outputType },
     };
     const payload = await this.#chan.request(msg);
 
@@ -471,11 +471,11 @@ export class Shelter {
     return payload.obj as number;
   }
 
-  async evalR(code: string, options: CaptureROptions = {}): Promise<RObject> {
+  async evalR(code: string, options: EvalROptions = {}): Promise<RObject> {
     const opts = replaceInObject(options, isRObject, (obj: RObject) => obj._payload);
     const msg: EvalRMessage = {
       type: 'evalR',
-      data: { code: code, options: opts as CaptureROptions, shelter: this.#id },
+      data: { code: code, options: opts as EvalROptions, shelter: this.#id },
     };
     const payload = await this.#chan.request(msg);
 
@@ -487,7 +487,7 @@ export class Shelter {
     }
   }
 
-  async captureR(code: string, options: CaptureROptions = {}): Promise<{
+  async captureR(code: string, options: EvalROptions = {}): Promise<{
     result: RObject;
     output: unknown[];
   }> {
@@ -496,7 +496,7 @@ export class Shelter {
       type: 'captureR',
       data: {
         code: code,
-        options: opts as CaptureROptions,
+        options: opts as EvalROptions,
         shelter: this.#id,
       },
     };

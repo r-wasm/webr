@@ -17,7 +17,7 @@ import { generateUUID } from './chan/task-common';
 import {
   CallRObjectMethodMessage,
   CaptureRMessage,
-  CaptureROptions,
+  EvalROptions,
   EvalRMessage,
   EvalRMessageRaw,
   FSMessage,
@@ -468,10 +468,10 @@ function callRObjectMethod(
   return { obj: ret, payloadType: 'raw' };
 }
 
-function captureR(code: string, options: CaptureROptions = {}): RList {
+function captureR(code: string, options: EvalROptions = {}): RList {
   const prot = { n: 0 };
   try {
-    const _options: Required<CaptureROptions> = Object.assign(
+    const _options: Required<EvalROptions> = Object.assign(
       {
         env: RObject.globalEnv,
         captureStreams: true,
@@ -531,7 +531,7 @@ function captureR(code: string, options: CaptureROptions = {}): RList {
   }
 }
 
-function evalR(code: string, options: CaptureROptions = {}): RObject {
+function evalR(code: string, options: EvalROptions = {}): RObject {
   const capture = captureR(code, options);
   Module._Rf_protect(capture.ptr);
 

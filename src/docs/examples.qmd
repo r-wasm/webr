@@ -82,7 +82,7 @@ The optional arguments of
 [`WebR.captureR()`](api/js/classes/WebR.WebR.md#capturer) have been designed so
 that the defaults are sufficient for general R evaluation and output capture.
 However, the default behaviour can be changed by passing an `options` argument
-of type [`CaptureROptions`](api/js/interfaces/WebRChan.CaptureROptions.md), if
+of type [`EvalROptions`](api/js/interfaces/WebRChan.EvalROptions.md), if
 required.
 
 ### Executing an R function from JavaScript

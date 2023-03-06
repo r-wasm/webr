@@ -12,7 +12,7 @@ arguments,
 
 -   `code` - The R code to evaluate.
 -   `options` - Optional: A
-    [`CaptureROptions`](api/js/interfaces/WebRChan.CaptureROptions.md) object
+    [`EvalROptions`](api/js/interfaces/WebRChan.EvalROptions.md) object
     controlling how the code is evaluated.
 
 [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) returns a promise resolving
@@ -60,7 +60,7 @@ any stream output or conditions raised. The method takes two arguments,
 
 -   `code` - The R code to evaluate
 -   `options` - Optional: A
-    [`CaptureROptions`](api/js/interfaces/WebRChan.CaptureROptions.md) object
+    [`EvalROptions`](api/js/interfaces/WebRChan.EvalROptions.md) object
     controlling how the code is evaluated.
 
 [`WebR.captureR()`](api/js/classes/WebR.WebR.md#capturer) returns a promise

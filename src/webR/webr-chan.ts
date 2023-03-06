@@ -21,7 +21,7 @@ export interface CallRObjectMethodMessage extends Message {
 /**
  * The configuration settings used when evaluating R code.
  */
-export interface CaptureROptions {
+export interface EvalROptions {
   /**
    * The R environment to evaluate within.
    * Deafult: The global environment.
@@ -58,7 +58,7 @@ export interface CaptureRMessage extends Message {
   type: 'captureR';
   data: {
     code: string;
-    options: CaptureROptions;
+    options: EvalROptions;
     shelter: ShelterID;
   };
 }
@@ -67,7 +67,7 @@ export interface EvalRMessage extends Message {
   type: 'evalR';
   data: {
     code: string;
-    options: CaptureROptions;
+    options: EvalROptions;
     shelter: ShelterID;
     outputType?: EvalRMessageOutputType
   };
@@ -79,7 +79,7 @@ export interface EvalRMessageRaw extends Message {
   type: 'evalRRaw';
   data: {
     code: string;
-    options: CaptureROptions;
+    options: EvalROptions;
     outputType: EvalRMessageOutputType
   };
 }
