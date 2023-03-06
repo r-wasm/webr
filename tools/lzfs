@@ -93,6 +93,7 @@ if [[ ${#PARR[@]} -gt 0 ]]; then
         # Create directory structure
         (cd ${PATHS[0]} && find . -type d -print0) | while read -d $'\0' d; do
             NEWDIR="${PATHS[1]}${d#.}"
+            # TODO: Check if VFS dir exists without relying on a FS.stat exception
             write "try{FS.stat('${NEWDIR}')} catch {FS.mkdirTree('${NEWDIR}')}"
             [[ -n "$DEST" ]] && mkdir -p "${DEST}${NEWDIR}"
         done

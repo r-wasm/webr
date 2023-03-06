@@ -67,7 +67,7 @@ publish: $(PKG_DIST)
 $(PKG_DIST): Makefile webR/config.ts node_modules esbuild.js
 	npm run build
 # Copy R binaries into npm package for distribution
-	cd "$(DIST)" && cp R.bin.* *.so "$(PKG_DIST)"
+	cd "$(DIST)" && cp -r vfs R.bin.* *.so "$(PKG_DIST)"
 	touch $@
 
 clean:
