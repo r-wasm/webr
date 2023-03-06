@@ -57,19 +57,31 @@ console.log('Result of running `rnorm` from webR: ', output);
     6.793839154500917, 5.80036239061935, 5.342100112394279,
     5.555879371932934, 4.314676418095938, 5.113592217724398]
 
+The `options` argument of [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr)
+has been designed so that the default is sufficient for general R evaluation.
+However, the default behaviour can be changed by passing an `options` argument
+of type [`EvalROptions`](api/js/interfaces/WebRChan.EvalROptions.md), if
+required.
+
 ### Capturing console output from R code
 
-The following snippet demonstrates capturing R output during evaluation using
-[`WebR.captureR()`](api/js/classes/WebR.WebR.md#capturer). This differs
-from the example above in that the output is retrieved in the form of lines of
-text from the `stdout` stream, rather than a reference to an R object [in the
-form of an `RObject` proxy](objects.qmd).
+The following snippet demonstrates using a webR [shelter](objects.qmd#shelter)
+to capture R output during evaluation. This differs from the example above in
+that the output is retrieved in the form of lines of text from the `stdout`
+stream, rather than a reference to an R object [in the form of an `RObject`
+proxy](objects.qmd).
+
+Once the result is no longer needed, the shelter is purged for the purpose of
+[memory management](objects.qmd#memory-management).
 
 ``` javascript
-let result = await webR.captureR('print(rnorm(10,5,1))');
+let shelter = await new webR.Shelter();
+let result = await shelter.captureR('print(rnorm(10,5,1))');
 
 console.log('Output obtained from running `rnorm` from webR:')
 console.log(result.output);
+
+shelter.purge();
 ```
 
     Output obtained from running `rnorm` from webR:
@@ -77,13 +89,6 @@ console.log(result.output);
       {type: 'stdout', data: ' [1] 5.322551 6.924352 4.592612 6.357413 7.198339 5.152446 4.185396'}
       {type: 'stdout', data: ' [8] 4.995504 6.034569 6.295957'}
     ]
-
-The optional arguments of
-[`WebR.captureR()`](api/js/classes/WebR.WebR.md#capturer) have been designed so
-that the defaults are sufficient for general R evaluation and output capture.
-However, the default behaviour can be changed by passing an `options` argument
-of type [`EvalROptions`](api/js/interfaces/WebRChan.EvalROptions.md), if
-required.
 
 ### Executing an R function from JavaScript
 

@@ -51,18 +51,23 @@ browser, no installation required!
   import { WebR } from 'https://webr.r-wasm.org/v0.1.0/webr.mjs';
   const webR = new WebR();
   await webR.init();
+  const shelter = await new webR.Shelter();
 
   async function runR() {
     let code = editor.getValue();
-    const result = await webR.captureR(code, undefined, {
+    const result = await shelter.captureR(code, undefined, {
       withAutoprint: true,
       captureStreams: true,
       captureConditions: false
     });
-    const out = result.output.filter(
-      evt => evt.type == 'stdout' || evt.type == 'stderr'
-    ).map((evt) => evt.data);
-    document.getElementById('out').innerText = out.join('\n');
+    try {
+      const out = result.output.filter(
+        evt => evt.type == 'stdout' || evt.type == 'stderr'
+      ).map((evt) => evt.data);
+      document.getElementById('out').innerText = out.join('\n');
+    } finally {
+      shelter.purge();
+    }
   }
   document.getElementById('runButton').onclick = runR;
   document.getElementById('runButton').innerText = 'Run code';
