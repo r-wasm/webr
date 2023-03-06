@@ -12,6 +12,7 @@ export interface Module extends EmscriptenModule {
   GOT: {
     [key: string]: {required: boolean; value: number};
   }
+  createLazyFilesystem: () => void;
   monitorRunDependencies: (n: number) => void;
   noImageDecoding: boolean;
   noAudioDecoding: boolean;

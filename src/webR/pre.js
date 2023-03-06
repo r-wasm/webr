@@ -1,1 +1,0 @@
-var Module = globalThis.Module;
