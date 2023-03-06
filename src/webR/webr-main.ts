@@ -292,34 +292,10 @@ export class WebR {
   }
 
   /**
-   * Evaluate the given R code, capturing output.
-   *
-   * Stream outputs and conditions raised during exectution are by default
-   * captured and returned as part of the output of this function.
-   *
-   * See {@link evalR} for a simpler version of this function that returns only
-   * the result of the computation.
-   *
-   * @param {string} code The R code to evaluate.
-   * @param {EvalROptions} [options] Options for the execution environment.
-   * @return {Promise<{result: RObject, output: unknown[]}>} An object
-   * containing the result of the computation and and array of captured output.
-   */
-  async captureR(code: string, options: EvalROptions = {}): Promise<{
-    result: RObject;
-    output: unknown[];
-  }> {
-    return this.globalShelter.captureR(code, options);
-  }
-
-  /**
    * Evaluate the given R code.
    *
    * Stream outputs and any conditions raised during exectution are written to
    * the JavaScript console.
-   *
-   * See {@link captureR} for a version of this function that allows for
-   * capturing and returning outputs as part of the result.
    *
    * @param {string} code The R code to evaluate.
    * @param {EvalROptions} [options] Options for the execution environment.
@@ -471,6 +447,16 @@ export class Shelter {
     return payload.obj as number;
   }
 
+  /**
+   * Evaluate the given R code.
+   *
+   * Stream outputs and any conditions raised during exectution are written to
+   * the JavaScript console. The returned R object is protected by the shelter.
+   *
+   * @param {string} code The R code to evaluate.
+   * @param {EvalROptions} [options] Options for the execution environment.
+   * @return {Promise<RObject>} The result of the computation.
+   */
   async evalR(code: string, options: EvalROptions = {}): Promise<RObject> {
     const opts = replaceInObject(options, isRObject, (obj: RObject) => obj._payload);
     const msg: EvalRMessage = {
@@ -487,6 +473,18 @@ export class Shelter {
     }
   }
 
+  /**
+   * Evaluate the given R code, capturing output.
+   *
+   * Stream outputs and conditions raised during exectution are captured and
+   * returned as part of the output of this function. Returned R objects are
+   * protected by the shelter.
+   *
+   * @param {string} code The R code to evaluate.
+   * @param {EvalROptions} [options] Options for the execution environment.
+   * @return {Promise<{result: RObject, output: unknown[]}>} An object
+   * containing the result of the computation and and array of captured output.
+   */
   async captureR(code: string, options: EvalROptions = {}): Promise<{
     result: RObject;
     output: unknown[];

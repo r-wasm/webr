@@ -48,7 +48,7 @@ describe('Test webR simple console input/output', () => {
 
 describe('Evaluate R code', () => {
   test('Evaluate R code without setting up error handlers', async () => {
-    const result = webR.captureR('webr::global_prompt_install()', {
+    const result = webR.evalR('webr::global_prompt_install()', {
       withHandlers: false,
     });
     await expect(result).resolves.not.toThrow();
@@ -71,7 +71,7 @@ describe('Evaluate R code', () => {
 
   test('Write to stdout while evaluating R code', async () => {
     await webR.flush();
-    const res = webR.captureR('print("Hello, stdout!")', {
+    const res = webR.evalR('print("Hello, stdout!")', {
       captureStreams: false,
     });
     await expect(res).resolves.not.toThrow();
@@ -80,7 +80,7 @@ describe('Evaluate R code', () => {
 
   test('Write to stderr while evaluating R code', async () => {
     await webR.flush();
-    const res = webR.captureR('message("Hello, stderr!")', {
+    const res = webR.evalR('message("Hello, stderr!")', {
       captureStreams: false,
       captureConditions: false,
     });
@@ -127,29 +127,35 @@ describe('Evaluate R code', () => {
   });
 
   test('Capture stdout while capturing R code', async () => {
-    const composite = await webR.captureR('c(1, 2, 4, 6, 12, 24, 36, 48)', {
+    const shelter = await new webR.Shelter();
+    const composite = await shelter.captureR('c(1, 2, 4, 6, 12, 24, 36, 48)', {
       withAutoprint: true,
       captureStreams: true,
     });
     expect(composite.output).toEqual([{ type: 'stdout', data: '[1]  1  2  4  6 12 24 36 48' }]);
+    shelter.purge();
   });
 
   test('Capture stderr while capturing R code', async () => {
-    const res = await webR.captureR('message("Hello, stderr!")', {
+    const shelter = await new webR.Shelter();
+    const res = await shelter.captureR('message("Hello, stderr!")', {
       captureStreams: true,
       captureConditions: false,
     });
     expect(res.output).toEqual([{ type: 'stderr', data: 'Hello, stderr!' }]);
+    shelter.purge();
   });
 
   test('Capture conditions while capturing R code', async () => {
-    const res = await webR.captureR('warning("This is a warning message")', {
+    const shelter = await new webR.Shelter();
+    const res = await shelter.captureR('warning("This is a warning message")', {
       captureConditions: true,
     });
     const cond = res.output as { type: string; data: RList }[];
     expect(cond[0].type).toEqual('warning');
     const condMsg = (await cond[0].data.get('message')) as RCharacter;
     expect(await condMsg.toString()).toContain('This is a warning message');
+    shelter.purge();
   });
 });
 

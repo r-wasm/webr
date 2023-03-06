@@ -1,8 +1,10 @@
 ---
-title: "R Object References"
+title: "R Object Memory Management"
 format: html
 toc: true
 ---
+
+## References to R objects
 
 When webR provides a reference to an R object on the main thread, such as the
 result of R code evaluation with
@@ -60,7 +62,7 @@ It is the user's responsibility to signal to webR when they have finished
 working with an `RObject` reference.
 :::
 
-## Sheltering R object references
+## Sheltering R object references {#shelter}
 
 WebR solves the problem through a *sheltering* mechanism. When an `RObject`
 reference is created on the main thread, the object referenced is automatically
@@ -135,7 +137,7 @@ provided on the [`WebR`](api/js/classes/WebR.WebR.md#methods) class.
 #### Evaluating under a shelter
 
 The [`Shelter.evalR()`](api/js/classes/WebR.Shelter.md#evalr) and
-[`Shelter.captureR()`](api/js/classes/WebR.Shelter.md#evalr) methods will
+[`Shelter.captureR()`](api/js/classes/WebR.Shelter.md#capturer) methods will
 automatically protect the resulting `RObject` references using this shelter,
 rather than default shelter.
 

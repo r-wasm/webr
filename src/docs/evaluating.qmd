@@ -15,9 +15,8 @@ arguments,
     [`EvalROptions`](api/js/interfaces/WebRChan.EvalROptions.md) object
     controlling how the code is evaluated.
 
-[`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) returns a promise resolving
-to a reference to the result of the computation, given as an
-[`RObject`](api/js/modules/RMain.md#robject) proxy.
+A promise is returned resolving to a reference to the result of the computation,
+given as an [`RObject`](api/js/modules/RMain.md#robject) proxy.
 
 The `options` argument provides advanced control over how the R code is
 evaluated and captured. For example, this can be used to enable R's
@@ -35,11 +34,12 @@ If any error conditions are raised during evaluation, they will be re-thrown as
 JavaScript exceptions. Other conditions and stream output is written to the
 JavaScript console.
 
-::: callout-warning
-`RObject` references returned by `evalR()` and other methods are subject to R
-[memory management](objects.qmd#memory-management) and should be destroyed when
-no longer in use.
-:::
+`RObject` references returned by `evalR()` are subject to [memory
+management](objects.qmd#memory-management) and should be destroyed when no
+longer in use. The related
+[`Shelter.evalR()`](api/js/classes/WebR.Shelter.md#evalr) method can be used to
+automatically manage returned R objects using a webR
+[shelter](objects.qmd#shelter).
 
 ### Returning JavaScript values when evaluating R code
 
@@ -58,17 +58,26 @@ result.
 
 ## Evaluating R code and capturing output with `captureR`
 
-The [`WebR.captureR()`](api/js/classes/WebR.WebR.md#capturer) method can be used
-to both evaluate R code and retrieve the result of the computation, and capture
-any stream output or conditions raised. The method takes two arguments,
+The [`Shelter.captureR()`](api/js/classes/WebR.Shelter.md#capturer) method can
+be used to evaluate R code and capture any stream output or conditions raised in
+addition to returning the result of the computation.
+
+Unlike `evalR()` which only returns one R object, `captureR()` returns a
+variable number of objects when R conditions are captured. This makes memory
+management of individual objects unwieldy. For this reason, `captureR()`
+requires the [shelter](objects.qmd#shelter) approach to
+[memory management](objects.qmd#memory-management), where all the sheltered
+objects are destroyed at once.
+
+The method takes two arguments,
 
 -   `code` - The R code to evaluate
 -   `options` - Optional: A
     [`EvalROptions`](api/js/interfaces/WebRChan.EvalROptions.md) object
     controlling how the code is evaluated.
 
-[`WebR.captureR()`](api/js/classes/WebR.WebR.md#capturer) returns a promise
-resolving to a JavaScript object with two properties,
+A promise is returned resolving resolving to a JavaScript object with two
+properties,
 
 -   `result` - The result of the computation, as an
     [`RObject`](api/js/modules/RMain.md#robject) proxy.
@@ -91,7 +100,7 @@ JavaScript callback functions, can be used as an alternative way to use the R
 REPL without directly issuing messages to the webR communication channel.
 
 The issuing of input messages and the consumption of output messages over the
-communication channel between the webR worker thread and the main thead is
+communication channel between the webR worker thread and the main thread is
 handled by [`Console`](api/js/classes/WebR.Console.md), invoking the relevant
 callbacks provided.
 
