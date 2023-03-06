@@ -306,26 +306,34 @@ export class WebR {
   }
 
   async evalRVoid(code: string, options?: EvalROptions) {
-    return this.#evalRRaw(code, options, 'void') as Promise<void>;
+    return this.evalRRaw(code, 'void', options);
   }
 
   async evalRBoolean(code: string, options?: EvalROptions) {
-    return this.#evalRRaw(code, options, 'boolean') as Promise<boolean>;
+    return this.evalRRaw(code, 'boolean', options);
   }
 
   async evalRNumber(code: string, options?: EvalROptions) {
-    return this.#evalRRaw(code, options, 'number') as Promise<number>;
+    return this.evalRRaw(code, 'number', options);
   }
 
   async evalRString(code: string, options?: EvalROptions) {
-    return this.#evalRRaw(code, options, 'string') as Promise<string>;
+    return this.evalRRaw(code, 'string', options);
   }
 
-  async #evalRRaw(
-    code: string,
-    options: EvalROptions = {},
-    outputType: EvalRMessageOutputType
-  ) {
+  /**
+    * Evaluate the given R code, returning the result as a raw JavaScript object.
+    *
+    * @param {string} code The R code to evaluate.
+    * @param {EvalRMessageOutputType} outputType JavaScript type to return the result as.
+    * @param {EvalROptions} [options] Options for the execution environment.
+    * @return {Promise<unknown>} The result of the computation.
+    */
+  async evalRRaw(code: string, outputType: 'void', options?: EvalROptions): Promise<void>;
+  async evalRRaw(code: string, outputType: 'boolean', options?: EvalROptions): Promise<boolean>;
+  async evalRRaw(code: string, outputType: 'number', options?: EvalROptions): Promise<number>;
+  async evalRRaw(code: string, outputType: 'string', options?: EvalROptions): Promise<string>;
+  async evalRRaw(code: string, outputType: EvalRMessageOutputType, options: EvalROptions = {}) {
     const opts = replaceInObject(options, isRObject, (obj: RObject) => obj._payload);
     const msg: EvalRMessageRaw = {
       type: 'evalRRaw',
