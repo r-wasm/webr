@@ -415,6 +415,7 @@ export class Shelter {
     this.#chan = chan;
   }
 
+  /* @internal */
   async init() {
     if (this.#initialised) {
       return;

@@ -33,6 +33,7 @@ export type WebRPayloadErr = {
 export type WebRPayload = WebRPayloadRaw | WebRPayloadPtr;
 export type WebRPayloadWorker = WebRPayloadRaw | WebRPayloadPtr | WebRPayloadErr;
 
+/* @internal */
 export function webRPayloadError(payload: WebRPayloadErr): Error {
   const e = new Error(payload.obj.message);
   e.name = payload.obj.name;

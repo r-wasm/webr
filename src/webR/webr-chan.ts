@@ -8,6 +8,7 @@ import { RType, WebRData } from './robj';
 
 export { isUUID as isShelterID, UUID as ShelterID } from './chan/task-common';
 
+/** @internal */
 export interface CallRObjectMethodMessage extends Message {
   type: 'callRObjectMethod';
   data: {
@@ -54,6 +55,7 @@ export interface EvalROptions {
   withHandlers?: boolean;
 }
 
+/** @internal */
 export interface CaptureRMessage extends Message {
   type: 'captureR';
   data: {
@@ -63,6 +65,7 @@ export interface CaptureRMessage extends Message {
   };
 }
 
+/** @internal */
 export interface EvalRMessage extends Message {
   type: 'evalR';
   data: {
@@ -82,6 +85,7 @@ export type EvalRMessageOutputType =
   | 'string'
   | 'string[]';
 
+/** @internal */
 export interface EvalRMessageRaw extends Message {
   type: 'evalRRaw';
   data: {
@@ -91,11 +95,13 @@ export interface EvalRMessageRaw extends Message {
   };
 }
 
+/** @internal */
 export interface FSMessage extends Message {
   type: 'lookupPath' | 'mkdir' | 'rmdir' | 'unlink';
   data: { path: string };
 }
 
+/** @internal */
 export interface FSReadFileMessage extends Message {
   type: 'readFile';
   data: {
@@ -104,6 +110,7 @@ export interface FSReadFileMessage extends Message {
   };
 }
 
+/** @internal */
 export interface FSWriteFileMessage extends Message {
   type: 'writeFile';
   data: {
@@ -113,6 +120,7 @@ export interface FSWriteFileMessage extends Message {
   };
 }
 
+/** @internal */
 export interface NewRObjectMessage extends Message {
   type: 'newRObject';
   data: {
@@ -122,15 +130,18 @@ export interface NewRObjectMessage extends Message {
   };
 }
 
+/** @internal */
 export interface NewShelterMessage extends Message {
   type: 'newShelter';
 }
 
+/** @internal */
 export interface ShelterMessage extends Message {
   type: 'shelterPurge' | 'shelterSize';
   data: ShelterID;
 }
 
+/** @internal */
 export interface ShelterDestroyMessage extends Message {
   type: 'shelterDestroy';
   data: { id: ShelterID; obj: WebRPayloadPtr };

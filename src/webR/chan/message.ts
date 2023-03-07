@@ -28,6 +28,7 @@ export interface Response {
   };
 }
 
+/** @internal */
 export function newRequest(msg: Message, transferables?: [Transferable]): Request {
   return newRequestResponseMessage(
     {
@@ -41,6 +42,7 @@ export function newRequest(msg: Message, transferables?: [Transferable]): Reques
   );
 }
 
+/** @internal */
 export function newResponse(uuid: UUID, resp: unknown, transferables?: [Transferable]): Response {
   return newRequestResponseMessage(
     {
@@ -54,6 +56,7 @@ export function newResponse(uuid: UUID, resp: unknown, transferables?: [Transfer
   );
 }
 
+/** @internal */
 function newRequestResponseMessage<T>(msg: T, transferables?: [Transferable]): T {
   // Signal to Synclink that the data contains objects we wish to
   // transfer, as in `postMessage()`
@@ -63,7 +66,9 @@ function newRequestResponseMessage<T>(msg: T, transferables?: [Transferable]): T
   return msg;
 }
 
-/** A webR communication channel sync-request. */
+/** A webR communication channel sync-request.
+ * @internal
+ */
 export interface SyncRequest {
   type: 'sync-request';
   data: {
@@ -72,7 +77,8 @@ export interface SyncRequest {
   };
 }
 
-/** Transfer data required when using sync-request with SharedArrayBuffer. */
+/** Transfer data required when using sync-request with SharedArrayBuffer.
+ * @internal */
 export interface SyncRequestData {
   taskId?: number;
   sizeBuffer: Int32Array;
@@ -80,6 +86,7 @@ export interface SyncRequestData {
   dataBuffer: Uint8Array;
 }
 
+/** @internal */
 export function newSyncRequest(msg: Message, data: SyncRequestData): SyncRequest {
   return {
     type: 'sync-request',
@@ -94,6 +101,7 @@ const decoder = new TextDecoder('utf-8');
  * Encode data for transfering from worker thread to main thread.
  * @param {any} data The message data to be serialised and encoded.
  * @return {Uint8Array} The encoded data.
+ * @internal
  * */
 export function encodeData(data: any): Uint8Array {
   // TODO: Pass a `replacer` function
@@ -104,6 +112,7 @@ export function encodeData(data: any): Uint8Array {
  * Decode data that has been transferred from worker thread to main thread.
  * @param {any} data The message data to be decoded.
  * @return {unknown} The data after decoding.
+ * @internal
  * */
 export function decodeData(data: Uint8Array): unknown {
   return JSON.parse(decoder.decode(data)) as unknown;

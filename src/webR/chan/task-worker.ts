@@ -229,8 +229,7 @@ let handleInterrupt = (): void => {
 /**
  * Sets the interrupt handler. This is called when the computation is
  * interrupted. Should zero the interrupt buffer and throw an exception.
- * @function handler
- * @param {handler} handler
+ * @internal
  */
 export function setInterruptHandler(handler: () => void) {
   handleInterrupt = handler;
@@ -239,7 +238,7 @@ export function setInterruptHandler(handler: () => void) {
 /**
  * Sets the interrupt buffer. Should be a shared array buffer. When element 0
  * is set non-zero it signals an interrupt.
- * @param {ArrayBufferLike} buffer
+ * @internal
  */
 export function setInterruptBuffer(buffer: ArrayBufferLike) {
   interruptBuffer = new Int32Array(buffer);

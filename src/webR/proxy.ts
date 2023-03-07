@@ -117,6 +117,7 @@ function targetAsyncIterator(chan: ChannelMain, proxy: RProxy<RWorker.RObject>) 
  *
  * When the optional payload argument has not been provided, an
  * {@link RWorker.RObject} static method is called.
+ * @internal
  */
 export function targetMethod(chan: ChannelMain, prop: string): any;
 export function targetMethod(chan: ChannelMain, prop: string, payload: WebRPayloadPtr): any;
