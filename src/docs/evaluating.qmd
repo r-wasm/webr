@@ -17,7 +17,7 @@ The `options` argument provides advanced control over how the R code is evaluate
 
 The `env` property of the `options` argument can be set when you wish to evaluate the R code within an R environment, rather than the default global environment. This could be used, for example, to sandbox an evaluation in a local environment to avoid `<-` creating variables in the global environment. Providing an environment is also a convenient way to pass data from Javascript to the R process.
 
-If any error conditions are raised during evaluation, they will be re-thrown as JavaScript exceptions. Other conditions and stream output is written to the JavaScript console.
+The normal stream output is written to the JavaScript console. The error stream is also written to the console except when it is emitted with structured R conditions and `captureConditions` is `true` (the default). In this case, R errors raised during evaluation are rethrown as JavaScript exceptions, and R warnings and messages are rethrown as JavaScript warnings.
 
 `RObject` references returned by `evalR()` are subject to [memory management](objects.qmd#memory-management) and should be destroyed when no longer in use. The related [`Shelter.evalR()`](api/js/classes/WebR.Shelter.md#evalr) method can be used to automatically manage returned R objects using a webR [shelter](objects.qmd#shelter).
 
@@ -50,9 +50,9 @@ The `evalRRaw()` method and its related convenience methods require that the res
 
 ## Evaluating R code and capturing output with `captureR`
 
-The [`Shelter.captureR()`](api/js/classes/WebR.Shelter.md#capturer) method can be used to evaluate R code and capture any stream output or conditions raised in addition to returning the result of the computation.
+The [`Shelter.captureR()`](api/js/classes/WebR.Shelter.md#capturer) method is lower level and more flexible than `evalR()`. It allows to capture any stream output or conditions raised during evaluation of R code, in addition to returning the result of the computation.
 
-Unlike `evalR()` which only returns one R object, `captureR()` returns a variable number of objects when R conditions are captured. This makes memory management of individual objects unwieldy. For this reason, `captureR()` requires the [shelter](objects.qmd#shelter) approach to [memory management](objects.qmd#memory-management), where all the sheltered objects are destroyed at once.
+Unlike `evalR()` which only returns one R object, `captureR()` returns a variable number of objects when R conditions are captured. Since this makes memory management of individual objects unwieldy, `captureR()` requires the [shelter](objects.qmd#shelter) approach to [memory management](objects.qmd#memory-management), where all the sheltered objects are destroyed at once.
 
 The method takes two arguments,
 
