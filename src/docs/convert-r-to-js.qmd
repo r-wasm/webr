@@ -12,11 +12,11 @@ Once webR has been loaded into a web page, objects can be converted into JavaScr
 At the moment, not all R objects can be converted to JavaScript objects. Attempting to convert an unsupported R object will throw a JavaScript exception.
 :::
 
-Explicitly converting an [`RObject`](api/js/classes/RWorker.RObject.md) to JavaScript can be done by invoking the [`RObject.toJs()`](api/js/classes/RWorker.RObject.md#tojs) method, which returns a JavaScript representation of the associated R object. In most cases, JavaScript conversion has been implemented by serialising the R object to an [`WebRDataTree`](api/js/modules/Tree.md#webrdatatree).
+Explicitly converting an [`RObject`](api/js/classes/RWorker.RObject.md) to JavaScript can be done by invoking the [`RObject.toJs()`](api/js/classes/RWorker.RObject.md#tojs) method, which returns a JavaScript representation of the associated R object. In most cases, JavaScript conversion has been implemented by serialising the R object to an [`WebRDataJs`](api/js/modules/RObject.md#webrdatajs).
 
 ### Serialising R objects
 
-Invoking [`RObject.toTree()`](api/js/classes/RWorker.RObject.md#totree) on an R object serialises the object to a JavaScript object of type [`WebRDataTree`](api/js/modules/Tree.md#webrdatatree). This type is designed to form a tree structure, supporting an unambiguous JavaScript representation for potentially nested R objects.
+Invoking [`RObject.toJs()`](api/js/classes/RWorker.RObject.md#tojs) on an R object serialises the object to a JavaScript object of type [`WebRDataJs`](api/js/modules/RObject.md#webrdatajs). This type is designed to form a tree structure, supporting an unambiguous JavaScript representation for potentially nested R objects.
 
 Most R objects are serialised to JavaScript objects that contain the following properties,
 
@@ -28,7 +28,7 @@ Most R objects are serialised to JavaScript objects that contain the following p
 
 Some R objects, such as lists or environments, contain references to other R objects. Such objects are serialised recursively. Any R objects deeper than the [maximum depth setting](#serialisation-options) will not be serialised and instead included in the `values` array as an [`RObject`](api/js/classes/RWorker.RObject.md). By default, R objects are serialised with infinite maximum depth.
 
-An R `NULL` object is serialised to a JavaScript object of type [`WebRDataTreeNull`](api/js/modules/Tree.md#webrdatatreenull). This type does not include the `names` or `values` properties.
+An R `NULL` object is serialised to a JavaScript object of type [`WebRDataJsNull`](api/js/modules/RObject.md#webrdatajsnull). This type does not include the `names` or `values` properties.
 
 ::: callout-warning
 The structure of serialised R objects may be updated in future versions of webR, expanding to include more R object attributes. As such, compatibility of serialised R objects between versions of webR is not guaranteed.
@@ -36,7 +36,7 @@ The structure of serialised R objects may be updated in future versions of webR,
 
 #### Serialisation options {#serialisation-options}
 
-An `options` argument of type [`ToTreeOptions`](api/js/interfaces/RWorker.ToTreeOptions.md) can be provided to the [RObject.toTree()](api/js/classes/RWorker.RObject.md#totree) method for fine-grained control over how objects are serialised.
+An `options` argument of type [`ToJsOptions`](api/js/interfaces/RWorker.ToJsOptions.md) can be provided to the [RObject.toJs()](api/js/classes/RWorker.RObject.md#tojs) method for fine-grained control over how objects are serialised.
 
 The following options are available,
 

@@ -44,14 +44,14 @@ The resulting R object type is chosen based on the contents of the JavaScript ar
 | `{ re: 1, im: 2 }`                                                         | Complex atomic vector                                                                                      |
 | `string`                                                                   | Character atomic vector                                                                                    |
 | JavaScript array                                                           | An atomic vector with type based on the above rules and following the coercion rules of R's `c()` function |
-| [Object of type `WebRDataTree`](convert-r-to-js.qmd#serialising-r-objects) | An R object type given by the `type` property in the provided object                                       |
+| [Object of type `WebRDataJs`](convert-r-to-js.qmd#serialising-r-objects) | An R object type given by the `type` property in the provided object                                       |
 | Other JavaScript object                                                    | Reserved for future use                                                                                    |
 
-In the case of R lists provided as an [`WebRDataTree`](api/js/modules/Tree.md#webrdatatree), the above rules are applied recursively to also construct the objects provided within the list.
+In the case of R lists provided as an [`WebRDataJs`](api/js/modules/RObject.md#webrdatajs), the above rules are applied recursively to also construct the objects provided within the list.
 
 ### Creating an R object with specific type
 
-As an alternative to constructing an [`WebRDataTree`](api/js/modules/Tree.md#webrdatatree) with an explicit `type` property, several class proxies of different type are available on the [`WebR`](api/js/classes/WebR.WebR.md) instance. For example, the [`WebR.RList`](api/js/classes/WebR.WebR.md#rlist) class proxy can be used to specifically construct an R list object, rather than an atomic vector, using a JavaScript array of values.
+As an alternative to constructing an [`WebRDataJs`](api/js/modules/RObject.md#webrdatajs) with an explicit `type` property, several class proxies of different type are available on the [`WebR`](api/js/classes/WebR.WebR.md) instance. For example, the [`WebR.RList`](api/js/classes/WebR.WebR.md#rlist) class proxy can be used to specifically construct an R list object, rather than an atomic vector, using a JavaScript array of values.
 
 To see how this can be useful, consider the difference in structure between the following two R object construction examples, using the same JavaScript object as the constructor argument,
 
@@ -78,11 +78,11 @@ await foo.toJs();
 
 ### Creating objects using `RObject` references
 
-An [`RObject`](api/js/classes/RWorker.RObject.md) can be used as part of R object construction, either on its own, included in a JavaScript array, or as the values in an [`WebRDataTree`](api/js/modules/Tree.md#webrdatatree).
+An [`RObject`](api/js/classes/RWorker.RObject.md) can be used as part of R object construction, either on its own, included in a JavaScript array, or as the values in an [`WebRDataJs`](api/js/modules/RObject.md#webrdatajs).
 
 In such cases a new `RObject` instance will be created, but the R object will not be copied as part of construction. The resulting `RObject` will be a reference to the same point in WebAssembly memory as the source object.
 
-This mechanism can be useful for creating new R lists or environments, or when re-constructing partially serialised objects in the form of an [`WebRDataTree`](api/js/modules/Tree.md#webrdatatree).
+This mechanism can be useful for creating new R lists or environments, or when re-constructing partially serialised objects in the form of an [`WebRDataJs`](api/js/modules/RObject.md#webrdatajs).
 
 ## Binding objects to an R environment
 
