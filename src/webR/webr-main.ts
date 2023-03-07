@@ -39,20 +39,20 @@ export interface WebRFS {
    * Lookup information about a file or directory node in the Emscripten
    * virtual file system.
    * @param {string} path Path to the requested node.
-   * @return {Promise<FSNode>} The requested node.
+   * @returns {Promise<FSNode>} The requested node.
    */
   lookupPath: (path: string) => Promise<FSNode>;
   /**
    * Create a directory on the Emscripten virtual file system.
    * @param {string} path Path of the directory to create.
-   * @return {Promise<FSNode>} The newly created directory node.
+   * @returns {Promise<FSNode>} The newly created directory node.
    */
   mkdir: (path: string) => Promise<FSNode>;
   /**
    * Get the content of a file on the Emscripten virtual file system.
    * @param {string} path Path of the file to read.
    * @param {string} [flags] Open the file with the specified flags.
-   * @return {Promise<Uint8Array>} The content of the requested file.
+   * @returns {Promise<Uint8Array>} The content of the requested file.
    */
   readFile: (path: string, flags?: string) => Promise<Uint8Array>;
   /**
@@ -88,43 +88,51 @@ export type FSNode = {
  * The configuration settings to be used when starting webR.
  */
 export interface WebROptions {
-  /** Command line arguments to be passed to R.
+  /**
+   * Command line arguments to be passed to R.
    * Default: `[]`.
    */
   RArgs?: string[];
 
-  /** Environment variables to be made available for the R process.
+  /**
+   * Environment variables to be made available for the R process.
    * Default: `{ R_HOME: '/usr/lib/R', R_ENABLE_JIT: 0 }`.
    */
   REnv?: { [key: string]: string };
 
-  /** The base URL used for downloading R WebAssembly binaries.
+  /**
+   * The base URL used for downloading R WebAssembly binaries.
    *  Default: `'https://webr.r-wasm.org/[version]/'`
    */
   WEBR_URL?: string;
 
-  /** The repo URL to use when downloading R WebAssembly packages.
+  /**
+   * The repo URL to use when downloading R WebAssembly packages.
    * Default: `'https://repo.r-wasm.org/`
    */
   PKG_URL?: string;
 
-  /** The base URL from where to load JavaScript worker scripts when loading
+  /**
+   * The base URL from where to load JavaScript worker scripts when loading
    * webR with the ServiceWorker communication channel mode.
    * Default: `''`
    */
   SW_URL?: string;
 
-  /** The WebAssembly user's home directory and initial working directory.
+  /**
+   * The WebAssembly user's home directory and initial working directory.
    * Default: `'/home/web_user'`
    */
   homedir?: string;
 
-  /** Start R in interactive mode?
+  /**
+   * Start R in interactive mode?
    * Default: `true`.
    */
   interactive?: boolean;
 
-  /** Set the communication channel type to be used.
+  /**
+   * Set the communication channel type to be used.
    * Deafult: `channelType.Automatic`
    */
   channelType?: (typeof ChannelType)[keyof typeof ChannelType];
@@ -191,7 +199,7 @@ export class WebR {
   }
 
   /**
-   * @return {Promise<void>} A promise that resolves once webR has been
+   * @returns {Promise<void>} A promise that resolves once webR has been
    * intialised.
    */
   async init() {
@@ -236,7 +244,7 @@ export class WebR {
 
   /**
    * Read from the communication channel and return an output message.
-   * @return {Promise<Message>}
+   * @returns {Promise<Message>} The output message
    */
   async read(): Promise<Message> {
     return await this.#chan.read();
@@ -245,7 +253,7 @@ export class WebR {
   /**
    * Flush the output queue in the communication channel and return all output
    * messages.
-   * @return {Promise<Message[]>}
+   * @returns {Promise<Message[]>} The output messages
    */
   async flush(): Promise<Message[]> {
     return await this.#chan.flush();
@@ -299,7 +307,7 @@ export class WebR {
    *
    * @param {string} code The R code to evaluate.
    * @param {EvalROptions} [options] Options for the execution environment.
-   * @return {Promise<RObject>} The result of the computation.
+   * @returns {Promise<RObject>} The result of the computation.
    */
   async evalR(code: string, options?: EvalROptions): Promise<RObject> {
     return this.globalShelter.evalR(code, options);
@@ -322,13 +330,13 @@ export class WebR {
   }
 
   /**
-    * Evaluate the given R code, returning the result as a raw JavaScript object.
-    *
-    * @param {string} code The R code to evaluate.
-    * @param {EvalRMessageOutputType} outputType JavaScript type to return the result as.
-    * @param {EvalROptions} [options] Options for the execution environment.
-    * @return {Promise<unknown>} The result of the computation.
-    */
+   * Evaluate the given R code, returning the result as a raw JavaScript object.
+   *
+   * @param {string} code The R code to evaluate.
+   * @param {EvalRMessageOutputType} outputType JavaScript type to return the result as.
+   * @param {EvalROptions} [options] Options for the execution environment.
+   * @returns {Promise<unknown>} The result of the computation.
+   */
   async evalRRaw(code: string, outputType: 'void', options?: EvalROptions): Promise<void>;
   async evalRRaw(code: string, outputType: 'boolean', options?: EvalROptions): Promise<boolean>;
   async evalRRaw(code: string, outputType: 'boolean[]', options?: EvalROptions): Promise<boolean[]>;
@@ -466,7 +474,7 @@ export class Shelter {
    *
    * @param {string} code The R code to evaluate.
    * @param {EvalROptions} [options] Options for the execution environment.
-   * @return {Promise<RObject>} The result of the computation.
+   * @returns {Promise<RObject>} The result of the computation.
    */
   async evalR(code: string, options: EvalROptions = {}): Promise<RObject> {
     const opts = replaceInObject(options, isRObject, (obj: RObject) => obj._payload);
@@ -493,7 +501,7 @@ export class Shelter {
    *
    * @param {string} code The R code to evaluate.
    * @param {EvalROptions} [options] Options for the execution environment.
-   * @return {Promise<{result: RObject, output: unknown[]}>} An object
+   * @returns {Promise<{result: RObject, output: unknown[]}>} An object
    * containing the result of the computation and and array of captured output.
    */
   async captureR(code: string, options: EvalROptions = {}): Promise<{

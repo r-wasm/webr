@@ -49,7 +49,7 @@ export type WebRDataTreeAtomic<T> = {
  * Test for a {@link WebRDataTree} instance
  *
  * @param {any} value The object to test.
- * @return {boolean} True if the object is an instance of a {@link WebRDataTree}.
+ * @returns {boolean} True if the object is an instance of a {@link WebRDataTree}.
  */
 export function isWebRDataTree(value: any): value is WebRDataTree {
   return value && typeof value === 'object' && Object.keys(RTypeMap).includes(value.type as string);

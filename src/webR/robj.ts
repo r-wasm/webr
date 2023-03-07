@@ -101,7 +101,7 @@ export type WebRDataScalar<T> = T | RMain.RObject | RWorker.RObjectBase;
  * Test if an object is of type {@link Complex}.
  *
  * @param {any} value The object to test.
- * @return {boolean} True if the object is of type {@link Complex}.
+ * @returns {boolean} True if the object is of type {@link Complex}.
  */
 export function isComplex(value: any): value is Complex {
   return value && typeof value === 'object' && 're' in value && 'im' in value;
