@@ -170,10 +170,12 @@ export class RObject extends RObjectBase {
     return `RObject:${this.type()}`;
   }
 
-  static getStaticPropertyValue(prop: keyof typeof RObject): unknown {
-    return RObject[prop];
+  /** @internal */
+  static getPersistentObject(prop: keyof typeof objs): unknown {
+    return objs[prop];
   }
 
+  /** @internal */
   getPropertyValue(prop: keyof this): unknown {
     return this[prop];
   }
@@ -187,7 +189,7 @@ export class RObject extends RObjectBase {
   }
 
   isUnbound(): boolean {
-    return this.ptr === RObject.unboundValue.ptr;
+    return this.ptr === objs.unboundValue.ptr;
   }
 
   attrs(): Nullable<RPairlist> {
@@ -198,7 +200,7 @@ export class RObject extends RObjectBase {
     let namesObj: RObject;
 
     if (values === null) {
-      namesObj = RObject.null;
+      namesObj = objs.null;
     } else if (Array.isArray(values) && values.every((v) => typeof v === 'string' || v === null)) {
       namesObj = new RCharacter(values);
     } else {
@@ -206,12 +208,12 @@ export class RObject extends RObjectBase {
     }
 
     // `setAttrib()` protects its inputs
-    Module._Rf_setAttrib(this.ptr, RObject.namesSymbol.ptr, namesObj.ptr);
+    Module._Rf_setAttrib(this.ptr, objs.namesSymbol.ptr, namesObj.ptr);
     return this;
   }
 
   names(): (string | null)[] | null {
-    const names = RCharacter.wrap(Module._Rf_getAttrib(this.ptr, RObject.namesSymbol.ptr));
+    const names = RCharacter.wrap(Module._Rf_getAttrib(this.ptr, objs.namesSymbol.ptr));
     if (names.isNull()) {
       return null;
     } else {
@@ -233,15 +235,15 @@ export class RObject extends RObjectBase {
   }
 
   subset(prop: number | string): RObject {
-    return this.#slice(prop, RObject.bracketSymbol.ptr);
+    return this.#slice(prop, objs.bracketSymbol.ptr);
   }
 
   get(prop: number | string): RObject {
-    return this.#slice(prop, RObject.bracket2Symbol.ptr);
+    return this.#slice(prop, objs.bracket2Symbol.ptr);
   }
 
   getDollar(prop: string): RObject {
-    return this.#slice(prop, RObject.dollarSymbol.ptr);
+    return this.#slice(prop, objs.dollarSymbol.ptr);
   }
 
   #slice(prop: number | string, op: RPtr): RObject {
@@ -254,14 +256,14 @@ export class RObject extends RObjectBase {
       const call = Module._Rf_lang3(op, this.ptr, idx.ptr);
       protectInc(call, prot);
 
-      return RObject.wrap(safeEval(call, RObject.baseEnv));
+      return RObject.wrap(safeEval(call, objs.baseEnv));
     } finally {
       unprotect(prot.n);
     }
   }
 
   pluck(...path: (string | number)[]): RObject | undefined {
-    const index = protectWithIndex(RObject.null);
+    const index = protectWithIndex(objs.null);
 
     try {
       const getter = (obj: RObject, prop: string | number): RObject => {
@@ -276,7 +278,7 @@ export class RObject extends RObjectBase {
     }
   }
 
-  set(prop: string | number, value: RObject | WebRDataRaw) {
+  set(prop: string | number, value: RObject | WebRDataRaw): RObject {
     const prot = { n: 0 };
 
     try {
@@ -290,12 +292,13 @@ export class RObject extends RObjectBase {
       const call = Module._Rf_lang4(assign.ptr, this.ptr, idx.ptr, valueObj.ptr);
       protectInc(call, prot);
 
-      return RObject.wrap(safeEval(call, RObject.baseEnv));
+      return RObject.wrap(safeEval(call, objs.baseEnv));
     } finally {
       unprotect(prot.n);
     }
   }
 
+  /** @internal */
   static getMethods(obj: RObject) {
     const props = new Set<string>();
     let cur: unknown = obj;
@@ -303,70 +306,6 @@ export class RObject extends RObjectBase {
       Object.getOwnPropertyNames(cur).map((p) => props.add(p));
     } while ((cur = Object.getPrototypeOf(cur)));
     return [...props.keys()].filter((i) => typeof obj[i as keyof typeof obj] === 'function');
-  }
-
-  static get globalEnv(): RObject {
-    return RObject.wrap(Module.getValue(Module._R_GlobalEnv, '*'));
-  }
-
-  static get emptyEnv(): RObject {
-    return RObject.wrap(Module.getValue(Module._R_EmptyEnv, '*'));
-  }
-
-  static get baseEnv(): RObject {
-    return RObject.wrap(Module.getValue(Module._R_BaseEnv, '*'));
-  }
-
-  static get null(): RNull {
-    return RNull.wrap(Module.getValue(Module._R_NilValue, '*'));
-  }
-
-  static get naLogical(): number {
-    return Module.getValue(Module._R_NaInt, 'i32');
-  }
-
-  static get naInteger(): number {
-    return Module.getValue(Module._R_NaInt, 'i32');
-  }
-
-  static get naDouble(): number {
-    return Module.getValue(Module._R_NaReal, 'double');
-  }
-
-  static get naString(): RObject {
-    return RObject.wrap(Module.getValue(Module._R_NaString, '*'));
-  }
-
-  static get true(): RLogical {
-    return RLogical.wrap(Module.getValue(Module._R_TrueValue, '*'));
-  }
-
-  static get false(): RLogical {
-    return RLogical.wrap(Module.getValue(Module._R_FalseValue, '*'));
-  }
-
-  static get logicalNA(): RLogical {
-    return RLogical.wrap(Module.getValue(Module._R_LogicalNAValue, '*'));
-  }
-
-  static get unboundValue(): RObject {
-    return RObject.wrap(Module.getValue(Module._R_UnboundValue, '*'));
-  }
-
-  static get bracketSymbol(): RSymbol {
-    return RSymbol.wrap(Module.getValue(Module._R_BracketSymbol, '*'));
-  }
-
-  static get bracket2Symbol(): RSymbol {
-    return RSymbol.wrap(Module.getValue(Module._R_Bracket2Symbol, '*'));
-  }
-
-  static get dollarSymbol(): RSymbol {
-    return RSymbol.wrap(Module.getValue(Module._R_DollarSymbol, '*'));
-  }
-
-  static get namesSymbol(): RSymbol {
-    return RSymbol.wrap(Module.getValue(Module._R_NamesSymbol, '*'));
   }
 }
 
@@ -583,7 +522,7 @@ export class RCall extends RObject {
   }
 
   eval(): RObject {
-    return RObject.wrap(safeEval(this.ptr, RObject.baseEnv));
+    return RObject.wrap(safeEval(this.ptr, objs.baseEnv));
   }
 }
 
@@ -716,7 +655,7 @@ export class REnvironment extends RObject {
     try {
       const { names, values } = toWebRData(val);
 
-      const ptr = protect(Module._R_NewEnv(RObject.globalEnv.ptr, 0, 0));
+      const ptr = protect(Module._R_NewEnv(objs.globalEnv.ptr, 0, 0));
       ++nProt;
 
       values.forEach((v, i) => {
@@ -862,7 +801,7 @@ abstract class RVectorAtomic<T extends atomicType> extends RObject {
       const call = Module._Rf_lang2(new RSymbol('is.na').ptr, this.ptr);
       protectInc(call, prot);
 
-      const val = RLogical.wrap(safeEval(call, RObject.baseEnv));
+      const val = RLogical.wrap(safeEval(call, objs.baseEnv));
       protectInc(val, prot);
 
       const ret = val.toTypedArray();
@@ -919,9 +858,9 @@ export class RLogical extends RVectorAtomic<boolean> {
 
   static #newSetter = (ptr: RPtr) => {
     const data = Module._LOGICAL(ptr);
-
+    const naLogical = Module.getValue(Module._R_NaInt, 'i32');
     return (v: null | boolean, i: number) => {
-      Module.setValue(data + 4 * i, v === null ? RObject.naLogical : Boolean(v), 'i32');
+      Module.setValue(data + 4 * i, v === null ? naLogical : Boolean(v), 'i32');
     };
   };
 
@@ -962,9 +901,10 @@ export class RInteger extends RVectorAtomic<number> {
 
   static #newSetter = (ptr: RPtr) => {
     const data = Module._INTEGER(ptr);
+    const naInteger = Module.getValue(Module._R_NaInt, 'i32');
 
     return (v: null | number, i: number) => {
-      Module.setValue(data + 4 * i, v === null ? RObject.naInteger : Math.round(Number(v)), 'i32');
+      Module.setValue(data + 4 * i, v === null ? naInteger : Math.round(Number(v)), 'i32');
     };
   };
 
@@ -1000,9 +940,10 @@ export class RDouble extends RVectorAtomic<number> {
 
   static #newSetter = (ptr: RPtr) => {
     const data = Module._REAL(ptr);
+    const naDouble = Module.getValue(Module._R_NaReal, 'double');
 
     return (v: null | number, i: number) => {
-      Module.setValue(data + 8 * i, v === null ? RObject.naDouble : v, 'double');
+      Module.setValue(data + 8 * i, v === null ? naDouble : v, 'double');
     };
   };
 
@@ -1035,10 +976,11 @@ export class RComplex extends RVectorAtomic<Complex> {
 
   static #newSetter = (ptr: RPtr) => {
     const data = Module._COMPLEX(ptr);
+    const naDouble = Module.getValue(Module._R_NaReal, 'double');
 
     return (v: null | Complex, i: number) => {
-      Module.setValue(data + 8 * (2 * i), v === null ? RObject.naDouble : v.re, 'double');
-      Module.setValue(data + 8 * (2 * i + 1), v === null ? RObject.naDouble : v.im, 'double');
+      Module.setValue(data + 8 * (2 * i), v === null ? naDouble : v.re, 'double');
+      Module.setValue(data + 8 * (2 * i + 1), v === null ? naDouble : v.im, 'double');
     };
   };
 
@@ -1082,7 +1024,7 @@ export class RCharacter extends RVectorAtomic<string> {
   static #newSetter = (ptr: RPtr) => {
     return (v: null | string, i: number) => {
       if (v === null) {
-        Module._SET_STRING_ELT(ptr, i, RObject.naString.ptr);
+        Module._SET_STRING_ELT(ptr, i, objs.naString.ptr);
       } else {
         Module._SET_STRING_ELT(ptr, i, new RString(v).ptr);
       }
@@ -1216,4 +1158,45 @@ export function getRWorkerClass(type: RTypeNumber): typeof RObject {
  */
 export function isRObject(value: any): value is RObject {
   return value instanceof RObject;
+}
+
+/**
+ * A store for persistent R objects, initialised at R startup.
+ */
+export let objs: {
+  baseEnv: REnvironment,
+  bracket2Symbol: RSymbol,
+  bracketSymbol: RSymbol,
+  dollarSymbol: RSymbol,
+  emptyEnv: REnvironment,
+  false: RLogical,
+  globalEnv: REnvironment,
+  na: RLogical,
+  namesSymbol: RSymbol,
+  naString: RObject,
+  null: RNull,
+  true: RLogical,
+  unboundValue: RObject,
+};
+
+/**
+ * Populate the persistent R object store.
+ * @internal
+ */
+export function initPersistentObjects(){
+  objs = {
+    baseEnv: REnvironment.wrap(Module.getValue(Module._R_BaseEnv, '*')),
+    bracket2Symbol: RSymbol.wrap(Module.getValue(Module._R_Bracket2Symbol, '*')),
+    bracketSymbol: RSymbol.wrap(Module.getValue(Module._R_BracketSymbol, '*')),
+    dollarSymbol: RSymbol.wrap(Module.getValue(Module._R_DollarSymbol, '*')),
+    emptyEnv: REnvironment.wrap(Module.getValue(Module._R_EmptyEnv, '*')),
+    false: RLogical.wrap(Module.getValue(Module._R_FalseValue, '*')),
+    globalEnv: REnvironment.wrap(Module.getValue(Module._R_GlobalEnv, '*')),
+    na: RLogical.wrap(Module.getValue(Module._R_LogicalNAValue, '*')),
+    namesSymbol: RSymbol.wrap(Module.getValue(Module._R_NamesSymbol, '*')),
+    naString: RObject.wrap(Module.getValue(Module._R_NaString, '*')),
+    null: RNull.wrap(Module.getValue(Module._R_NilValue, '*')),
+    true: RLogical.wrap(Module.getValue(Module._R_TrueValue, '*')),
+    unboundValue: RObject.wrap(Module.getValue(Module._R_UnboundValue, '*')),
+  };
 }
