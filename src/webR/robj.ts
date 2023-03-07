@@ -2,7 +2,7 @@
  * Common module for working with R objects.
  * @module RObject
  */
-import { WebRDataTree, WebRDataTreeAtomic } from './tree';
+import { WebRDataJs, WebRDataJsAtomic } from './tree';
 import * as RMain from './robj-main';
 import * as RWorker from './robj-worker';
 
@@ -76,7 +76,7 @@ export type WebRData =
   | RWorker.RObjectBase
   | RWorker.RObject
   | WebRDataRaw
-  | WebRDataTree
+  | WebRDataJs
   | WebRData[]
   | { [key: string]: WebRData };
 
@@ -89,7 +89,7 @@ export type WebRData =
 export type WebRDataAtomic<T> =
   | WebRDataScalar<T>
   | (T | null)[]
-  | WebRDataTreeAtomic<T>
+  | WebRDataJsAtomic<T>
   | NamedObject<T | null>;
 
 /**

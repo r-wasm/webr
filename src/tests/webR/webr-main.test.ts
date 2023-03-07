@@ -501,7 +501,7 @@ describe('Serialise nested R lists, pairlists and vectors unambiguously', () => 
     const rObj = (await webR.evalR(
       'list(a=list(e=c(T,F,NA),f=c(1,2,3)), b=pairlist(g=c(4L,5L,6L)), c=list(h=c("abc","def"), i=list(7i)))'
     )) as RList;
-    const jsObj = await rObj.toTree();
+    const jsObj = await rObj.toJs();
     const newRObj = (await new webR.RObject(jsObj)) as RList;
     const env = await new webR.REnvironment({ newRObj, rObj });
     const identical = (await webR.evalR('identical(rObj, newRObj)', { env })) as RLogical;
@@ -513,7 +513,7 @@ describe('Serialise nested R lists, pairlists and vectors unambiguously', () => 
     const rObj = (await webR.evalR(
       'list(a=list(e=c(T,F,NA),f=c(1,2,3)), b=pairlist(g=c(4L,5L,6L)), c=list(h=c("abc","def"), i=list(7i)))'
     )) as RList;
-    const jsObj = await rObj.toTree({ depth: 1 });
+    const jsObj = await rObj.toJs({ depth: 1 });
     const newRObj = (await new webR.RObject(jsObj)) as RList;
     const env = await new webR.REnvironment({ newRObj, rObj });
     const identical = (await webR.evalR('identical(rObj, newRObj)', { env })) as RLogical;

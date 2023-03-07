@@ -7,50 +7,54 @@ import * as RMain from './robj-worker';
 import { WebRDataRaw, RPtr, RTypeMap } from './robj';
 
 /**
- * `WebRDataTree` objects form a tree structure, used when serialising
- * R objects into a JavaScript respresentation.
+ * `WebRDataJs` objects form a tree structure, used when serialising R objects
+ * into a JavaScript respresentation.
  *
- * Nested R objects are serialised using the {@link WebRDataTreeNode} type,
+ * Nested R objects are serialised using the {@link WebRDataJsNode} type,
  * forming branches in the resulting tree structure, with leaves formed by the
  * remaining types.
  */
-export type WebRDataTree =
-  | WebRDataTreeNull
-  | WebRDataTreeString
-  | WebRDataTreeSymbol
-  | WebRDataTreeNode
-  | WebRDataTreeAtomic<RWorker.atomicType>;
+export type WebRDataJs =
+  | WebRDataJsNull
+  | WebRDataJsString
+  | WebRDataJsSymbol
+  | WebRDataJsNode
+  | WebRDataJsAtomic<RWorker.atomicType>;
 
-export type WebRDataTreeNull = {
+export type WebRDataJsNull = {
   type: 'null';
 };
-export type WebRDataTreeString = {
+
+export type WebRDataJsString = {
   type: 'string';
   value: string;
 };
-export type WebRDataTreeSymbol = {
+
+export type WebRDataJsSymbol = {
   type: 'symbol';
   printname: string | null;
   symvalue: RPtr | null;
   internal: RPtr | null;
 };
-export type WebRDataTreeNode = {
+
+export type WebRDataJsNode = {
   type: 'list' | 'pairlist' | 'environment';
   names: (string | null)[] | null;
-  values: (WebRDataRaw | RWorker.RObject | RMain.RObject | WebRDataTree)[];
+  values: (WebRDataRaw | RWorker.RObject | RMain.RObject | WebRDataJs)[];
 };
-export type WebRDataTreeAtomic<T> = {
+
+export type WebRDataJsAtomic<T> = {
   type: 'logical' | 'integer' | 'double' | 'complex' | 'character' | 'raw';
   names: (string | null)[] | null;
   values: (T | null)[];
 };
 
 /**
- * Test for a {@link WebRDataTree} instance
+ * Test for a {@link WebRDataJs} instance.
  *
  * @param {any} value The object to test.
- * @returns {boolean} True if the object is an instance of a {@link WebRDataTree}.
+ * @return {boolean} True if the object is an instance of a {@link WebRDataJs}.
  */
-export function isWebRDataTree(value: any): value is WebRDataTree {
+export function isWebRDataJs(value: any): value is WebRDataJs {
   return value && typeof value === 'object' && Object.keys(RTypeMap).includes(value.type as string);
 }

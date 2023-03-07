@@ -8,8 +8,8 @@ import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './
 import { envPoke, parseEvalBare, protect, protectInc, unprotect } from './utils-r';
 import { protectWithIndex, reprotect, unprotectIndex, safeEval } from './utils-r';
 import { ShelterID, isShelterID } from './webr-chan';
-import { isWebRDataTree, WebRDataTree, WebRDataTreeAtomic, WebRDataTreeNode } from './tree';
-import { WebRDataTreeNull, WebRDataTreeString, WebRDataTreeSymbol } from './tree';
+import { isWebRDataJs, WebRDataJs, WebRDataJsAtomic, WebRDataJsNode } from './tree';
+import { WebRDataJsNull, WebRDataJsString, WebRDataJsSymbol } from './tree';
 
 export type RHandle = RObject | RPtr;
 
@@ -83,15 +83,15 @@ export function purge(shelter: ShelterID) {
   shelters.set(shelter, []);
 }
 
-export interface ToTreeOptions {
+export interface ToJsOptions {
   depth: number;
 }
 
 export type Nullable<T> = T | RNull;
 
 function newObjectFromData(obj: WebRData): RObject {
-  // Conversion of WebRDataTree type JS objects
-  if (isWebRDataTree(obj)) {
+  // Conversion of WebRDataJs type JS objects
+  if (isWebRDataJs(obj)) {
     return new (getRWorkerClass(RTypeMap[obj.type]))(obj);
   }
 
@@ -226,12 +226,8 @@ export class RObject extends RObjectBase {
     return names && names.includes(name);
   }
 
-  toTree(options: ToTreeOptions = { depth: 0 }, depth = 1): WebRDataTree {
+  toJs(options: ToJsOptions = { depth: 0 }, depth = 1): WebRDataJs {
     throw new Error('This R object cannot be converted to JS');
-  }
-
-  toJs() {
-    return this.toTree() as ReturnType<this['toTree']>;
   }
 
   subset(prop: number | string): RObject {
@@ -315,7 +311,7 @@ export class RNull extends RObject {
     return this;
   }
 
-  toTree(): WebRDataTreeNull {
+  toJs(): WebRDataJsNull {
     return { type: 'null' };
   }
 }
@@ -338,7 +334,7 @@ export class RSymbol extends RObject {
     }
   }
 
-  toTree(): WebRDataTreeSymbol {
+  toJs(): WebRDataJsSymbol {
     const obj = this.toObject();
     return {
       type: 'symbol',
@@ -410,8 +406,8 @@ export class RPairlist extends RObject {
     return this.toArray().length;
   }
 
-  toArray(options: ToTreeOptions = { depth: 1 }): WebRData[] {
-    return this.toTree(options).values;
+  toArray(options: ToJsOptions = { depth: 1 }): WebRData[] {
+    return this.toJs(options).values;
   }
 
   toObject({
@@ -432,15 +428,15 @@ export class RPairlist extends RObject {
     );
   }
 
-  entries(options: ToTreeOptions = { depth: 1 }): NamedEntries<WebRData> {
-    const obj = this.toTree(options);
+  entries(options: ToJsOptions = { depth: 1 }): NamedEntries<WebRData> {
+    const obj = this.toJs(options);
     return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
   }
 
-  toTree(options: ToTreeOptions = { depth: 0 }, depth = 1): WebRDataTreeNode {
+  toJs(options: ToJsOptions = { depth: 0 }, depth = 1): WebRDataJsNode {
     const namesArray: string[] = [];
     let hasNames = false;
-    const values: WebRDataTreeNode['values'] = [];
+    const values: WebRDataJsNode['values'] = [];
 
     for (let next = this as Nullable<RPairlist>; !next.isNull(); next = next.cdr()) {
       const symbol = next.tag();
@@ -453,7 +449,7 @@ export class RPairlist extends RObject {
       if (options.depth && depth >= options.depth) {
         values.push(next.car());
       } else {
-        values.push(next.car().toTree(options, depth + 1));
+        values.push(next.car().toJs(options, depth + 1));
       }
     }
     const names = hasNames ? namesArray : null;
@@ -558,7 +554,7 @@ export class RList extends RObject {
   }
 
   toArray(options: { depth: number } = { depth: 1 }): WebRData[] {
-    return this.toTree(options).values;
+    return this.toJs(options).values;
   }
 
   toObject({
@@ -580,11 +576,11 @@ export class RList extends RObject {
   }
 
   entries(options: { depth: number } = { depth: 1 }): NamedEntries<WebRData> {
-    const obj = this.toTree(options);
+    const obj = this.toJs(options);
     return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
   }
 
-  toTree(options: { depth: number } = { depth: 0 }, depth = 1): WebRDataTreeNode {
+  toJs(options: { depth: number } = { depth: 0 }, depth = 1): WebRDataJsNode {
     return {
       type: 'list',
       names: this.names(),
@@ -592,7 +588,7 @@ export class RList extends RObject {
         if (options.depth && depth >= options.depth) {
           return this.get(i + 1);
         } else {
-          return this.get(i + 1).toTree(options, depth + 1);
+          return this.get(i + 1).toJs(options, depth + 1);
         }
       }),
     };
@@ -635,7 +631,7 @@ export class RString extends RObject {
     return Module.UTF8ToString(Module._R_CHAR(this.ptr));
   }
 
-  toTree(): WebRDataTreeString {
+  toJs(): WebRDataJsString {
     return {
       type: 'string',
       value: this.toString(),
@@ -714,18 +710,18 @@ export class REnvironment extends RObject {
     const symbols = this.names();
     return Object.fromEntries(
       [...Array(symbols.length).keys()].map((i) => {
-        return [symbols[i], this.getDollar(symbols[i]).toTree({ depth })];
+        return [symbols[i], this.getDollar(symbols[i]).toJs({ depth })];
       })
     );
   }
 
-  toTree(options: { depth: number } = { depth: 0 }, depth = 1): WebRDataTreeNode {
+  toJs(options: { depth: number } = { depth: 0 }, depth = 1): WebRDataJsNode {
     const names = this.names();
     const values = [...Array(names.length).keys()].map((i) => {
       if (options.depth && depth >= options.depth) {
         return this.getDollar(names[i]);
       } else {
-        return this.getDollar(names[i]).toTree(options, depth + 1);
+        return this.getDollar(names[i]).toJs(options, depth + 1);
       }
     });
 
@@ -842,7 +838,7 @@ abstract class RVectorAtomic<T extends atomicType> extends RObject {
     return values.map((v, i) => [names ? names[i] : null, v]);
   }
 
-  toTree(): WebRDataTreeAtomic<T> {
+  toJs(): WebRDataJsAtomic<T> {
     return {
       type: this.type() as 'logical' | 'integer' | 'double' | 'complex' | 'character' | 'raw',
       names: this.names(),
@@ -1107,7 +1103,7 @@ function toWebRData<T>(jsObj: WebRDataAtomic<T>): {
 };
 function toWebRData(jsObj: WebRData): WebRData;
 function toWebRData(jsObj: WebRData): WebRData {
-  if (isWebRDataTree(jsObj)) {
+  if (isWebRDataJs(jsObj)) {
     return jsObj;
   } else if (Array.isArray(jsObj)) {
     return { names: null, values: jsObj };
