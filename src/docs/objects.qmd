@@ -6,74 +6,35 @@ toc: true
 
 ## References to R objects
 
-When webR provides a reference to an R object on the main thread, such as the
-result of R code evaluation with
-[`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr), it is provided in the form
-of an [`RObject`](api/js/modules/RMain.md#robject) proxy.
+When webR provides a reference to an R object on the main thread, such as the result of R code evaluation with [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr), it is provided in the form of an [`RObject`](api/js/modules/RMain.md#robject) proxy.
 
-Technically, an `RObject` is a JavaScript object that holds a reference to an R
-object in WebAssembly memory, and forwards requests relating to that object to
-the webR worker thread for processing. As such, printing an `RObject` to the
-JavaScript console appears as an object of type `Proxy`,
+Technically, an `RObject` is a JavaScript object that holds a reference to an R object in WebAssembly memory, and forwards requests relating to that object to the webR worker thread for processing. As such, printing an `RObject` to the JavaScript console appears as an object of type `Proxy`,
 
 ``` javascript
 Proxy {obj: { type: 'double', ptr: 2184504, ... }, payloadType: 'ptr'}
 ```
 
-An `RObject` proxy can be used as opaque reference to a particular object in R's
-memory and as such can be passed to webR API calls, such as when passing an
-environment to evaluate within using
-[`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr), or when invoking R
-functions with an [`RFunction`](api/js/classes/RWorker.RFunction.md) object.
+An `RObject` proxy can be used as opaque reference to a particular object in R's memory and as such can be passed to webR API calls, such as when passing an environment to evaluate within using [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr), or when invoking R functions with an [`RFunction`](api/js/classes/RWorker.RFunction.md) object.
 
-Support for different types of R object are provided by different `RProxy` type
-aliases in the [`RMain` module](api/js/modules/RMain.md). Each type of `RObject`
-proxy is associated with a corresponding subclass of
-[`RWorker.RObject`](api/js/classes/RWorker.RObject.md) with the same name. The
-`RWorker` module implements the methods for interacting with R objects on the
-webR worker thread, and the methods are made available to the main thread
-through `RObject` proxies.
+Support for different types of R object are provided by different `RProxy` type aliases in the [`RMain` module](api/js/modules/RMain.md). Each type of `RObject` proxy is associated with a corresponding subclass of [`RWorker.RObject`](api/js/classes/RWorker.RObject.md) with the same name. The `RWorker` module implements the methods for interacting with R objects on the webR worker thread, and the methods are made available to the main thread through `RObject` proxies.
 
-Invoking a method on an `RObject` proxy is automatically handled by webR by
-issuing a request to the worker thread over the established communication
-channel. `RProxy` method invocation returns a JavaScript Promise that resolves
-to the result of invoking the corresponding
-[`RWorker.RObject`](api/js/classes/RWorker.RObject.md) method for the R object
-associated with the proxy.
+Invoking a method on an `RObject` proxy is automatically handled by webR by issuing a request to the worker thread over the established communication channel. `RProxy` method invocation returns a JavaScript Promise that resolves to the result of invoking the corresponding [`RWorker.RObject`](api/js/classes/RWorker.RObject.md) method for the R object associated with the proxy.
 
 ## Memory management
 
-The R interpreter includes a built-in [garbage
-collector](https://en.wikipedia.org/wiki/Garbage_collection_(computer_science))
-(GC) designed to delete objects when they are no longer required. Unfortunately,
-this useful feature raises an issue when working with R objects from JavaScript;
-we must ensure that any R objects targeted by an `RObject` reference are not
-deleted by the GC while they are still in use.
+The R interpreter includes a built-in [garbage collector](https://en.wikipedia.org/wiki/Garbage_collection_(computer_science)) (GC) designed to delete objects when they are no longer required. Unfortunately, this useful feature raises an issue when working with R objects from JavaScript; we must ensure that any R objects targeted by an `RObject` reference are not deleted by the GC while they are still in use.
 
-While the JavaScript specification does provide a [finaliser
-mechanism](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry)
-to signal when objects are no longer in use, it cannot be relied upon. Even a
-fully conforming JavaScript implementation is not required to call the cleanup
-callbacks. This means that R's GC cannot know for sure if a JavaScript `RObject`
-reference is still in use, or no longer required, without some extra help.
+While the JavaScript specification does provide a [finaliser mechanism](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry) to signal when objects are no longer in use, it cannot be relied upon. Even a fully conforming JavaScript implementation is not required to call the cleanup callbacks. This means that R's GC cannot know for sure if a JavaScript `RObject` reference is still in use, or no longer required, without some extra help.
 
 ::: callout-note
-It is the user's responsibility to signal to webR when they have finished
-working with an `RObject` reference.
+It is the user's responsibility to signal to webR when they have finished working with an `RObject` reference.
 :::
 
 ## Sheltering R object references {#shelter}
 
-WebR solves the problem through a *sheltering* mechanism. When an `RObject`
-reference is created on the main thread, the object referenced is automatically
-sheltered from R's GC. The object will not be deleted by R until it has been
-removed from the sheltering mechanism.
+WebR solves the problem through a *sheltering* mechanism. When an `RObject` reference is created on the main thread, the object referenced is automatically sheltered from R's GC. The object will not be deleted by R until it has been removed from the sheltering mechanism.
 
-Once an R object has been removed from the shelter, there are no longer any
-guarantees about the state of the referenced object -- it may have already been
-deleted by the GC. In effect the `RObject` reference is no longer valid, and so
-the process of removing an object from the shelter is referred to as
-*destroying* the reference.
+Once an R object has been removed from the shelter, there are no longer any guarantees about the state of the referenced object -- it may have already been deleted by the GC. In effect the `RObject` reference is no longer valid, and so the process of removing an object from the shelter is referred to as *destroying* the reference.
 
 ::: callout-warning
 An `RObject` reference **should not** be used after it has been destroyed.
@@ -81,24 +42,13 @@ An `RObject` reference **should not** be used after it has been destroyed.
 
 ### The default shelter
 
-As webR initialises it creates a default shelter for R objects. When R object
-references are created without specifying a particular shelter, when running
-[`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) for example, they are
-sheltered by the default shelter.
+As webR initialises it creates a default shelter for R objects. When R object references are created without specifying a particular shelter, when running [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) for example, they are sheltered by the default shelter.
 
-To signal to webR that you have finished working with the an `RObject` reference
-sheltered in this way, invoke
-[`WebR.destroy()`](api/js/classes/WebR.WebR.md#destroy) with the object
-reference as an argument. The `RObject` reference will be destroyed and the
-referenced object may be garbage collected.
+To signal to webR that you have finished working with the an `RObject` reference sheltered in this way, invoke [`WebR.destroy()`](api/js/classes/WebR.WebR.md#destroy) with the object reference as an argument. The `RObject` reference will be destroyed and the referenced object may be garbage collected.
 
 ### Using `try`/`finally`
 
-An `RObject` should be destroyed when it is no longer in use, even if a
-JavaScript error is thrown and interrupts execution. A useful pattern when
-working with `RObject` references is to do work using an `RObject` within a
-JavaScript `try`/`finally` block, to ensure that the R object reference is
-always destroyed once the work is complete.
+An `RObject` should be destroyed when it is no longer in use, even if a JavaScript error is thrown and interrupts execution. A useful pattern when working with `RObject` references is to do work using an `RObject` within a JavaScript `try`/`finally` block, to ensure that the R object reference is always destroyed once the work is complete.
 
 ``` javascript
 const obj = await webR.evalR('42 + 123');
@@ -112,34 +62,19 @@ try {
 
 ### Working with multiple shelters
 
-The above mechanism provides fine-grained control over the lifetime of R
-objects, but may become unwieldy when working with many `RObject` references.
-WebR's sheltering mechanism provides a solution to this problem by allowing for
-multiple shelters with methods to associate an `RObject` reference with a
-particular shelter. In addition, all `RObject` references protected by a
-particular shelter can be destroyed at once.
+The above mechanism provides fine-grained control over the lifetime of R objects, but may become unwieldy when working with many `RObject` references. WebR's sheltering mechanism provides a solution to this problem by allowing for multiple shelters with methods to associate an `RObject` reference with a particular shelter. In addition, all `RObject` references protected by a particular shelter can be destroyed at once.
 
-A new shelter can be created using the
-[`Shelter`](api/js/classes/WebR.Shelter.md) class. An asynchronous `Shelter`
-constructor is available as an instance property of the `WebR` class. Creating a
-new object with this constructor returns a Promise that resolves to a new
-instance of the `Shelter` class once the shelter is ready to use.
+A new shelter can be created using the [`Shelter`](api/js/classes/WebR.Shelter.md) class. An asynchronous `Shelter` constructor is available as an instance property of the `WebR` class. Creating a new object with this constructor returns a Promise that resolves to a new instance of the `Shelter` class once the shelter is ready to use.
 
 ``` javascript
 const myShelter = await new webR.Shelter();
 ```
 
-A list of available methods can be found in the methods section of the
-[`Shelter` class reference](api/js/classes/WebR.Shelter.md#methods). This
-includes similar methods for interacting with R or evaluating code to those
-provided on the [`WebR`](api/js/classes/WebR.WebR.md#methods) class.
+A list of available methods can be found in the methods section of the [`Shelter` class reference](api/js/classes/WebR.Shelter.md#methods). This includes similar methods for interacting with R or evaluating code to those provided on the [`WebR`](api/js/classes/WebR.WebR.md#methods) class.
 
 #### Evaluating under a shelter
 
-The [`Shelter.evalR()`](api/js/classes/WebR.Shelter.md#evalr) and
-[`Shelter.captureR()`](api/js/classes/WebR.Shelter.md#capturer) methods will
-automatically protect the resulting `RObject` references using this shelter,
-rather than default shelter.
+The [`Shelter.evalR()`](api/js/classes/WebR.Shelter.md#evalr) and [`Shelter.captureR()`](api/js/classes/WebR.Shelter.md#capturer) methods will automatically protect the resulting `RObject` references using this shelter, rather than default shelter.
 
 ``` javascript
 const obj = myShelter.evalR('42 + 123');
@@ -147,13 +82,7 @@ const obj = myShelter.evalR('42 + 123');
 
 #### Create new objects protected by a shelter
 
-Shelters also provide a range of [R object class
-proxies](api/js/classes/WebR.Shelter.md#properties) which can be
-used to create a new R object by providing a JavaScript object. This works in
-the same way as when [creating R objects protected by the global
-shelter](convert-js-to-r.qmd#creating-an-r-object-with-specific-type), except
-that the resulting R objects will automatically be protected using this shelter,
-rather than the default shelter.
+Shelters also provide a range of [R object class proxies](api/js/classes/WebR.Shelter.md#properties) which can be used to create a new R object by providing a JavaScript object. This works in the same way as when [creating R objects protected by the global shelter](convert-js-to-r.qmd#creating-an-r-object-with-specific-type), except that the resulting R objects will automatically be protected using this shelter, rather than the default shelter.
 
 ``` javascript
 const obj = await new myShelter.RDouble([1, 1.5, 2, 2.5, 3]);
@@ -161,12 +90,7 @@ const obj = await new myShelter.RDouble([1, 1.5, 2, 2.5, 3]);
 
 #### Destroying objects protected by a shelter
 
-The [`Shelter.destroy()`](api/js/classes/WebR.Shelter.md#destroy) method is used
-to remove an `RObject` reference from a shelter. In addition,
-[`Shelter.purge()`](api/js/classes/WebR.Shelter.md#purge) destroys all `RObject`
-references associated with a particular shelter. The `purge()` mechanism in
-combination with the `try`/`finally` pattern makes managing memory for multiple
-R object references relatively easy.
+The [`Shelter.destroy()`](api/js/classes/WebR.Shelter.md#destroy) method is used to remove an `RObject` reference from a shelter. In addition, [`Shelter.purge()`](api/js/classes/WebR.Shelter.md#purge) destroys all `RObject` references associated with a particular shelter. The `purge()` mechanism in combination with the `try`/`finally` pattern makes managing memory for multiple R object references relatively easy.
 
 ``` javascript
 const myShelter = await new webR.Shelter();

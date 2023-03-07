@@ -4,40 +4,22 @@ format: html
 toc: true
 ---
 
-For performance and
-[security](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer#security_requirements%3E)
-reasons, web pages that load webR should be served with certain HTTP headers so
-that the page is [cross-origin
-isolated](https://developer.mozilla.org/en-US/docs/Web/API/crossOriginIsolated).
-This allows the `SharedArrayBuffer` based [communication
-channel](communication.qmd#webr-channels) to be used.
+For performance and [security](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer#security_requirements%3E) reasons, web pages that load webR should be served with certain HTTP headers so that the page is [cross-origin isolated](https://developer.mozilla.org/en-US/docs/Web/API/crossOriginIsolated). This allows the `SharedArrayBuffer` based [communication channel](communication.qmd#webr-channels) to be used.
 
-To ensure a web page is cross-origin isolated, serve the page with both the
-[COOP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy)
-and
-[COEP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy)
-HTTP headers set,
+To ensure a web page is cross-origin isolated, serve the page with both the [COOP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy) and [COEP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy) HTTP headers set,
 
     Cross-Origin-Opener-Policy: same-origin
     Cross-Origin-Embedder-Policy: require-corp
 
-If successful, the value of the global JavaScript property `crossOriginIsolated`
-should return `true`.
+If successful, the value of the global JavaScript property `crossOriginIsolated` should return `true`.
 
 ::: callout-warning
-Without cross-origin isolation, webR will fall back to the
-[`ServiceWorker`](communication.qmd#webr-channels) communication channel. With
-this channel there may be reduced performance or [further setup](#sw-cdn)
-required.
+Without cross-origin isolation, webR will fall back to the [`ServiceWorker`](communication.qmd#webr-channels) communication channel. With this channel there may be reduced performance or [further setup](#sw-cdn) required.
 :::
 
 ## Example script to serve webR pages locally
 
-The following simple R script will serve files locally from the current working
-directory with the required HTTP headers set. Ensure that your R installation
-has the [httpuv](https://cran.r-project.org/web/packages/httpuv/index.html)
-package installed and then save the following R code in a new script named
-`serve.R`.
+The following simple R script will serve files locally from the current working directory with the required HTTP headers set. Ensure that your R installation has the [httpuv](https://cran.r-project.org/web/packages/httpuv/index.html) package installed and then save the following R code in a new script named `serve.R`.
 
 ```{r eval=FALSE}
 library(httpuv)
@@ -56,19 +38,13 @@ runServer(host = "127.0.0.1", port = 8080,
 )
 ```
 
-Run the script on your own machine, for example by executing `Rscript serve.R`
-in a terminal. Once running, you can access the contents of the current working
-directory at the URL http://127.0.0.1:8080.
+Run the script on your own machine, for example by executing `Rscript serve.R` in a terminal. Once running, you can access the contents of the current working directory at the URL http://127.0.0.1:8080.
 
 ## Using the service worker channel when loading from CDN {#sw-cdn}
 
-When loading webR from CDN and using the `ServiceWorker` communication channel,
-you must host your own versions of the webR worker scripts somewhere in the same
-origin as the page loading webR. Attempting to load a service worker
-cross-domain will be blocked by most browsers, for security reasons.
+When loading webR from CDN and using the `ServiceWorker` communication channel, you must host your own versions of the webR worker scripts somewhere in the same origin as the page loading webR. Attempting to load a service worker cross-domain will be blocked by most browsers, for security reasons.
 
-The contents of your worker scripts can simply wrap the workers hosted on the
-webR CDN. For example, your service worker script may simply contain,
+The contents of your worker scripts can simply wrap the workers hosted on the webR CDN. For example, your service worker script may simply contain,
 
 ``` javascript
 importScripts('https://webr.r-wasm.org/latest/webr-serviceworker.js');
@@ -84,10 +60,6 @@ importScripts('https://webr.r-wasm.org/latest/webr-worker.js');
 
 saved with the filename `webr-worker.js`.
 
-Serve the two files somewhere in the same origin and scope as your web page. Do
-not store the scripts in a subdirectory relative to the page, as the service
-worker's scope would then be limited to that location.
+Serve the two files somewhere in the same origin and scope as your web page. Do not store the scripts in a subdirectory relative to the page, as the service worker's scope would then be limited to that location.
 
-Once the worker scripts are available on your server, configure webR by giving
-the URL of the directory containing the scripts as the configuration option
-[`WebROptions.SW_URL`](api/js/interfaces/WebR.WebROptions.md#sw_url).
+Once the worker scripts are available on your server, configure webR by giving the URL of the directory containing the scripts as the configuration option [`WebROptions.SW_URL`](api/js/interfaces/WebR.WebROptions.md#sw_url).

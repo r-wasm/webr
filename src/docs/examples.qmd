@@ -6,30 +6,17 @@ toc: true
 
 ## Starting webR
 
-Once webR has been [downloaded](downloading.qmd) and made available for use, it
-can be initialised by creating a new instance of the
-[`WebR`](api/js/classes/WebR.WebR.md) class.
+Once webR has been [downloaded](downloading.qmd) and made available for use, it can be initialised by creating a new instance of the [`WebR`](api/js/classes/WebR.WebR.md) class.
 
 ``` javascript
 const webR = new WebR();
 ```
 
-A configuration object of type
-[`WebROptions`](api/js/interfaces/WebR.WebROptions.md) can be passed to the
-above constructor. This optional argument provides access to advanced webR
-settings such as WebAssembly binary URLs, communication channel settings, and
-control over the Emscripten environment that the WebAssembly binaries are to be
-executed in.
+A configuration object of type [`WebROptions`](api/js/interfaces/WebR.WebROptions.md) can be passed to the above constructor. This optional argument provides access to advanced webR settings such as WebAssembly binary URLs, communication channel settings, and control over the Emscripten environment that the WebAssembly binaries are to be executed in.
 
 ### Awaiting initialisation
 
-WebR is ready to use once the promise returned by
-[`WebR.init()`](api/js/classes/WebR.WebR.md#init) resolves. In a modern
-asynchronous JavaScript environment (e.g. within an
-[`async function`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)),
-the
-[`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await)
-keyword can be used to ensure webR has finished starting before continuing.
+WebR is ready to use once the promise returned by [`WebR.init()`](api/js/classes/WebR.WebR.md#init) resolves. In a modern asynchronous JavaScript environment (e.g. within an [`async function`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)), the [`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await) keyword can be used to ensure webR has finished starting before continuing.
 
 ``` javascript
 await webR.init();
@@ -39,11 +26,7 @@ await webR.init();
 
 ### Evaluating R code and retrieving results
 
-This example demonstrates running R code with
-[`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) and getting the result [in
-the form of an `RObject` proxy](objects.qmd). The result is then
-[converted into a JavaScript object](convert-r-to-js.qmd) before being output to
-the JavaScript console.
+This example demonstrates running R code with [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) and getting the result [in the form of an `RObject` proxy](objects.qmd). The result is then [converted into a JavaScript object](convert-r-to-js.qmd) before being output to the JavaScript console.
 
 ``` javascript
 let result = await webR.evalR('rnorm(10,5,1)');
@@ -57,22 +40,13 @@ console.log('Result of running `rnorm` from webR: ', output);
     6.793839154500917, 5.80036239061935, 5.342100112394279,
     5.555879371932934, 4.314676418095938, 5.113592217724398]
 
-The `options` argument of [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr)
-has been designed so that the default is sufficient for general R evaluation.
-However, the default behaviour can be changed by passing an `options` argument
-of type [`EvalROptions`](api/js/interfaces/WebRChan.EvalROptions.md), if
-required.
+The `options` argument of [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) has been designed so that the default is sufficient for general R evaluation. However, the default behaviour can be changed by passing an `options` argument of type [`EvalROptions`](api/js/interfaces/WebRChan.EvalROptions.md), if required.
 
 ### Capturing console output from R code
 
-The following snippet demonstrates using a webR [shelter](objects.qmd#shelter)
-to capture R output during evaluation. This differs from the example above in
-that the output is retrieved in the form of lines of text from the `stdout`
-stream, rather than a reference to an R object [in the form of an `RObject`
-proxy](objects.qmd).
+The following snippet demonstrates using a webR [shelter](objects.qmd#shelter) to capture R output during evaluation. This differs from the example above in that the output is retrieved in the form of lines of text from the `stdout` stream, rather than a reference to an R object [in the form of an `RObject` proxy](objects.qmd).
 
-Once the result is no longer needed, the shelter is purged for the purpose of
-[memory management](objects.qmd#memory-management).
+Once the result is no longer needed, the shelter is purged for the purpose of [memory management](objects.qmd#memory-management).
 
 ``` javascript
 let shelter = await new webR.Shelter();
@@ -92,10 +66,7 @@ shelter.purge();
 
 ### Executing an R function from JavaScript
 
-The following snippet demonstrates executing an R function from JavaScript. A
-reference to the R function is first obtained as an
-[`RFunction`](api/js/modules/RMain.md#rfunction) JavaScript proxy, and then
-executed in a similar way to a normal JavaScript function.
+The following snippet demonstrates executing an R function from JavaScript. A reference to the R function is first obtained as an [`RFunction`](api/js/modules/RMain.md#rfunction) JavaScript proxy, and then executed in a similar way to a normal JavaScript function.
 
 ``` javascript
 let sin = await webR.evalR('sin');
@@ -108,12 +79,9 @@ console.log(result.values);
     Result of running `await sin([1,2,3])`:
     [0.8414709848078965, 0.9092974268256817, 0.1411200080598672]
 
-
 ### Evaluating R code within an environment
 
-The `options` argument of [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr)
-can be used to control how R code is executed. In this example the options
-argument is used to create a new environment for the R code to be evaluated in.
+The `options` argument of [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) can be used to control how R code is executed. In this example the options argument is used to create a new environment for the R code to be evaluated in.
 
 ``` javascript
 let result = await webR.evalR('foo + bar', { env: { foo: 1234, bar: 1 } });
@@ -124,12 +92,9 @@ console.log(output);
 
     1235
 
-
 ### Bind a JavaScript object into the R global environment
 
-The following snippet demonstrates binding a JavaScript object into the R global
-environment. The JavaScript object is automatically converted into an R object,
-and the value is then used in the subsequent R evaluation.
+The following snippet demonstrates binding a JavaScript object into the R global environment. The JavaScript object is automatically converted into an R object, and the value is then used in the subsequent R evaluation.
 
 ``` javascript
 await webR.objs.globalEnv.bind('arr', [2,4,6,8,9]);
@@ -142,10 +107,8 @@ console.log(output);
     [2, 9, 6]
 
 ### Cleaning up after an R object is no longer in use
-R object references in the form of an `RObject` are subject to
-[memory management](objects.qmd#memory-management) and should be destroyed when
-they are no longer required. This signals to R that the object referenced may be
-deleted by the garbage collector.
+
+R object references in the form of an `RObject` are subject to [memory management](objects.qmd#memory-management) and should be destroyed when they are no longer required. This signals to R that the object referenced may be deleted by the garbage collector.
 
 ``` javascript
 let result = await webR.evalR('rnorm(3,5,1)');
@@ -161,10 +124,7 @@ webR.destroy(result);
 
 ### Creating an interactive webR REPL console
 
-The following HTML document loads webR from CDN and creates a simple interactive
-R console. This demonstrates using the
-[`Console`](api/js/classes/WebR.Console.md) class with JavaScript callbacks to
-interface with the built-in R REPL.
+The following HTML document loads webR from CDN and creates a simple interactive R console. This demonstrates using the [`Console`](api/js/classes/WebR.Console.md) class with JavaScript callbacks to interface with the built-in R REPL.
 
 ``` html
 <html>
@@ -206,8 +166,7 @@ interface with the built-in R REPL.
 </html>
 ```
 
-After loading, the resulting web page should present an interactive R console
-similar to the following,
+After loading, the resulting web page should present an interactive R console similar to the following,
 
 ```{=html}
 <div style="border: solid #333 1px; padding: 5px;">
@@ -249,16 +208,13 @@ similar to the following,
 ```
 ### Creating a webR React app using `create-react-app`
 
-A simple React app incorporating webR can be bootstrapped using
-`create-react-app`. First, ensure `create-react-app` is available. For example,
-install it with npm using,
+A simple React app incorporating webR can be bootstrapped using `create-react-app`. First, ensure `create-react-app` is available. For example, install it with npm using,
 
 ``` bash
 npm i -g create-react-app
 ```
 
-Next, bootstrap a new React app with `create-react-app`. Enter the new app
-directory and install webR using npm.
+Next, bootstrap a new React app with `create-react-app`. Enter the new app directory and install webR using npm.
 
 ``` bash
 npx create-react-app my-app
@@ -266,10 +222,7 @@ cd my-app
 npm i @r-wasm/webr
 ```
 
-Next, set up a middleware for the app's Express instance so that the app is
-served with the required [cross-origin isolation headers](serving.qmd). To do
-this, create the following JavaScript file with the path
-`my-app/src/setupProxy.js`,
+Next, set up a middleware for the app's Express instance so that the app is served with the required [cross-origin isolation headers](serving.qmd). To do this, create the following JavaScript file with the path `my-app/src/setupProxy.js`,
 
 ``` javascript
 module.exports = function (app) {
@@ -314,5 +267,4 @@ function App() {
 export default App;
 ```
 
-Test the new app by running `npm start`. The app should automatically open in
-your browser and show the result of evaluating R code.
+Test the new app by running `npm start`. The app should automatically open in your browser and show the result of evaluating R code.

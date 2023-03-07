@@ -6,50 +6,28 @@ toc: true
 
 ## The webR worker thread
 
-WebR initialises by launching a version of R built for WebAssembly in a
-[JavaScript web
-worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API). This
-allows R to perform long running computation without blocking the main browser
-thread. Without this process, the browser page loading webR would freeze
-whenever R is performing work.
+WebR initialises by launching a version of R built for WebAssembly in a [JavaScript web worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API). This allows R to perform long running computation without blocking the main browser thread. Without this process, the browser page loading webR would freeze whenever R is performing work.
 
 ## Communication channels {#webr-channels}
 
-Communication between the main thread and the webR worker thread is managed by
-message passing through a communication channel. The possible channel types are,
+Communication between the main thread and the webR worker thread is managed by message passing through a communication channel. The possible channel types are,
 
 | Name                          | Requirements                                                                                      | Limitations                                                                         |
-|---------------------|-------------------------------|----------------------------|
+|-------------------|----------------------------|-------------------------|
 | `SharedArrayBuffer` (Default) | [Cross-origin Isolation](https://developer.mozilla.org/en-US/docs/Web/API/crossOriginIsolated)    | None                                                                                |
 | `ServiceWorker`               | [JavaScript service workers](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API) | A service worker script must be hosted in the same origin as the page loading webR. |
 
-A communication channel will be automatically selected at startup, defaulting to
-`SharedArrayBuffer` if the page is cross-origin isolated. It is also possible to
-manually select a channel type by setting the
-[`WebROptions.channelType`](api/js/interfaces/WebR.WebROptions.md#channeltype)
-configuration option at startup.
+A communication channel will be automatically selected at startup, defaulting to `SharedArrayBuffer` if the page is cross-origin isolated. It is also possible to manually select a channel type by setting the [`WebROptions.channelType`](api/js/interfaces/WebR.WebROptions.md#channeltype) configuration option at startup.
 
 ::: callout-warning
-Only one JavaScript service worker can be active at at time for a given web
-page. As such, if you plan to use your own service worker in the web application
-making use of webR, then you must either use cross-origin isolation and the
-default `SharedArrayBuffer` communication channel, or integrate the required
-webR communication message passing into your own service worker.
+Only one JavaScript service worker can be active at at time for a given web page. As such, if you plan to use your own service worker in the web application making use of webR, then you must either use cross-origin isolation and the default `SharedArrayBuffer` communication channel, or integrate the required webR communication message passing into your own service worker.
 :::
 
 ## JavaScript promises
 
-Since messages and data are communicated to and from the worker thread
-asynchronously, most of the API methods provided by webR return results through
-[JavaScript
-Promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises)
-rather than returning results directly.
+Since messages and data are communicated to and from the worker thread asynchronously, most of the API methods provided by webR return results through [JavaScript Promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises) rather than returning results directly.
 
-In a modern asynchronous JavaScript environment (e.g. within an
-[`async function`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)),
-the result of a promise can easily be obtained by using the
-[`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await)
-keyword. For example,
+In a modern asynchronous JavaScript environment (e.g. within an [`async function`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)), the result of a promise can easily be obtained by using the [`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await) keyword. For example,
 
 ``` javascript
 await webR.read();
@@ -59,9 +37,7 @@ await webR.read();
 
 ### Alternative use of promises
 
-As an alternative, the `then()` method can be used with JavaScript promises and
-callbacks when not in an asynchronous environment to obtain results without
-requiring the use of `async` or `await`,
+As an alternative, the `then()` method can be used with JavaScript promises and callbacks when not in an asynchronous environment to obtain results without requiring the use of `async` or `await`,
 
 ``` javascript
 webR.read().then((message) => {
@@ -73,45 +49,29 @@ webR.read().then((message) => {
 
 ## Message passing and requests
 
-Communication between the main thread and the webR worker thread is in the form
-of messages sent over an established communication channel. A web application
-making use of webR should send input messages and handle output messages.
+Communication between the main thread and the webR worker thread is in the form of messages sent over an established communication channel. A web application making use of webR should send input messages and handle output messages.
 
-The webR main thread maintains both input and an output queues. All messages
-sent from the main thread to the worker are stored in the input queue until they
-are consumed by the webR worker thread. If the input queue is empty, the worker
-worker thread blocks until an input message has been received.
+The webR main thread maintains both input and an output queues. All messages sent from the main thread to the worker are stored in the input queue until they are consumed by the webR worker thread. If the input queue is empty, the worker worker thread blocks until an input message has been received.
 
-Messages from the worker thread are stored in the output queue on the main
-thread until they are read and consumed by the application loading and using
-webR.
+Messages from the worker thread are stored in the output queue on the main thread until they are read and consumed by the application loading and using webR.
 
 ### Message interface
 
-Communication messages are in the form of a JavaScript object with type
-[`Message`](api/js/interfaces/Message.Message.md), which in general have shape,
+Communication messages are in the form of a JavaScript object with type [`Message`](api/js/interfaces/Message.Message.md), which in general have shape,
 
 ``` javascript
 { type: string, data: any }
 ```
 
-From the main thread, messages can be sent to the webR worker thread using
-[`WebR.write()`](api/js/classes/WebR.WebR.md#write).
+From the main thread, messages can be sent to the webR worker thread using [`WebR.write()`](api/js/classes/WebR.WebR.md#write).
 
-Messages from the worker thread can be obtained from the output queue using
-[`WebR.read()`](api/js/classes/WebR.WebR.md#read) to receive the next message in
-the queue, or [`WebR.flush()`](api/js/classes/WebR.WebR.md#flush) to receive an
-array of all queued output messages. These methods both return promises
-resolving to the output messages.
+Messages from the worker thread can be obtained from the output queue using [`WebR.read()`](api/js/classes/WebR.WebR.md#read) to receive the next message in the queue, or [`WebR.flush()`](api/js/classes/WebR.WebR.md#flush) to receive an array of all queued output messages. These methods both return promises resolving to the output messages.
 
-The [`WebR.close()`](api/js/classes/WebR.WebR.md#close) method closes down the
-communication channel. This stops the webR worker thread and should only be used
-once communication with an R process is no longer required.
+The [`WebR.close()`](api/js/classes/WebR.WebR.md#close) method closes down the communication channel. This stops the webR worker thread and should only be used once communication with an R process is no longer required.
 
 #### Handling messages
 
-A useful pattern for a web application making use of webR is to handle output
-messages in an asynchronous loop,
+A useful pattern for a web application making use of webR is to handle output messages in an asynchronous loop,
 
 ``` javascript
 async run() {
@@ -131,22 +91,15 @@ async run() {
 }
 ```
 
-As an alternative to manually managing messages in this way, the
-[`Console`](api/js/classes/WebR.Console.md) class is available on the main
-[`WebR`](api/js/modules/WebR.md) module which can be used to [implement a simple
-R console using JavaScript callbacks](evaluating.qmd#console).
+As an alternative to manually managing messages in this way, the [`Console`](api/js/classes/WebR.Console.md) class is available on the main [`WebR`](api/js/modules/WebR.md) module which can be used to [implement a simple R console using JavaScript callbacks](evaluating.qmd#console).
 
 ### Input messages
 
 #### Standard input stream
 
-Messages of type `stdin` are sent to the R standard input stream, and a
-convenience function
-[`WebR.writeConsole()`](api/js/classes/WebR.WebR.md#writeconsole) is provided to
-send messages of this type.
+Messages of type `stdin` are sent to the R standard input stream, and a convenience function [`WebR.writeConsole()`](api/js/classes/WebR.WebR.md#writeconsole) is provided to send messages of this type.
 
-Messages of type `stdin` should provide a line of input in the form of a string
-as the message data.
+Messages of type `stdin` should provide a line of input in the form of a string as the message data.
 
 ``` javascript
 { type: 'stdin', data: string }
@@ -154,32 +107,23 @@ as the message data.
 
 #### Package installation
 
-A request to install a package from the [webR binary package
-repository](packages.qmd#downloading-packages-from-a-webr-binary-repository) can
-be made with messages of type `installPackage`, providing the name of the
-requested package to be installed in the form of a string,
+A request to install a package from the [webR binary package repository](packages.qmd#downloading-packages-from-a-webr-binary-repository) can be made with messages of type `installPackage`, providing the name of the requested package to be installed in the form of a string,
 
 ``` javascript
 { type: 'installPackage', data: { name: string } }
 ```
 
-A convenience function
-[`WebR.installPackages()`](api/js/classes/WebR.WebR.md#installpackages) is
-provided, taking an array of package names to be installed.
+A convenience function [`WebR.installPackages()`](api/js/classes/WebR.WebR.md#installpackages) is provided, taking an array of package names to be installed.
 
 #### Interruption
 
-A long running R computation can be interrupted by sending an interruption
-request message using the
-[`WebR.interrupt()`](api/js/classes/WebR.WebR.md#interrupt) method.
+A long running R computation can be interrupted by sending an interruption request message using the [`WebR.interrupt()`](api/js/classes/WebR.WebR.md#interrupt) method.
 
 ### Ouput messages
 
 #### Standard output streams
 
-Messages of type `stdout` or `stderr` are sent to the output queue for each line
-of standard stream output given by R. The line of output is given in the `data`
-property.
+Messages of type `stdout` or `stderr` are sent to the output queue for each line of standard stream output given by R. The line of output is given in the `data` property.
 
 ``` javascript
 { type: 'stdout' | 'stderr', data: string }
@@ -187,9 +131,7 @@ property.
 
 #### Prompt
 
-Messages of type `prompt` are sent to the output queue when R has given a prompt
-and is waiting for input. The prompt string, e.g. `'> '`, is given in the `data`
-property.
+Messages of type `prompt` are sent to the output queue when R has given a prompt and is waiting for input. The prompt string, e.g. `'> '`, is given in the `data` property.
 
 ``` javascript
 { type: 'prompt', data: string }
@@ -197,11 +139,7 @@ property.
 
 #### Plotting with the webR HTML canvas
 
-WebR's version of R built for WebAssembly includes a built in graphics device,
-`canvas()`, designed for drawing using the JavaScript [Canvas
-API](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API). This graphics
-device is implemented by sending messages of type `canvasExec` to the main
-thread for processing.
+WebR's version of R built for WebAssembly includes a built in graphics device, `canvas()`, designed for drawing using the JavaScript [Canvas API](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API). This graphics device is implemented by sending messages of type `canvasExec` to the main thread for processing.
 
 The Canvas API messages are of the form,
 
@@ -209,14 +147,9 @@ The Canvas API messages are of the form,
 { type: 'canvasExec', data: string }
 ```
 
-where the `data` property contains a string that is to be interpreted as a
-single Canvas API call. Canvas message data can be append to any 2D canvas
-context that is available on the main thread, and then executed by constructing
-a JavaScript
-[`Function()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/Function).
+where the `data` property contains a string that is to be interpreted as a single Canvas API call. Canvas message data can be append to any 2D canvas context that is available on the main thread, and then executed by constructing a JavaScript [`Function()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/Function).
 
-For example, for a fixed HTML canvas element with `id="plot-canvas"`, messages
-of type `canvasExec` could be handled by executing,
+For example, for a fixed HTML canvas element with `id="plot-canvas"`, messages of type `canvasExec` could be handled by executing,
 
 ``` javascript
 Function(`
@@ -226,33 +159,18 @@ Function(`
 
 ### Emscripten virtual filesystem
 
-WebR runs under a [virtual file system provided by
-Emscripten](https://emscripten.org/docs/api_reference/Filesystem-API.html).
-Request messages can be sent from the main thread to interact with the virtual
-filesystem (VFS) through the [`WebRFS`](api/js/interfaces/WebR.WebRFS.md)
-interface. This interface is designed to broadly match that of the [Emscripten
-File System API](https://emscripten.org/docs/api_reference/Filesystem-API.html).
+WebR runs under a [virtual file system provided by Emscripten](https://emscripten.org/docs/api_reference/Filesystem-API.html). Request messages can be sent from the main thread to interact with the virtual filesystem (VFS) through the [`WebRFS`](api/js/interfaces/WebR.WebRFS.md) interface. This interface is designed to broadly match that of the [Emscripten File System API](https://emscripten.org/docs/api_reference/Filesystem-API.html).
 
 #### Read a file on the VFS
 
-Get the contents of a file from the Emscripten VFS using the
-[`WebR.FS.readFile()`](api/js/interfaces/WebR.WebRFS.md#readfile) method. This
-method takes the full path name to a file in the form of a string as its
-argument and returns a JavaScript promise, resolving to the contents of the
-requested file provided in the form of a `Uint8Array`.
+Get the contents of a file from the Emscripten VFS using the [`WebR.FS.readFile()`](api/js/interfaces/WebR.WebRFS.md#readfile) method. This method takes the full path name to a file in the form of a string as its argument and returns a JavaScript promise, resolving to the contents of the requested file provided in the form of a `Uint8Array`.
 
 #### Write a file to the VFS
 
-Write a new file to the Emscripten VFS using the
-[`WebR.FS.writeFile()`](api/js/interfaces/WebR.WebRFS.md#writefile) method. In
-addition to the full path name as above, the content of the new file should be
-given as the method's second argument in the form of a `Uint8Array`.
+Write a new file to the Emscripten VFS using the [`WebR.FS.writeFile()`](api/js/interfaces/WebR.WebRFS.md#writefile) method. In addition to the full path name as above, the content of the new file should be given as the method's second argument in the form of a `Uint8Array`.
 
-This method returns a JavaScript promise, resolving once the file has been
-created.
+This method returns a JavaScript promise, resolving once the file has been created.
 
 #### Other VFS operations
 
-Further details for similar virtual filesystem operations, including functions
-for removing files and working with directories, can be found in the
-[`WebRFS`](api/js/interfaces/WebR.WebRFS.md) interface reference.
+Further details for similar virtual filesystem operations, including functions for removing files and working with directories, can be found in the [`WebRFS`](api/js/interfaces/WebR.WebRFS.md) interface reference.

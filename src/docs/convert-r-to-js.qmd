@@ -4,70 +4,44 @@ format: html
 toc: true
 ---
 
-Once webR has been loaded into a web page, objects can be converted into
-JavaScript from the R environment. For example, it is possible perform some
-computation within R and then convert the resulting R object into a JavaScript
-object for use.
+Once webR has been loaded into a web page, objects can be converted into JavaScript from the R environment. For example, it is possible perform some computation within R and then convert the resulting R object into a JavaScript object for use.
 
 ## Converting R objects to JavaScript objects
 
 ::: callout-warning
-At the moment, not all R objects can be converted to JavaScript objects.
-Attempting to convert an unsupported R object will throw a JavaScript exception.
+At the moment, not all R objects can be converted to JavaScript objects. Attempting to convert an unsupported R object will throw a JavaScript exception.
 :::
 
-Explicitly converting an [`RObject`](api/js/classes/RWorker.RObject.md) to
-JavaScript can be done by invoking the
-[`RObject.toJs()`](api/js/classes/RWorker.RObject.md#tojs) method, which returns a
-JavaScript representation of the associated R object. In most cases, JavaScript
-conversion has been implemented by serialising the R object to an
-[`WebRDataTree`](api/js/modules/Tree.md#webrdatatree).
+Explicitly converting an [`RObject`](api/js/classes/RWorker.RObject.md) to JavaScript can be done by invoking the [`RObject.toJs()`](api/js/classes/RWorker.RObject.md#tojs) method, which returns a JavaScript representation of the associated R object. In most cases, JavaScript conversion has been implemented by serialising the R object to an [`WebRDataTree`](api/js/modules/Tree.md#webrdatatree).
 
 ### Serialising R objects
 
-Invoking [`RObject.toTree()`](api/js/classes/RWorker.RObject.md#totree) on an R
-object serialises the object to a JavaScript object of type
-[`WebRDataTree`](api/js/modules/Tree.md#webrdatatree). This type is designed to
-form a tree structure, supporting an unambiguous JavaScript representation for
-potentially nested R objects.
+Invoking [`RObject.toTree()`](api/js/classes/RWorker.RObject.md#totree) on an R object serialises the object to a JavaScript object of type [`WebRDataTree`](api/js/modules/Tree.md#webrdatatree). This type is designed to form a tree structure, supporting an unambiguous JavaScript representation for potentially nested R objects.
 
-Most R objects are serialised to JavaScript objects that contain the following
-properties,
+Most R objects are serialised to JavaScript objects that contain the following properties,
 
 | Property | Value                                                                                                               |
-|-------------------------|------------------------------------------------------|
+|-----------------------|-------------------------------------------------|
 | `type`   | A description of the R object's type as a string.                                                                   |
 | `names`  | An array of strings corresponding to the R object's `names` attribute, or `null` for no names.                      |
 | `values` | An array containing the value(s) associated with the R object. A JavaScript `null` indicates a missing value, `NA`. |
 
-Some R objects, such as lists or environments, contain references to other R
-objects. Such objects are serialised recursively. Any R objects deeper than the
-[maximum depth setting](#serialisation-options) will not be serialised and
-instead included in the `values` array as an
-[`RObject`](api/js/classes/RWorker.RObject.md). By default, R objects are
-serialised with infinite maximum depth.
+Some R objects, such as lists or environments, contain references to other R objects. Such objects are serialised recursively. Any R objects deeper than the [maximum depth setting](#serialisation-options) will not be serialised and instead included in the `values` array as an [`RObject`](api/js/classes/RWorker.RObject.md). By default, R objects are serialised with infinite maximum depth.
 
-An R `NULL` object is serialised to a JavaScript object of type
-[`WebRDataTreeNull`](api/js/modules/Tree.md#webrdatatreenull). This type does
-not include the `names` or `values` properties.
+An R `NULL` object is serialised to a JavaScript object of type [`WebRDataTreeNull`](api/js/modules/Tree.md#webrdatatreenull). This type does not include the `names` or `values` properties.
 
 ::: callout-warning
-The structure of serialised R objects may be updated in future versions of webR,
-expanding to include more R object attributes. As such, compatibility of
-serialised R objects between versions of webR is not guaranteed.
+The structure of serialised R objects may be updated in future versions of webR, expanding to include more R object attributes. As such, compatibility of serialised R objects between versions of webR is not guaranteed.
 :::
 
 #### Serialisation options {#serialisation-options}
 
-An `options` argument of type
-[`ToTreeOptions`](api/js/interfaces/RWorker.ToTreeOptions.md) can be provided to
-the [RObject.toTree()](api/js/classes/RWorker.RObject.md#totree) method for
-fine-grained control over how objects are serialised.
+An `options` argument of type [`ToTreeOptions`](api/js/interfaces/RWorker.ToTreeOptions.md) can be provided to the [RObject.toTree()](api/js/classes/RWorker.RObject.md#totree) method for fine-grained control over how objects are serialised.
 
 The following options are available,
 
 | Property | Description                                                                            |
-|----------------------------------|----------------------------------------------|
+|-------------------------------|-----------------------------------------|
 | `depth`  | How deep should nested R objects be serialised? A value of 0 indicates infinite depth. |
 
 #### Example: Serialising an R double atomic vector
@@ -85,12 +59,7 @@ await primes.toJs()
 
 ### Other R object conversion methods
 
-[Subclasses of `RObject`](api/js/modules/RWorker.md#classes) provide additional
-methods to convert objects into a JavaScript representation. For example, the
-[`toTypedArray()`](api/js/classes/RWorker.RDouble.md#totypedarray) method can be
-invoked on atomic vectors, such as an
-[`RDouble`](api/js/classes/RWorker.RDouble.md), to access a copy of the raw
-buffer as it exists in WebAssembly memory.
+[Subclasses of `RObject`](api/js/modules/RWorker.md#classes) provide additional methods to convert objects into a JavaScript representation. For example, the [`toTypedArray()`](api/js/classes/RWorker.RDouble.md#totypedarray) method can be invoked on atomic vectors, such as an [`RDouble`](api/js/classes/RWorker.RDouble.md), to access a copy of the raw buffer as it exists in WebAssembly memory.
 
 ``` javascript
 const primes = await webR.evalR('c(2,3,5,7,11,13)')
@@ -100,28 +69,19 @@ await primes.toTypedArray()
     Float64Array(6) [2, 3, 5, 7, 11, 13, buffer: ArrayBuffer(48), ... ]
 
 ::: callout-note
-When converting atomic vectors to JavaScript values, missing values of `NA` are
-represented as values of `null` in the resulting JavaScript representation. This
-conversion process may have a performance cost for very large vectors.
+When converting atomic vectors to JavaScript values, missing values of `NA` are represented as values of `null` in the resulting JavaScript representation. This conversion process may have a performance cost for very large vectors.
 
-When using `toTypedArray()`, however, a copy of the raw memory buffer is
-returned. In this case the raw sentinel values will be preserved in the case of
-missing values.
+When using `toTypedArray()`, however, a copy of the raw memory buffer is returned. In this case the raw sentinel values will be preserved in the case of missing values.
 :::
 
 ## Cached R objects
 
-[`WebR.objs`](api/js/classes/WebR.WebR.md#objs) contains named references to
-long-living R objects in the form of
-[`RObject`](api/js/modules/RMain.md#robject) proxies. `WebR.objs` is
-automatically populated at initialisation time, and its properties may be safely
-accessed once the promise returned by
-[`WebR.init()`](api/js/classes/WebR.WebR.md#init) resolves.
+[`WebR.objs`](api/js/classes/WebR.WebR.md#objs) contains named references to long-living R objects in the form of [`RObject`](api/js/modules/RMain.md#robject) proxies. `WebR.objs` is automatically populated at initialisation time, and its properties may be safely accessed once the promise returned by [`WebR.init()`](api/js/classes/WebR.WebR.md#init) resolves.
 
 `WebR.objs` contains references to the following R objects,
 
 | Property    | JavaScript Type                                          | R object                 |
-|---------------------|--------------------------------------|---------------------|
+|-------------------|----------------------------------|-------------------|
 | `null`      | [`RNull`](api/js/classes/RWorker.RNull.html)             | `NULL`                   |
 | `true`      | [`RLogical`](api/js/classes/RWorker.RLogical.md)         | `TRUE`                   |
 | `false`     | [`RLogical`](api/js/classes/RWorker.RLogical.md)         | `FALSE`                  |
@@ -131,31 +91,18 @@ accessed once the promise returned by
 
 ## Additional R object proxy hooks
 
-When an [`RObject`](api/js/modules/RMain.md#robject) proxy is created, certain
-so-called hooks are put in place. In addition to the hook that forwards class
-method invocation to the webR worker thread, the following hooks provide
-additional R object functionality.
+When an [`RObject`](api/js/modules/RMain.md#robject) proxy is created, certain so-called hooks are put in place. In addition to the hook that forwards class method invocation to the webR worker thread, the following hooks provide additional R object functionality.
 
 ### Executing R functions from JavaScript {#exec-r}
 
-At the moment, R functions cannot be directly converted into JavaScript
-functions. However, references to R functions can be executed from JavaScript in
-a limited way. It is possible to return an R function or closure with
-[`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) and it will be made
-available as an [`RFunction`](api/js/modules/RMain.md#rfunction) proxy.
+At the moment, R functions cannot be directly converted into JavaScript functions. However, references to R functions can be executed from JavaScript in a limited way. It is possible to return an R function or closure with [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) and it will be made available as an [`RFunction`](api/js/modules/RMain.md#rfunction) proxy.
 
-Rather than attempting to convert an `RFunction` to JavaScript, the R
-computation associated with the object can be executed by either,
+Rather than attempting to convert an `RFunction` to JavaScript, the R computation associated with the object can be executed by either,
 
--   Invoking the [`RFunction.exec()`](api/js/classes/RWorker.RFunction.md#exec)
-    method on the `RFunction` object.
--   Applying an `RFunction` proxy as if it were a normal JavaScript function,
-    using `()`.
+-   Invoking the [`RFunction.exec()`](api/js/classes/RWorker.RFunction.md#exec) method on the `RFunction` object.
+-   Applying an `RFunction` proxy as if it were a normal JavaScript function, using `()`.
 
-In either case, both JavaScript or [`RObject`](api/js/modules/RMain.md#robject)
-proxies can be passed as arguments to the associated R function. In the case of
-JavaScript values they are [converted to R objects](convert-r-to-js.qmd) before
-function execution.
+In either case, both JavaScript or [`RObject`](api/js/modules/RMain.md#robject) proxies can be passed as arguments to the associated R function. In the case of JavaScript values they are [converted to R objects](convert-r-to-js.qmd) before function execution.
 
 ``` javascript
 const fn = await webR.evalR('function(x) { 2 * x }');
@@ -165,10 +112,7 @@ await result.toArray()
 
     [2, 4, 6]
 
-The result of the R computation is automatically converted back into a
-JavaScript representation using
-[`RObject.toJs()`](api/js/classes/RWorker.RObject.md#tojs) if the
-`RFunction` proxy was executed using `()`.
+The result of the R computation is automatically converted back into a JavaScript representation using [`RObject.toJs()`](api/js/classes/RWorker.RObject.md#tojs) if the `RFunction` proxy was executed using `()`.
 
 ``` javascript
 const sin = await webR.evalR('sin');
@@ -183,11 +127,7 @@ await sin([1,2,3]);
 
 ### Looping over R vectors
 
-[`RObject`](api/js/modules/RMain.md#robject) proxies are async iterable for
-objects with a `length` property. As such, R vectors can be looped over using
-the JavaScript
-[`for await...of`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of)
-syntax. For example,
+[`RObject`](api/js/modules/RMain.md#robject) proxies are async iterable for objects with a `length` property. As such, R vectors can be looped over using the JavaScript [`for await...of`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of) syntax. For example,
 
 ``` javascript
 const list = await webR.evalR('list(2,4,6,"abc")')

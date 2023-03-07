@@ -4,28 +4,19 @@ format: html
 toc: true
 ---
 
-WebR is a version of the statistical language [R](https://www.r-project.org/)
-compiled for the browser and [Node.js](https://nodejs.org/en/) using
-[WebAssembly](https://webassembly.org), via
-[Emscripten](https://emscripten.org/).
+WebR is a version of the statistical language [R](https://www.r-project.org/) compiled for the browser and [Node.js](https://nodejs.org/en/) using [WebAssembly](https://webassembly.org), via [Emscripten](https://emscripten.org/).
 
-WebR makes it possible to run R code in the browser without the need for an R
-server to execute the code: the R interpreter runs directly on the user's
-machine. Several R packages have also been ported for use with webR, and can be
-[loaded in the usual way](packages.qmd) using the `library()` function.
+WebR makes it possible to run R code in the browser without the need for an R server to execute the code: the R interpreter runs directly on the user's machine. Several R packages have also been ported for use with webR, and can be [loaded in the usual way](packages.qmd) using the `library()` function.
 
 ::: callout-warning
-The webR project is under active development, and the API is subject to change.
-Be aware that if you are using the latest build of webR the contents of this
-documentation might be out of date.
+The webR project is under active development, and the API is subject to change. Be aware that if you are using the latest build of webR the contents of this documentation might be out of date.
 :::
 
 ## Try it out
 
 ### WebR REPL
 
-Try a [demo of the webR REPL](https://webr.r-wasm.org/latest/) directly in your web
-browser, no installation required!
+Try a [demo of the webR REPL](https://webr.r-wasm.org/latest/) directly in your web browser, no installation required!
 
 ### Interactive R code editor
 

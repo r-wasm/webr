@@ -6,9 +6,7 @@ toc: true
 
 ## Download from npm
 
-The webR JavaScript loader has been published as an [npm
-package](https://www.npmjs.com/package/@r-wasm/webr) so that it can be
-bundled as part of your npm managed JavaScript or TypeScript project.
+The webR JavaScript loader has been published as an [npm package](https://www.npmjs.com/package/@r-wasm/webr) so that it can be bundled as part of your npm managed JavaScript or TypeScript project.
 
 Install the package by running,
 
@@ -16,8 +14,7 @@ Install the package by running,
 npm i @r-wasm/webr
 ```
 
-Then import the [`WebR`](api/js/classes/WebR.WebR.md) class into your project
-and initialise a new instance of webR.
+Then import the [`WebR`](api/js/classes/WebR.WebR.md) class into your project and initialise a new instance of webR.
 
 ``` javascript
 import { WebR } from '@r-wasm/webr';
@@ -26,18 +23,11 @@ const webR = new WebR();
 await webR.init();
 ```
 
-By default, webR will download the WebAssembly R binaries from CDN at start-up.
-If required, this behaviour can be overridden by self-hosting the contents of a
-[webR release package](#download-release) (or [building from
-source](#build-from-source)) and providing an alternative base URL for the
-[`WebROptions.WEBR_URL`](api/js/interfaces/WebR.WebROptions.md#webr_url)
-configuration setting.
+By default, webR will download the WebAssembly R binaries from CDN at start-up. If required, this behaviour can be overridden by self-hosting the contents of a [webR release package](#download-release) (or [building from source](#build-from-source)) and providing an alternative base URL for the [`WebROptions.WEBR_URL`](api/js/interfaces/WebR.WebROptions.md#webr_url) configuration setting.
 
 ## Download from CDN
 
-To dynamically import webR in JavaScript, directly from CDN, first import the
-[`WebR`](api/js/classes/WebR.WebR.md) class using the CDN URL. Once the promise
-resolves initialise a new instance of webR.
+To dynamically import webR in JavaScript, directly from CDN, first import the [`WebR`](api/js/classes/WebR.WebR.md) class using the CDN URL. Once the promise resolves initialise a new instance of webR.
 
 ``` javascript
 import('https://webr.r-wasm.org/latest/webr.mjs').then(
@@ -48,22 +38,14 @@ import('https://webr.r-wasm.org/latest/webr.mjs').then(
 );
 ```
 
-Replace `latest` with a fixed version string, such as `v0.1.0`, if you would
-like to maintain a fixed version of webR.
+Replace `latest` with a fixed version string, such as `v0.1.0`, if you would like to maintain a fixed version of webR.
 
 ## Download release package {#download-release}
 
-Packages for released versions of webR can be downloaded from the [releases
-section](https://github.com/georgestagg/webR/releases) of the webR source
-repository. Release packages contain both the webR JavaScript loader and the R
-WebAssembly binaries.
+Packages for released versions of webR can be downloaded from the [releases section](https://github.com/georgestagg/webR/releases) of the webR source repository. Release packages contain both the webR JavaScript loader and the R WebAssembly binaries.
 
-The release package contents should be self-hosted on a web server
-that you control, and then the webR JavaScript loader can be imported in a
-similar way to above.
+The release package contents should be self-hosted on a web server that you control, and then the webR JavaScript loader can be imported in a similar way to above.
 
 ## Build from source {#build-from-source}
 
-It is possible to build webR from source by following the build instructions at
-[the webR source repository](https://github.com/georgestagg/webR). Building from
-source creates a customised webR release package.
+It is possible to build webR from source by following the build instructions at [the webR source repository](https://github.com/georgestagg/webR). Building from source creates a customised webR release package.
