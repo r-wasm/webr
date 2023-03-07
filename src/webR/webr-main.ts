@@ -411,6 +411,7 @@ export class Shelter {
   RString!: ReturnType<typeof newRClassProxy<typeof RWorker.RString, RString>>;
   RCall!: ReturnType<typeof newRClassProxy<typeof RWorker.RCall, RCall>>;
 
+  /** @internal */
   constructor(chan: ChannelMain) {
     this.#chan = chan;
   }
