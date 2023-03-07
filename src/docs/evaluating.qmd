@@ -43,7 +43,7 @@ automatically manage returned R objects using a webR
 
 ### Returning JavaScript values when evaluating R code
 
-A selection of convenience methods are available that return the result of
+A selection of convenience methods return the result of
 evaluating R code as a promise resolving to a JavaScript object, rather than
 an `RObject` reference. The benefit is that since the returned object is of a
 raw JavaScript type, it does not need to be memory managed like an `RObject`
