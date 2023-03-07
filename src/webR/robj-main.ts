@@ -30,7 +30,7 @@ export type RFunction = RProxy<RWorker.RFunction> & ((...args: unknown[]) => Pro
  * RObject is the user facing interface to R objects.
  *
  * @param {any} value The object to test.
- * @return {boolean} True if the object is an instance of an RObject.
+ * @returns {boolean} True if the object is an instance of an RObject.
  */
 export function isRObject(value: any): value is RObject {
   return (
@@ -45,7 +45,7 @@ export function isRObject(value: any): value is RObject {
  * Test for an RFunction instance
  *
  * @param {any} value The object to test.
- * @return {boolean} True if the object is an instance of an RFunction.
+ * @returns {boolean} True if the object is an instance of an RFunction.
  */
 export function isRFunction(value: any): value is RFunction {
   return Boolean(isRObject(value) && value._payload.obj.methods?.includes('exec'));

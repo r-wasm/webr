@@ -40,7 +40,8 @@ export interface ConsoleCallbacks {
 export class Console {
   /** The supporting instance of webR */
   webR: WebR;
-  /** A HTML canvas element
+  /**
+   * A HTML canvas element
    *
    * The canvas graphics device writes to this element by default. Undefined
    * when HTML canvas is unsupported.

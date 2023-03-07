@@ -117,6 +117,7 @@ function targetAsyncIterator(chan: ChannelMain, proxy: RProxy<RWorker.RObject>) 
  *
  * When the optional payload argument has not been provided, an
  * {@link RWorker.RObject} static method is called.
+ * @internal
  */
 export function targetMethod(chan: ChannelMain, prop: string): any;
 export function targetMethod(chan: ChannelMain, prop: string, payload: WebRPayloadPtr): any;
@@ -189,7 +190,7 @@ async function newRObject(
  *
  * @param {ChannelMain} chan The current main thread communication channel.
  * @param {WebRPayloadPtr} payload A webR payload referencing an R object.
- * @return {RProxy<RWorker.RObject>} An {@link RObject} corresponding to the
+ * @returns {RProxy<RWorker.RObject>} An {@link RObject} corresponding to the
  * referenced R object.
  */
 export function newRProxy(chan: ChannelMain, payload: WebRPayloadPtr): RProxy<RWorker.RObject> {
@@ -226,9 +227,8 @@ export function newRProxy(chan: ChannelMain, payload: WebRPayloadPtr): RProxy<RW
  * @param {ShelterID} shelter The shelter ID to protect returned objects with.
  * @param {(RType | 'object')} objType The R object type, or `'object'` for the
  * generic {@link RWorker.RObject} class.
- * @return {RWorker.RObject} A proxy to the R object class corresponding to the
+ * @returns {RWorker.RObject} A proxy to the R object class corresponding to the
  * given value of the `objType` argument.
- *
  * @typeParam T The type for the proxied class constructor argument.
  * @typeParam R The type to be returned from the proxied class constructor.
  */

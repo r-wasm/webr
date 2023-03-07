@@ -34,6 +34,7 @@
     "hideBreadcrumbs": true,
     "githubPages": false,
     "excludePrivate": true,
+    "excludeInternal": true,
   },
   "include": ["**/*.ts"],
 }
