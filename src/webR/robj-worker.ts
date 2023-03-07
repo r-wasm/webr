@@ -170,10 +170,12 @@ export class RObject extends RObjectBase {
     return `RObject:${this.type()}`;
   }
 
+  /** @internal */
   static getPersistentObject(prop: keyof typeof objs): unknown {
     return objs[prop];
   }
 
+  /** @internal */
   getPropertyValue(prop: keyof this): unknown {
     return this[prop];
   }
@@ -296,6 +298,7 @@ export class RObject extends RObjectBase {
     }
   }
 
+  /** @internal */
   static getMethods(obj: RObject) {
     const props = new Set<string>();
     let cur: unknown = obj;
