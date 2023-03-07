@@ -25,7 +25,6 @@
       "webR/robj.ts",
       "webR/robj-main.ts",
       "webR/robj-worker.ts",
-      "webR/tree.ts",
       "webR/webr-main.ts",
       "webR/webr-chan.ts"
     ],

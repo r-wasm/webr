@@ -5,11 +5,11 @@
 import { Module } from './emscripten';
 import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw, WebRDataScalar } from './robj';
 import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
+import { isWebRDataJs, WebRDataJs, WebRDataJsAtomic, WebRDataJsNode } from './robj';
+import { WebRDataJsNull, WebRDataJsString, WebRDataJsSymbol } from './robj';
 import { envPoke, parseEvalBare, protect, protectInc, unprotect } from './utils-r';
 import { protectWithIndex, reprotect, unprotectIndex, safeEval } from './utils-r';
 import { ShelterID, isShelterID } from './webr-chan';
-import { isWebRDataJs, WebRDataJs, WebRDataJsAtomic, WebRDataJsNode } from './tree';
-import { WebRDataJsNull, WebRDataJsString, WebRDataJsSymbol } from './tree';
 
 export type RHandle = RObject | RPtr;
 
