@@ -9,7 +9,7 @@ import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadRaw, WebRPayloadPtr, WebRPayloadWorker, isWebRPayloadPtr } from './payload';
 import { RObject, isRObject, REnvironment, RList, getRWorkerClass } from './robj-worker';
 import { RCharacter, RString, keep, destroy, purge, shelters } from './robj-worker';
-import { RLogical, RInteger, RDouble } from './robj-worker';
+import { RLogical, RInteger, RDouble, initPersistentObjects, objs } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
 import { protect, protectInc, unprotect, parseEvalBare, UnwindProtectException, safeEval } from './utils-r';
 import { generateUUID } from './chan/task-common';
@@ -519,7 +519,7 @@ function captureR(code: string, options: EvalROptions = {}): RList {
   try {
     const _options: Required<EvalROptions> = Object.assign(
       {
-        env: RObject.globalEnv,
+        env: objs.globalEnv,
         captureStreams: true,
         captureConditions: true,
         withAutoprint: false,
@@ -537,10 +537,10 @@ function captureR(code: string, options: EvalROptions = {}): RList {
       throw new Error('Attempted to evaluate R code with invalid environment object');
     }
 
-    const tPtr = RObject.true.ptr;
-    const fPtr = RObject.false.ptr;
+    const tPtr = objs.true.ptr;
+    const fPtr = objs.false.ptr;
 
-    const fn = parseEvalBare('webr::eval_r', RObject.baseEnv);
+    const fn = parseEvalBare('webr::eval_r', objs.baseEnv);
     protectInc(fn, prot);
 
     const codeObj = new RCharacter(code);
@@ -655,6 +655,7 @@ function init(config: Required<WebROptions>) {
   Module.webr = {
     UnwindProtectException: UnwindProtectException,
     resolveInit: () => {
+      initPersistentObjects();
       chan?.setInterrupt(Module._Rf_onintr);
       Module.setValue(Module._R_Interactive, _config.interactive, '*');
       evalR(`options(webr_pkg_repos="${_config.PKG_URL}")`);

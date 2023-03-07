@@ -222,12 +222,12 @@ export class WebR {
     this.RCall = this.globalShelter.RCall;
 
     this.objs = {
-      baseEnv: (await this.RObject.getStaticPropertyValue('baseEnv')) as REnvironment,
-      globalEnv: (await this.RObject.getStaticPropertyValue('globalEnv')) as REnvironment,
-      null: (await this.RObject.getStaticPropertyValue('null')) as RNull,
-      true: (await this.RObject.getStaticPropertyValue('true')) as RLogical,
-      false: (await this.RObject.getStaticPropertyValue('false')) as RLogical,
-      na: (await this.RObject.getStaticPropertyValue('logicalNA')) as RLogical,
+      baseEnv: (await this.RObject.getPersistentObject('baseEnv')) as REnvironment,
+      globalEnv: (await this.RObject.getPersistentObject('globalEnv')) as REnvironment,
+      null: (await this.RObject.getPersistentObject('null')) as RNull,
+      true: (await this.RObject.getPersistentObject('true')) as RLogical,
+      false: (await this.RObject.getPersistentObject('false')) as RLogical,
+      na: (await this.RObject.getPersistentObject('na')) as RLogical,
     };
 
     return init;
