@@ -77,6 +77,28 @@ export type RProxy<T extends RWorker.RObject> = { [P in Methods<T>]: RProxify<T[
   [Symbol.asyncIterator](): AsyncGenerator<RProxy<RWorker.RObject>, void, unknown>;
 };
 
+/**
+ * Create a proxy constructor based on a {@link RWorker.RObject} class.
+ *
+ * The class constructors and static methods of the given subclass of
+ * {@link RWorker.RObject} are proxied, and the proxied constructor returns a
+ * promise to an R object of a given {@link RProxy} type.
+ *
+ * @typeParam T The type of the {@link RWorker.RObject} class to be proxied.
+ * @typeParam R The type to be returned from the proxied class constructor.
+ */
+export type ProxyConstructor<T,R> = (T extends abstract new (...args: infer U) => any
+    ? {
+        new (
+          ...args: {
+            [V in keyof U]: U[V];
+          }
+        ): Promise<R>;
+      }
+    : never) & {
+    [P in Methods<typeof RWorker.RObject>]: RProxify<(typeof RWorker.RObject)[P]>;
+  };
+
 /* The empty function is used as base when we are proxying RFunction objects.
  * This enables function call semantics on the proxy using the apply hook.
  */
@@ -217,19 +239,15 @@ export function newRProxy(chan: ChannelMain, payload: WebRPayloadPtr): RProxy<RW
 }
 
 /**
- * Proxy an R object class.
- *
- * The class constructors and static methods of {@link RWorker.RObject} and its
- * subclasses are proxied, enabling access to R object construction from the
- * main thread.
+ * Proxy an {@link RWorker.RObject} class.
  *
  * @param {ChannelMain} chan The current main thread communication channel.
  * @param {ShelterID} shelter The shelter ID to protect returned objects with.
  * @param {(RType | 'object')} objType The R object type, or `'object'` for the
  * generic {@link RWorker.RObject} class.
- * @returns {RWorker.RObject} A proxy to the R object class corresponding to the
- * given value of the `objType` argument.
- * @typeParam T The type for the proxied class constructor argument.
+ * @returns {ProxyConstructor} A proxy to the R object subclass corresponding to
+ * the given value of the `objType` argument.
+ * @typeParam T The type of the {@link RWorker.RObject} class to be proxied.
  * @typeParam R The type to be returned from the proxied class constructor.
  */
 export function newRClassProxy<T, R>(
@@ -242,15 +260,5 @@ export function newRClassProxy<T, R>(
     get: (_, prop: string | number | symbol) => {
       return targetMethod(chan, prop.toString());
     },
-  }) as unknown as (T extends abstract new (...args: infer U) => any
-    ? {
-        new (
-          ...args: {
-            [V in keyof U]: U[V];
-          }
-        ): Promise<R>;
-      }
-    : never) & {
-    [P in Methods<typeof RWorker.RObject>]: RProxify<(typeof RWorker.RObject)[P]>;
-  };
+  }) as unknown as ProxyConstructor<T,R>;
 }
