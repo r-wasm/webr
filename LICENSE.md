@@ -16,7 +16,7 @@ The webR distribution binaries also contain copies of several of the above softw
 Other software in this repository, such as the webR environment setup scripts, build scripts, and additional application software such as the webR REPL are distributed under the MIT Licence (copied below) unless stated otherwise in the source code files.
 
 ## The MIT Licence
-Copyright 2022
+Copyright (c) 2023 webR authors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

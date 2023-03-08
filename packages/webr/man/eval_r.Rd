@@ -9,26 +9,29 @@ eval_r(
   conditions = TRUE,
   streams = FALSE,
   autoprint = FALSE,
-  handlers = TRUE
+  handlers = TRUE,
+  env = parent.frame()
 )
 }
 \arguments{
 \item{code}{The R code to evaluate.}
 
-\item{conditions}{If `TRUE`, capture and return conditions raised during
+\item{conditions}{If \code{TRUE}, capture and return conditions raised during
 execution.}
 
-\item{streams}{If `TRUE`, capture and return the `stdout` and `stderr`
+\item{streams}{If \code{TRUE}, capture and return the \code{stdout} and \code{stderr}
 streams.}
 
-\item{autoprint}{If `TRUE`, code automatically prints as if it were
+\item{autoprint}{If \code{TRUE}, code automatically prints as if it were
 written at an R console.}
 
-\item{handlers}{If `TRUE`, execute the R code using a [tryCatch], with
+\item{handlers}{If \code{TRUE}, execute the R code using a \link{tryCatch}, with
 handlers in place.}
+
+\item{env}{The environment in which to evaluate.}
 }
 \description{
 This function evaluates the provided R code with various settings in place
 to configure behavior. The function is intended to be used by the webR
-`evalR` API, rather than invoked directly by the end user.
+\code{evalR} API, rather than invoked directly by the end user.
 }

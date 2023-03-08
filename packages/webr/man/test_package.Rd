@@ -14,6 +14,6 @@ test_package(pkg)
 }
 \description{
 This function runs R package examples and tests. The implementation is based
-on [tools::testInstalledPackage()], with modifications for webR where the
-[system()] function cannot be used.
+on \code{\link[tools:testInstalledPackage]{tools::testInstalledPackage()}}, with modifications for webR where the
+\code{\link[=system]{system()}} function cannot be used.
 }

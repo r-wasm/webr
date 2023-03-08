@@ -28,6 +28,10 @@
     {
       "name": "Lionel Henry",
       "email": "lionel@posit.co"
+    },
+    {
+      "name": "Posit Software, PBC",
+      "url": "https://posit.co/"
     }
   ],
   "files": [
@@ -96,7 +100,7 @@
   },
   "scripts": {
     "build": "node ./esbuild.js && tsc --emitDeclarationOnly",
-    "prepack": "cp ../LICENCE.md ../README.md .",
-    "postpack": "rm LICENCE.md README.md"
+    "prepack": "cp ../LICENSE.md ../README.md .",
+    "postpack": "rm LICENSE.md README.md"
   }
 }

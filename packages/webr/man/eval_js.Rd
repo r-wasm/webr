@@ -17,7 +17,7 @@ This function evaluates the given character string as JavaScript code. The
 result is returned as an integer.
 }
 \details{
-The JavaScript code is evaluated using `emscripten_run_script_int` from the
+The JavaScript code is evaluated using \code{emscripten_run_script_int} from the
 Emscripten C API. In the event of a JavaScript exception an R error condition
 will be raised with the exception message.
 
