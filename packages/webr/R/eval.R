@@ -14,6 +14,7 @@
 #' written at an R console.
 #' @param handlers If `TRUE`, execute the R code using a [tryCatch], with
 #' handlers in place.
+#' @param env The environment in which to evaluate.
 #'
 #' @export
 #' @useDynLib webr, .registration = TRUE
