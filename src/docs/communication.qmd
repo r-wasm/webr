@@ -91,7 +91,7 @@ async run() {
 }
 ```
 
-As an alternative to manually managing messages in this way, the [`Console`](api/js/classes/WebR.Console.md) class is available on the main [`WebR`](api/js/modules/WebR.md) module which can be used to [implement a simple R console using JavaScript callbacks](evaluating.qmd#console).
+As an alternative to manually managing messages in this way, the [`Console`](api/js/classes/WebR.Console.md) class is available on the main [`WebR`](api/js/modules/WebR.md) module which can be used to [implement a simple R console using JavaScript callbacks](#console).
 
 ### Input messages
 
@@ -174,3 +174,26 @@ This method returns a JavaScript promise, resolving once the file has been creat
 #### Other VFS operations
 
 Further details for similar virtual filesystem operations, including functions for removing files and working with directories, can be found in the [`WebRFS`](api/js/interfaces/WebR.WebRFS.md) interface reference.
+
+## Setting up an R REPL with `Console` {#console}
+
+The [`Console`](api/js/classes/WebR.Console.md) class, in combination with JavaScript callback functions, can be used as an alternative way to use the R REPL without directly issuing messages to the webR communication channel.
+
+The issuing of input messages and the consumption of output messages over the communication channel between the webR worker thread and the main thread is handled by [`Console`](api/js/classes/WebR.Console.md), invoking the relevant callbacks provided.
+
+The [`Console`](api/js/classes/WebR.Console.md) class constructor takes two arguments,
+
+-   `callbacks` - A list of webR console callbacks to be used for this console.
+-   `options` - The startup options to be provided to webR.
+
+The [`Console.run()`](api/js/classes/WebR.Console.md#run) method is used to start the R console. Callback functions `stdout` and `stderr` are called with a single line of output as the first argument when the R REPL produces standard stream output. The default implementation of `stdout` and `stderr` writes to the console using `console.log` and `console.error`.
+
+R code can be sent as input by calling the [`Console.stdin()`](api/js/classes/WebR.Console.md#stdin) method.
+
+A long running R computation can be interrupted by calling the [`Console.interrupt()`](api/js/classes/WebR.Console.md#interrupt) method.
+
+The `prompt` callback function is called when webR produces a prompt at the REPL and is awaiting user input. The prompt character (usually `>` or `+`) is given as the first argument to the callback function. The default implementation of `prompt` shows a JavaScript prompt asking the user for input, and then sends the user input to `stdin`.
+
+The `canvasExec` callback function is called when webR writes plots to the built-in HTML canvas graphics device. Once the default HTML canvas has been written to (e.g. by plotting something in R), the HTML canvas element can be accessed with the [`Console.canvas`](api/js/classes/WebR.Console.html#canvas) instance property.
+
+See the [Example Usage](examples.qmd) page to see a worked example of a HTML web page loading webR and starting a `Console`, creating an interactive R REPL directly in the page.
