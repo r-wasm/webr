@@ -1,6 +1,6 @@
 {
   "name": "@r-wasm/webr",
-  "version": "0.1.0-alpha.18",
+  "version": "0.1.0",
   "description": "The statistical programming langauge R compiled into WASM for use in a web browser and node.",
   "keywords": [
     "webR",
