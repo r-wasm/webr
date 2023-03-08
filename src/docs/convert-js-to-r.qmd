@@ -22,9 +22,9 @@ await d.toArray();
 
     [2, 4, 6]
 
-In addition to explicitly constructing an R object with `await new`, new R object construction is also performed automatically when [executing R functions with JavaScript arguments](convert-r-to-js.qmd#exec-r).
+Newly created `RObject` references are protected by the [default shelter](objects.qmd#the-default-shelter) unless [otherwise specified](objects.html#working-with-multiple-shelters). It is your responsibility to call the `destroy()` method to release these objects.
 
-Newly created `RObject` references are protected by the [default shelter](objects.qmd#the-default-shelter) unless [otherwise specified](objects.html#working-with-multiple-shelters).
+Sometimes webR constructs new R objects implicitly behind the scenes. For instance new R objects are constructed automatically when [executing R functions with JavaScript arguments](convert-r-to-js.qmd#exec-r). In this case memory management is in the hands of webR and doesn't need intervention on your part.
 
 ::: callout-warning
 `RObject` references that have been created from JavaScript objects are subject to R [memory management](objects.qmd#memory-management) and should be destroyed when no longer in use.

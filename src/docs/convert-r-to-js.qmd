@@ -91,16 +91,15 @@ When using `toTypedArray()`, however, a copy of the raw memory buffer is returne
 
 ## Additional R object proxy hooks
 
-When an [`RObject`](api/js/modules/RMain.md#robject) proxy is created, certain so-called hooks are put in place. In addition to the hook that forwards class method invocation to the webR worker thread, the following hooks provide additional R object functionality.
+The [`RObject`](api/js/modules/RMain.md#robject) proxies are implemented with so-called hooks, for instance a hook that forwards class method invocation to the webR worker thread. The following hooks provide additional R object functionality.
 
 ### Executing R functions from JavaScript {#exec-r}
 
-At the moment, R functions cannot be directly converted into JavaScript functions. However, references to R functions can be executed from JavaScript in a limited way. It is possible to return an R function or closure with [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) and it will be made available as an [`RFunction`](api/js/modules/RMain.md#rfunction) proxy.
-
-Rather than attempting to convert an `RFunction` to JavaScript, the R computation associated with the object can be executed by either,
+At the moment, R functions cannot be directly converted into JavaScript functions. However, references to R functions can be executed from JavaScript in a limited way. It is possible to return an R function or closure with [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) and wrap it as an [`RFunction`](api/js/modules/RMain.md#rfunction) proxy. The R function represented by the proxy can be called by either:
 
 -   Invoking the [`RFunction.exec()`](api/js/classes/RWorker.RFunction.md#exec) method on the `RFunction` object.
--   Applying an `RFunction` proxy as if it were a normal JavaScript function, using `()`.
+
+-   Using `()`, i.e. the normal JavaScript function call syntax.
 
 In either case, both JavaScript or [`RObject`](api/js/modules/RMain.md#robject) proxies can be passed as arguments to the associated R function. In the case of JavaScript values they are [converted to R objects](convert-r-to-js.qmd) before function execution.
 

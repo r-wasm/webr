@@ -1,5 +1,10 @@
 /**
- * Module for working with R objects on the main thead through JavaScript proxies.
+ * Module for working with R objects on the main thead through
+ * JavaScript proxies. The `RObject` types in `RMain` are aliases for
+ * proxies to the corresponding types in `RWorker`. For instance,
+ * `RMain.RCharacter` is an alias for `RMain.RProxy<RWorker.RCharacter>`.
+ * The proxies automatically and asynchronously forward method and
+ * getter calls to the implementations on the R worker side.
  * @module RMain
  */
 import type { RProxy } from './proxy';
