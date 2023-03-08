@@ -16,7 +16,7 @@ Proxy {obj: { type: 'double', ptr: 2184504, ... }, payloadType: 'ptr'}
 
 `RObject` proxys can be passed to webR API calls that manipulate or access R objects. For instance, an `RObject` representing an environment can be passed to [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) to evaluate code in a particular environment.
 
-A proxy is parameterised by an R type, e.g. a proxy that wrap a character vector is implemented as `RProxy<RWorker.RCharacter>`. The [`RMain` module](api/js/modules/RMain.md) provides convenient type aliases for each R type. For instance, `RCharacter` stands for `RProxy<RWorker.RCharacter>`. Each of these types supports specific methods related to the kind of data they represent. For instance `RCharacter` supports conversion to a JS string with `toString()` whereas `RDouble` supports `toNumber()`.
+A proxy is parameterised by an R type, e.g. a proxy that wraps a character vector is implemented as `RProxy<RWorker.RCharacter>`. The [`RMain` module](api/js/modules/RMain.md) provides convenient type aliases for each R type. For instance, `RCharacter` stands for `RProxy<RWorker.RCharacter>`. Each of these types supports specific methods related to the kind of data they represent. For instance `RCharacter` supports conversion to a JS string with `toString()` whereas `RDouble` supports `toNumber()`.
 
 ### Under the hood
 
@@ -74,7 +74,7 @@ try {
   const obj2 = await webR.evalR('42 * 123');
 
   try {
-    result = result + obj2.toNumber();
+    result = result + await obj2.toNumber();
   } finally {
     webR.destroy(obj2);
   }
@@ -99,13 +99,13 @@ The nested `try` / `finally` blocks example can be refactored as:
 const myShelter = await new webR.Shelter();
 
 try {
-  const obj1 = await myShelterR.evalR('42 + 123');
+  const obj1 = await myShelter.evalR('42 + 123');
   const obj2 = await webR.evalR('42 * 123');
 
-  const result = obj1.toNumber() + obj2.toNumber();
+  const result = await obj1.toNumber() + await obj2.toNumber();
   console.log(result);
 } finally {
-  myShelterR.purge();
+  myShelter.purge();
 }
 ```
 
