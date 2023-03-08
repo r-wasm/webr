@@ -11,7 +11,7 @@ project:
 website:
   title: WebR - R in the Browser
   site-url: https://docs.r-wasm.org/
-  repo-url: https://github.com/georgestagg/webr/
+  repo-url: https://github.com/r-wasm/webr/
   repo-branch: main
   repo-subdir: src/docs
   repo-actions: [edit, issue]
@@ -45,7 +45,7 @@ website:
               - auto: "api/js/interfaces"
     tools:
       - icon: github
-        href: https://github.com/georgestagg/webr/
+        href: https://github.com/r-wasm/webr/
 
 format:
   html:

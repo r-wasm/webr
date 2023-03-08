@@ -10,8 +10,8 @@ Authors@R: c(
 Description: An R package to act as an interface to webR and provide
     supporting functions.
 License: MIT + file LICENSE
-URL: https://github.com/georgestagg/webR
-BugReports: https://github.com/georgestagg/webR/issues
+URL: https://github.com/r-wasm/webr
+BugReports: https://github.com/r-wasm/webr/issues
 Imports:
     utils
 Encoding: UTF-8

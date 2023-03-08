@@ -1,4 +1,4 @@
-[![Build, test and deploy webR](https://github.com/georgestagg/webR/actions/workflows/deploy.yml/badge.svg)](https://github.com/georgestagg/webR/actions/workflows/deploy.yml) [![codecov](https://codecov.io/gh/georgestagg/webR/branch/main/graph/badge.svg)](https://codecov.io/gh/georgestagg/webR)
+[![Build, test and deploy webR](https://github.com/r-wasm/webr/actions/workflows/deploy.yml/badge.svg)](https://github.com/r-wasm/webr/actions/workflows/deploy.yml) [![codecov](https://codecov.io/gh/r-wasm/webr/branch/main/graph/badge.svg)](https://codecov.io/gh/r-wasm/webr)
 
 # WebR - R in the Browser
 
@@ -14,7 +14,7 @@ https://docs.r-wasm.org/webr/latest/
 
 The webR JavaScript package is available for download through [npm](https://www.npmjs.com/package/@r-wasm/webr) and on [CDN](https://docs.r-wasm.org/webr/latest/downloading.html#download-from-cdn).
 
-Complete release packages, including R WebAssembly binaries, are available to download for self hosting in the [GitHub Releases section](https://github.com/georgestagg/webR/releases).
+Complete release packages, including R WebAssembly binaries, are available to download for self hosting in the [GitHub Releases section](https://github.com/r-wasm/webr/releases).
 
 ## Building webR from Source
 Included in the source repository is a `Dockerfile` which can be optionally used to setup an

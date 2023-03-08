@@ -68,4 +68,4 @@ Try a [demo of the webR REPL](https://webr.r-wasm.org/latest/) directly in your 
 ```
 ## Useful links
 
--   WebR on GitHub: <https://github.com/georgestagg/webR/>
+-   WebR on GitHub: <https://github.com/r-wasm/webR/>

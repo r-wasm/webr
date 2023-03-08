@@ -11,13 +11,13 @@
     "webassembly",
     "emscripten"
   ],
-  "homepage": "https://github.com/georgestagg/webR",
+  "homepage": "https://github.com/r-wasm/webr",
   "repository": {
     "type": "git",
-    "url": "git@github.com:georgestagg/webR.git"
+    "url": "git@github.com:r-wasm/webr.git"
   },
   "bugs": {
-    "url": "https://github.com/georgestagg/webR/issues"
+    "url": "https://github.com/r-wasm/webr/issues"
   },
   "license": "SEE LICENSE IN LICENCE.md",
   "contributors": [
