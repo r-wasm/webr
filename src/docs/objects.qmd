@@ -89,7 +89,7 @@ try {
 
 To avoid increasingly nested blocks, it is often preferable to work with a shelter instead. A new shelter can be created using the [`Shelter`](api/js/classes/WebR.Shelter.md) class. An asynchronous constructor for this class is available in the `WebR.Shelter` property for convenient instantiation, e.g. `const myShelter = await new myWebR.Shelter()`.
 
-- The objects referenced in a shelter can be destroyed all at once using the `purge()` method.
+- The objects referenced in a shelter can be destroyed all at once using the `purge()` method. They can also be destroyed individually with the `destroy()` method, just like you would do with the global shelter.
 
 - The [`Shelter.evalR()`](api/js/classes/WebR.Shelter.md#evalr) and [`Shelter.captureR()`](api/js/classes/WebR.Shelter.md#capturer) methods automatically protect resulting `RObject` references within the shelter instance instead of the default shelter.
 
@@ -117,26 +117,4 @@ Shelters also provide a range of [R object class proxies](api/js/classes/WebR.Sh
 
 ``` javascript
 const obj = await new myShelter.RDouble([1, 1.5, 2, 2.5, 3]);
-```
-
-#### Destroying objects protected by a shelter
-
-The [`Shelter.destroy()`](api/js/classes/WebR.Shelter.md#destroy) method is used to remove an `RObject` reference from a shelter. In addition, [`Shelter.purge()`](api/js/classes/WebR.Shelter.md#purge) destroys all `RObject` references associated with a particular shelter. The `purge()` mechanism in combination with the `try`/`finally` pattern makes managing memory for multiple R object references relatively easy.
-
-``` javascript
-const myShelter = await new webR.Shelter();
-
-const obj1 = await myShelter.evalR('rnorm(10,10,1)');
-const obj2 = await myShelter.evalR('rnorm(10,20,1)');
-const obj3 = await myShelter.evalR('rnorm(10,30,1)');
-const obj4 = await myShelter.evalR('rnorm(10,40,1)');
-
-try {
-  console.log(await obj1.toArray());
-  console.log(await obj2.toArray());
-  console.log(await obj3.toArray());
-  console.log(await obj4.toArray());
-} finally {
-  myShelter.purge();
-}
 ```
