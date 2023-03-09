@@ -12,7 +12,6 @@
     "emscripten"
   ],
   "homepage": "https://github.com/r-wasm/webr",
-  "repository":"https://github.com/OWNER/REPOSITORY",
   "repository": {
     "type": "git",
     "url": "https://github.com/r-wasm/webr.git"
