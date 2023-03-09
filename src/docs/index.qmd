@@ -46,7 +46,7 @@ Try a [demo of the webR REPL](https://webr.r-wasm.org/latest/) directly in your 
 
   async function runR() {
     let code = editor.getValue();
-    const result = await shelter.captureR(code, undefined, {
+    const result = await shelter.captureR(code, {
       withAutoprint: true,
       captureStreams: true,
       captureConditions: false
