@@ -23,7 +23,9 @@ const webR = new WebR();
 await webR.init();
 ```
 
-By default, webR will download the WebAssembly R binaries from CDN at start-up. If required, this behaviour can be overridden by self-hosting the contents of a [webR release package](#download-release) (or [building from source](#build-from-source)) and providing an alternative base URL for the [`WebROptions.WEBR_URL`](api/js/interfaces/WebR.WebROptions.md#webr_url) configuration setting.
+The default location from which webR will load the WebAssembly R binaries depends on the execution environment. When running in a browser, webR will download binaries from CDN at start-up. If webR is running under Node.js, it will load binaries from the local module installation directory.
+
+If required, this behaviour can be overridden by self-hosting the contents of a [webR release package](#download-release) (or [building from source](#build-from-source)) and providing an alternative base URL for the [`WebROptions.WEBR_URL`](api/js/interfaces/WebR.WebROptions.md#webr_url) configuration setting.
 
 ## Download from CDN
 
