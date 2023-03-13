@@ -47,6 +47,12 @@ function build({ input, output, platform, minify }) {
     minify: false,
   },
   {
+    input: "webR/webr-main.ts",
+    output: "webr.node.js",
+    platform: 'node',
+    minify: false,
+  },
+  {
     input: "repl/repl.ts",
     output: "repl.mjs",
     platform: 'neutral',
