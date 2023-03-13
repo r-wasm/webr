@@ -100,7 +100,7 @@ const myShelter = await new webR.Shelter();
 
 try {
   const obj1 = await myShelter.evalR('42 + 123');
-  const obj2 = await myShelterR.evalR('42 * 123');
+  const obj2 = await myShelter.evalR('42 * 123');
 
   const result = await obj1.toNumber() + await obj2.toNumber();
   console.log(result);
