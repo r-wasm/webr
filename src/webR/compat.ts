@@ -7,8 +7,7 @@ declare let process: Process;
 export const IN_NODE =
   typeof process !== 'undefined' &&
   process.release &&
-  process.release.name === 'node' &&
-  typeof process.browser === 'undefined';
+  process.release.name === 'node';
 
 // Adapted from https://github.com/pyodide/pyodide/blob/main/src/js/compat.ts
 export let loadScript: (url: string) => Promise<void>;
