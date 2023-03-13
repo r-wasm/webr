@@ -93,3 +93,13 @@ export interface ChannelWorker {
   inputOrDispatch: () => number;
   setDispatchHandler: (dispatch: (msg: Message) => void) => void;
 }
+
+/**
+ * Handler functions dealing with setup and commmunication over a Service Worker.
+ */
+export interface ServiceWorkerHandlers {
+  handleActivate: (this: ServiceWorkerGlobalScope, ev: ExtendableEvent) => any;
+  handleFetch: (this: ServiceWorkerGlobalScope, ev: FetchEvent) => any;
+  handleInstall: (this: ServiceWorkerGlobalScope, ev: ExtendableEvent) => any;
+  handleMessage: (this: ServiceWorkerGlobalScope, ev: ExtendableMessageEvent) => any;
+}

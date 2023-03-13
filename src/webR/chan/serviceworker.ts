@@ -1,5 +1,6 @@
 import { promiseHandles } from '../utils';
 import { decodeData, encodeData } from './message';
+import { ServiceWorkerHandlers } from './channel';
 
 declare let self: ServiceWorkerGlobalScope;
 
@@ -11,17 +12,17 @@ const requests: {
   };
 } = {};
 
-function handleInstall() {
+export function handleInstall() {
   console.log('webR service worker installed');
   self.skipWaiting();
 }
 
-function handleActivate(event: ExtendableEvent) {
+export function handleActivate(event: ExtendableEvent) {
   console.log('webR service worker activating');
   event.waitUntil(self.clients.claim());
 }
 
-const sendRequest = async (clientId: string, uuid: string): Promise<Response> => {
+async function sendRequest(clientId: string, uuid: string): Promise<Response> {
   const client = await self.clients.get(clientId);
   if (!client) {
     throw new Error('Service worker client not found');
@@ -35,13 +36,13 @@ const sendRequest = async (clientId: string, uuid: string): Promise<Response> =>
   const response = await requests[uuid].promise;
   const headers = { 'Cross-Origin-Embedder-Policy': 'require-corp' };
   return new Response(encodeData(response), { headers });
-};
+}
 
-const handleFetch = (event: FetchEvent) => {
+export function handleFetch(event: FetchEvent) {
   // console.log('service worker got a fetch', event);
   const wasmMatch = /__wasm__\/webr-fetch-request\//.exec(event.request.url);
   if (!wasmMatch) {
-    return;
+    return false;
   }
   const requestBody = event.request.arrayBuffer();
   const requestReponse = requestBody.then(async (body) => {
@@ -50,9 +51,10 @@ const handleFetch = (event: FetchEvent) => {
   });
   event.waitUntil(requestReponse);
   event.respondWith(requestReponse);
-};
+  return true;
+}
 
-function handleMessage(event: ExtendableMessageEvent) {
+export function handleMessage(event: ExtendableMessageEvent) {
   // console.log('service worker got a message', event.data);
   switch (event.data.type) {
     case 'register-client-main': {
@@ -77,11 +79,19 @@ function handleMessage(event: ExtendableMessageEvent) {
       break;
     }
     default:
-      throw new Error(`Unknown service worker message type: ${event.data.type as string}`);
+      return false;
   }
+  return true;
 }
 
-self.addEventListener('install', handleInstall);
-self.addEventListener('activate', handleActivate);
-self.addEventListener('fetch', handleFetch);
-self.addEventListener('message', handleMessage);
+export const webRHandlers: ServiceWorkerHandlers = {
+  handleInstall,
+  handleActivate,
+  handleFetch,
+  handleMessage
+};
+
+self.addEventListener('install', webRHandlers.handleInstall);
+self.addEventListener('activate', webRHandlers.handleActivate);
+self.addEventListener('fetch', webRHandlers.handleFetch);
+self.addEventListener('message', webRHandlers.handleMessage);
