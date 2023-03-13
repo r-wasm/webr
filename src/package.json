@@ -42,7 +42,7 @@
   "types": "webr-main.d.ts",
   "exports": {
     ".": {
-      "node": "./dist/webr.node.js",
+      "node": "./dist/webr.cjs",
       "default": "./dist/webr.mjs"
     },
     "./console": "./dist/console.mjs",
