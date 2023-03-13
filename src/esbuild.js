@@ -8,7 +8,7 @@ function build({ input, output, platform, minify }) {
     target: ['es2020','node12'],
     minify: minify,
     sourcemap: true,
-    outfile: `../dist/${output}`,
+    outfile: output,
     logLevel: 'info',
     platform: platform,
     mainFields: ['main', 'module'],
@@ -27,41 +27,62 @@ function build({ input, output, platform, minify }) {
   }).catch(() => process.exit(1));
 }
 
-[
-  {
-    input: "webR/webr-worker.ts",
-    output: "webr-worker.js",
-    platform: 'node',
-    minify: false,
-  },
-  {
-    input: "webR/chan/serviceworker.ts",
-    output: "webr-serviceworker.js",
-    platform: 'node',
-    minify: false,
-  },
-  {
-    input: "webR/webr-main.ts",
-    output: "webr.mjs",
-    platform: 'neutral',
-    minify: false,
-  },
-  {
-    input: "webR/webr-main.ts",
-    output: "webr.node.js",
-    platform: 'node',
-    minify: false,
-  },
-  {
-    input: "repl/repl.ts",
-    output: "repl.mjs",
-    platform: 'neutral',
-    minify: true,
-  },
-  {
+const outputs = {
+  'console.mjs': {
     input: "console/console.ts",
-    output: "console.mjs",
     platform: 'neutral',
     minify: true,
   },
-].map(build);
+  'repl.mjs': {
+    input: "repl/repl.ts",
+    platform: 'neutral',
+    minify: true,
+  },
+  'webr-worker.js': {
+    input: "webR/webr-worker.ts",
+    platform: 'node',
+    minify: false,
+  },
+  'webr-serviceworker.js': {
+    input: "webR/chan/serviceworker.ts",
+    platform: 'browser',
+    minify: false,
+  },
+  'webr-serviceworker.mjs': {
+    input: "webR/chan/serviceworker.ts",
+    platform: 'neutral',
+    minify: false,
+  },
+  'webr.mjs': {
+    input: "webR/webr-main.ts",
+    platform: 'neutral',
+    minify: true,
+  },
+  'webr.cjs': {
+    input: "webR/webr-main.ts",
+    platform: 'node',
+    minify: true,
+  },
+};
+
+// Build for web release package
+[
+  'console.mjs',
+  'repl.mjs',
+  'webr-serviceworker.js',
+  'webr-worker.js',
+  'webr.mjs'
+].map( (outfile) => {
+  build(Object.assign(outputs[outfile], { output: `../dist/${outfile}`}))
+});
+
+// Build for npm release package
+[
+  'webr-serviceworker.mjs',
+  'webr-serviceworker.js',
+  'webr-worker.js',
+  'webr.cjs',
+  'webr.mjs'
+].map( (outfile) => {
+  build(Object.assign(outputs[outfile], { output: `./dist/${outfile}`}))
+});

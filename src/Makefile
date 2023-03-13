@@ -5,7 +5,6 @@ ROOT = $(abspath .)
 PKG_DIST = $(ROOT)/dist
 
 HTML_TEMPLATES = console.html repl.html
-ENTRY_POINTS = console/console.ts repl/repl.ts webR/webr-worker.ts
 HTML_INDEX = repl.html
 
 TS_SOURCES = $(shell find $(ROOT) \
@@ -24,7 +23,7 @@ $(DIST): $(TS_SOURCES) $(HTML_DIST) \
   Makefile webR/config.ts node_modules esbuild.js
 	cp $(DIST)/$(HTML_INDEX) $(DIST)/index.html
 	npm run build
-	rm -rf "$(DIST)/tests"
+	rm -rf "$(PKG_DIST)"
 	touch $@
 
 $(DIST)/%.html: templates/%.html
@@ -67,9 +66,8 @@ publish: $(PKG_DIST)
 
 $(PKG_DIST): Makefile webR/config.ts node_modules esbuild.js
 	npm run build
-# Cleanup npm package files for distribution
-	cp -r "$(DIST)/." "$(PKG_DIST)"
-	rm -rf "$(PKG_DIST)"/*.html "$(PKG_DIST)"/tests
+# Copy R binaries into npm package for distribution
+	cd "$(DIST)" && cp R.bin.* *.so "$(PKG_DIST)"
 	touch $@
 
 clean:
