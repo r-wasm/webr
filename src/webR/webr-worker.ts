@@ -378,7 +378,7 @@ function dispatch(msg: Message): void {
 
           case 'installPackage': {
             // TODO: Use `evalRVoid()`
-            evalR(`webr::install("${reqMsg.data.name as string}", repos="${_config.PKG_URL}")`);
+            evalR(`webr::install("${reqMsg.data.name as string}", repos="${_config.repoUrl}")`);
 
             write({
               obj: true,
@@ -658,7 +658,7 @@ function init(config: Required<WebROptions>) {
       initPersistentObjects();
       chan?.setInterrupt(Module._Rf_onintr);
       Module.setValue(Module._R_Interactive, _config.interactive, '*');
-      evalR(`options(webr_pkg_repos="${_config.PKG_URL}")`);
+      evalR(`options(webr_pkg_repos="${_config.repoUrl}")`);
       chan?.resolve();
     },
 
@@ -695,7 +695,7 @@ function init(config: Required<WebROptions>) {
     },
   };
 
-  Module.locateFile = (path: string) => _config.WEBR_URL + path;
+  Module.locateFile = (path: string) => _config.baseUrl + path;
   Module.downloadFileContent = downloadFileContent;
 
   Module.print = (text: string) => {
@@ -716,7 +716,7 @@ function init(config: Required<WebROptions>) {
 
   // At the next tick, launch the REPL. This never returns.
   setTimeout(() => {
-    const scriptSrc = `${_config.WEBR_URL}R.bin.js`;
+    const scriptSrc = `${_config.baseUrl}R.bin.js`;
     loadScript(scriptSrc);
   });
 }

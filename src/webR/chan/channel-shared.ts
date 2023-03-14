@@ -33,12 +33,12 @@ export class SharedBufferChannelMain extends ChannelMain {
       worker.postMessage(msg);
     };
 
-    if (isCrossOrigin(config.WEBR_URL)) {
-      newCrossOriginWorker(`${config.WEBR_URL}webr-worker.js`, (worker: Worker) =>
+    if (isCrossOrigin(config.baseUrl)) {
+      newCrossOriginWorker(`${config.baseUrl}webr-worker.js`, (worker: Worker) =>
         initWorker(worker)
       );
     } else {
-      const worker = new Worker(`${config.WEBR_URL}webr-worker.js`);
+      const worker = new Worker(`${config.baseUrl}webr-worker.js`);
       initWorker(worker);
     }
 

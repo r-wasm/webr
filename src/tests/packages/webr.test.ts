@@ -2,7 +2,7 @@ import { WebR } from '../../webR/webr-main';
 import { RDouble, RLogical } from '../../webR/robj-main';
 
 const webR = new WebR({
-  WEBR_URL: '../dist/',
+  baseUrl: '../dist/',
   RArgs: ['--quiet'],
   interactive: false,
 });
