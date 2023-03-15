@@ -36,26 +36,28 @@ export class ServiceWorkerChannelMain extends ChannelMain {
     const initWorker = (worker: Worker) => {
       this.#handleEventsFromWorker(worker);
       this.close = () => worker.terminate();
-      this.#registerServiceWorker(`${config.SW_URL}webr-serviceworker.js`).then((clientId) => {
-        const msg = {
-          type: 'init',
-          data: {
-            config,
-            channelType: ChannelType.ServiceWorker,
-            clientId,
-            location: window.location.href,
-          },
-        } as Message;
-        worker.postMessage(msg);
-      });
+      this.#registerServiceWorker(`${config.serviceWorkerUrl}webr-serviceworker.js`).then(
+        (clientId) => {
+          const msg = {
+            type: 'init',
+            data: {
+              config,
+              channelType: ChannelType.ServiceWorker,
+              clientId,
+              location: window.location.href,
+            },
+          } as Message;
+          worker.postMessage(msg);
+        }
+      );
     };
 
-    if (isCrossOrigin(config.SW_URL)) {
-      newCrossOriginWorker(`${config.SW_URL}webr-worker.js`, (worker: Worker) =>
+    if (isCrossOrigin(config.serviceWorkerUrl)) {
+      newCrossOriginWorker(`${config.serviceWorkerUrl}webr-worker.js`, (worker: Worker) =>
         initWorker(worker)
       );
     } else {
-      const worker = new Worker(`${config.SW_URL}webr-worker.js`);
+      const worker = new Worker(`${config.serviceWorkerUrl}webr-worker.js`);
       initWorker(worker);
     }
 

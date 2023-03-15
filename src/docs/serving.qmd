@@ -62,4 +62,4 @@ saved with the filename `webr-worker.js`.
 
 Serve the two files somewhere in the same origin and scope as your web page. Do not store the scripts in a subdirectory relative to the page, as the service worker's scope would then be limited to that location.
 
-Once the worker scripts are available on your server, configure webR by giving the URL of the directory containing the scripts as the configuration option [`WebROptions.SW_URL`](api/js/interfaces/WebR.WebROptions.md#sw_url).
+Once the worker scripts are available on your server, configure webR by giving the URL of the directory containing the scripts as the configuration option [`WebROptions.serviceWorkerUrl`](api/js/interfaces/WebR.WebROptions.md#serviceworkerurl).

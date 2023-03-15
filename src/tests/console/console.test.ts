@@ -13,7 +13,7 @@ const con = new Console(
     prompt: (line: string) => waitForPrompt.resolve(prompt(line)),
   },
   {
-    WEBR_URL: '../dist/',
+    baseUrl: '../dist/',
   }
 );
 con.run();

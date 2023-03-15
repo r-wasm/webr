@@ -3,7 +3,7 @@ import { RDouble, RFunction, RList } from '../../webR/robj-main';
 import util from 'util';
 
 const webR = new WebR({
-  WEBR_URL: '../dist/',
+  baseUrl: '../dist/',
   RArgs: ['--quiet'],
 });
 

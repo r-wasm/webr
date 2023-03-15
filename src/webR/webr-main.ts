@@ -104,20 +104,20 @@ export interface WebROptions {
    * The base URL used for downloading R WebAssembly binaries.
    *  Default: `'https://webr.r-wasm.org/[version]/'`
    */
-  WEBR_URL?: string;
+  baseUrl?: string;
 
   /**
    * The repo URL to use when downloading R WebAssembly packages.
    * Default: `'https://repo.r-wasm.org/`
    */
-  PKG_URL?: string;
+  repoUrl?: string;
 
   /**
    * The base URL from where to load JavaScript worker scripts when loading
    * webR with the ServiceWorker communication channel mode.
    * Default: `''`
    */
-  SW_URL?: string;
+  serviceWorkerUrl?: string;
 
   /**
    * The WebAssembly user's home directory and initial working directory.
@@ -146,9 +146,9 @@ const defaultEnv = {
 const defaultOptions = {
   RArgs: [],
   REnv: defaultEnv,
-  WEBR_URL: BASE_URL,
-  SW_URL: '',
-  PKG_URL: PKG_BASE_URL,
+  baseUrl: BASE_URL,
+  serviceWorkerUrl: '',
+  repoUrl: PKG_BASE_URL,
   homedir: '/home/web_user',
   interactive: true,
   channelType: ChannelType.Automatic,

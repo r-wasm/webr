@@ -43,7 +43,7 @@ export function newChannelMain(data: Required<WebROptions>) {
        * workers, we could setup a service worker to inject the relevant headers
        * to enable cross-origin isolation.
        */
-      if ('serviceWorker' in navigator && !isCrossOrigin(data.SW_URL)) {
+      if ('serviceWorker' in navigator && !isCrossOrigin(data.serviceWorkerUrl)) {
         return new ServiceWorkerChannelMain(data);
       }
       throw new Error("Can't initialise main thread communication channel");
