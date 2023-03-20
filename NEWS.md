@@ -7,6 +7,8 @@
 
  * Improve compatibility when running webR under Node (#167 & #171).
 
+ * Fix `chol()` with `pivot=TRUE` by working around a Fortran library issue.
+
 # webR 0.1.0
 
 Initial Release
