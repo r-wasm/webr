@@ -18,3 +18,4 @@ emscripten-xhr-download.diff
 fix-signrank-wilcox.diff
 emscripten-avoid-testing-issues.diff
 fix-dtptrs.diff
+flang-avoid-maxloc.diff
