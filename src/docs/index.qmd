@@ -39,7 +39,7 @@ Try a [demo of the webR REPL](https://webr.r-wasm.org/latest/) directly in your 
     theme: 'light default',
     viewportMargin: Infinity,
   });
-  import { WebR } from 'https://webr.r-wasm.org/v0.1.0/webr.mjs';
+  import { WebR } from 'https://webr.r-wasm.org/v0.1.1/webr.mjs';
   const webR = new WebR();
   await webR.init();
   const shelter = await new webR.Shelter();

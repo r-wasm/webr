@@ -40,7 +40,7 @@ import('https://webr.r-wasm.org/latest/webr.mjs').then(
 );
 ```
 
-Replace `latest` with a fixed version string, such as `v0.1.0`, if you would like to maintain a fixed version of webR.
+Replace `latest` with a fixed version string, such as `v0.1.1`, if you would like to maintain a fixed version of webR.
 
 ## Download release package {#download-release}
 
