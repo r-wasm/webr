@@ -8,6 +8,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     environment: deploy
+    container: georgestagg/webr-flang:latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -16,6 +17,19 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - name: Set the webR CDN URL as the BASE_URL
         run: echo "BASE_URL=https://webr.r-wasm.org/${{ github.ref_name }}/" > "$HOME/.webr-config.mk"
+      - name: Configure webR for flang
+        run: ./configure
+      - name: Copy flang into webR tree
+        run: |
+          cp -r /opt/flang/wasm .
+          cp -r /opt/flang/host .
+          cp /opt/flang/emfc ./host/bin/emfc
+      - name: Setup Emscripten PATH
+        run: echo "/opt/emsdk:/opt/emsdk/upstream/emscripten" >> $GITHUB_PATH
+      - name: Build webR
+        env:
+          EMSDK: /opt/emsdk
+        run: make
         shell: bash
       - run: cd src && make publish
         env:
