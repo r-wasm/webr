@@ -1,0 +1,102 @@
+Index: R-4.1.3/src/modules/lapack/dlapack.f
+===================================================================
+--- R-4.1.3.orig/src/modules/lapack/dlapack.f
++++ R-4.1.3/src/modules/lapack/dlapack.f
+@@ -114497,6 +114497,20 @@
+ *> \ingroup doubleOTHERcomputational
+ *
+ *  =====================================================================
++      INTEGER FUNCTION MAXLOCD( N, ARR )
++      INTEGER          I, N
++      DOUBLE PRECISION ARR( N ), TMP
++
++      MAXLOCD = 0
++      TMP = -HUGE(TMP)
++      DO I = 1, N
++         IF( ARR(I) > TMP) THEN
++            MAXLOCD = I
++            TMP = ARR(I)
++         END IF
++      END DO
++      END
++
+       SUBROUTINE DPSTF2( UPLO, N, A, LDA, PIV, RANK, TOL, WORK, INFO )
+ *
+ *  -- LAPACK computational routine (version 3.7.0) --
+@@ -114522,7 +114536,7 @@
+ *     ..
+ *     .. Local Scalars ..
+       DOUBLE PRECISION   AJJ, DSTOP, DTEMP
+-      INTEGER            I, ITEMP, J, PVT
++      INTEGER            I, ITEMP, J, PVT, MAXLOCD
+       LOGICAL            UPPER
+ *     ..
+ *     .. External Functions ..
+@@ -114534,7 +114549,7 @@
+       EXTERNAL           DGEMV, DSCAL, DSWAP, XERBLA
+ *     ..
+ *     .. Intrinsic Functions ..
+-      INTRINSIC          MAX, SQRT, MAXLOC
++      INTRINSIC          MAX, SQRT
+ *     ..
+ *     .. Executable Statements ..
+ *
+@@ -114615,7 +114630,7 @@
+   120       CONTINUE
+ *
+             IF( J.GT.1 ) THEN
+-               ITEMP = MAXLOC( WORK( (N+J):(2*N) ), 1 )
++               ITEMP = MAXLOCD(1+(2*N)-(N+J), WORK((N+J):(2*N)))
+                PVT = ITEMP + J - 1
+                AJJ = WORK( N+PVT )
+                IF( AJJ.LE.DSTOP.OR.DISNAN( AJJ ) ) THEN
+@@ -114678,7 +114693,7 @@
+   140       CONTINUE
+ *
+             IF( J.GT.1 ) THEN
+-               ITEMP = MAXLOC( WORK( (N+J):(2*N) ), 1 )
++               ITEMP = MAXLOCD(1+(2*N)-(N+J), WORK((N+J):(2*N)))
+                PVT = ITEMP + J - 1
+                AJJ = WORK( N+PVT )
+                IF( AJJ.LE.DSTOP.OR.DISNAN( AJJ ) ) THEN
+@@ -114909,7 +114924,7 @@
+ *     ..
+ *     .. Local Scalars ..
+       DOUBLE PRECISION   AJJ, DSTOP, DTEMP
+-      INTEGER            I, ITEMP, J, JB, K, NB, PVT
++      INTEGER            I, ITEMP, J, JB, K, NB, PVT, MAXLOCD
+       LOGICAL            UPPER
+ *     ..
+ *     .. External Functions ..
+@@ -114922,12 +114937,12 @@
+       EXTERNAL           DGEMV, DPSTF2, DSCAL, DSWAP, DSYRK, XERBLA
+ *     ..
+ *     .. Intrinsic Functions ..
+-      INTRINSIC          MAX, MIN, SQRT, MAXLOC
++      INTRINSIC          MAX, MIN, SQRT
+ *     ..
+ *     .. Executable Statements ..
+ *
+ *     Test the input parameters.
+ *
+       INFO = 0
+       UPPER = LSAME( UPLO, 'U' )
+       IF( .NOT.UPPER .AND. .NOT.LSAME( UPLO, 'L' ) ) THEN
+@@ -115024,7 +115036,7 @@
+   120             CONTINUE
+ *
+                   IF( J.GT.1 ) THEN
+-                     ITEMP = MAXLOC( WORK( (N+J):(2*N) ), 1 )
++                     ITEMP = MAXLOCD(1+(2*N)-(N+J), WORK((N+J):(2*N)))
+                      PVT = ITEMP + J - 1
+                      AJJ = WORK( N+PVT )
+                      IF( AJJ.LE.DSTOP.OR.DISNAN( AJJ ) ) THEN
+@@ -115111,7 +115123,7 @@
+   160             CONTINUE
+ *
+                   IF( J.GT.1 ) THEN
+-                     ITEMP = MAXLOC( WORK( (N+J):(2*N) ), 1 )
++                     ITEMP = MAXLOCD(1+(2*N)-(N+J), WORK((N+J):(2*N)))
+                      PVT = ITEMP + J - 1
+                      AJJ = WORK( N+PVT )
+                      IF( AJJ.LE.DSTOP.OR.DISNAN( AJJ ) ) THEN
