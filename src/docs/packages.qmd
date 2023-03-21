@@ -14,7 +14,7 @@ A collection of supported packages are publicly hosted via a CDN in a CRAN-like 
 
     https://repo.r-wasm.org/
 
-The public CDN build of webR has been distributed with a pre-installed [webr support package](rapi). This R package provides a helper function [`install()`](api/r.qmd#install-one-or-more-packages-from-a-webr-binary-package-repo), which can be used to install further R packages from a compatible webR binary repository.
+The public CDN build of webR has been distributed with a pre-installed [webr support package](api/r.qmd). This R package provides a helper function [`install()`](api/r.qmd#install-one-or-more-packages-from-a-webr-binary-package-repo), which can be used to install further R packages from a compatible webR binary repository.
 
 The repository URL is set using the `repos` argument and the public build of webR defaults the `repo` argument to the repository URL shown above.
 
