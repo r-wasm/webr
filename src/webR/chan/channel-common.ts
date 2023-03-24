@@ -35,7 +35,7 @@ export function newChannelMain(data: Required<WebROptions>) {
       return new ServiceWorkerChannelMain(data);
     case ChannelType.Automatic:
     default:
-      if (IN_NODE || crossOriginIsolated) {
+      if ("SharedArrayBuffer" in globalThis) {
         return new SharedBufferChannelMain(data);
       }
       /*
