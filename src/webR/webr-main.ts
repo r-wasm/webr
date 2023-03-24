@@ -133,7 +133,7 @@ export interface WebROptions {
 
   /**
    * Set the communication channel type to be used.
-   * Deafult: `channelType.Automatic`
+   * Default: `channelType.Automatic`
    */
   channelType?: (typeof ChannelType)[keyof typeof ChannelType];
 }
