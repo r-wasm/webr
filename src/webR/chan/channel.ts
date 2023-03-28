@@ -31,6 +31,7 @@ import { WebRPayload, WebRPayloadWorker, webRPayloadError } from '../payload';
 export abstract class ChannelMain {
   inputQueue = new AsyncQueue<Message>();
   outputQueue = new AsyncQueue<Message>();
+  systemQueue = new AsyncQueue<Message>();
 
   #parked = new Map<string, { resolve: ResolveFn; reject: RejectFn }>();
 
@@ -48,6 +49,10 @@ export abstract class ChannelMain {
       msg.push(await this.read());
     }
     return msg;
+  }
+
+  async readSystem(): Promise<Message> {
+    return await this.systemQueue.get();
   }
 
   write(msg: Message): void {
@@ -86,6 +91,7 @@ export abstract class ChannelMain {
 export interface ChannelWorker {
   resolve(): void;
   write(msg: Message, transfer?: [Transferable]): void;
+  writeSystem(msg: Message, transfer?: [Transferable]): void;
   read(): Message;
   handleInterrupt(): void;
   setInterrupt(interrupt: () => void): void;

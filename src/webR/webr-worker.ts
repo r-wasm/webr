@@ -706,7 +706,7 @@ function init(config: Required<WebROptions>) {
     },
 
     setTimeoutWasm: (ptr: EmPtr, delay: number, ...args: number[]): void => {
-      chan?.write({ type: 'setTimeoutWasm', data: { ptr, delay, args } });
+      chan?.writeSystem({ type: 'setTimeoutWasm', data: { ptr, delay, args } });
     },
   };
 

@@ -232,7 +232,32 @@ export class WebR {
       na: (await this.RObject.getPersistentObject('na')) as RLogical,
     };
 
+    this.#handleSystemMessages();
     return init;
+  }
+
+  async #handleSystemMessages() {
+    for (;;) {
+      const msg = await this.#chan.readSystem();
+      switch (msg.type) {
+        case 'setTimeoutWasm':
+          /* Handle messages requesting a delayed invocation of a wasm function.
+          * TODO: Reimplement without using the main thread once it is possible
+          *       to yield in the worker thread.
+          */
+          setTimeout(
+            (ptr: EmPtr, args: number[]) => {
+              this.invokeWasmFunction(ptr, ...args);
+            },
+            msg.data.delay as number,
+            msg.data.ptr,
+            msg.data.args
+          );
+          break;
+        default:
+          throw new Error('Unknown system message type `' + msg.type + '`');
+      }
+    }
   }
 
   /**
@@ -249,26 +274,7 @@ export class WebR {
    * @returns {Promise<Message>} The output message
    */
   async read(): Promise<Message> {
-    let msg = await this.#chan.read();
-
-    /* Handle any output messages requesting a delayed invocation of a wasm
-     * function. Otherwise, return messages to the application.
-     * TODO: Reimplement without using the main thread once it is possible to
-     *       yield in the worker thread.
-     */
-    while (msg.type === 'setTimeoutWasm') {
-      setTimeout(
-        (ptr: EmPtr, args: number[]) => {
-          this.invokeWasmFunction(ptr, ...args);
-        },
-        msg.data.delay as number,
-        msg.data.ptr,
-        msg.data.args
-      );
-      msg = await this.#chan.read();
-    }
-
-    return msg;
+    return await this.#chan.read();
   }
 
   /**
