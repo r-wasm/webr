@@ -45,6 +45,7 @@
       "node": "./dist/webr.cjs",
       "default": "./dist/webr.mjs"
     },
+    "./chan/serviceworker": "./dist/webr-serviceworker.mjs",
     "./console": "./dist/console.mjs",
     "./repl": "./dist/repl.mjs"
   },
