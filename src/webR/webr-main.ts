@@ -7,6 +7,7 @@ import { ChannelMain } from './chan/channel';
 import { newChannelMain, ChannelType } from './chan/channel-common';
 import { Message } from './chan/message';
 import { BASE_URL, PKG_BASE_URL } from './config';
+import { EmPtr } from './emscripten';
 import { WebRPayloadPtr } from './payload';
 import { newRProxy, newRClassProxy } from './proxy';
 import { isRObject, RCharacter, RComplex, RDouble } from './robj-main';
@@ -24,6 +25,7 @@ import {
   FSMessage,
   FSReadFileMessage,
   FSWriteFileMessage,
+  InvokeWasmFunctionMessage,
   NewShelterMessage,
   ShelterDestroyMessage,
   ShelterMessage,
@@ -230,7 +232,32 @@ export class WebR {
       na: (await this.RObject.getPersistentObject('na')) as RLogical,
     };
 
+    this.#handleSystemMessages();
     return init;
+  }
+
+  async #handleSystemMessages() {
+    for (;;) {
+      const msg = await this.#chan.readSystem();
+      switch (msg.type) {
+        case 'setTimeoutWasm':
+          /* Handle messages requesting a delayed invocation of a wasm function.
+          * TODO: Reimplement without using the main thread once it is possible
+          *       to yield in the worker thread.
+          */
+          setTimeout(
+            (ptr: EmPtr, args: number[]) => {
+              this.invokeWasmFunction(ptr, ...args);
+            },
+            msg.data.delay as number,
+            msg.data.ptr,
+            msg.data.args
+          );
+          break;
+        default:
+          throw new Error('Unknown system message type `' + msg.type + '`');
+      }
+    }
   }
 
   /**
@@ -358,6 +385,15 @@ export class WebR {
       case 'ptr':
         throw new Error('Unexpected ptr payload type returned from evalRVoid');
     }
+  }
+
+  async invokeWasmFunction(ptr: EmPtr, ...args: number[]): Promise<EmPtr> {
+    const msg = {
+      type: 'invokeWasmFunction',
+      data: { ptr, args },
+    } as InvokeWasmFunctionMessage;
+    const resp = await this.#chan.request(msg);
+    return resp.obj as EmPtr;
   }
 
   FS = {

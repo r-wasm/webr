@@ -164,6 +164,10 @@ export class ServiceWorkerChannelMain extends ChannelMain {
         this.resolveResponse(message as Response);
         return;
 
+      case 'system':
+        this.systemQueue.put(message.data as Message);
+        return;
+
       default:
         this.outputQueue.put(message);
         return;
@@ -210,6 +214,10 @@ export class ServiceWorkerChannelWorker implements ChannelWorker {
 
   write(msg: Message, transfer?: [Transferable]) {
     this.#ep.postMessage(msg, transfer);
+  }
+
+  writeSystem(msg: Message, transfer?: [Transferable]) {
+    this.#ep.postMessage({ type: 'system', data: msg }, transfer);
   }
 
   syncRequest(message: Message): Response {

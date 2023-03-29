@@ -617,6 +617,33 @@ describe('Evaluate objects without shelters', () => {
   });
 });
 
+test('Invoke a wasm function from the main thread', async () => {
+  const ptr = (await webR.evalRNumber(`
+    webr::eval_js("
+      Module.addFunction((x, y) => x + y, 'iii')
+    ")
+  `));
+  const ret = await webR.invokeWasmFunction(ptr, 667430, 5);
+  expect(ret).toEqual(667435);
+});
+
+test('Invoke a wasm function after a delay', async () => {
+  const ptr = (await webR.evalRNumber(`
+    webr::eval_js("
+      Module.addFunction(() => {
+        const str = Module.allocateUTF8('Hello, World!\\\\n');
+        Module._printf(str);
+        Module._free(str);
+      }, 'vi')
+    ")
+  `));
+  await webR.flush();
+  await webR.evalR(`
+    webr::eval_js("Module.webr.setTimeoutWasm(${ptr}, 500)")
+  `);
+  expect((await webR.read()).data).toBe('Hello, World!');
+});
+
 beforeEach(() => {
   jest.restoreAllMocks();
 });

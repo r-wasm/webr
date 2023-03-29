@@ -3,6 +3,7 @@
  */
 import { Message } from './chan/message';
 import { UUID as ShelterID } from './chan/task-common';
+import { EmPtr } from './emscripten';
 import { WebRPayloadWorker, WebRPayloadPtr } from './payload';
 import { RType, WebRData } from './robj';
 
@@ -118,6 +119,12 @@ export interface FSWriteFileMessage extends Message {
     data: ArrayBufferView;
     flags?: string;
   };
+}
+
+/** @internal */
+export interface InvokeWasmFunctionMessage extends Message {
+  type: 'invokeWasmFunction';
+  data: { ptr: EmPtr; args: number[] };
 }
 
 /** @internal */

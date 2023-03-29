@@ -3,7 +3,7 @@ import { ChannelWorker } from './chan/channel';
 import { newChannelWorker, ChannelInitMessage } from './chan/channel-common';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions } from './webr-main';
-import { Module } from './emscripten';
+import { EmPtr, Module } from './emscripten';
 import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadRaw, WebRPayloadPtr, WebRPayloadWorker, isWebRPayloadPtr } from './payload';
@@ -23,6 +23,7 @@ import {
   FSMessage,
   FSReadFileMessage,
   FSWriteFileMessage,
+  InvokeWasmFunctionMessage,
   NewRObjectMessage,
   ShelterMessage,
   ShelterDestroyMessage,
@@ -376,6 +377,16 @@ function dispatch(msg: Message): void {
             break;
           }
 
+          case 'invokeWasmFunction': {
+            const msg = reqMsg as InvokeWasmFunctionMessage;
+            const res = Module.getWasmTableEntry(msg.data.ptr)(...msg.data.args) as number;
+            write({
+              payloadType: 'raw',
+              obj: res,
+            });
+            break;
+          }
+
           case 'installPackage': {
             // TODO: Use `evalRVoid()`
             evalR(`webr::install("${reqMsg.data.name as string}", repos="${_config.repoUrl}")`);
@@ -692,6 +703,10 @@ function init(config: Required<WebROptions>) {
       }
       throwUnreachable();
       return 0;
+    },
+
+    setTimeoutWasm: (ptr: EmPtr, delay: number, ...args: number[]): void => {
+      chan?.writeSystem({ type: 'setTimeoutWasm', data: { ptr, delay, args } });
     },
   };
 
