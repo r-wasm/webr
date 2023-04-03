@@ -129,6 +129,7 @@ export class ServiceWorkerChannelMain extends ChannelMain {
             uuid: uuid,
             response: newResponse(uuid, response),
           });
+          this.inputQueue.reset();
           this.#interrupted = false;
           break;
         }

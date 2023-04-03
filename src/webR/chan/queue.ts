@@ -16,6 +16,11 @@ export class AsyncQueue<T> {
     this.#promises = [];
   }
 
+  reset() {
+    this.#resolvers = [];
+    this.#promises = [];
+  }
+
   put(t: T) {
     if (!this.#resolvers.length) {
       this.#add();

@@ -49,6 +49,7 @@ export class SharedBufferChannelMain extends ChannelMain {
     if (!this.#interruptBuffer) {
       throw new Error('Failed attempt to interrupt before initialising interruptBuffer');
     }
+    this.inputQueue.reset();
     this.#interruptBuffer[0] = 1;
   }
 
