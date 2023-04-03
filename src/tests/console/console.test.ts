@@ -38,15 +38,25 @@ test('Generate an error message and write to stdout', async () => {
   expect(stderr).toHaveBeenCalledWith('Error: unexpected \';\' in ";"');
 });
 
-test('Interrupt a long running R computation', async () => {
-  waitForPrompt = promiseHandles();
-  con.stdin('while(TRUE){}');
-  con.interrupt();
-  // A new prompt will appear only if the infinite loop is successfully interrupted
-  await waitForPrompt.promise;
-  expect(prompt).toHaveBeenCalledWith('> ');
-});
+describe('Interrupt execution', () => {
+  test('Interrupt R code executed using the main R REPL', async () => {
+    waitForPrompt = promiseHandles();
+    con.stdin('while(TRUE){}');
+    con.interrupt();
+    // A new prompt will appear only if the infinite loop is successfully interrupted
+    await waitForPrompt.promise;
+    expect(prompt).toHaveBeenCalledWith('> ');
+  });
 
+  test('Interrupt webr::eval_js executed using the main R REPL', async () => {
+    waitForPrompt = promiseHandles();
+    con.stdin('webr::eval_js("globalThis.Module.webr.readConsole()")');
+    con.interrupt();
+    // A new prompt will appear only if the infinite loop is successfully interrupted
+    await waitForPrompt.promise;
+    expect(prompt).toHaveBeenCalledWith('> ');
+  });
+});
 afterAll(() => {
   return con.webR.close();
 });

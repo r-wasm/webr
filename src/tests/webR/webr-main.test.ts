@@ -617,6 +617,20 @@ describe('Evaluate objects without shelters', () => {
   });
 });
 
+describe('Interrupt execution', () => {
+  test('Interrupt R code executed using evalR', async () => {
+    const loop = webR.evalRVoid('while(TRUE){}');
+    setTimeout(() => webR.interrupt(), 100);
+    await expect(loop).rejects.toThrow('A non-local transfer of control occured');
+  });
+
+  test('Interrupt webr::eval_js executed using evalR', async () => {
+    const loop = webR.evalRVoid('webr::eval_js("globalThis.Module.webr.readConsole()")');
+    setTimeout(() => webR.interrupt(), 100);
+    await expect(loop).rejects.toThrow('A non-local transfer of control occured');
+  });
+});
+
 test('Invoke a wasm function from the main thread', async () => {
   const ptr = (await webR.evalRNumber(`
     webr::eval_js("
