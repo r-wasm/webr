@@ -695,6 +695,9 @@ function init(config: Required<WebROptions>) {
         if (e instanceof UnwindProtectException) {
           Module._R_ContinueUnwind(e.cont);
           throwUnreachable();
+        } else if (e === Infinity) {
+          // Propagate interruption
+          throw e;
         }
         const msg = Module.allocateUTF8OnStack(
           `An error occured during JavaScript evaluation:\n  ${(e as { message: string }).message}`
