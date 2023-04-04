@@ -21,6 +21,7 @@ R's source code and supporting libraries are written in both C/C++ and Fortran. 
 If you are compiling webR using the default toolchain, ensure that you first install the following required prerequisites:
  * [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html) (>=3.1.25)
  * cmake
+ * gperf
  * liblzma
  * libpcre2
  * node (>=16.0.0)
