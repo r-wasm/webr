@@ -47,6 +47,126 @@ export function isRObject(value: any): value is RObject {
 }
 
 /**
+ * Test for an RNull instance
+ *
+ * @param {any} value The object to test.
+ * @returns {boolean} True if the object is an instance of an RNull.
+ */
+export function isRNull(value: any): value is RNull {
+  return isRObject(value) && value._payload.obj.type === 'null';
+}
+
+/**
+ * Test for an RSymbol instance
+ *
+ * @param {any} value The object to test.
+ * @returns {boolean} True if the object is an instance of an RSymbol.
+ */
+export function isRSymbol(value: any): value is RSymbol {
+  return isRObject(value) && value._payload.obj.type === 'symbol';
+}
+
+/**
+ * Test for an RPairlist instance
+ *
+ * @param {any} value The object to test.
+ * @returns {boolean} True if the object is an instance of an RPairlist.
+ */
+export function isRPairlist(value: any): value is RPairlist {
+  return isRObject(value) && value._payload.obj.type === 'pairlist';
+}
+
+/**
+ * Test for an REnvironment instance
+ *
+ * @param {any} value The object to test.
+ * @returns {boolean} True if the object is an instance of an REnvironment.
+ */
+export function isREnvironment(value: any): value is REnvironment {
+  return isRObject(value) && value._payload.obj.type === 'environment';
+}
+
+/**
+ * Test for an RLogical instance
+ *
+ * @param {any} value The object to test.
+ * @returns {boolean} True if the object is an instance of an RLogical.
+ */
+export function isRLogical(value: any): value is RLogical {
+  return isRObject(value) && value._payload.obj.type === 'logical';
+}
+
+/**
+ * Test for an RInteger instance
+ *
+ * @param {any} value The object to test.
+ * @returns {boolean} True if the object is an instance of an RInteger.
+ */
+export function isRInteger(value: any): value is RInteger {
+  return isRObject(value) && value._payload.obj.type === 'integer';
+}
+
+/**
+ * Test for an RDouble instance
+ *
+ * @param {any} value The object to test.
+ * @returns {boolean} True if the object is an instance of an RDouble.
+ */
+export function isRDouble(value: any): value is RDouble {
+  return isRObject(value) && value._payload.obj.type === 'double';
+}
+
+/**
+ * Test for an RComplex instance
+ *
+ * @param {any} value The object to test.
+ * @returns {boolean} True if the object is an instance of an RComplex.
+ */
+export function isRComplex(value: any): value is RComplex {
+  return isRObject(value) && value._payload.obj.type === 'complex';
+}
+
+/**
+ * Test for an RCharacter instance
+ *
+ * @param {any} value The object to test.
+ * @returns {boolean} True if the object is an instance of an RCharacter.
+ */
+export function isRCharacter(value: any): value is RCharacter {
+  return isRObject(value) && value._payload.obj.type === 'character';
+}
+
+/**
+ * Test for an RList instance
+ *
+ * @param {any} value The object to test.
+ * @returns {boolean} True if the object is an instance of an RList.
+ */
+export function isRList(value: any): value is RList {
+  return isRObject(value) && value._payload.obj.type === 'list';
+}
+
+/**
+ * Test for an RRaw instance
+ *
+ * @param {any} value The object to test.
+ * @returns {boolean} True if the object is an instance of an RRaw.
+ */
+export function isRRaw(value: any): value is RRaw {
+  return isRObject(value) && value._payload.obj.type === 'raw';
+}
+
+/**
+ * Test for an RCall instance
+ *
+ * @param {any} value The object to test.
+ * @returns {boolean} True if the object is an instance of an RCall.
+ */
+export function isRCall(value: any): value is RCall {
+  return isRObject(value) && value._payload.obj.type === 'call';
+}
+
+/**
  * Test for an RFunction instance
  *
  * @param {any} value The object to test.
