@@ -4,6 +4,7 @@
 * Issue an output message of type `'closed'` when the webR communication channel closes.
 * Build Cairo graphics library and its prerequisites for Wasm as part of the webR build process. This allows the default Cairo-based graphics devices in R, such as `png()`, `bmp()` and `svg()`, to work in webR.
 * Update webR's version of R to 4.3.0.
+* Include additional type predicate functions for subclasses of `RObject`, such as `isRDouble()`. These can be used by TypeScript applications to narrow the typing of an `RObject`.
 
 # webR 0.1.1
 
