@@ -148,7 +148,8 @@ export class Console {
    * This loop waits for output from webR and dispatches callbacks based on the
    * message recieved.
    *
-   * The promise returned by this asynchronous function never resolves.
+   * The promise returned by this asynchronous function resolves only once the
+   * webR communication channel has closed.
    */
   async #run() {
     for (;;) {
@@ -166,6 +167,8 @@ export class Console {
         case 'canvasExec':
           this.#canvasExec(output.data as string);
           break;
+        case 'closed':
+          return;
         default:
           console.warn(`Unhandled output type for webR Console: ${output.type}.`);
       }

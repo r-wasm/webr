@@ -182,6 +182,8 @@ const webR = new WebR({
            document.getElementById('plot-canvas').getContext('2d').${output.data as string}
          `)();
         break;
+      case 'closed':
+        throw new Error('The webR communication channel has been closed');
       default:
         console.error(`Unimplemented output type: ${output.type}`);
         console.error(output.data);
