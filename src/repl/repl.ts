@@ -11,6 +11,7 @@ const term = new Terminal({
     background: '#191919',
     foreground: '#F0F0F0',
   },
+  screenReaderMode: true,
 });
 const fitAddon = new FitAddon();
 const readline = new Readline();
