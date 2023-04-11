@@ -119,7 +119,7 @@ A convenience function [`WebR.installPackages()`](api/js/classes/WebR.WebR.md#in
 
 A long running R computation can be interrupted by sending an interruption request message using the [`WebR.interrupt()`](api/js/classes/WebR.WebR.md#interrupt) method.
 
-### Ouput messages
+### Output messages
 
 #### Standard output streams
 
@@ -136,6 +136,16 @@ Messages of type `prompt` are sent to the output queue when R has given a prompt
 ``` javascript
 { type: 'prompt', data: string }
 ```
+
+#### Closed
+
+A message of type `closed` is issued when the webR worker thread and communication channel have been terminated using [`WebR.close()`](api/js/classes/WebR.WebR.md#close). This message indicates that the webR instance should no longer be used and no further messages will be issued. The `data` property is undefined for this type of message.
+
+``` javascript
+{ type: 'closed' }
+```
+
+This type of message can be a useful signal to break out of an otherwise infinite asynchronous loop of reading webR output messages.
 
 #### Plotting with the webR HTML canvas
 

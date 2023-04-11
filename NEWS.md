@@ -1,6 +1,7 @@
 # webR (development version)
 
 * Improve accessibility of xterm.js in the webR REPL app by enabling `screenReaderMode`.
+* Issue an output message of type `'closed'` when the webR communication channel closes.
 
 # webR 0.1.1
 
