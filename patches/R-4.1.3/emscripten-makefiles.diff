@@ -20,7 +20,7 @@ Index: R-4.1.3/src/main/Makefile.in
 ===================================================================
 --- R-4.1.3.orig/src/main/Makefile.in
 +++ R-4.1.3/src/main/Makefile.in
-@@ -147,6 +147,34 @@ R: Makedeps
+@@ -147,6 +147,39 @@ R: Makedeps
  $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
  	$(MAIN_LINK) -o $@ $(R_bin_OBJECTS) $(R_bin_LDADD)
  
@@ -40,8 +40,13 @@ Index: R-4.1.3/src/main/Makefile.in
 +	@cp -a "$(prefix)/lib" "$(prefix)/tmp/"
 +	@rm -r "$(prefix)/tmp/lib/R/library/translations"
 +	@rm -r "$(prefix)/tmp/lib/R/library/tcltk"
++	@rm -r "$(prefix)/tmp/lib/R/library/parallel"
 +	@rm -r "$(prefix)/tmp/lib/R/bin"
 +	@rm -r "$(prefix)/tmp/lib/R/include"
++	@rm -r "$(prefix)/tmp/lib/R/lib"
++	@find "$(prefix)/tmp/lib/R" -type d -name 'help' -exec rm -r "{}" +
++	@find "$(prefix)/tmp/lib/R" -type d -name 'doc' -exec rm -r "{}" +
++	@find "$(prefix)/tmp/lib/R" -type d -name 'html' -exec rm -r "{}" +
 +	$(MAIN_LINK) $(MAIN_WEBR_LDADD) \
 +	-o $(prefix)/dist/$(R_binary).js \
 +	$(R_bin_OBJECTS) -lRlapack $(FORTRAN_WASM_LDADD) $(R_bin_LDADD)
