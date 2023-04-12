@@ -29,7 +29,17 @@ install <- function(packages, repos = NULL, lib = NULL) {
     }
 
     if (!pkg %in% info) {
-      warning(cat("Requested package", pkg, "not found in webR binary repo.\n"))
+      warning(
+        sprintf(
+          paste0(
+            "Requested package %s not found in webR binary repo.\n",
+            "Please run `rownames(available.packages(repos = '%s'))` to get available packages\n"
+          ), 
+          pkg, 
+          repos
+        )
+      )
+
       next
     }
 
