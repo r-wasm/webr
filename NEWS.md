@@ -1,8 +1,8 @@
 # webR (development version)
 
-# webR 0.1.1
-
 * Improve accessibility of xterm.js in the webR REPL app by enabling `screenReaderMode`.
+
+# webR 0.1.1
 
 ## Breaking changes
  * Rename the properties of `WebROptions` so that they are all in camelCase, consistent with the rest of the webR TypeScript source. We have made the decision to release the above breaking change quickly while there are still a relatively low number of affected users.
