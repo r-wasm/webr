@@ -35,7 +35,10 @@ export class ServiceWorkerChannelMain extends ChannelMain {
     super();
     const initWorker = (worker: Worker) => {
       this.#handleEventsFromWorker(worker);
-      this.close = () => worker.terminate();
+      this.close = () => {
+        worker.terminate();
+        this.putClosedMessage();
+      };
       this.#registerServiceWorker(`${config.serviceWorkerUrl}webr-serviceworker.js`).then(
         (clientId) => {
           const msg = {

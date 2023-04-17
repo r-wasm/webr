@@ -69,6 +69,10 @@ export abstract class ChannelMain {
     return promise as Promise<WebRPayload>;
   }
 
+  protected putClosedMessage(): void {
+    this.outputQueue.put({ type: 'closed' });
+  }
+
   protected resolveResponse(msg: Response) {
     const uuid = msg.data.uuid;
     const handles = this.#parked.get(uuid);

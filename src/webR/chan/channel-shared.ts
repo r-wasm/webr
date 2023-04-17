@@ -25,7 +25,10 @@ export class SharedBufferChannelMain extends ChannelMain {
     super();
     const initWorker = (worker: Worker) => {
       this.#handleEventsFromWorker(worker);
-      this.close = () => worker.terminate();
+      this.close = () => {
+        worker.terminate();
+        this.putClosedMessage();
+      };
       const msg = {
         type: 'init',
         data: { config, channelType: ChannelType.SharedArrayBuffer },

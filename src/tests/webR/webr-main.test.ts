@@ -658,6 +658,32 @@ test('Invoke a wasm function after a delay', async () => {
   expect((await webR.read()).data).toBe('Hello, World!');
 });
 
+test('Close webR communication channel', async () => {
+  const tempR = new WebR({ baseUrl: '../dist/' });
+  await tempR.init();
+
+  // Promise resolves when the webR communication channel closes
+  const closedPromise = new Promise((resolve) => {
+    (async () => {
+      for (;;) {
+        const output = await tempR.read();
+        if (output.type === 'closed') {
+          break;
+        }
+      }
+      resolve(true);
+    })();
+  });
+
+  // Generate some activity
+  tempR.writeConsole('foo <- 123');
+  tempR.writeConsole('print(foo)');
+
+  // Close the channel
+  tempR.close();
+  await expect(closedPromise).resolves.toEqual(true);
+});
+
 beforeEach(() => {
   jest.restoreAllMocks();
 });
