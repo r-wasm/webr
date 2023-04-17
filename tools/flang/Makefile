@@ -47,6 +47,7 @@ RUNTIME_CFLAGS := $(RUNTIME_CFLAGS)
 RUNTIME_CFLAGS += -I$(BUILD)/include -I$(BUILD)/tools/flang/runtime
 RUNTIME_CFLAGS += -I$(SOURCE)/flang/include -I$(SOURCE)/llvm/include
 RUNTIME_CFLAGS += -DFLANG_LITTLE_ENDIAN -fPIC
+RUNTIME_CFLAGS += -fvisibility=hidden
 
 RUNTIME_CXXFLAGS := $(RUNTIME_CXXFLAGS)
 RUNTIME_CXXFLAGS += $(RUNTIME_CFLAGS) -std=c++17 -Wno-c++11-narrowing
