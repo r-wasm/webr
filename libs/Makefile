@@ -21,7 +21,7 @@ CAIRO_TARBALL = $(DOWNLOAD)/cairo-$(CAIRO_VERSION).tar.xz
 CAIRO_URL = https://cairographics.org/releases/cairo-${CAIRO_VERSION}.tar.xz
 CAIRO_WASM_LIB = $(WASM)/lib/libcairo.a
 
-FC_VERSION = 2.13.92
+FC_VERSION = 2.12.5
 FC_TARBALL = $(DOWNLOAD)/fontconfig-$(FC_VERSION).tar.gz
 FC_URL = https://www.freedesktop.org/software/fontconfig/release/fontconfig-$(FC_VERSION).tar.gz
 FC_WASM_LIB = $(WASM)/lib/libfontconfig.a
@@ -61,7 +61,14 @@ WASM_LIBS += $(PCRE_WASM_LIB)
 WASM_LIBS += $(PIXMAN_WASM_LIB)
 WASM_LIBS += $(XZ_WASM_LIB)
 
+
+export EM_PKG_CONFIG_PATH = $(WASM)/lib/pkgconfig
+
 all: $(WASM_LIBS) $(WASM)/usr/share/fonts
+
+$(EM_PKG_CONFIG_PATH)/%.pc: %.pc
+	mkdir -p $(EM_PKG_CONFIG_PATH)
+	cp "$<" "$@"
 
 .PHONY: cairo
 cairo: $(CAIRO_WASM_LIB)
@@ -72,17 +79,13 @@ $(CAIRO_TARBALL):
 
 $(CAIRO_WASM_LIB): $(CAIRO_TARBALL) $(PIXMAN_WASM_LIB) $(FC_WASM_LIB)
 	rm -rf $(BUILD)/cairo-$(CAIRO_VERSION)
+	mkdir -p $(BUILD)/cairo-$(CAIRO_VERSION)/build
 	tar -C $(BUILD) -xf $(CAIRO_TARBALL)
 	cp -r "$(WEBR_ROOT)/patches/cairo-$(CAIRO_VERSION)/." \
 	  "$(BUILD)/cairo-$(CAIRO_VERSION)/patches"
-	cd "$(BUILD)/cairo-$(CAIRO_VERSION)" && quilt push -a
-	mkdir -p $(BUILD)/cairo-$(CAIRO_VERSION)/build
-	cd $(BUILD)/cairo-$(CAIRO_VERSION)/build && \
+	cd $(BUILD)/cairo-$(CAIRO_VERSION)/build && quilt push -a && \
 	  CFLAGS="$(WASM_CFLAGS) -DCAIRO_NO_MUTEX=1" \
 	  LDFLAGS="-sUSE_FREETYPE=1" \
-	  FREETYPE_CFLAGS="-sUSE_FREETYPE=1" \
-	  FREETYPE_LIBS="-sUSE_FREETYPE=1" \
-	  EM_PKG_CONFIG_PATH="$(WASM)/lib/pkgconfig" \
 	  emconfigure ../configure \
 	    ax_cv_c_float_words_bigendian=no \
 	    --enable-shared=no \
@@ -92,10 +95,6 @@ $(CAIRO_WASM_LIB): $(CAIRO_TARBALL) $(PIXMAN_WASM_LIB) $(FC_WASM_LIB)
 	    --enable-fc=yes \
 	    --prefix=$(WASM) && \
 	  emmake make install
-	sed -i.bak -e 's/freetype2 >= [0-9]*\.[0-9]*\.[0-9]*//g' \
-		-e 's/-lz//2' $(WASM)/lib/pkgconfig/cairo.pc
-	sed -i.bak -e 's/freetype2 >= [0-9]*\.[0-9]*\.[0-9]*//g' $(WASM)/lib/pkgconfig/cairo-ft.pc
-	touch $@
 
 .PHONY: fontconfig
 fontconfig: $(FC_WASM_LIB)
@@ -104,31 +103,20 @@ $(FC_TARBALL):
 	mkdir -p $(DOWNLOAD)
 	wget -q -O $@ $(FC_URL)
 
-$(FC_WASM_LIB): $(FC_TARBALL) $(LIBXML2_WASM_LIB)
-	mkdir -p $(BUILD)
-	tar -C $(BUILD) -xf $(FC_TARBALL)
+$(FC_WASM_LIB): $(FC_TARBALL) $(LIBXML2_WASM_LIB) $(EM_PKG_CONFIG_PATH)/freetype2.pc
 	mkdir -p $(BUILD)/fontconfig-$(FC_VERSION)/build
-	sed -i.bak 's/ax_pthread_ok=yes/ax_pthread_ok=no/g' \
-	  $(BUILD)/fontconfig-$(FC_VERSION)/configure
-	sed -i.bak 's/RUN_FC_CACHE_TEST =.*/RUN_FC_CACHE_TEST = false/g' \
-	  $(BUILD)/fontconfig-$(FC_VERSION)/Makefile.in
+	tar -C $(BUILD) -xf $(FC_TARBALL) --exclude=fcobjshash.h
 	cd $(BUILD)/fontconfig-$(FC_VERSION)/build && \
 	  CFLAGS="$(WASM_CFLAGS)" \
-	  FREETYPE_CFLAGS="-sUSE_FREETYPE=1" \
-	  FREETYPE_LIBS="-sUSE_FREETYPE=1" \
 	  LDFLAGS="-sUSE_FREETYPE=1" \
-	  EM_PKG_CONFIG_PATH="$(WASM)/lib/pkgconfig" \
+	  PTHREAD_CFLAGS=" " \
 	  emconfigure ../configure \
+	    ac_cv_func_fstatfs=no \
 	    --enable-shared=no \
 	    --enable-static=yes \
 	    --enable-libxml2 \
-	    --prefix=$(WASM)
-	sed -i.bak 's/#define HAVE_FSTATFS 1/#undef HAVE_FSTATFS/' \
-	  $(BUILD)/fontconfig-$(FC_VERSION)/build/config.h
-	cd $(BUILD)/fontconfig-$(FC_VERSION)/build && \
-	  emmake make install
-	sed -i.bak 's/Requires:.*/Requires:/' $(WASM)/lib/pkgconfig/fontconfig.pc
-	touch $@
+	    --prefix=$(WASM) && \
+	  emmake make RUN_FC_CACHE_TEST=false install
 
 .PHONY: libpng
 libpng: $(LIBPNG_WASM_LIB)
@@ -137,18 +125,16 @@ $(LIBPNG_TARBALL):
 	mkdir -p $(DOWNLOAD)
 	wget $(LIBPNG_URL) -O $@
 
-$(LIBPNG_WASM_LIB): $(LIBPNG_TARBALL)
-	mkdir -p $(BUILD)
+$(LIBPNG_WASM_LIB): $(LIBPNG_TARBALL) $(EM_PKG_CONFIG_PATH)/zlib.pc
+	mkdir -p $(BUILD)/libpng-$(LIBPNG_VERSION)/build
 	tar -C $(BUILD) -xf $(LIBPNG_TARBALL)
-	cd $(BUILD)/libpng-$(LIBPNG_VERSION) && \
-	  mkdir -p build && \
-	  cd build && \
-	  CFLAGS="$(WASM_CFLAGS)" emconfigure ../configure \
+	cd $(BUILD)/libpng-$(LIBPNG_VERSION)/build && \
+	  CFLAGS="$(WASM_CFLAGS)" \
+	  emconfigure ../configure \
 	    --enable-shared=no \
 	    --enable-static=yes \
 	    --prefix=$(WASM) && \
 	  emmake make install
-	touch $@
 
 .PHONY: libxml2
 libxml2: $(LIBXML2_WASM_LIB)
@@ -157,13 +143,11 @@ $(LIBXML2_TARBALL):
 	mkdir -p $(DOWNLOAD)
 	wget -q -O $@ $(LIBXML2_URL)
 
-$(LIBXML2_WASM_LIB): $(LIBXML2_TARBALL) $(ZLIB_WASM_LIB) $(XZ_WASM_LIB)
-	mkdir -p $(BUILD)
-	tar -C $(BUILD) -xf $(LIBXML2_TARBALL)
+$(LIBXML2_WASM_LIB): $(LIBXML2_TARBALL) $(XZ_WASM_LIB)
 	mkdir -p $(BUILD)/libxml2-$(LIBXML2_VERSION)/build
+	tar -C $(BUILD) -xf $(LIBXML2_TARBALL)
 	cd $(BUILD)/libxml2-$(LIBXML2_VERSION)/build && \
 	  CFLAGS="$(WASM_CFLAGS)" \
-	  EM_PKG_CONFIG_PATH="$(WASM)/lib/pkgconfig" \
 	  emconfigure ../configure \
 	    --enable-shared=no \
 	    --enable-static=yes \
@@ -171,7 +155,6 @@ $(LIBXML2_WASM_LIB): $(LIBXML2_TARBALL) $(ZLIB_WASM_LIB) $(XZ_WASM_LIB)
 	    --without-threads \
 	    --prefix=$(WASM) && \
 	  emmake make install
-	touch $@
 
 .PHONY: pcre2
 pcre2: $(PCRE_WASM_LIB)
@@ -181,16 +164,15 @@ $(PCRE_TARBALL):
 	wget -q -O $@ $(PCRE_URL)
 
 $(PCRE_WASM_LIB): $(PCRE_TARBALL)
-	mkdir -p $(BUILD)
-	tar -C $(BUILD) -xf $(PCRE_TARBALL)
 	mkdir -p $(BUILD)/pcre2-$(PCRE_VERSION)/build
+	tar -C $(BUILD) -xf $(PCRE_TARBALL)
 	cd $(BUILD)/pcre2-$(PCRE_VERSION)/build && \
-	  CFLAGS="$(WASM_CFLAGS)" emconfigure ../configure \
+	  CFLAGS="$(WASM_CFLAGS)" \
+	  emconfigure ../configure \
 	    --enable-shared=no \
 	    --enable-static=yes \
 	    --prefix=$(WASM) && \
 	  emmake make install
-	touch $@
 
 .PHONY: pixman
 pixman: $(PIXMAN_WASM_LIB)
@@ -200,13 +182,12 @@ $(PIXMAN_TARBALL):
 	wget -q -O $@ $(PIXMAN_URL)
 
 $(PIXMAN_WASM_LIB): $(PIXMAN_TARBALL) $(LIBPNG_WASM_LIB)
-	tar -C $(BUILD) -xf $(PIXMAN_TARBALL)
 	mkdir -p $(BUILD)/pixman-$(PIXMAN_VERSION)/build
+	tar -C $(BUILD) -xf $(PIXMAN_TARBALL)
 	sed -i.bak 's/support_for_pthreads=yes/support_for_pthreads=no/g' \
 	  $(BUILD)/pixman-$(PIXMAN_VERSION)/configure
 	cd $(BUILD)/pixman-$(PIXMAN_VERSION)/build && \
 	  CFLAGS="$(WASM_CFLAGS)" \
-	  EM_PKG_CONFIG_PATH="$(WASM)/lib/pkgconfig" \
 	  emconfigure ../configure \
 	    --enable-shared=no \
 	    --enable-static=yes \
@@ -221,18 +202,16 @@ $(XZ_TARBALL):
 	wget $(XZ_URL) -O $@
 
 $(XZ_WASM_LIB): $(XZ_TARBALL)
-	mkdir -p $(BUILD)
+	mkdir -p $(BUILD)/xz-$(XZ_VERSION)/build
 	tar -C $(BUILD) -xf $(XZ_TARBALL)
-	cd $(BUILD)/xz-$(XZ_VERSION) && \
-	  mkdir -p build && \
-	  cd build && \
-	  CFLAGS="$(WASM_CFLAGS)" emconfigure ../configure \
+	cd $(BUILD)/xz-$(XZ_VERSION)/build && \
+	  CFLAGS="$(WASM_CFLAGS)" \
+	  emconfigure ../configure \
 	    --enable-shared=no \
 	    --enable-static=yes \
 	    --enable-threads=no \
 	    --prefix=$(WASM) && \
 	  emmake make install
-	touch $@
 
 .PHONY: fonts
 fonts: $(WASM)/usr/share/fonts
