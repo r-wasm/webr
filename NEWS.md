@@ -2,6 +2,7 @@
 
 * Improve accessibility of xterm.js in the webR REPL app by enabling `screenReaderMode`.
 * Issue an output message of type `'closed'` when the webR communication channel closes.
+* Build Cairo graphics library and its prerequisites for Wasm as part of the webR build process. This allows the default Cairo-based graphics devices in R, such as `png()`, `bmp()` and `svg()`, to work in webR.
 
 # webR 0.1.1
 
