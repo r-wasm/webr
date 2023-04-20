@@ -2,7 +2,7 @@ Index: R-4.1.3/src/main/eval.c
 ===================================================================
 --- R-4.1.3.orig/src/main/eval.c
 +++ R-4.1.3/src/main/eval.c
-@@ -6492,6 +6492,11 @@ static SEXP bcEval(SEXP body, SEXP rho, 
+@@ -6492,6 +6492,11 @@ static SEXP bcEval(SEXP body, SEXP rho, Rboolean useCa
    codebase = pc = BCCODE(body);
    constants = BCCONSTS(body);
  

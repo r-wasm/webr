@@ -2,7 +2,7 @@ Index: R-4.1.3/src/main/Rdynload.c
 ===================================================================
 --- R-4.1.3.orig/src/main/Rdynload.c
 +++ R-4.1.3/src/main/Rdynload.c
-@@ -960,8 +960,8 @@ int R_moduleCdynload(const char *module,
+@@ -960,8 +960,8 @@ int R_moduleCdynload(const char *module, int local, in
  
      if(!p) return 0;
  #ifdef R_ARCH

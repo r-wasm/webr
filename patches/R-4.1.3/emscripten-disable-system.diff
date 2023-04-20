@@ -2,7 +2,7 @@ Index: R-4.1.3/src/library/base/R/unix/system.unix.R
 ===================================================================
 --- R-4.1.3.orig/src/library/base/R/unix/system.unix.R
 +++ R-4.1.3/src/library/base/R/unix/system.unix.R
-@@ -35,6 +35,11 @@ system <- function(command, intern = FAL
+@@ -35,6 +35,11 @@ system <- function(command, intern = FALSE,
      if(!is.logical(wait) || is.na(wait))
          stop("'wait' must be TRUE or FALSE")
  
@@ -14,7 +14,7 @@ Index: R-4.1.3/src/library/base/R/unix/system.unix.R
      if(ignore.stdout) command <- paste(command, ">/dev/null")
      if(ignore.stderr) command <- paste(command, "2>/dev/null")
      if(!is.null(input)) {
-@@ -63,6 +69,11 @@ system2 <- function(command, args = char
+@@ -63,6 +68,11 @@ system2 <- function(command, args = character(),
      if(!is.logical(wait) || is.na(wait))
          stop("'wait' must be TRUE or FALSE")
  
@@ -26,10 +26,12 @@ Index: R-4.1.3/src/library/base/R/unix/system.unix.R
      intern <- FALSE
      command <- paste(c(env, shQuote(command), args), collapse = " ")
  
-@@ -107,6 +119,17 @@ system2 <- function(command, args = char
+@@ -105,6 +115,17 @@ system2 <- function(command, args = character(),
+     } else if (nzchar(stdin)) command <- paste(command, "<", shQuote(stdin))
+     if(!wait && !intern) command <- paste(command, "&")
      .Internal(system(command, intern, timeout))
- }
- 
++}
++
 +webr_hook_system <- function(command) {
 +    hook <- getOption("webr.hook_system")
 +    if (is.function(hook)) {
@@ -39,8 +41,6 @@ Index: R-4.1.3/src/library/base/R/unix/system.unix.R
 +       # Try to carry on regardless, as if it had worked but produced no output
 +	c("", "")
 +    }
-+}
-+
+ }
+ 
  ## Some people try to use this with NA inputs (PR#15147)
- Sys.which <- function(names)
- {

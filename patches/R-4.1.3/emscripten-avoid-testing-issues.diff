@@ -2,7 +2,7 @@ Index: R-4.1.3/src/library/base/man/stopifnot.Rd
 ===================================================================
 --- R-4.1.3.orig/src/library/base/man/stopifnot.Rd
 +++ R-4.1.3/src/library/base/man/stopifnot.Rd
-@@ -102,7 +102,7 @@ stopifnot(1 == 1, all.equal(pi, 3.141592
+@@ -102,7 +102,7 @@ stopifnot(m == t(m), diag(m) == rep(1, 2)) # all(.) |=
  
  m <- matrix(c(1,3,3,1), 2, 2)
  stopifnot(m == t(m), diag(m) == rep(1, 2)) # all(.) |=>  TRUE
@@ -11,19 +11,19 @@ Index: R-4.1.3/src/library/base/man/stopifnot.Rd
  op <- options(error = expression(NULL))
  # "disabling stop(.)"  << Use with CARE! >>
  
-@@ -134,6 +134,7 @@ stopifnot("m must be symmetric"= m == t(
+@@ -133,6 +133,7 @@ options(op)  # revert to previous error handler
+ #=> Error: m must be symmetric
  
  options(op)  # revert to previous error handler
- }
 +}
+ }
  \keyword{environment}
  \keyword{programming}
- \keyword{error}
 Index: R-4.1.3/src/library/base/man/validUTF8.Rd
 ===================================================================
 --- R-4.1.3.orig/src/library/base/man/validUTF8.Rd
 +++ R-4.1.3/src/library/base/man/validUTF8.Rd
-@@ -60,6 +60,7 @@ validEnc(x) # depends on the locale
+@@ -60,6 +60,7 @@ validEnc(x) # typically the last, x[10], is invalid
  Encoding(x) <-"UTF-8"
  validEnc(x) # typically the last, x[10], is invalid
  
@@ -31,16 +31,17 @@ Index: R-4.1.3/src/library/base/man/validUTF8.Rd
  ## Maybe advantageous to declare it "unknown":
  G <- x ; Encoding(G[!validEnc(G)]) <- "unknown"
  try( substr(x, 1,1) ) # gives 'invalid multibyte string' error in a UTF-8 locale
-@@ -69,3 +70,4 @@ nchar(G) # fine, too
+@@ -68,4 +69,5 @@ all.equal(validEnc(x),
+ ## but it is not "more valid" typically:
  all.equal(validEnc(x),
            validEnc(G)) # typically TRUE
- }
 +}
+ }
 Index: R-4.1.3/src/library/base/man/warnings.Rd
 ===================================================================
 --- R-4.1.3.orig/src/library/base/man/warnings.Rd
 +++ R-4.1.3/src/library/base/man/warnings.Rd
-@@ -91,7 +91,7 @@ tail(warnings(), 2) # see the last two w
+@@ -91,7 +91,7 @@ summary(warnings())
  
  ## Often the most useful way to look at many warnings:
  summary(warnings())
@@ -53,7 +54,7 @@ Index: R-4.1.3/src/library/utils/man/news.Rd
 ===================================================================
 --- R-4.1.3.orig/src/library/utils/man/news.Rd
 +++ R-4.1.3/src/library/utils/man/news.Rd
-@@ -122,6 +122,7 @@ news(query, package = "R", lib.loc = NUL
+@@ -122,6 +122,7 @@ news(query, package = "R", lib.loc = NULL, format = NU
  }
  
  \examples{
@@ -61,11 +62,13 @@ Index: R-4.1.3/src/library/utils/man/news.Rd
  ## Build a db of all R news entries.
  db <- news()
  \dontshow{
-@@ -158,3 +159,4 @@ sort(table(db3[, "Category"]), decreasin
+@@ -156,5 +157,6 @@ table(news(Version >= "3.6.0", db = db3)$Version)
+ sort(table(db3[, "Category"]), decreasing = TRUE)
+ ## Entries with version >= 3.6.0
  table(news(Version >= "3.6.0", db = db3)$Version)
- }
- }
 +}
+ }
+ }
 Index: R-4.1.3/src/library/grDevices/tests/saved-recordPlot.R
 ===================================================================
 --- R-4.1.3.orig/src/library/grDevices/tests/saved-recordPlot.R
@@ -78,7 +81,7 @@ Index: R-4.1.3/src/library/grDevices/tests/saved-recordPlot.R
  # Save displaylist for a simple plot
  png('test.png')
  dev.control(displaylist ="enable")
-@@ -32,3 +33,4 @@ sapply(tt, head)
+@@ -32,3 +33,4 @@ stopifnot(
  stopifnot(
      identical(tt[[1]], tt[[2]]),
      identical(tt[[3]], tt[[2]]))
@@ -96,7 +99,7 @@ Index: R-4.1.3/src/library/utils/tests/Sweave-tst.R
  .proctime00 <- proc.time()
  library(utils)
  options(digits = 5) # to avoid trivial printed differences
-@@ -82,3 +82,4 @@ tools::texi2pdf(sub("Rnw$","tex", f))# u
+@@ -82,3 +82,4 @@ cat('Time elapsed: ', proc.time() - .proctime00,'\n')
  
  
  cat('Time elapsed: ', proc.time() - .proctime00,'\n')
@@ -105,7 +108,7 @@ Index: R-4.1.3/src/library/methods/tests/envRefClass.R
 ===================================================================
 --- R-4.1.3.orig/src/library/methods/tests/envRefClass.R
 +++ R-4.1.3/src/library/methods/tests/envRefClass.R
-@@ -4,7 +4,7 @@
+@@ -4,7 +4,7 @@ str(rp) ## failed
  rc <- getClass("refClass")
  rp <- rc@prototype
  str(rp) ## failed
@@ -118,10 +121,10 @@ Index: R-4.1.3/src/library/methods/tests/nextWithDots.R
 ===================================================================
 --- R-4.1.3.orig/src/library/methods/tests/nextWithDots.R
 +++ R-4.1.3/src/library/methods/tests/nextWithDots.R
-@@ -1,9 +1,10 @@
+@@ -1,9 +1,10 @@ setClass("A")
  setClass("A")
-+ # Works OK but breaks another test later - renaming B to BB avoids the issue
 -setClass("B", contains = c("array", "A"))
++ # Works OK but breaks another test later - renaming B to BB avoids the issue
 +setClass("BB", contains = c("array", "A"))
  a = array(1:12, c(2,3,4))
 -bb = new("B", a)
@@ -132,7 +135,7 @@ Index: R-4.1.3/src/library/methods/tests/nextWithDots.R
  
  withDots <- function(x, ...) names(list(...))
  
-@@ -15,6 +15,6 @@ setMethod("withDots", "C", function(x, .
+@@ -15,6 +16,6 @@ stopifnot(identical(withDots(1, a=1, b=2), withDots(ne
            callNextMethod()
            )
  stopifnot(identical(withDots(1, a=1, b=2), withDots(new("C"), a=1, b=2)))
@@ -144,7 +147,7 @@ Index: R-4.1.3/src/library/compiler/man/compile.Rd
 ===================================================================
 --- R-4.1.3.orig/src/library/compiler/man/compile.Rd
 +++ R-4.1.3/src/library/compiler/man/compile.Rd
-@@ -135,7 +135,7 @@ oldJIT <- enableJIT(0)
+@@ -135,7 +135,7 @@ fc(2)
  f <- function(x) x+1
  fc <- cmpfun(f)
  fc(2)
@@ -157,7 +160,7 @@ Index: R-4.1.3/src/library/compiler/tests/basics.R
 ===================================================================
 --- R-4.1.3.orig/src/library/compiler/tests/basics.R
 +++ R-4.1.3/src/library/compiler/tests/basics.R
-@@ -5,7 +5,7 @@ options(keep.source=TRUE)
+@@ -5,7 +5,7 @@ stopifnot(eval(compile(quote(x + 1))) == 3)
  ## very minimal
  x <- 2
  stopifnot(eval(compile(quote(x + 1))) == 3)
@@ -166,16 +169,17 @@ Index: R-4.1.3/src/library/compiler/tests/basics.R
  ## simple code generation
  checkCode <- function(expr, code, optimize = 2) {
      v <- compile(expr, options = list(optimize = optimize))
-@@ -29,7 +29,7 @@ checkCode(quote({f(1); f(2)}),
+@@ -29,8 +29,8 @@ checkCode(quote({f(1); f(2)}),
              PUSHCONSTARG.OP, 6L,
              CALL.OP, 7L,
              RETURN.OP))
--
 +}
  
+-
  ## names and ... args
  f <- function(...) list(...)
-@@ -90,7 +90,7 @@ stopifnot(sfc(x) == sf(x))
+ stopifnot(identical(f(1, 2), cmpfun(f)(1, 2)))
+@@ -90,7 +90,7 @@ pp <- sapply(h, function(n) get(n, compiler:::inlineHa
  h <- ls(compiler:::inlineHandlers, all.names = TRUE)
  p <- sub("package:", "", sapply(h, find))
  pp <- sapply(h, function(n) get(n, compiler:::inlineHandlers)$package)

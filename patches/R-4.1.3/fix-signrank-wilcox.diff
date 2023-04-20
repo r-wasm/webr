@@ -2,7 +2,7 @@ Index: R-4.1.3/src/library/stats/src/distn.c
 ===================================================================
 --- R-4.1.3.orig/src/library/stats/src/distn.c
 +++ R-4.1.3/src/library/stats/src/distn.c
-@@ -458,13 +458,13 @@ DEFMATH4_2(qtukey)
+@@ -458,13 +458,13 @@ extern void wilcox_free(void);
  extern void signrank_free(void);
  extern void wilcox_free(void);
  
@@ -22,7 +22,7 @@ Index: R-4.1.3/src/library/stats/src/statsR.h
 ===================================================================
 --- R-4.1.3.orig/src/library/stats/src/statsR.h
 +++ R-4.1.3/src/library/stats/src/statsR.h
-@@ -203,5 +203,5 @@ SEXP Fisher_sim(SEXP sr, SEXP sc, SEXP s
+@@ -203,5 +203,5 @@ SEXP d2x2xk(SEXP sK, SEXP sm, SEXP sn, SEXP st, SEXP s
  SEXP chisq_sim(SEXP sr, SEXP sc, SEXP sB, SEXP E);
  SEXP d2x2xk(SEXP sK, SEXP sm, SEXP sn, SEXP st, SEXP srn);
  
