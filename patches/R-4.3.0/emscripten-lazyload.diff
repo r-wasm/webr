@@ -1,0 +1,226 @@
+Index: R-4.3.0/src/library/datasets/Makefile.in
+===================================================================
+--- R-4.3.0.orig/src/library/datasets/Makefile.in
++++ R-4.3.0/src/library/datasets/Makefile.in
+@@ -26,7 +26,7 @@ all: Makefile DESCRIPTION
+ 	  $(INSTALL_DATA) $${f} $(top_builddir)/library/$(pkg)/data; \
+ 	done
+ 	@rm -f $(top_builddir)/library/$(pkg)/data/Rdata.*
+-	@$(ECHO) "tools:::data2LazyLoadDB(\"$(pkg)\", compress=3)" | \
++	@$(ECHO) "tools:::data2LazyLoadDB(\"$(pkg)\", $(LIB_LOC_ARG), compress=3)" | \
+ 	  R_DEFAULT_PACKAGES=NULL LC_ALL=C $(R_EXE) > /dev/null
+ 	@$(INSTALL_DATA) $(srcdir)/data/morley.tab \
+ 	  $(top_builddir)/library/$(pkg)/data
+Index: R-4.3.0/Makeconf.in
+===================================================================
+--- R-4.3.0.orig/Makeconf.in
++++ R-4.3.0/Makeconf.in
+@@ -164,3 +164,13 @@ Rexecmodulesdir = $(rhome)/modules$(R_ARCH)
+ ## switching to automake.
+ ## </FIXME>
+ Rexecmodulesdir = $(rhome)/modules$(R_ARCH)
++
++# WEBR: These arguments are passed to the lazyload DB helpers to
++# create databases for the wasm packages
++ifeq ($(R_INSTALL_LIBRARY),)
++  LIB_LOC_ARG = lib.loc = NULL
++  TARGET_LIB_LOC_ARG = target.lib.loc = NULL
++else
++  LIB_LOC_ARG = lib.loc = \"$(R_INSTALL_LIBRARY)\"
++  TARGET_LIB_LOC_ARG = target.lib.loc = \"$(R_INSTALL_LIBRARY)\"
++endif
+Index: R-4.3.0/share/make/basepkg.mk
+===================================================================
+--- R-4.3.0.orig/share/make/basepkg.mk
++++ R-4.3.0/share/make/basepkg.mk
+@@ -127,7 +127,7 @@ mklazy:
+ ## only used if byte-compilation is disabled
+ mklazy:
+ 	@$(INSTALL_DATA) all.R $(top_builddir)/library/$(pkg)/R/$(pkg)
+-	@$(ECHO) "tools:::makeLazyLoading(\"$(pkg)\")" | \
++	@$(ECHO) "tools:::makeLazyLoading(\"$(pkg)\", $(TARGET_LIB_LOC_ARG))" | \
+ 	  R_DEFAULT_PACKAGES=$(DEFPKGS) LC_ALL=C $(R_EXE) > /dev/null
+ 
+ mklazycomp: $(top_builddir)/library/$(pkg)/R/$(pkg).rdb
+Index: R-4.3.0/share/make/lazycomp.mk
+===================================================================
+--- R-4.3.0.orig/share/make/lazycomp.mk
++++ R-4.3.0/share/make/lazycomp.mk
+@@ -7,11 +7,11 @@ $(top_builddir)/library/$(pkg)/R/$(pkg).rdb: all.R
+ $(top_builddir)/library/$(pkg)/R/$(pkg).rdb: all.R
+ 	@$(INSTALL_DATA) all.R $(top_builddir)/library/$(pkg)/R/$(pkg)
+ 	@if test -n "$(R_NO_BASE_COMPILE)"; then \
+-	 $(ECHO) "tools:::makeLazyLoading(\"$(pkg)\")" | \
++	 $(ECHO) "tools:::makeLazyLoading(\"$(pkg)\", $(TARGET_LIB_LOC_ARG))" | \
+ 	  R_DEFAULT_PACKAGES=$(DEFPKGS) LC_ALL=C $(R_EXE) > /dev/null; \
+ 	else \
+ 	 $(ECHO) "byte-compiling package '$(pkg)'"; \
+-	 $(ECHO) "tools:::makeLazyLoading(\"$(pkg)\")" | \
++	 $(ECHO) "tools:::makeLazyLoading(\"$(pkg)\", $(TARGET_LIB_LOC_ARG))" | \
+ 	  _R_COMPILE_PKGS_=1 R_COMPILER_SUPPRESS_ALL=1 \
+ 	  R_DEFAULT_PACKAGES=$(DEFPKGS) LC_ALL=C $(R_EXE) > /dev/null; \
+ 	fi
+Index: R-4.3.0/src/library/methods/Makefile.in
+===================================================================
+--- R-4.3.0.orig/src/library/methods/Makefile.in
++++ R-4.3.0/src/library/methods/Makefile.in
+@@ -37,6 +37,9 @@ RfilesLazy: $(top_builddir)/library/$(pkg)/R/$(pkg).rd
+ 
+ RfilesLazy: $(top_builddir)/library/$(pkg)/R/$(pkg).rdb
+ 
++WEBR_HOST_METHODS =
++WEBR_BUILD_METHODS = $(top_builddir)/library/methods
++
+ ## loadNamespace() depends on the NAMESPACE file.  We remove the
+ ## dumped copy (it is rebuilt later), and we have already installed
+ ## NAMESPACE in the library tree.
+@@ -44,15 +47,22 @@ $(top_builddir)/library/$(pkg)/R/$(pkg).rdb: all.R  $(
+ ## Depending on names.c at least catches the latter.
+ $(top_builddir)/library/$(pkg)/R/$(pkg).rdb: all.R  $(srcdir)/NAMESPACE \
+   $(top_srcdir)/src/main/names.c
++	@if test -n "$(WEBR_HOST_METHODS)" && test ! -f "$(WEBR_BUILD_METHODS)/libs/$(pkg).so.wasm"; then \
++	  mv $(WEBR_BUILD_METHODS)/libs/$(pkg).so $(WEBR_BUILD_METHODS)/libs/$(pkg).so.wasm; \
++	  cp $(WEBR_HOST_METHODS)/libs/$(pkg).so $(WEBR_BUILD_METHODS)/libs/$(pkg).so; \
++	fi
+ 	@rm -f $(top_builddir)/library/$(pkg)/Meta/nsInfo.rds $@
+ 	@$(INSTALL_DATA) all.R $(top_builddir)/library/$(pkg)/R/$(pkg)
+ 	@if test -n "$(EXTRAS2)"; then \
+ 	  $(ECHO) "byte-compiling package '$(pkg)'"; \
+ 	fi
+-	@$(ECHO) "invisible(loadNamespace(\"$(pkg)\"))" | \
++	@$(ECHO) "invisible(loadNamespace(\"$(pkg)\", lib.loc = \"$(top_builddir)/library\"))" | \
+ 	  $(EXTRAS2) R_DEFAULT_PACKAGES=NULL LC_ALL=C $(R_EXE)
+ 	@$(INSTALL_DATA) $(top_srcdir)/share/R/nspackloader.R \
+ 	  $(top_builddir)/library/$(pkg)/R/$(pkg)
++	@if test -f "$(WEBR_BUILD_METHODS)/libs/$(pkg).so.wasm"; then \
++	  mv $(WEBR_BUILD_METHODS)/libs/$(pkg).so.wasm $(WEBR_BUILD_METHODS)/libs/$(pkg).so; \
++	fi
+ 
+ ## not supported
+ Rsimple:
+Index: R-4.3.0/src/library/methods/R/zzz.R
+===================================================================
+--- R-4.3.0.orig/src/library/methods/R/zzz.R
++++ R-4.3.0/src/library/methods/R/zzz.R
+@@ -21,6 +21,8 @@
+   ## Initialize the methods package.
+   function(libname, pkgname)
+ {
++    # WEBR: Loading this later throws an error about missing `is` export
++    loadNamespace("tools")
+     where <- environment(sys.function())  # the namespace
+     initMethodDispatch(where)
+     ## temporary empty reference to the package's own namespace
+Index: R-4.3.0/src/library/tools/Makefile.in
+===================================================================
+--- R-4.3.0.orig/src/library/tools/Makefile.in
++++ R-4.3.0/src/library/tools/Makefile.in
+@@ -51,7 +51,7 @@ $(top_builddir)/library/$(pkg)/R/$(pkg).rdb: all.R $(t
+ 	@$(ECHO) "byte-compiling package '$(pkg)'"
+ 	@$(INSTALL_DATA) all.R $(top_builddir)/library/$(pkg)/R/$(pkg)
+ 	@(cat $(srcdir)/R/makeLazyLoad.R; \
+-	  $(ECHO) "makeLazyLoading(\"$(pkg)\")") | \
++	  $(ECHO) "makeLazyLoading(\"$(pkg)\", $(TARGET_LIB_LOC_ARG))") | \
+ 	  _R_COMPILE_PKGS_=1 R_COMPILER_SUPPRESS_ALL=1 \
+ 	  R_DEFAULT_PACKAGES=NULL LC_ALL=C $(R_EXE) > /dev/null
+ 
+@@ -60,7 +60,7 @@ Rlazy: mkR mkRsimple
+ Rlazy: mkR mkRsimple
+ 	@$(INSTALL_DATA) all.R $(top_builddir)/library/$(pkg)/R/$(pkg)
+ 	@(cat $(srcdir)/R/makeLazyLoad.R; \
+-	  $(ECHO) "makeLazyLoading(\"$(pkg)\")") | \
++	  $(ECHO) "makeLazyLoading(\"$(pkg)\", $(TARGET_LIB_LOC_ARG))") | \
+ 	  R_DEFAULT_PACKAGES=NULL LC_ALL=C $(R_EXE) > /dev/null
+ 
+ Rlazycomp: mkR mkRsimple mklazycomp
+Index: R-4.3.0/src/library/tools/R/makeLazyLoad.R
+===================================================================
+--- R-4.3.0.orig/src/library/tools/R/makeLazyLoad.R
++++ R-4.3.0/src/library/tools/R/makeLazyLoad.R
+@@ -20,11 +20,12 @@ code2LazyLoadDB <-
+     function(package, lib.loc = NULL,
+              keep.source = getOption("keep.source.pkgs"),
+              keep.parse.data = getOption("keep.parse.data.pkgs"),
+-             compress = TRUE, set.install.dir = NULL)
++             compress = TRUE, set.install.dir = NULL,
++             target.lib.loc = lib.loc)
+ {
+-    pkgpath <- find.package(package, lib.loc, quiet = TRUE)
++    pkgpath <- find.package(package, target.lib.loc, quiet = TRUE)
+     if(!length(pkgpath))
+-        stop(packageNotFoundError(package, lib.loc, sys.call()))
++        stop(packageNotFoundError(package, target.lib.loc, sys.call()))
+     dbbase <- file.path(pkgpath, "R", package)
+     if (packageHasNamespace(package, dirname(pkgpath))) {
+         if (! is.null(.getNamespace(as.name(package))))
+@@ -33,6 +34,12 @@ code2LazyLoadDB <-
+                   package = package, lib.loc = lib.loc,
+                   keep.source = keep.source, keep.parse.data = keep.parse.data,
+                   partial = TRUE))
++        # WEBR: When we load a package from the host's library, the
++        # namespace contains lazyload promises to the host database.
++        # We force them all here so that the new lazyload database
++        # contains promises to values and not promises to lazyload
++        # promises.
++        eapply(ns, force, all.names = TRUE)
+         makeLazyLoadDB(ns, dbbase, compress = compress,
+                        set.install.dir = set.install.dir)
+     }
+@@ -333,7 +340,7 @@ makeLazyLoading <-
+     function(package, lib.loc = NULL, compress = TRUE,
+              keep.source = getOption("keep.source.pkgs"),
+              keep.parse.data = getOption("keep.parse.data.pkgs"),
+-             set.install.dir = NULL)
++             set.install.dir = NULL, target.lib.loc = lib.loc)
+ {
+     if(!is.logical(compress) && compress %notin% c(2,3))
+ 	stop(gettextf("invalid value for '%s' : %s", "compress",
+@@ -350,7 +357,7 @@ makeLazyLoading <-
+         stop("this cannot be used for package 'base'")
+ 
+     loaderFile <- file.path(R.home("share"), "R", "nspackloader.R")
+-    pkgpath <- findpack(package, lib.loc)
++    pkgpath <- findpack(package, target.lib.loc)
+     codeFile <- file.path(pkgpath, "R", package)
+ 
+     if (!file.exists(codeFile)) {
+@@ -364,7 +371,8 @@ makeLazyLoading <-
+                         keep.source = keep.source,
+                         keep.parse.data = keep.parse.data,
+                         compress = compress,
+-                        set.install.dir = set.install.dir)
++                        set.install.dir = set.install.dir,
++                        target.lib.loc = target.lib.loc)
+         file.copy(loaderFile, codeFile, TRUE)
+     }
+ 
+Index: R-4.3.0/src/library/base/makebasedb.R
+===================================================================
+--- R-4.3.0.orig/src/library/base/makebasedb.R
++++ R-4.3.0/src/library/base/makebasedb.R
+@@ -116,7 +116,11 @@ local({
+     if (length(search()[search()!="Autoloads"]) != 2)
+         stop("start R with NO packages loaded to create the data base")
+ 
+-    baseFileBase <- file.path(.Library,"base","R","base")
++    webr_lib <- Sys.getenv("R_INSTALL_LIBRARY")
++    if (!nzchar(webr_lib)) {
++      webr_lib <- .Library
++    }
++    baseFileBase <- file.path(webr_lib,"base","R","base")
+ 
+     if (file.info(baseFileBase)["size"] < 20000) # crude heuristic
+         stop("may already be using lazy loading on base");
+Index: R-4.3.0/src/library/base/R/library.R
+===================================================================
+--- R-4.3.0.orig/src/library/base/R/library.R
++++ R-4.3.0/src/library/base/R/library.R
+@@ -765,7 +765,7 @@ function(package = NULL, lib.loc = NULL, quiet = FALSE
+     ## don't waste time looking for the standard packages:
+     ## we know where they are and this can take a significant
+     ## time with 1000+ packages installed.
+-    if(length(package) == 1L  &&
++    if(length(package) == 1L  && is.null(lib.loc) &&
+        package %in% c("base", "tools", "utils", "grDevices", "graphics",
+                       "stats", "datasets", "methods", "grid", "parallel",
+                       "splines", "stats4", "tcltk", "compiler"))

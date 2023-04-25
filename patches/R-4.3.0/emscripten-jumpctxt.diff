@@ -1,0 +1,22 @@
+Index: R-4.3.0/src/main/errors.c
+===================================================================
+--- R-4.3.0.orig/src/main/errors.c
++++ R-4.3.0/src/main/errors.c
+@@ -1082,7 +1082,7 @@ static void jump_to_top_ex(Rboolean traceback,
+ 	}
+     }
+ 
+-    R_jumpctxt(R_ToplevelContext, 0, NULL);
++    R_jumpctxt(R_ToplevelContext, 1, NULL);
+ }
+ 
+ NORET void jump_to_toplevel(void)
+@@ -1536,7 +1536,7 @@ NORET void R_JumpToToplevel(Rboolean restart)
+     if (c != R_ToplevelContext)
+ 	warning(_("top level inconsistency?"));
+ 
+-    R_jumpctxt(R_ToplevelContext, CTXT_TOPLEVEL, NULL);
++    R_jumpctxt(R_ToplevelContext, 1, NULL);
+ }
+ #endif
+ 

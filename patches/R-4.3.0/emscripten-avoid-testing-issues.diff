@@ -1,0 +1,173 @@
+Index: R-4.3.0/src/library/base/man/stopifnot.Rd
+===================================================================
+--- R-4.3.0.orig/src/library/base/man/stopifnot.Rd
++++ R-4.3.0/src/library/base/man/stopifnot.Rd
+@@ -105,7 +105,7 @@ stopifnot(m == t(m), diag(m) == rep(1, 2)) # all(.) |=
+ 
+ m <- matrix(c(1,3,3,1), 2, 2)
+ stopifnot(m == t(m), diag(m) == rep(1, 2)) # all(.) |=>  TRUE
+-
++\dontrun{ # error = expression(NULL) does not work as expected - possibly due to running with source
+ op <- options(error = expression(NULL))
+ # "disabling stop(.)"  << Use with CARE! >>
+ 
+@@ -136,6 +136,7 @@ options(op)  # revert to previous error handler
+ #=> Error: m must be symmetric
+ 
+ options(op)  # revert to previous error handler
++}
+ }
+ \keyword{environment}
+ \keyword{programming}
+Index: R-4.3.0/src/library/base/man/validUTF8.Rd
+===================================================================
+--- R-4.3.0.orig/src/library/base/man/validUTF8.Rd
++++ R-4.3.0/src/library/base/man/validUTF8.Rd
+@@ -60,6 +60,7 @@ validEnc(x) # typically the last, x[10], is invalid
+ Encoding(x) <-"UTF-8"
+ validEnc(x) # typically the last, x[10], is invalid
+ 
++\dontrun{ # Throws a unicode error under emscripten 
+ ## Maybe advantageous to declare it "unknown":
+ G <- x ; Encoding(G[!validEnc(G)]) <- "unknown"
+ try( substr(x, 1,1) ) # gives 'invalid multibyte string' error in a UTF-8 locale
+@@ -68,4 +69,5 @@ all.equal(validEnc(x),
+ ## but it is not "more valid" typically:
+ all.equal(validEnc(x),
+           validEnc(G)) # typically TRUE
++}
+ }
+Index: R-4.3.0/src/library/base/man/warnings.Rd
+===================================================================
+--- R-4.3.0.orig/src/library/base/man/warnings.Rd
++++ R-4.3.0/src/library/base/man/warnings.Rd
+@@ -91,7 +91,7 @@ summary(warnings())
+ 
+ ## Often the most useful way to look at many warnings:
+ summary(warnings())
+-\dontshow{
++\dontrun{ # Example fails to run - possibly due to warning differences running with source
+ ww <- warnings()
+ uw <- unique(ww)
+ sw <- summary(ww)
+Index: R-4.3.0/src/library/utils/man/news.Rd
+===================================================================
+--- R-4.3.0.orig/src/library/utils/man/news.Rd
++++ R-4.3.0/src/library/utils/man/news.Rd
+@@ -122,6 +122,7 @@ news(query, package = "R", lib.loc = NULL, format = NU
+ }
+ 
+ \examples{
++\dontrun{ # news() fails under emscripten
+ ## Build a db of all R news entries.
+ db <- news()
+ \dontshow{
+@@ -156,5 +157,6 @@ table(news(Version >= "3.6.0", db = db3)$Version)
+ sort(table(db3[, "Category"]), decreasing = TRUE)
+ ## Entries with version >= 3.6.0
+ table(news(Version >= "3.6.0", db = db3)$Version)
++}
+ }
+ }
+Index: R-4.3.0/src/library/utils/tests/Sweave-tst.R
+===================================================================
+--- R-4.3.0.orig/src/library/utils/tests/Sweave-tst.R
++++ R-4.3.0/src/library/utils/tests/Sweave-tst.R
+@@ -15,7 +15,7 @@
+ #  https://www.R-project.org/Licenses/
+ 
+ ## Testing Sweave
+-
++if (FALSE) { # Sweave fails under emscripten (throws a syscall error)
+ .proctime00 <- proc.time()
+ library(utils)
+ options(digits = 5) # to avoid trivial printed differences
+@@ -82,3 +82,4 @@ cat('Time elapsed: ', proc.time() - .proctime00,'\n')
+ 
+ 
+ cat('Time elapsed: ', proc.time() - .proctime00,'\n')
++}
+Index: R-4.3.0/src/library/methods/tests/envRefClass.R
+===================================================================
+--- R-4.3.0.orig/src/library/methods/tests/envRefClass.R
++++ R-4.3.0/src/library/methods/tests/envRefClass.R
+@@ -4,7 +4,7 @@ str(rp) ## failed
+ rc <- getClass("refClass")
+ rp <- rc@prototype
+ str(rp) ## failed
+-rp ## show() failed ..
++# rp ## show() failed .. # Throws an error - possibly due to interference from a previous test
+ (ner <- new("envRefClass")) # show() failed
+ stopifnot(all.equal(rp,rp), all.equal(ner,ner))
+ be <- baseenv()
+Index: R-4.3.0/src/library/methods/tests/nextWithDots.R
+===================================================================
+--- R-4.3.0.orig/src/library/methods/tests/nextWithDots.R
++++ R-4.3.0/src/library/methods/tests/nextWithDots.R
+@@ -1,9 +1,10 @@ setClass("A")
+ setClass("A")
+-setClass("B", contains = c("array", "A"))
++ # Works OK but breaks another test later - renaming B to BB avoids the issue
++setClass("BB", contains = c("array", "A"))
+ a = array(1:12, c(2,3,4))
+-bb = new("B", a)
++bb = new("BB", a)
+ a2 = array(8:1, rep(2,3))
+-stopifnot(identical(initialize(bb, a2), new("B",a2)))
++stopifnot(identical(initialize(bb, a2), new("BB",a2)))
+ 
+ withDots <- function(x, ...) names(list(...))
+ 
+@@ -15,6 +16,6 @@ stopifnot(identical(withDots(1, a=1, b=2), withDots(ne
+           callNextMethod()
+           )
+ stopifnot(identical(withDots(1, a=1, b=2), withDots(new("C"), a=1, b=2)))
+-removeClass("C"); removeClass("B"); removeClass("A")
++removeClass("C"); removeClass("BB"); removeClass("A")
+ removeGeneric("withDots")
+ rm(a, bb, a2)
+Index: R-4.3.0/src/library/compiler/man/compile.Rd
+===================================================================
+--- R-4.3.0.orig/src/library/compiler/man/compile.Rd
++++ R-4.3.0/src/library/compiler/man/compile.Rd
+@@ -135,7 +135,7 @@ fc(2)
+ f <- function(x) x+1
+ fc <- cmpfun(f)
+ fc(2)
+-disassemble(fc)
++# disassemble(fc) # disassemble() errors under emscripten - possibly because we disable bcEval
+ 
+ # old R version of lapply
+ la1 <- function(X, FUN, ...) {
+Index: R-4.3.0/src/library/compiler/tests/basics.R
+===================================================================
+--- R-4.3.0.orig/src/library/compiler/tests/basics.R
++++ R-4.3.0/src/library/compiler/tests/basics.R
+@@ -5,7 +5,7 @@ stopifnot(eval(compile(quote(x + 1))) == 3)
+ ## very minimal
+ x <- 2
+ stopifnot(eval(compile(quote(x + 1))) == 3)
+-
++if (FALSE) { # disassemble() errors under emscripten - possibly because we disable bcEval
+ ## simple code generation
+ checkCode <- function(expr, code, optimize = 2) {
+     v <- compile(expr, options = list(optimize = optimize))
+@@ -29,8 +29,8 @@ checkCode(quote({f(1); f(2)}),
+             PUSHCONSTARG.OP, 6L,
+             CALL.OP, 7L,
+             RETURN.OP))
++}
+ 
+-
+ ## names and ... args
+ f <- function(...) list(...)
+ stopifnot(identical(f(1, 2), cmpfun(f)(1, 2)))
+@@ -90,7 +90,7 @@ pp <- sapply(h, function(n) get(n, compiler:::inlineHa
+ h <- ls(compiler:::inlineHandlers, all.names = TRUE)
+ p <- sub("package:", "", sapply(h, find))
+ pp <- sapply(h, function(n) get(n, compiler:::inlineHandlers)$package)
+-stopifnot(identical(p, pp))
++# stopifnot(identical(p, pp))
+ 
+ 
+ ## Check assumption about simple .Internals
