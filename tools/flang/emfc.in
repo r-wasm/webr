@@ -18,7 +18,7 @@ while [[ $# -gt 0 ]]; do
             NO_LINKING=true
             shift
             ;;
-        -O0|-O1|-O2|-O3|-fPIC)
+        -O0|-O1|-O2|-O3|-fpic|-fPIC|-fPIE)
             shift
             ;;
         -*|--*)
@@ -52,7 +52,7 @@ sed -i.bak "s/_QQcl\./_QQcl_/g" ${OUT_BASE}.ll && rm ${OUT_BASE}.ll.bak
 if [ -z ${NO_LINKING-} ]
 then
     ${LLC} -march=wasm32 -filetype=obj --relocation-model=pic "${OUT_BASE}.ll" -o "${OUT_BASE}.s"
-    wasm-ld "${OUT_BASE}.s" -o "${OUT}" --no-entry --allow-undefined --relocatable --experimental-pic
+    wasm-ld "${OUT_BASE}.s" -Oz -o "${OUT}" --no-entry --allow-undefined --relocatable --experimental-pic
 else
-    ${LLC} -march=wasm32 -filetype=obj --relocation-model=pic "${OUT_BASE}.ll" -o "${OUT}"
+    ${LLC} -march=wasm32 -O2 -filetype=obj --relocation-model=pic "${OUT_BASE}.ll" -o "${OUT}"
 fi
