@@ -8,7 +8,7 @@ RUN echo "deb http://archive.ubuntu.com/ubuntu/ trusty main restricted universe"
     echo "deb http://security.ubuntu.com/ubuntu/ trusty-security main" >> /etc/apt/sources.list && \
     apt-get update && \
     apt-get -y install --no-install-recommends \
-        build-essential curl wget git gnutls-bin bash make cmake ca-certificates xz-utils \
+        build-essential curl wget git gnutls-bin bash make cmake ca-certificates xz-utils gperf \
         gfortran-4.6 g++-4.6 gcc-4.6 gcc-4.6-plugin-dev gfortran-4.6 llvm-3.3-dev python3 quilt \
 		libbz2-dev liblzma-dev libpcre2-dev libcurl4-openssl-dev libpng-dev clang-3.3 zlib1g-dev && \
     rm -rf /var/lib/apt/lists/*

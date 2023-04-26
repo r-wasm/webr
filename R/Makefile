@@ -76,7 +76,7 @@ $(BUILD)/state/r-stage1-configured: $(BUILD)/state/r-patched
 	    --with-aqua=no \
 	    --with-readline=no \
 	    --with-jpeglib=no \
-	    --with-cairo=no \
+	    --with-static-cairo=yes \
 	    --disable-openmp \
 	    --with-recommended-packages=no \
 	    --enable-R-profiling=no \
@@ -97,12 +97,14 @@ STAGE2_CPPFLAGS += -I$(WASM)/include
 STAGE2_CPPFLAGS += -DEXPEL_OLD_TO_NEW=1
 STAGE2_CPPFLAGS += -s USE_BZIP2=1
 STAGE2_CPPFLAGS += -s USE_ZLIB=1
+STAGE2_CPPFLAGS += -s USE_FREETYPE=1
 
 STAGE2_CFLAGS := $(STAGE2_CFLAGS)
 STAGE2_CFLAGS += $(STAGE2_CPPFLAGS) $(WASM_CFLAGS)
 
 STAGE2_LDFLAGS := $(STAGE2_LDFLAGS)
 STAGE2_LDFLAGS += -L$(WASM)/lib
+STAGE2_LDFLAGS +=-s USE_FREETYPE=1
 
 MAIN_LDFLAGS  = -s MAIN_MODULE=1
 MAIN_LDFLAGS += -s WASM=1
@@ -138,7 +140,7 @@ $(BUILD)/state/r-stage2-configured: $(BUILD)/state/r-patched $(FORTRAN_WASM_LIB)
 	    --with-x=no \
 	    --with-readline=no \
 	    --with-jpeglib=no \
-	    --with-cairo=no \
+	    --with-static-cairo=yes \
 	    --disable-openmp \
 	    --with-recommended-packages=no \
 	    --enable-R-profiling=no \
@@ -176,6 +178,10 @@ MAKE_WASM_INSTALL := $(MAKE_WASM)
 $(BUILD)/state/r-stage2: $(BUILD)/state/r-stage1 $(BUILD)/state/r-stage2-configured
 	cd $(WEBR_ROOT)/packages && \
 	  $(MAKE_WASM) clean && $(MAKE_WASM) all
+# Remove repeated link flags, leads to duplicate symbol error with Emscripten
+	sed -i.bak -e ':m' -e 's/-lz//2' -e 't m' -e ':n' -e 's/-lpng16//2' -e 't n' \
+	  $(R_SOURCE)/build/src/library/grDevices/src/cairo/Makefile
+	rm $(R_SOURCE)/build/src/library/grDevices/src/cairo/Makefile.bak
 	cd $(STAGE2_BUILD) && \
 	  $(MAKE_WASM_BUILD) R
 	touch $@
@@ -184,6 +190,7 @@ $(BUILD)/state/r-stage2: $(BUILD)/state/r-stage1 $(BUILD)/state/r-stage2-configu
 Rprofile: $(BUILD)/state/r-stage2
 	mkdir -p "$(R_WASM)/lib/R/etc/"
 	echo "options(expressions=400)" > "$(R_WASM)/lib/R/etc/Rprofile.site"
+	echo "options(bitmapType='cairo')" >> "$(R_WASM)/lib/R/etc/Rprofile.site"
 
 .PHONY: install
 install: install-tests Rprofile

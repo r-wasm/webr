@@ -141,6 +141,7 @@ export interface WebROptions {
 }
 
 const defaultEnv = {
+  FONTCONFIG_PATH: '/etc/fonts',
   R_HOME: '/usr/lib/R',
   R_ENABLE_JIT: '0',
 };

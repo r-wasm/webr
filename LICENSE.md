@@ -10,6 +10,7 @@ The following external software is included either directly as part of this repo
  * [Dragonegg](https://dragonegg.llvm.org) - GNU GPL Version 2
  * [LLVM Flang](https://github.com/flang-compiler/f18-llvm-project) - Apache Licence Version 2
  * [xterm.js](https://xtermjs.org/) - MIT Licence
+ * [Noto Fonts](https://fonts.google.com/noto) - SIL Open Font License
 
 The webR distribution binaries also contain copies of several of the above software. To remain compatible with the GPL, the webR binaries are distributed under the GNU GPL Version 3 Licence (copied below).
 
