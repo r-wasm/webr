@@ -736,9 +736,6 @@ function init(config: Required<WebROptions>) {
   Module.setPrompt = (prompt: string) => {
     chan?.write({ type: 'prompt', data: prompt });
   };
-  Module.canvasExec = (op: string) => {
-    chan?.write({ type: 'canvasExec', data: op });
-  };
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   (globalThis as any).Module = Module;

@@ -68,7 +68,6 @@ const webR = new WebR({
     R_HOME: '/usr/lib/R',
     FONTCONFIG_PATH: '/etc/fonts',
     R_ENABLE_JIT: '0',
-    R_DEFAULT_DEVICE: 'canvas',
     COLORTERM: 'truecolor',
   },
 });
@@ -80,6 +79,7 @@ const webR = new WebR({
   readline.setCtrlCHandler(() => webR.interrupt());
 
   await webR.evalRVoid('webr::global_prompt_install()', { withHandlers: false });
+  await webR.evalRVoid('options(device=webr::canvas)');
 
   // Clear the loading message
   term.write('\x1b[2K\r');
