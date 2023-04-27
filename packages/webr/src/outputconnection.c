@@ -21,7 +21,7 @@
 #include <R_ext/Connections.h>
 #include "decl/outputconnection-decl.h"
 
-SEXP ffi_new_output_connections() {
+SEXP ffi_new_output_connections(void) {
   Rconnection out_con_stdout;
   Rconnection out_con_stderr;
 

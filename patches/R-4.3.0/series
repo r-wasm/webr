@@ -9,7 +9,6 @@ emscripten-input.diff
 emscripten-disable-system.diff
 emscripten-jumpctxt.diff
 emscripten-xhr-download.diff
-emscripten-canvas-device.diff
 emscripten-disable-bcEval.diff
 emscripten-fix-blas-dlsym-search.diff
 emscripten-avoid-testing-issues.diff
