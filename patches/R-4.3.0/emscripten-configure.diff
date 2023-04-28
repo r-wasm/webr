@@ -1,0 +1,89 @@
+Index: R-4.3.0/configure
+===================================================================
+--- R-4.3.0.orig/configure
++++ R-4.3.0/configure
+@@ -15050,7 +15050,7 @@ _LT_EOF
+       archive_expsym_cmds='sed "s|^|_|" $export_symbols >$output_objdir/$soname.expsym~$CC -shared $pic_flag $libobjs $deplibs $compiler_flags $wl-h,$soname $wl--retain-symbols-file,$output_objdir/$soname.expsym $wl--image-base,`expr ${RANDOM-$$} % 4096 / 2 \* 262144 + 1342177280` -o $lib'
+       ;;
+ 
+-    gnu* | linux* | tpf* | k*bsd*-gnu | kopensolaris*-gnu)
++    gnu* | linux* | tpf* | k*bsd*-gnu | kopensolaris*-gnu | emscripten*)
+       tmp_diet=no
+       if test linux-dietlibc = "$host_os"; then
+ 	case $cc_basename in
+@@ -15817,7 +15817,7 @@ printf "%s\n" "$lt_cv_irix_exported_symbol" >&6; }
+       link_all_deplibs=yes
+       ;;
+ 
+-    linux*)
++    linux* | emscripten*)
+       case $cc_basename in
+       tcc*)
+ 	# Fabrice Bellard et al's Tiny C Compiler
+@@ -16874,7 +16874,7 @@ linux*android*)
+   ;;
+ 
+ # This must be glibc/ELF.
+-linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu*)
++linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu* | emscripten*)
+   version_type=linux # correct to gnu/linux during the next big refactor
+   need_lib_prefix=no
+   need_version=no
+@@ -18966,7 +18966,7 @@ fi
+         inherit_rpath_CXX=yes
+         ;;
+ 
+-      linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu*)
++      linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu* | emscripten*)
+         case $cc_basename in
+           KCC*)
+ 	    # Kuck and Associates, Inc. (KAI) C++ Compiler
+@@ -20851,7 +20851,7 @@ linux*android*)
+   ;;
+ 
+ # This must be glibc/ELF.
+-linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu*)
++linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu* | emscripten*)
+   version_type=linux # correct to gnu/linux during the next big refactor
+   need_lib_prefix=no
+   need_version=no
+@@ -23972,7 +23972,7 @@ linux*android*)
+   ;;
+ 
+ # This must be glibc/ELF.
+-linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu*)
++linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu* | emscripten*)
+   version_type=linux # correct to gnu/linux during the next big refactor
+   need_lib_prefix=no
+   need_version=no
+@@ -42825,7 +42825,7 @@ case "${host_os}" in
+ ##    flags to all (C, C++ and Fortran) compiler flags.
+ 
+ case "${host_os}" in
+-  mingw*|windows*|winnt|msys)
++  mingw*|windows*|winnt|msys|emscripten*)
+     ;;
+   *)
+     r_save_CFLAGS=${CFLAGS}
+@@ -51602,6 +51602,11 @@ fi
+ 
+ ## libcurl
+ 
++case $host_os in
++emscripten*)
++  have_libcurl=no
++  ;;
++*)
+ # Extract the first word of "curl-config", so it can be a program name with args.
+ set dummy curl-config; ac_word=$2
+ { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+@@ -51788,7 +51793,9 @@ fi
+ else
+   as_fn_error $? "libcurl >= 7.28.0 library and headers are required with support for https" "$LINENO" 5
+ fi
++;;
+ 
++esac
+ 
+ 
+ ## Bitmap headers and libraries.

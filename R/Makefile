@@ -37,19 +37,19 @@ WASM_CFLAGS += -fPIC -fno-exceptions -fno-rtti $(WASM_OPT)
 all: R
 
 .PHONY: R
-R: $(BUILD)/state/r-stage2
+R: $(BUILD)/state/R-$(R_VERSION)/r-stage2
 
 $(R_TARBALL):
 	mkdir -p $(DOWNLOAD)
 	wget $(R_URL) -O $@
 
-$(BUILD)/state/r-patched: $(R_TARBALL)
+$(BUILD)/state/R-$(R_VERSION)/r-patched: $(R_TARBALL)
 	rm -rf $(R_SOURCE)
 	mkdir -p $(BUILD)
 	tar -C $(BUILD) -xf $(R_TARBALL)
 	cp -r "$(WEBR_ROOT)/patches/R-$(R_VERSION)/." "$(R_SOURCE)/patches"
 	cd "$(R_SOURCE)/patches" && quilt push -a
-	mkdir -p $(BUILD)/state
+	mkdir -p $(BUILD)/state/R-$(R_VERSION)
 	touch $@
 
 STAGE1_CC ?= clang
@@ -57,7 +57,7 @@ STAGE1_CXX ?= clang++
 STAGE1_FC ?= gfortran
 
 # Stage 1: Build a native version of R so we can compile the default packages
-$(BUILD)/state/r-stage1-configured: $(BUILD)/state/r-patched
+$(BUILD)/state/R-$(R_VERSION)/r-stage1-configured: $(BUILD)/state/R-$(R_VERSION)/r-patched
 	mkdir -p $(R_SOURCE)/build-stage1/doc
 # Workaround for the lack of LaTeX packages
 	cd $(R_SOURCE)/build-stage1/doc && \
@@ -86,7 +86,7 @@ $(BUILD)/state/r-stage1-configured: $(BUILD)/state/r-patched
 	    --enable-long-double=no
 	touch $@
 
-$(BUILD)/state/r-stage1: $(BUILD)/state/r-stage1-configured
+$(BUILD)/state/R-$(R_VERSION)/r-stage1: $(BUILD)/state/R-$(R_VERSION)/r-stage1-configured
 	cd $(R_SOURCE)/build-stage1 && \
 	  $(MAKE) R && \
 	  $(MAKE) install
@@ -123,7 +123,7 @@ SHLIB_LDFLAGS  = -s SIDE_MODULE=1
 SHLIB_LDFLAGS += -s WASM_BIGINT $(WASM_OPT_LDADD)
 
 # Stage 2: Reconfigure and build for wasm32-unknown-emscripten target
-$(BUILD)/state/r-stage2-configured: $(BUILD)/state/r-patched $(FORTRAN_WASM_LIB)
+$(BUILD)/state/R-$(R_VERSION)/r-stage2-configured: $(BUILD)/state/R-$(R_VERSION)/r-patched $(FORTRAN_WASM_LIB)
 	mkdir -p $(R_SOURCE)/build
 	cd $(R_SOURCE)/build && \
 	  EM_PKG_CONFIG_PATH="$(WASM)/lib/pkgconfig" \
@@ -175,7 +175,7 @@ MAKE_WASM_BUILD += FORTRAN_WASM_LDADD="$(FORTRAN_WASM_LDADD)"
 
 MAKE_WASM_INSTALL := $(MAKE_WASM)
 
-$(BUILD)/state/r-stage2: $(BUILD)/state/r-stage1 $(BUILD)/state/r-stage2-configured
+$(BUILD)/state/R-$(R_VERSION)/r-stage2: $(BUILD)/state/R-$(R_VERSION)/r-stage1 $(BUILD)/state/R-$(R_VERSION)/r-stage2-configured
 	cd $(WEBR_ROOT)/packages && \
 	  $(MAKE_WASM) clean && $(MAKE_WASM) all
 # Remove repeated link flags, leads to duplicate symbol error with Emscripten
@@ -187,7 +187,7 @@ $(BUILD)/state/r-stage2: $(BUILD)/state/r-stage1 $(BUILD)/state/r-stage2-configu
 	touch $@
 
 .PHONY: Rprofile
-Rprofile: $(BUILD)/state/r-stage2
+Rprofile: $(BUILD)/state/R-$(R_VERSION)/r-stage2
 	mkdir -p "$(R_WASM)/lib/R/etc/"
 	echo "options(expressions=400)" > "$(R_WASM)/lib/R/etc/Rprofile.site"
 	echo "options(bitmapType='cairo')" >> "$(R_WASM)/lib/R/etc/Rprofile.site"
@@ -202,14 +202,14 @@ install: install-tests Rprofile
 	cp -r "$(R_WASM)/dist/." $(DIST)
 
 .PHONY: install-tests
-install-tests: $(BUILD)/state/r-stage2
+install-tests: $(BUILD)/state/R-$(R_VERSION)/r-stage2
 	cd $(R_SOURCE)/build && \
 	  $(MAKE_WASM_BUILD) docs && \
 	  $(MAKE_WASM_INSTALL) install-tests
 
 .PHONY: rebuild-extra-pkgs
-rebuild-extra-pkgs: $(BUILD)/state/r-stage2
-	rm -f $(BUILD)/state/r-stage2
+rebuild-extra-pkgs: $(BUILD)/state/R-$(R_VERSION)/r-stage2
+	rm -f $(BUILD)/state/R-$(R_VERSION)/r-stage2
 	cd $(WEBR_ROOT)/packages && \
 	  $(MAKE_WASM) clean && $(MAKE_WASM) all
 	cd $(STAGE2_BUILD)/src/main && \
@@ -217,8 +217,8 @@ rebuild-extra-pkgs: $(BUILD)/state/r-stage2
 	cp -r "$(R_WASM)/dist/." $(DIST)
 
 .PHONY: rebuild-core
-rebuild-core: $(BUILD)/state/r-stage2
-	rm -f $(BUILD)/state/r-stage2
+rebuild-core: $(BUILD)/state/R-$(R_VERSION)/r-stage2
+	rm -f $(BUILD)/state/R-$(R_VERSION)/r-stage2
 	cd $(STAGE2_BUILD)/src/unix && \
 	  $(MAKE_WASM_BUILD)
 	cd $(STAGE2_BUILD)/src/main && \
@@ -227,8 +227,8 @@ rebuild-core: $(BUILD)/state/r-stage2
 	cp -r "$(R_WASM)/dist/." $(DIST)
 
 .PHONY: rebuild-modules
-rebuild-modules: $(BUILD)/state/r-stage2
-	rm -f $(BUILD)/state/r-stage2
+rebuild-modules: $(BUILD)/state/R-$(R_VERSION)/r-stage2
+	rm -f $(BUILD)/state/R-$(R_VERSION)/r-stage2
 	cd $(STAGE2_BUILD)/src/modules && \
 	  $(MAKE_WASM_BUILD) && \
 	  $(MAKE_WASM_BUILD) install
