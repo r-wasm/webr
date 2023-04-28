@@ -24,6 +24,8 @@
 
  * Removed the legacy `console.mjs` build target. The `Console` class is re-exported on the default `WebR` entrypoint, and so the extra build target is not required. This is technically a breaking change, but the legacy entrypoint was never documented and so we believe the change has only minor effect.
 
+ * The webR HTML `canvas()` graphics device has been moved from the default grDevices package to the webr support package. In addition, it has been reimplemented using the `OffscreenCanvas` API. Users of the Safari web browser will now require at least version 16.4 (the latest stable release at time of writing) to use the canvas graphics device. Users with older browsers not supporting `OffscreenCanvas` will need to use an alternative plotting method, such as bitmap graphics using the `png()` Cairo device.
+
 ## Bug fixes
 
 * The `REnv` property of a user provided `WebROptions` is now merged with the default value, rather than replacing it. With this a user need not explicitly include the default `R_HOME` value when adding new environment variables.
