@@ -1,20 +1,20 @@
 /* eslint-disable @typescript-eslint/await-thenable */
 import { WebR } from '../../webR/webr-main';
+import * as RMain from '../../webR/robj-main';
 import {
-  RNull,
-  RDouble,
-  RInteger,
-  RFunction,
-  RSymbol,
-  RLogical,
-  RComplex,
-  RRaw,
-  RPairlist,
-  RList,
-  REnvironment,
   RCharacter,
-  isRObject,
+  RComplex,
+  RDouble,
+  REnvironment,
+  RFunction,
+  RInteger,
+  RList,
+  RLogical,
+  RNull,
   RObject,
+  RPairlist,
+  RRaw,
+  RSymbol,
 } from '../../webR/robj-main';
 
 const webR = new WebR({
@@ -355,17 +355,17 @@ describe('Working with R lists and vectors', () => {
   test('Convert an R pairlist to depth 1', async () => {
     const result = (await webR.evalR('pairlist(pairlist(1))')) as RPairlist;
     let convert = await result.toJs();
-    expect(isRObject(convert.values[0])).toEqual(false);
+    expect(RMain.isRObject(convert.values[0])).toEqual(false);
     convert = await result.toJs({ depth: 1 });
-    expect(isRObject(convert.values[0])).toEqual(true);
+    expect(RMain.isRObject(convert.values[0])).toEqual(true);
   });
 
   test('Convert an R list to depth 1', async () => {
     const result = (await webR.evalR('list(list(1))')) as RList;
     let convert = await result.toJs();
-    expect(isRObject(convert.values[0])).toEqual(false);
+    expect(RMain.isRObject(convert.values[0])).toEqual(false);
     convert = await result.toJs({ depth: 1 });
-    expect(isRObject(convert.values[0])).toEqual(true);
+    expect(RMain.isRObject(convert.values[0])).toEqual(true);
   });
 });
 
@@ -424,9 +424,9 @@ describe('Working with R environments', () => {
   test('Convert an R environment to depth 1', async () => {
     const env = (await webR.evalR('x<-new.env();x$a=TRUE;x$b=FALSE;x$.c=NA;x')) as REnvironment;
     let convert = await env.toJs();
-    expect(isRObject(convert.values[0])).toEqual(false);
+    expect(RMain.isRObject(convert.values[0])).toEqual(false);
     convert = await env.toJs({ depth: 1 });
-    expect(isRObject(convert.values[0])).toEqual(true);
+    expect(RMain.isRObject(convert.values[0])).toEqual(true);
   });
 
   test('Evaluating R code in an environment', async () => {
@@ -640,6 +640,91 @@ describe('Garbage collection', () => {
 
     await shelter.purge();
     expect(await shelter.size()).toEqual(0);
+  });
+});
+
+describe('R proxy object type predicate functions', () => {
+  test('Check an RObject instance', async () => {
+    const obj = await webR.evalR('1234');
+    expect(RMain.isRObject(obj)).toEqual(true);
+  });
+
+  test('Check an RNull instance', async () => {
+    const obj = await webR.evalR('NULL');
+    expect(RMain.isRNull(obj)).toEqual(true);
+    expect(RMain.isRDouble(obj)).toEqual(false);
+  });
+
+  test('Check an RSymbol instance', async () => {
+    const obj = await webR.evalR('as.symbol("foo")');
+    expect(RMain.isRSymbol(obj)).toEqual(true);
+    expect(RMain.isRDouble(obj)).toEqual(false);
+  });
+
+  test('Check an RPairlist instance', async () => {
+    const obj = await webR.evalR('pairlist(foo=1, bar=2)');
+    expect(RMain.isRPairlist(obj)).toEqual(true);
+    expect(RMain.isRDouble(obj)).toEqual(false);
+  });
+
+  test('Check an REnvironment instance', async () => {
+    const obj = await webR.evalR('new.env()');
+    expect(RMain.isREnvironment(obj)).toEqual(true);
+    expect(RMain.isRDouble(obj)).toEqual(false);
+  });
+
+  test('Check an RLogical instance', async () => {
+    const obj = await webR.evalR('TRUE');
+    expect(RMain.isRLogical(obj)).toEqual(true);
+    expect(RMain.isRDouble(obj)).toEqual(false);
+  });
+
+  test('Check an RInteger instance', async () => {
+    const obj = await webR.evalR('123L');
+    expect(RMain.isRInteger(obj)).toEqual(true);
+    expect(RMain.isRDouble(obj)).toEqual(false);
+  });
+
+  test('Check an RDouble instance', async () => {
+    const obj = await webR.evalR('123');
+    expect(RMain.isRDouble(obj)).toEqual(true);
+    expect(RMain.isRCharacter(obj)).toEqual(false);
+  });
+
+  test('Check an RComplex instance', async () => {
+    const obj = await webR.evalR('1+2i');
+    expect(RMain.isRComplex(obj)).toEqual(true);
+    expect(RMain.isRDouble(obj)).toEqual(false);
+  });
+
+  test('Check an RCharacter instance', async () => {
+    const obj = await webR.evalR('"foo"');
+    expect(RMain.isRCharacter(obj)).toEqual(true);
+    expect(RMain.isRDouble(obj)).toEqual(false);
+  });
+
+  test('Check an RList instance', async () => {
+    const obj = await webR.evalR('list(foo=1, bar=2)');
+    expect(RMain.isRList(obj)).toEqual(true);
+    expect(RMain.isRDouble(obj)).toEqual(false);
+  });
+
+  test('Check an RRaw instance', async () => {
+    const obj = await webR.evalR('as.raw(c(1,2,3))');
+    expect(RMain.isRRaw(obj)).toEqual(true);
+    expect(RMain.isRDouble(obj)).toEqual(false);
+  });
+
+  test('Check an RCall instance', async () => {
+    const obj = await webR.evalR('quote(sin(x))');
+    expect(RMain.isRCall(obj)).toEqual(true);
+    expect(RMain.isRDouble(obj)).toEqual(false);
+  });
+
+  test('Check an RFunction instance', async () => {
+    const obj = await webR.evalR('sin');
+    expect(RMain.isRFunction(obj)).toEqual(true);
+    expect(RMain.isRDouble(obj)).toEqual(false);
   });
 });
 
