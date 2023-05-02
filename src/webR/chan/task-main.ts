@@ -3,7 +3,8 @@
 import { Endpoint, SZ_BUF_FITS_IDX, SZ_BUF_SIZE_IDX, generateUUID } from './task-common';
 
 import { sleep } from '../utils';
-import { SyncRequestData, encodeData } from './message';
+import { SyncRequestData } from './message';
+import { encode } from '@msgpack/msgpack';
 
 import { IN_NODE } from '../compat';
 import type { Worker as NodeWorker } from 'worker_threads';
@@ -28,7 +29,7 @@ export async function syncResponse(endpoint: Endpoint, data: SyncRequestData, re
     let { taskId, sizeBuffer, dataBuffer, signalBuffer } = data;
     // console.warn(msg);
 
-    const bytes = encodeData(response);
+    const bytes = encode(response);
     const fits = bytes.length <= dataBuffer.length;
 
     Atomics.store(sizeBuffer, SZ_BUF_SIZE_IDX, bytes.length);

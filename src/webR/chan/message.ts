@@ -93,27 +93,3 @@ export function newSyncRequest(msg: Message, data: SyncRequestData): SyncRequest
     data: { msg, reqData: data },
   };
 }
-
-const encoder = new TextEncoder();
-const decoder = new TextDecoder('utf-8');
-
-/**
- * Encode data for transfering from worker thread to main thread.
- * @param {any} data The message data to be serialised and encoded.
- * @return {Uint8Array} The encoded data.
- * @internal
- * */
-export function encodeData(data: any): Uint8Array {
-  // TODO: Pass a `replacer` function
-  return encoder.encode(JSON.stringify(data));
-}
-
-/**
- * Decode data that has been transferred from worker thread to main thread.
- * @param {any} data The message data to be decoded.
- * @return {unknown} The data after decoding.
- * @internal
- * */
-export function decodeData(data: Uint8Array): unknown {
-  return JSON.parse(decoder.decode(data)) as unknown;
-}

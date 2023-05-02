@@ -5,9 +5,8 @@ import {
   Response,
   Request,
   newResponse,
-  encodeData,
-  decodeData,
 } from './message';
+import { encode, decode } from '@msgpack/msgpack';
 import { Endpoint } from './task-common';
 import { ChannelMain, ChannelWorker } from './channel';
 import { ChannelType } from './channel-common';
@@ -249,8 +248,8 @@ export class ServiceWorkerChannelWorker implements ChannelWorker {
           clientId: this.#mainThreadId,
           uuid: request.data.uuid,
         };
-        xhr.send(encodeData(fetchReqBody));
-        return decodeData(new Uint8Array(xhr.response as ArrayBuffer)) as Response;
+        xhr.send(encode(fetchReqBody));
+        return decode(xhr.response as ArrayBuffer) as Response;
       } catch (e: any) {
         if (e instanceof DOMException && retryCount++ < 1000) {
           console.log('Service worker request failed - resending request');
