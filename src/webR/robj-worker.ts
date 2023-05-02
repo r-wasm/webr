@@ -1105,7 +1105,7 @@ function toWebRData(jsObj: WebRData): WebRData;
 function toWebRData(jsObj: WebRData): WebRData {
   if (isWebRDataJs(jsObj)) {
     return jsObj;
-  } else if (Array.isArray(jsObj)) {
+  } else if (Array.isArray(jsObj) || ArrayBuffer.isView(jsObj)) {
     return { names: null, values: jsObj };
   } else if (jsObj && typeof jsObj === 'object' && !isComplex(jsObj)) {
     return {
