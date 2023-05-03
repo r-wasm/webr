@@ -1,5 +1,5 @@
 import { promiseHandles } from '../utils';
-import { decodeData, encodeData } from './message';
+import { encode, decode } from '@msgpack/msgpack';
 import { ServiceWorkerHandlers } from './channel';
 
 declare let self: ServiceWorkerGlobalScope;
@@ -35,7 +35,7 @@ async function sendRequest(clientId: string, uuid: string): Promise<Response> {
 
   const response = await requests[uuid].promise;
   const headers = { 'Cross-Origin-Embedder-Policy': 'require-corp' };
-  return new Response(encodeData(response), { headers });
+  return new Response(encode(response), { headers });
 }
 
 export function handleFetch(event: FetchEvent) {
@@ -46,7 +46,7 @@ export function handleFetch(event: FetchEvent) {
   }
   const requestBody = event.request.arrayBuffer();
   const requestReponse = requestBody.then(async (body) => {
-    const data = decodeData(new Uint8Array(body)) as { clientId: string; uuid: string };
+    const data = decode(body) as { clientId: string; uuid: string };
     return await sendRequest(data.clientId, data.uuid);
   });
   event.waitUntil(requestReponse);
