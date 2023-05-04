@@ -9,6 +9,8 @@ TOOLS = $(WEBR_ROOT)/tools
 HOST = $(WEBR_ROOT)/host
 WASM = $(WEBR_ROOT)/wasm
 
+export EM_PKG_CONFIG_PATH = $(WASM)/lib/pkgconfig
+
 WASM_OPT ?= -Oz
 WASM_OPT_LDADD ?= $(WASM_OPT)
 
@@ -25,6 +27,7 @@ FC_VERSION = 2.12.5
 FC_TARBALL = $(DOWNLOAD)/fontconfig-$(FC_VERSION).tar.gz
 FC_URL = https://www.freedesktop.org/software/fontconfig/release/fontconfig-$(FC_VERSION).tar.gz
 FC_WASM_LIB = $(WASM)/lib/libfontconfig.a
+FC_DEPS = $(FC_WASM_LIB) $(EM_PKG_CONFIG_PATH)/fontconfig.pc
 
 LIBPNG_VERSION = 1.6.38
 LIBPNG_TARBALL = $(DOWNLOAD)/libpng-$(LIBPNG_VERSION).tar.gz
@@ -62,8 +65,6 @@ WASM_LIBS += $(PIXMAN_WASM_LIB)
 WASM_LIBS += $(XZ_WASM_LIB)
 
 
-export EM_PKG_CONFIG_PATH = $(WASM)/lib/pkgconfig
-
 all: $(WASM_LIBS) $(WASM)/usr/share/fonts
 
 $(EM_PKG_CONFIG_PATH)/%.pc: %.pc
@@ -77,7 +78,7 @@ $(CAIRO_TARBALL):
 	mkdir -p $(DOWNLOAD)
 	wget -q -O $@ $(CAIRO_URL)
 
-$(CAIRO_WASM_LIB): $(CAIRO_TARBALL) $(PIXMAN_WASM_LIB) $(FC_WASM_LIB)
+$(CAIRO_WASM_LIB): $(CAIRO_TARBALL) $(PIXMAN_WASM_LIB) $(FC_DEPS)
 	rm -rf $(BUILD)/cairo-$(CAIRO_VERSION)
 	mkdir -p $(BUILD)/cairo-$(CAIRO_VERSION)/build
 	tar -C $(BUILD) -xf $(CAIRO_TARBALL)
@@ -97,13 +98,13 @@ $(CAIRO_WASM_LIB): $(CAIRO_TARBALL) $(PIXMAN_WASM_LIB) $(FC_WASM_LIB)
 	  emmake make install
 
 .PHONY: fontconfig
-fontconfig: $(FC_WASM_LIB)
+fontconfig: $(FC_DEPS)
 
 $(FC_TARBALL):
 	mkdir -p $(DOWNLOAD)
 	wget -q -O $@ $(FC_URL)
 
-$(FC_WASM_LIB): $(FC_TARBALL) $(LIBXML2_WASM_LIB) $(EM_PKG_CONFIG_PATH)/freetype2.pc
+$(FC_DEPS): $(FC_TARBALL) $(LIBXML2_WASM_LIB) $(EM_PKG_CONFIG_PATH)/freetype2.pc
 	mkdir -p $(BUILD)/fontconfig-$(FC_VERSION)/build
 	tar -C $(BUILD) -xf $(FC_TARBALL) --exclude=fcobjshash.h
 	cd $(BUILD)/fontconfig-$(FC_VERSION)/build && \
