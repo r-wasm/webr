@@ -94,6 +94,7 @@ $(CAIRO_WASM_LIB): $(CAIRO_TARBALL) $(PIXMAN_WASM_LIB) $(FC_DEPS)
 	    --enable-pthread=no \
 	    --enable-ft=yes \
 	    --enable-fc=yes \
+	    --enable-xlib=no \
 	    --prefix=$(WASM) && \
 	  emmake make install
 
