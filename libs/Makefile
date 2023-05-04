@@ -239,6 +239,7 @@ $(WASM)/usr/share/fonts:
 	cp -r "$(FONTS)/." "$(WASM)/usr/share/fonts"
 	cp fonts.conf "$(WASM)/etc/fonts/local.conf"
 
+.PHONY: clean-fonts
 clean-fonts:
 	rm -rf "$(FONTS)" "$(WASM)/usr/share/fonts" "$(WASM)/etc/fonts/local.conf"
 
