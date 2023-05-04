@@ -113,7 +113,7 @@ MAIN_LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 MAIN_LDFLAGS += -s STACK_SIZE=1MB
 MAIN_LDFLAGS += -s EXIT_RUNTIME=1
 MAIN_LDFLAGS += -s ERROR_ON_UNDEFINED_SYMBOLS=0
-MAIN_LDFLAGS += -s EXPORTED_RUNTIME_METHODS=['allocateUTF8','UTF8ToString','callMain','FS','ENV','getValue','setValue','LDSO']
+MAIN_LDFLAGS += -s EXPORTED_RUNTIME_METHODS=['allocateUTF8','UTF8ToString','callMain','FS','ENV','getValue','setValue','LDSO','allocateUTF8OnStack','addFunction']
 MAIN_LDFLAGS += -s FETCH=1
 MAIN_LDFLAGS += --extern-pre-js $(WEBR_ROOT)/src/webR/pre.js
 MAIN_LDFLAGS += $(FORTRAN_WASM_LDADD)
