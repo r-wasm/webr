@@ -85,7 +85,7 @@ $(CAIRO_WASM_LIB): $(CAIRO_TARBALL) $(PIXMAN_WASM_LIB) $(FC_WASM_LIB)
 	  "$(BUILD)/cairo-$(CAIRO_VERSION)/patches"
 	cd $(BUILD)/cairo-$(CAIRO_VERSION)/build && quilt push -a && \
 	  CFLAGS="$(WASM_CFLAGS) -DCAIRO_NO_MUTEX=1" \
-	  LDFLAGS="-sUSE_FREETYPE=1" \
+	  LDFLAGS="-sUSE_FREETYPE=1 -sUSE_PTHREADS=0" \
 	  emconfigure ../configure \
 	    ax_cv_c_float_words_bigendian=no \
 	    --enable-shared=no \
@@ -108,7 +108,7 @@ $(FC_WASM_LIB): $(FC_TARBALL) $(LIBXML2_WASM_LIB) $(EM_PKG_CONFIG_PATH)/freetype
 	tar -C $(BUILD) -xf $(FC_TARBALL) --exclude=fcobjshash.h
 	cd $(BUILD)/fontconfig-$(FC_VERSION)/build && \
 	  CFLAGS="$(WASM_CFLAGS)" \
-	  LDFLAGS="-sUSE_FREETYPE=1" \
+	  LDFLAGS="-sUSE_FREETYPE=1 -sUSE_PTHREADS=0" \
 	  PTHREAD_CFLAGS=" " \
 	  emconfigure ../configure \
 	    ac_cv_func_fstatfs=no \
