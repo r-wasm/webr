@@ -72,7 +72,16 @@ export class UnwindProtectException extends Error {
 }
 
 export function safeEval(call: RHandle, env: RHandle): RPtr {
-  return Module.LDSO.loadedLibsByName['/usr/lib/R/library/webr/libs/webr.so'].module.ffi_safe_eval(
+  // Old Emscripten
+  let exports = Module.LDSO.loadedLibsByName['/usr/lib/R/library/webr/libs/webr.so'].module;
+
+  // New Emscripten
+  // https://github.com/emscripten-core/emscripten/commit/c3bc5b89f4a0f0ebf53e8357179da54945c67239
+  if (!exports) {
+    exports = Module.LDSO.loadedLibsByName['/usr/lib/R/library/webr/libs/webr.so'].exports;
+  }
+
+  return exports.ffi_safe_eval(
     handlePtr(call),
     handlePtr(env)
   );
