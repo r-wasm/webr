@@ -163,7 +163,7 @@ $(LIBXML2_WASM_LIB): $(LIBXML2_TARBALL) $(XZ_WASM_LIB)
 	    --prefix=$(WASM) && \
 	  emmake make install
 
-.PHONY: libssl
+.PHONY: openssl
 openssl: $(OPENSSL_WASM_LIB)
 
 $(OPENSSL_TARBALL):
