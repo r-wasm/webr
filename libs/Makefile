@@ -41,6 +41,11 @@ LIBXML2_TARBALL = $(DOWNLOAD)/libxml2-$(LIBXML2_VERSION).tar.xz
 LIBXML2_URL = https://download.gnome.org/sources/libxml2/$(LIBXML2_SHORT)/libxml2-$(LIBXML2_VERSION).tar.xz
 LIBXML2_WASM_LIB = $(WASM)/lib/libxml2.a
 
+OPENSSL_VERSION = 3.1.0
+OPENSSL_TARBALL = $(DOWNLOAD)/openssl-$(OPENSSL_VERSION).tar.gz
+OPENSSL_URL = https://github.com/openssl/openssl/archive/refs/tags/openssl-$(OPENSSL_VERSION).tar.gz
+OPENSSL_WASM_LIB = $(WASM)/lib/libssl.a
+
 PCRE_VERSION = 10.39
 PCRE_TARBALL = $(DOWNLOAD)/pcre2-$(PCRE_VERSION).tar.gz
 PCRE_URL = https://github.com/PhilipHazel/pcre2/releases/download/pcre2-${PCRE_VERSION}/pcre2-$(PCRE_VERSION).tar.gz
@@ -158,6 +163,34 @@ $(LIBXML2_WASM_LIB): $(LIBXML2_TARBALL) $(XZ_WASM_LIB)
 	    --prefix=$(WASM) && \
 	  emmake make install
 
+.PHONY: openssl
+openssl: $(OPENSSL_WASM_LIB)
+
+$(OPENSSL_TARBALL):
+	mkdir -p $(DOWNLOAD)
+	wget -q -O $@ $(OPENSSL_URL)
+
+$(OPENSSL_WASM_LIB): $(OPENSSL_TARBALL)
+	mkdir -p $(BUILD)/openssl-openssl-$(OPENSSL_VERSION)/build
+	tar -C $(BUILD) -xf $(OPENSSL_TARBALL)
+	cd $(BUILD)/openssl-openssl-$(OPENSSL_VERSION)/build && \
+	  CFLAGS="$(WASM_CFLAGS)" \
+	  emconfigure ../Configure \
+	    darwin-i386 \
+	    CC="cc" \
+	    CXX="++" \
+	    AR="ar" \
+	    RANLIB="ranlib" \
+	    -static \
+	    -no-sock \
+	    -no-tests \
+	    -no-asm \
+	    --prefix=$(WASM) && \
+	  sed -i.bak '/^CNF_CFLAGS=/d' $(BUILD)/openssl-openssl-$(OPENSSL_VERSION)/build/Makefile && \
+	  sed -i.bak '/^CNF_LDFLAGS=/d' $(BUILD)/openssl-openssl-$(OPENSSL_VERSION)/build/Makefile && \
+	  emmake $(MAKE) build_generated libssl.a libcrypto.a && \
+	  emmake $(MAKE) install
+
 .PHONY: pcre2
 pcre2: $(PCRE_WASM_LIB)
 
@@ -239,6 +272,7 @@ $(WASM)/usr/share/fonts:
 	cp -r "$(FONTS)/." "$(WASM)/usr/share/fonts"
 	cp fonts.conf "$(WASM)/etc/fonts/local.conf"
 
+.PHONY: clean-fonts
 clean-fonts:
 	rm -rf "$(FONTS)" "$(WASM)/usr/share/fonts" "$(WASM)/etc/fonts/local.conf"
 
