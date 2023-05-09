@@ -1,0 +1,2 @@
+HARFBUZZ_WASM_LIB = $(WASM)/lib/libharfbuzz.a
+DEFAULT_WASM_LIBS += $(HARFBUZZ_WASM_LIB)
