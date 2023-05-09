@@ -9,10 +9,9 @@ export interface Module extends EmscriptenModule {
     mkdirTree(path: string): void;
   };
   ENV: { [key: string]: string };
-  LDSO: {
-    loadedLibsByName: { [key: string]: any };
-    loadedLibsByHandle: { [key: number]: any };
-  };
+  GOT: {
+    [key: string]: {required: boolean; value: number};
+  }
   monitorRunDependencies: (n: number) => void;
   noImageDecoding: boolean;
   noAudioDecoding: boolean;

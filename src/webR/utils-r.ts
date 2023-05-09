@@ -72,7 +72,7 @@ export class UnwindProtectException extends Error {
 }
 
 export function safeEval(call: RHandle, env: RHandle): RPtr {
-  return Module.LDSO.loadedLibsByName['/usr/lib/R/library/webr/libs/webr.so'].module.ffi_safe_eval(
+  return Module.getWasmTableEntry(Module.GOT.ffi_safe_eval.value)(
     handlePtr(call),
     handlePtr(env)
   );
