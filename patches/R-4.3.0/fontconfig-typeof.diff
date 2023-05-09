@@ -16,3 +16,14 @@ Index: R-4.3.0/src/library/grDevices/src/cairo/cairoFns.c
  
  SEXP in_CairoFT(void) 
  {
+@@ -2347,7 +2350,10 @@ static SEXP Cairo_Capabilities(SEXP capabilities) {
+  */
+ 
+ #if CAIRO_HAS_FT_FONT
++#undef TYPEOF
+ #include <cairo-ft.h>
++#undef TYPEOF
++#define TYPEOF(x)     ((x)->sxpinfo.type)
+ #endif
+ 
+ static void Cairo_Glyph(int n, int *glyphs, double *x, double *y, 
