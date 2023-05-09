@@ -1,0 +1,26 @@
+Index: pango-1.40.14/pango/pangocairo-fcfontmap.c
+===================================================================
+--- pango-1.40.14.orig/pango/pangocairo-fcfontmap.c
++++ pango-1.40.14/pango/pangocairo-fcfontmap.c
+@@ -88,7 +88,7 @@ static void
+ }
+ 
+ static void
+-cairo_font_map_iface_init (PangoCairoFontMapIface *iface)
++cairo_font_map_iface_init (PangoCairoFontMapIface *iface, void *data)
+ {
+   iface->set_resolution = pango_cairo_fc_font_map_set_resolution;
+   iface->get_resolution = pango_cairo_fc_font_map_get_resolution_cairo;
+Index: pango-1.40.14/pango/pangocairo-fcfont.c
+===================================================================
+--- pango-1.40.14.orig/pango/pangocairo-fcfont.c
++++ pango-1.40.14/pango/pangocairo-fcfont.c
+@@ -78,7 +78,7 @@ static void
+ }
+ 
+ static void
+-cairo_font_iface_init (PangoCairoFontIface *iface)
++cairo_font_iface_init (PangoCairoFontIface *iface, void *data)
+ {
+   iface->create_font_face = pango_cairo_fc_font_create_font_face;
+   iface->create_base_metrics_for_context = pango_cairo_fc_font_create_base_metrics_for_context;
