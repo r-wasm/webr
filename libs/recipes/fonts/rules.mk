@@ -20,7 +20,7 @@ $(WASM)/usr/share/fonts:
 	unzip -p $(FONTS)/NotoSansMono.zip static/NotoSansMono/NotoSansMono-Bold.ttf > $(FONTS)/NotoSansMono-Bold.ttf
 	rm $(FONTS)/NotoSansMono.zip
 	cp -r "$(FONTS)/." "$(WASM)/usr/share/fonts"
-	cp fonts.conf "$(WASM)/etc/fonts/local.conf"
+	cp recipes/fonts/fonts.conf "$(WASM)/etc/fonts/local.conf"
 
 .PHONY: clean-fonts
 clean-fonts:
