@@ -2,9 +2,6 @@ LIBPNG_VERSION = 1.6.38
 LIBPNG_TARBALL = $(DOWNLOAD)/libpng-$(LIBPNG_VERSION).tar.gz
 LIBPNG_URL = http://prdownloads.sourceforge.net/libpng/libpng-$(LIBPNG_VERSION).tar.xz?download
 
-LIBPNG_WASM_LIB = $(WASM)/lib/libpng.a
-DEFAULT_WASM_LIBS += $(LIBPNG_WASM_LIB)
-
 .PHONY: libpng
 libpng: $(LIBPNG_WASM_LIB)
 

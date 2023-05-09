@@ -2,9 +2,6 @@ PCRE_VERSION = 10.39
 PCRE_TARBALL = $(DOWNLOAD)/pcre2-$(PCRE_VERSION).tar.gz
 PCRE_URL = https://github.com/PhilipHazel/pcre2/releases/download/pcre2-${PCRE_VERSION}/pcre2-$(PCRE_VERSION).tar.gz
 
-PCRE_WASM_LIB = $(WASM)/lib/libpcre2-8.a
-DEFAULT_WASM_LIBS += $(PCRE_WASM_LIB)
-
 .PHONY: pcre
 pcre2: $(PCRE_WASM_LIB)
 

@@ -2,8 +2,6 @@ OPENSSL_VERSION = 3.1.0
 OPENSSL_TARBALL = $(DOWNLOAD)/openssl-$(OPENSSL_VERSION).tar.gz
 OPENSSL_URL = https://github.com/openssl/openssl/archive/refs/tags/openssl-$(OPENSSL_VERSION).tar.gz
 
-OPENSSL_WASM_LIB = $(WASM)/lib/libssl.a
-
 .PHONY: openssl
 openssl: $(OPENSSL_WASM_LIB)
 

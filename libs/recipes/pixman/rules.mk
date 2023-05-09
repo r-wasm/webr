@@ -2,9 +2,6 @@ PIXMAN_VERSION = 0.38.4
 PIXMAN_TARBALL = $(DOWNLOAD)/pixman-$(PIXMAN_VERSION).tar.gz
 PIXMAN_URL = https://cairographics.org/releases/pixman-$(PIXMAN_VERSION).tar.gz
 
-PIXMAN_WASM_LIB = $(WASM)/lib/libpixman-1.a
-DEFAULT_WASM_LIBS += $(PIXMAN_WASM_LIB)
-
 .PHONY: pixman
 pixman: $(PIXMAN_WASM_LIB)
 

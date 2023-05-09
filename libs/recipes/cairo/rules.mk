@@ -2,9 +2,6 @@ CAIRO_VERSION = 1.14.12
 CAIRO_TARBALL = $(DOWNLOAD)/cairo-$(CAIRO_VERSION).tar.xz
 CAIRO_URL = https://cairographics.org/releases/cairo-${CAIRO_VERSION}.tar.xz
 
-CAIRO_WASM_LIB = $(WASM)/lib/libcairo.a
-DEFAULT_WASM_LIBS += $(CAIRO_WASM_LIB)
-
 .PHONY: cairo
 cairo: $(CAIRO_WASM_LIB)
 

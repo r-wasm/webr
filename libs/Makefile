@@ -18,15 +18,8 @@ WASM_CFLAGS := $(WASM_CFLAGS)
 WASM_CFLAGS += -fPIC -fno-exceptions -fno-rtti $(WASM_OPT)
 WASM_CFLAGS += -s USE_BZIP2=1 -s USE_ZLIB=1
 
-include recipes/cairo.mk
-include recipes/fontconfig.mk
-include recipes/fonts.mk
-include recipes/openssl.mk
-include recipes/pcre.mk
-include recipes/pixman.mk
-include recipes/png.mk
-include recipes/xml2.mk
-include recipes/xz.mk
+include recipes/**/targets.mk
+include recipes/**/rules.mk
 
 all: $(DEFAULT_WASM_LIBS) $(WASM)/usr/share/fonts
 .DEFAULT_GOAL := all

@@ -1,0 +1,2 @@
+XZ_WASM_LIB = $(WASM)/lib/liblzma.a
+DEFAULT_WASM_LIBS += $(XZ_WASM_LIB)

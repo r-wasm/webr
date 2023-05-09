@@ -4,9 +4,6 @@ LIBXML2_SHORT := $(word 1,$(LIBXML2_WORDS)).$(word 2,$(LIBXML2_WORDS))
 LIBXML2_TARBALL = $(DOWNLOAD)/libxml2-$(LIBXML2_VERSION).tar.xz
 LIBXML2_URL = https://download.gnome.org/sources/libxml2/$(LIBXML2_SHORT)/libxml2-$(LIBXML2_VERSION).tar.xz
 
-LIBXML2_WASM_LIB = $(WASM)/lib/libxml2.a
-DEFAULT_WASM_LIBS += $(LIBXML2_WASM_LIB)
-
 .PHONY: libxml2
 libxml2: $(LIBXML2_WASM_LIB)
 

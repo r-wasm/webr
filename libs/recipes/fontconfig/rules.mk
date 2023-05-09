@@ -2,11 +2,6 @@ FC_VERSION = 2.12.5
 FC_TARBALL = $(DOWNLOAD)/fontconfig-$(FC_VERSION).tar.gz
 FC_URL = https://www.freedesktop.org/software/fontconfig/release/fontconfig-$(FC_VERSION).tar.gz
 
-FC_WASM_LIB = $(WASM)/lib/libfontconfig.a
-FC_DEPS = $(FC_WASM_LIB) $(EM_PKG_CONFIG_PATH)/fontconfig.pc
-
-DEFAULT_WASM_LIBS += $(FC_WASM_LIB)
-
 .PHONY: fontconfig
 fontconfig: $(FC_DEPS)
 
