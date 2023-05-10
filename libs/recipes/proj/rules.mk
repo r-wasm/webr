@@ -18,7 +18,6 @@ $(PROJ_WASM_LIB): $(PROJ_TARBALL) $(SQLITE3_WASM_LIB)
 	mkdir -p $(BUILD)/proj-$(PROJ_VERSION)/build
 	tar -C $(BUILD) -xf $(PROJ_TARBALL)
 	cd $(BUILD)/proj-$(PROJ_VERSION)/build && \
-	  CFLAGS="$(WASM_CFLAGS)" \
 	  emcmake cmake \
 	    -DCMAKE_INSTALL_PREFIX:PATH="$(WASM)" \
 	    -DSQLITE3_INCLUDE_DIR="$(WASM)/include" \

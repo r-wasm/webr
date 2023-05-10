@@ -15,7 +15,6 @@ $(SQLITE3_WASM_LIB): $(SQLITE3_TARBALL)
 	mkdir -p $(BUILD)/$(SQLITE3_FILE_NAME)/build
 	tar -C $(BUILD) -xf $(SQLITE3_TARBALL)
 	cd $(BUILD)/$(SQLITE3_FILE_NAME)/build && \
-	  CFLAGS="$(WASM_CFLAGS)" \
 	  emconfigure ../configure \
 	    --enable-shared=no \
 	    --enable-static=yes \

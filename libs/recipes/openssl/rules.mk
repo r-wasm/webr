@@ -13,7 +13,6 @@ $(OPENSSL_WASM_LIB): $(OPENSSL_TARBALL)
 	mkdir -p $(BUILD)/openssl-openssl-$(OPENSSL_VERSION)/build
 	tar -C $(BUILD) -xf $(OPENSSL_TARBALL)
 	cd $(BUILD)/openssl-openssl-$(OPENSSL_VERSION)/build && \
-	  CFLAGS="$(WASM_CFLAGS)" \
 	  emconfigure ../Configure \
 	    darwin-i386 \
 	    CC="cc" \

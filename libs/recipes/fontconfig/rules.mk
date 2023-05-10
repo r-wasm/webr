@@ -13,8 +13,7 @@ $(FC_DEPS): $(FC_TARBALL) $(LIBXML2_WASM_LIB) $(EM_PKG_CONFIG_PATH)/freetype2.pc
 	mkdir -p $(BUILD)/fontconfig-$(FC_VERSION)/build
 	tar -C $(BUILD) -xf $(FC_TARBALL) --exclude=fcobjshash.h
 	cd $(BUILD)/fontconfig-$(FC_VERSION)/build && \
-	  CFLAGS="$(WASM_CFLAGS)" \
-	  LDFLAGS="-sUSE_FREETYPE=1 -sUSE_PTHREADS=0" \
+	  LDFLAGS="$(LDFLAGS) -sUSE_FREETYPE=1 -sUSE_PTHREADS=0" \
 	  PTHREAD_CFLAGS=" " \
 	  emconfigure ../configure \
 	    ac_cv_func_fstatfs=no \
