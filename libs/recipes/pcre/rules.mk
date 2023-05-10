@@ -13,7 +13,6 @@ $(PCRE_WASM_LIB): $(PCRE_TARBALL)
 	mkdir -p $(BUILD)/pcre2-$(PCRE_VERSION)/build
 	tar -C $(BUILD) -xf $(PCRE_TARBALL)
 	cd $(BUILD)/pcre2-$(PCRE_VERSION)/build && \
-	  CFLAGS="$(WASM_CFLAGS)" \
 	  emconfigure ../configure \
 	    --enable-shared=no \
 	    --enable-static=yes \

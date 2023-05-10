@@ -16,8 +16,8 @@ $(CAIRO_WASM_LIB): $(CAIRO_TARBALL) $(PIXMAN_WASM_LIB) $(FC_DEPS)
 	cp -r "$(WEBR_ROOT)/patches/cairo-$(CAIRO_VERSION)/." \
 	  "$(BUILD)/cairo-$(CAIRO_VERSION)/patches"
 	cd $(BUILD)/cairo-$(CAIRO_VERSION)/build && quilt push -a && \
-	  CFLAGS="$(WASM_CFLAGS) -DCAIRO_NO_MUTEX=1" \
-	  LDFLAGS="-sUSE_FREETYPE=1 -sUSE_PTHREADS=0" \
+	  CFLAGS="$(CFLAGS) -DCAIRO_NO_MUTEX=1" \
+	  LDFLAGS="$(LDFLAGS) -sUSE_FREETYPE=1 -sUSE_PTHREADS=0" \
 	  emconfigure ../configure \
 	    ax_cv_c_float_words_bigendian=no \
 	    --enable-shared=no \

@@ -15,7 +15,6 @@ $(PIXMAN_WASM_LIB): $(PIXMAN_TARBALL) $(LIBPNG_WASM_LIB)
 	sed -i.bak 's/support_for_pthreads=yes/support_for_pthreads=no/g' \
 	  $(BUILD)/pixman-$(PIXMAN_VERSION)/configure
 	cd $(BUILD)/pixman-$(PIXMAN_VERSION)/build && \
-	  CFLAGS="$(WASM_CFLAGS)" \
 	  emconfigure ../configure \
 	    --enable-shared=no \
 	    --enable-static=yes \

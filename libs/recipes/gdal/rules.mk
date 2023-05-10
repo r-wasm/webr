@@ -15,7 +15,6 @@ $(GDAL_WASM_LIB): $(GDAL_TARBALL) $(PROJ_WASM_LIB)
 	mkdir -p $(BUILD)/gdal-$(GDAL_VERSION)/build
 	tar -C $(BUILD) -xf $(GDAL_TARBALL)
 	cd $(BUILD)/gdal-$(GDAL_VERSION)/build && \
-	  CFLAGS="$(WASM_CFLAGS)" \
 	  emcmake cmake --debug-find \
 	    -DCMAKE_FIND_ROOT_PATH=$(WASM) \
 	    -DCMAKE_INSTALL_PREFIX:PATH=$(WASM) \

@@ -9,12 +9,10 @@ TOOLS = $(WEBR_ROOT)/tools
 HOST = $(WEBR_ROOT)/host
 WASM = $(WEBR_ROOT)/wasm
 
-export EM_PKG_CONFIG_PATH = $(WASM)/lib/pkgconfig
-
 WASM_OPT ?= -Oz
 WASM_OPT_LDADD ?= $(WASM_OPT)
 
-WASM_CPPFLAGS := WASM_CPPFLAGS
+WASM_CPPFLAGS := $(WASM_CPPFLAGS)
 WASM_CPPFLAGS += -fwasm-exceptions
 
 WASM_FLAGS := -fPIC
@@ -30,6 +28,12 @@ WASM_CXXFLAGS += $(WASM_FLAGS)
 
 WASM_LDFLAGS := $(WASM_LDFLAGS)
 WASM_LDFLAGS += -fwasm-exceptions
+
+export CPPFLAGS = $(WASM_CPPFLAGS)
+export CFLAGS = $(WASM_CFLAGS)
+export CXXFLAGS = $(WASM_CXXFLAGS)
+export LDFLAGS = $(WASM_LDFLAGS)
+export EM_PKG_CONFIG_PATH = $(WASM)/lib/pkgconfig
 
 include recipes/**/targets.mk
 include recipes/**/rules.mk
