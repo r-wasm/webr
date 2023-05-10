@@ -14,6 +14,9 @@ export EM_PKG_CONFIG_PATH = $(WASM)/lib/pkgconfig
 WASM_OPT ?= -Oz
 WASM_OPT_LDADD ?= $(WASM_OPT)
 
+WASM_CPPFLAGS := WASM_CPPFLAGS
+WASM_CPPFLAGS += -fwasm-exceptions
+
 WASM_FLAGS := -fPIC
 WASM_FLAGS += -s USE_BZIP2=1
 WASM_FLAGS += -s USE_ZLIB=1
@@ -21,11 +24,12 @@ WASM_FLAGS += $(WASM_OPT)
 
 WASM_CFLAGS := $(WASM_CFLAGS)
 WASM_CFLAGS += $(WASM_FLAGS)
-WASM_CFLAGS += -fno-exceptions
-WASM_CFLAGS += -fno-rtti
 
 WASM_CXXFLAGS := $(WASM_CXXFLAGS)
 WASM_CXXFLAGS += $(WASM_FLAGS)
+
+WASM_LDFLAGS := $(WASM_LDFLAGS)
+WASM_LDFLAGS += -fwasm-exceptions
 
 include recipes/**/targets.mk
 include recipes/**/rules.mk
