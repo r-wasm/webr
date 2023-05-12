@@ -1,0 +1,2383 @@
+This patch file is a modified version of kleisauke's patches for glib,
+backported to version 2.56.4. Originally available at,
+https://github.com/GNOME/glib/compare/2.76.2...kleisauke:wasm-vips-2.76.2.patch
+
+Index: glib-2.56.4/gio/gapplication.c
+===================================================================
+--- glib-2.56.4.orig/gio/gapplication.c
++++ glib-2.56.4/gio/gapplication.c
+@@ -282,8 +282,10 @@ static guint g_application_signals[NR_SIGNALS];
+ 
+ static guint g_application_signals[NR_SIGNALS];
+ 
+-static void g_application_action_group_iface_init (GActionGroupInterface *);
+-static void g_application_action_map_iface_init (GActionMapInterface *);
++static void g_application_action_group_iface_init (GActionGroupInterface *iface,
++                                                   gpointer               iface_data);
++static void g_application_action_map_iface_init (GActionMapInterface *iface,
++                                                 gpointer             iface_data);
+ G_DEFINE_TYPE_WITH_CODE (GApplication, g_application, G_TYPE_OBJECT,
+  G_ADD_PRIVATE (GApplication)
+  G_IMPLEMENT_INTERFACE (G_TYPE_ACTION_GROUP, g_application_action_group_iface_init)
+@@ -309,7 +311,8 @@ static GType g_application_exported_actions_get_type  
+ } GApplicationExportedActions;
+ 
+ static GType g_application_exported_actions_get_type   (void);
+-static void  g_application_exported_actions_iface_init (GRemoteActionGroupInterface *iface);
++static void  g_application_exported_actions_iface_init (GRemoteActionGroupInterface *iface,
++                                                        gpointer                     iface_data);
+ G_DEFINE_TYPE_WITH_CODE (GApplicationExportedActions, g_application_exported_actions, G_TYPE_SIMPLE_ACTION_GROUP,
+                          G_IMPLEMENT_INTERFACE (G_TYPE_REMOTE_ACTION_GROUP, g_application_exported_actions_iface_init))
+ 
+@@ -353,7 +356,8 @@ static void
+ }
+ 
+ static void
+-g_application_exported_actions_iface_init (GRemoteActionGroupInterface *iface)
++g_application_exported_actions_iface_init (GRemoteActionGroupInterface *iface,
++                                           gpointer                     iface_data)
+ {
+   iface->activate_action_full = g_application_exported_actions_activate_action_full;
+   iface->change_action_state_full = g_application_exported_actions_change_action_state_full;
+@@ -2623,7 +2627,8 @@ static void
+ }
+ 
+ static void
+-g_application_action_group_iface_init (GActionGroupInterface *iface)
++g_application_action_group_iface_init (GActionGroupInterface *iface,
++                                       gpointer               iface_data)
+ {
+   iface->list_actions = g_application_list_actions;
+   iface->query_action = g_application_query_action;
+@@ -2632,7 +2637,8 @@ static void
+ }
+ 
+ static void
+-g_application_action_map_iface_init (GActionMapInterface *iface)
++g_application_action_map_iface_init (GActionMapInterface *iface,
++                                     gpointer             iface_data)
+ {
+   iface->lookup_action = g_application_lookup_action;
+   iface->add_action = g_application_add_action;
+Index: glib-2.56.4/gio/gbufferedinputstream.c
+===================================================================
+--- glib-2.56.4.orig/gio/gbufferedinputstream.c
++++ glib-2.56.4/gio/gbufferedinputstream.c
+@@ -113,7 +113,8 @@ static gssize g_buffered_input_stream_real_fill_finish
+                                                         GAsyncResult          *result,
+                                                         GError               **error);
+ 
+-static void     g_buffered_input_stream_seekable_iface_init (GSeekableIface  *iface);
++static void     g_buffered_input_stream_seekable_iface_init (GSeekableIface  *iface,
++                                                             gpointer         iface_data);
+ static goffset  g_buffered_input_stream_tell                (GSeekable       *seekable);
+ static gboolean g_buffered_input_stream_can_seek            (GSeekable       *seekable);
+ static gboolean g_buffered_input_stream_seek                (GSeekable       *seekable,
+@@ -300,7 +301,8 @@ static void
+ }
+ 
+ static void
+-g_buffered_input_stream_seekable_iface_init (GSeekableIface *iface)
++g_buffered_input_stream_seekable_iface_init (GSeekableIface *iface,
++                                             gpointer        iface_data)
+ {
+   iface->tell         = g_buffered_input_stream_tell;
+   iface->can_seek     = g_buffered_input_stream_can_seek;
+Index: glib-2.56.4/gio/gbufferedoutputstream.c
+===================================================================
+--- glib-2.56.4.orig/gio/gbufferedoutputstream.c
++++ glib-2.56.4/gio/gbufferedoutputstream.c
+@@ -105,7 +105,8 @@ static gboolean g_buffered_output_stream_close_finish 
+                                                        GAsyncResult         *result,
+                                                        GError              **error);
+ 
+-static void     g_buffered_output_stream_seekable_iface_init (GSeekableIface  *iface);
++static void     g_buffered_output_stream_seekable_iface_init (GSeekableIface  *iface,
++                                                              gpointer         iface_data);
+ static goffset  g_buffered_output_stream_tell                (GSeekable       *seekable);
+ static gboolean g_buffered_output_stream_can_seek            (GSeekable       *seekable);
+ static gboolean g_buffered_output_stream_seek                (GSeekable       *seekable,
+@@ -346,7 +347,8 @@ static void
+ }
+ 
+ static void
+-g_buffered_output_stream_seekable_iface_init (GSeekableIface *iface)
++g_buffered_output_stream_seekable_iface_init (GSeekableIface *iface,
++                                              gpointer        iface_data)
+ {
+   iface->tell         = g_buffered_output_stream_tell;
+   iface->can_seek     = g_buffered_output_stream_can_seek;
+Index: glib-2.56.4/gio/gbytesicon.c
+===================================================================
+--- glib-2.56.4.orig/gio/gbytesicon.c
++++ glib-2.56.4/gio/gbytesicon.c
+@@ -57,8 +57,10 @@ enum
+   PROP_BYTES
+ };
+ 
+-static void g_bytes_icon_icon_iface_init          (GIconIface          *iface);
+-static void g_bytes_icon_loadable_icon_iface_init (GLoadableIconIface  *iface);
++static void g_bytes_icon_icon_iface_init          (GIconIface          *iface,
++                                                   gpointer             iface_data);
++static void g_bytes_icon_loadable_icon_iface_init (GLoadableIconIface  *iface,
++                                                   gpointer             iface_data);
+ G_DEFINE_TYPE_WITH_CODE (GBytesIcon, g_bytes_icon, G_TYPE_OBJECT,
+                          G_IMPLEMENT_INTERFACE (G_TYPE_ICON, g_bytes_icon_icon_iface_init)
+                          G_IMPLEMENT_INTERFACE (G_TYPE_LOADABLE_ICON, g_bytes_icon_loadable_icon_iface_init))
+@@ -205,7 +207,8 @@ static void
+ }
+ 
+ static void
+-g_bytes_icon_icon_iface_init (GIconIface *iface)
++g_bytes_icon_icon_iface_init (GIconIface *iface,
++                              gpointer    iface_data)
+ {
+   iface->hash = g_bytes_icon_hash;
+   iface->equal = g_bytes_icon_equal;
+@@ -258,7 +261,8 @@ static void
+ }
+ 
+ static void
+-g_bytes_icon_loadable_icon_iface_init (GLoadableIconIface *iface)
++g_bytes_icon_loadable_icon_iface_init (GLoadableIconIface *iface,
++                                       gpointer            iface_data)
+ {
+   iface->load = g_bytes_icon_load;
+   iface->load_async = g_bytes_icon_load_async;
+Index: glib-2.56.4/gio/gcharsetconverter.c
+===================================================================
+--- glib-2.56.4.orig/gio/gcharsetconverter.c
++++ glib-2.56.4/gio/gcharsetconverter.c
+@@ -45,8 +45,10 @@ enum {
+  * GIConv.
+  */
+ 
+-static void g_charset_converter_iface_init          (GConverterIface *iface);
+-static void g_charset_converter_initable_iface_init (GInitableIface  *iface);
++static void g_charset_converter_iface_init          (GConverterIface *iface,
++                                                     gpointer         iface_data);
++static void g_charset_converter_initable_iface_init (GInitableIface  *iface,
++                                                     gpointer         iface_data);
+ 
+ /**
+  * GCharsetConverter:
+@@ -421,7 +423,8 @@ static void
+ }
+ 
+ static void
+-g_charset_converter_iface_init (GConverterIface *iface)
++g_charset_converter_iface_init (GConverterIface *iface,
++                                gpointer         iface_data)
+ {
+   iface->convert = g_charset_converter_convert;
+   iface->reset = g_charset_converter_reset;
+@@ -466,7 +469,8 @@ static void
+ }
+ 
+ static void
+-g_charset_converter_initable_iface_init (GInitableIface *iface)
++g_charset_converter_initable_iface_init (GInitableIface *iface,
++                                         gpointer        iface_data)
+ {
+   iface->init = g_charset_converter_initable_init;
+ }
+Index: glib-2.56.4/gio/gconverterinputstream.c
+===================================================================
+--- glib-2.56.4.orig/gio/gconverterinputstream.c
++++ glib-2.56.4/gio/gconverterinputstream.c
+@@ -91,8 +91,8 @@ static GSource *g_converter_input_stream_create_source
+ static GSource *g_converter_input_stream_create_source    (GPollableInputStream *stream,
+ 							   GCancellable          *cancellable);
+ 
+-static void g_converter_input_stream_pollable_iface_init  (GPollableInputStreamInterface *iface);
+-
++static void g_converter_input_stream_pollable_iface_init  (GPollableInputStreamInterface *iface,
++                                                           gpointer                       iface_data);
+ G_DEFINE_TYPE_WITH_CODE (GConverterInputStream,
+ 			 g_converter_input_stream,
+ 			 G_TYPE_FILTER_INPUT_STREAM,
+@@ -127,7 +127,8 @@ static void
+ }
+ 
+ static void
+-g_converter_input_stream_pollable_iface_init (GPollableInputStreamInterface *iface)
++g_converter_input_stream_pollable_iface_init (GPollableInputStreamInterface *iface,
++                                              gpointer                       iface_data)
+ {
+   iface->can_poll = g_converter_input_stream_can_poll;
+   iface->is_readable = g_converter_input_stream_is_readable;
+Index: glib-2.56.4/gio/gconverteroutputstream.c
+===================================================================
+--- glib-2.56.4.orig/gio/gconverteroutputstream.c
++++ glib-2.56.4/gio/gconverteroutputstream.c
+@@ -106,7 +106,8 @@ static GSource *g_converter_output_stream_create_sourc
+ static GSource *g_converter_output_stream_create_source     (GPollableOutputStream *stream,
+ 							     GCancellable          *cancellable);
+ 
+-static void g_converter_output_stream_pollable_iface_init (GPollableOutputStreamInterface *iface);
++static void g_converter_output_stream_pollable_iface_init (GPollableOutputStreamInterface *iface,
++                                                           gpointer                        iface_data);
+ 
+ G_DEFINE_TYPE_WITH_CODE (GConverterOutputStream,
+ 			 g_converter_output_stream,
+@@ -143,7 +144,8 @@ static void
+ }
+ 
+ static void
+-g_converter_output_stream_pollable_iface_init (GPollableOutputStreamInterface *iface)
++g_converter_output_stream_pollable_iface_init (GPollableOutputStreamInterface *iface,
++                                               gpointer                        iface_data)
+ {
+   iface->can_poll = g_converter_output_stream_can_poll;
+   iface->is_writable = g_converter_output_stream_is_writable;
+Index: glib-2.56.4/gio/gdataoutputstream.c
+===================================================================
+--- glib-2.56.4.orig/gio/gdataoutputstream.c
++++ glib-2.56.4/gio/gdataoutputstream.c
+@@ -58,7 +58,8 @@ static void g_data_output_stream_get_property (GObject
+ 					       GValue       *value,
+ 					       GParamSpec   *pspec);
+ 
+-static void     g_data_output_stream_seekable_iface_init (GSeekableIface  *iface);
++static void     g_data_output_stream_seekable_iface_init (GSeekableIface  *iface,
++                                                          gpointer         iface_data);
+ static goffset  g_data_output_stream_tell                (GSeekable       *seekable);
+ static gboolean g_data_output_stream_can_seek            (GSeekable       *seekable);
+ static gboolean g_data_output_stream_seek                (GSeekable       *seekable,
+@@ -160,7 +161,8 @@ static void
+ }
+ 
+ static void
+-g_data_output_stream_seekable_iface_init (GSeekableIface *iface)
++g_data_output_stream_seekable_iface_init (GSeekableIface *iface,
++                                          gpointer        iface_data)
+ {
+   iface->tell         = g_data_output_stream_tell;
+   iface->can_seek     = g_data_output_stream_can_seek;
+Index: glib-2.56.4/gio/gdbusactiongroup.c
+===================================================================
+--- glib-2.56.4.orig/gio/gdbusactiongroup.c
++++ glib-2.56.4/gio/gdbusactiongroup.c
+@@ -129,8 +129,10 @@ action_info_new_from_iter (GVariantIter *iter)
+   return info;
+ }
+ 
+-static void g_dbus_action_group_remote_iface_init (GRemoteActionGroupInterface *iface);
+-static void g_dbus_action_group_iface_init        (GActionGroupInterface       *iface);
++static void g_dbus_action_group_remote_iface_init (GRemoteActionGroupInterface *iface,
++                                                   gpointer                     iface_data);
++static void g_dbus_action_group_iface_init        (GActionGroupInterface       *iface,
++                                                   gpointer                     iface_data);
+ G_DEFINE_TYPE_WITH_CODE (GDBusActionGroup, g_dbus_action_group, G_TYPE_OBJECT,
+   G_IMPLEMENT_INTERFACE (G_TYPE_ACTION_GROUP, g_dbus_action_group_iface_init)
+   G_IMPLEMENT_INTERFACE (G_TYPE_REMOTE_ACTION_GROUP, g_dbus_action_group_remote_iface_init))
+@@ -457,14 +459,16 @@ static void
+ }
+ 
+ static void
+-g_dbus_action_group_remote_iface_init (GRemoteActionGroupInterface *iface)
++g_dbus_action_group_remote_iface_init (GRemoteActionGroupInterface *iface,
++                                       gpointer                     iface_data)
+ {
+   iface->activate_action_full = g_dbus_action_group_activate_action_full;
+   iface->change_action_state_full = g_dbus_action_group_change_action_state_full;
+ }
+ 
+ static void
+-g_dbus_action_group_iface_init (GActionGroupInterface *iface)
++g_dbus_action_group_iface_init (GActionGroupInterface *iface,
++                                gpointer               iface_data)
+ {
+   iface->list_actions = g_dbus_action_group_list_actions;
+   iface->query_action = g_dbus_action_group_query_action;
+Index: glib-2.56.4/gio/gdbusconnection.c
+===================================================================
+--- glib-2.56.4.orig/gio/gdbusconnection.c
++++ glib-2.56.4/gio/gdbusconnection.c
+@@ -532,8 +532,10 @@ static guint signals[LAST_SIGNAL] = { 0 };
+ 
+ static guint signals[LAST_SIGNAL] = { 0 };
+ 
+-static void initable_iface_init       (GInitableIface      *initable_iface);
+-static void async_initable_iface_init (GAsyncInitableIface *async_initable_iface);
++static void initable_iface_init       (GInitableIface      *initable_iface,
++                                       gpointer             iface_data);
++static void async_initable_iface_init (GAsyncInitableIface *async_initable_iface,
++                                       gpointer             iface_data);
+ 
+ G_DEFINE_TYPE_WITH_CODE (GDBusConnection, g_dbus_connection, G_TYPE_OBJECT,
+                          G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, initable_iface_init)
+@@ -2632,7 +2634,8 @@ static void
+ }
+ 
+ static void
+-initable_iface_init (GInitableIface *initable_iface)
++initable_iface_init (GInitableIface *initable_iface,
++                     gpointer        iface_data)
+ {
+   initable_iface->init = initable_init;
+ }
+@@ -2640,7 +2643,8 @@ static void
+ /* ---------------------------------------------------------------------------------------------------- */
+ 
+ static void
+-async_initable_iface_init (GAsyncInitableIface *async_initable_iface)
++async_initable_iface_init (GAsyncInitableIface *async_initable_iface,
++                           gpointer             iface_data)
+ {
+   /* Use default */
+ }
+Index: glib-2.56.4/gio/gdbusdaemon.c
+===================================================================
+--- glib-2.56.4.orig/gio/gdbusdaemon.c
++++ glib-2.56.4/gio/gdbusdaemon.c
+@@ -69,8 +69,10 @@ static guint g_dbus_daemon_signals[NR_SIGNALS];
+ static guint g_dbus_daemon_signals[NR_SIGNALS];
+ 
+ 
+-static void initable_iface_init      (GInitableIface         *initable_iface);
+-static void g_dbus_daemon_iface_init (_GFreedesktopDBusIface *iface);
++static void initable_iface_init      (GInitableIface         *initable_iface,
++                                      gpointer                iface_data);
++static void g_dbus_daemon_iface_init (_GFreedesktopDBusIface *iface,
++                                      gpointer                iface_data);
+ 
+ #define g_dbus_daemon_get_type _g_dbus_daemon_get_type
+ G_DEFINE_TYPE_WITH_CODE (GDBusDaemon, g_dbus_daemon, _G_TYPE_FREEDESKTOP_DBUS_SKELETON,
+@@ -1716,7 +1718,8 @@ static void
+ }
+ 
+ static void
+-g_dbus_daemon_iface_init (_GFreedesktopDBusIface *iface)
++g_dbus_daemon_iface_init (_GFreedesktopDBusIface *iface,
++                          gpointer                iface_data)
+ {
+   iface->handle_add_match = handle_add_match;
+   iface->handle_get_connection_selinux_security_context = handle_get_connection_selinux_security_context;
+@@ -1738,7 +1741,8 @@ static void
+ }
+ 
+ static void
+-initable_iface_init (GInitableIface *initable_iface)
++initable_iface_init (GInitableIface *initable_iface,
++                     gpointer        iface_data)
+ {
+   initable_iface->init = initable_init;
+ }
+Index: glib-2.56.4/gio/gdbusobjectmanagerclient.c
+===================================================================
+--- glib-2.56.4.orig/gio/gdbusobjectmanagerclient.c
++++ glib-2.56.4/gio/gdbusobjectmanagerclient.c
+@@ -165,9 +165,12 @@ static guint signals[LAST_SIGNAL] = { 0 };
+ 
+ static guint signals[LAST_SIGNAL] = { 0 };
+ 
+-static void initable_iface_init       (GInitableIface *initable_iface);
+-static void async_initable_iface_init (GAsyncInitableIface *async_initable_iface);
+-static void dbus_object_manager_interface_init (GDBusObjectManagerIface *iface);
++static void initable_iface_init       (GInitableIface *initable_iface,
++                                       gpointer        iface_data);
++static void async_initable_iface_init (GAsyncInitableIface *async_initable_iface,
++                                       gpointer             iface_data);
++static void dbus_object_manager_interface_init (GDBusObjectManagerIface *iface,
++                                                gpointer                 iface_data);
+ 
+ G_DEFINE_TYPE_WITH_CODE (GDBusObjectManagerClient, g_dbus_object_manager_client, G_TYPE_OBJECT,
+                          G_ADD_PRIVATE (GDBusObjectManagerClient)
+@@ -1409,13 +1412,15 @@ static void
+ }
+ 
+ static void
+-initable_iface_init (GInitableIface *initable_iface)
++initable_iface_init (GInitableIface *initable_iface,
++                     gpointer        iface_data)
+ {
+   initable_iface->init = initable_init;
+ }
+ 
+ static void
+-async_initable_iface_init (GAsyncInitableIface *async_initable_iface)
++async_initable_iface_init (GAsyncInitableIface *async_initable_iface,
++                           gpointer             iface_data)
+ {
+   /* for now, just use default: run GInitable code in thread */
+ }
+@@ -1751,7 +1756,8 @@ static void
+ 
+ 
+ static void
+-dbus_object_manager_interface_init (GDBusObjectManagerIface *iface)
++dbus_object_manager_interface_init (GDBusObjectManagerIface *iface,
++                                    gpointer                 iface_data)
+ {
+   iface->get_object_path = g_dbus_object_manager_client_get_object_path;
+   iface->get_objects     = g_dbus_object_manager_client_get_objects;
+Index: glib-2.56.4/gio/gdbusproxy.c
+===================================================================
+--- glib-2.56.4.orig/gio/gdbusproxy.c
++++ glib-2.56.4/gio/gdbusproxy.c
+@@ -179,9 +179,12 @@ static guint signals[LAST_SIGNAL] = {0};
+ 
+ static guint signals[LAST_SIGNAL] = {0};
+ 
+-static void dbus_interface_iface_init (GDBusInterfaceIface *dbus_interface_iface);
+-static void initable_iface_init       (GInitableIface *initable_iface);
+-static void async_initable_iface_init (GAsyncInitableIface *async_initable_iface);
++static void dbus_interface_iface_init (GDBusInterfaceIface *dbus_interface_iface,
++                                       gpointer             iface_data);
++static void initable_iface_init       (GInitableIface *initable_iface,
++                                       gpointer        iface_data);
++static void async_initable_iface_init (GAsyncInitableIface *async_initable_iface,
++                                       gpointer             iface_data);
+ 
+ G_DEFINE_TYPE_WITH_CODE (GDBusProxy, g_dbus_proxy, G_TYPE_OBJECT,
+                          G_ADD_PRIVATE (GDBusProxy)
+@@ -1879,7 +1882,8 @@ static void
+ }
+ 
+ static void
+-async_initable_iface_init (GAsyncInitableIface *async_initable_iface)
++async_initable_iface_init (GAsyncInitableIface *async_initable_iface,
++                           gpointer            iface_data)
+ {
+   async_initable_iface->init_async = async_initable_init_async;
+   async_initable_iface->init_finish = async_initable_init_finish;
+@@ -1966,7 +1970,8 @@ static void
+ }
+ 
+ static void
+-initable_iface_init (GInitableIface *initable_iface)
++initable_iface_init (GInitableIface *initable_iface,
++                     gpointer        iface_data)
+ {
+   initable_iface->init = initable_init;
+ }
+@@ -3206,7 +3211,8 @@ static void
+ }
+ 
+ static void
+-dbus_interface_iface_init (GDBusInterfaceIface *dbus_interface_iface)
++dbus_interface_iface_init (GDBusInterfaceIface *dbus_interface_iface,
++                           gpointer             iface_data)
+ {
+   dbus_interface_iface->get_info   = _g_dbus_proxy_get_info;
+   dbus_interface_iface->get_object = _g_dbus_proxy_get_object;
+Index: glib-2.56.4/gio/gdbusserver.c
+===================================================================
+--- glib-2.56.4.orig/gio/gdbusserver.c
++++ glib-2.56.4/gio/gdbusserver.c
+@@ -151,7 +151,8 @@ static guint _signals[LAST_SIGNAL] = {0};
+ 
+ static guint _signals[LAST_SIGNAL] = {0};
+ 
+-static void initable_iface_init       (GInitableIface *initable_iface);
++static void initable_iface_init       (GInitableIface *initable_iface,
++                                       gpointer        iface_data);
+ 
+ G_DEFINE_TYPE_WITH_CODE (GDBusServer, g_dbus_server, G_TYPE_OBJECT,
+                          G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, initable_iface_init))
+@@ -1132,7 +1133,8 @@ static void
+ 
+ 
+ static void
+-initable_iface_init (GInitableIface *initable_iface)
++initable_iface_init (GInitableIface *initable_iface,
++                     gpointer        iface_data)
+ {
+   initable_iface->init = initable_init;
+ }
+Index: glib-2.56.4/gio/gdesktopappinfo.c
+===================================================================
+--- glib-2.56.4.orig/gio/gdesktopappinfo.c
++++ glib-2.56.4/gio/gdesktopappinfo.c
+@@ -80,7 +80,8 @@ enum {
+   PROP_FILENAME
+ };
+ 
+-static void     g_desktop_app_info_iface_init         (GAppInfoIface    *iface);
++static void     g_desktop_app_info_iface_init         (GAppInfoIface    *iface,
++                                                       gpointer          iface_data);
+ static gboolean g_desktop_app_info_ensure_saved       (GDesktopAppInfo  *info,
+                                                        GError          **error);
+ 
+@@ -3776,7 +3777,8 @@ static void
+ /* GAppInfo interface init */
+ 
+ static void
+-g_desktop_app_info_iface_init (GAppInfoIface *iface)
++g_desktop_app_info_iface_init (GAppInfoIface *iface,
++                               gpointer       iface_data)
+ {
+   iface->dup = g_desktop_app_info_dup;
+   iface->equal = g_desktop_app_info_equal;
+Index: glib-2.56.4/gio/gdummyfile.c
+===================================================================
+--- glib-2.56.4.orig/gio/gdummyfile.c
++++ glib-2.56.4/gio/gdummyfile.c
+@@ -31,7 +31,8 @@
+ #include "gfile.h"
+ 
+ 
+-static void g_dummy_file_file_iface_init (GFileIface *iface);
++static void g_dummy_file_file_iface_init (GFileIface *iface,
++                                          gpointer    iface_data);
+ 
+ typedef struct {
+   char *scheme;
+@@ -396,7 +397,8 @@ static void
+ 
+ 
+ static void
+-g_dummy_file_file_iface_init (GFileIface *iface)
++g_dummy_file_file_iface_init (GFileIface *iface,
++                              gpointer    iface_data)
+ {
+   iface->dup = g_dummy_file_dup;
+   iface->hash = g_dummy_file_hash;
+Index: glib-2.56.4/gio/gdummyproxyresolver.c
+===================================================================
+--- glib-2.56.4.orig/gio/gdummyproxyresolver.c
++++ glib-2.56.4/gio/gdummyproxyresolver.c
+@@ -36,7 +36,8 @@ struct _GDummyProxyResolver {
+   GObject parent_instance;
+ };
+ 
+-static void g_dummy_proxy_resolver_iface_init (GProxyResolverInterface *iface);
++static void g_dummy_proxy_resolver_iface_init (GProxyResolverInterface *iface,
++                                               gpointer                 iface_data);
+ 
+ #define g_dummy_proxy_resolver_get_type _g_dummy_proxy_resolver_get_type
+ G_DEFINE_TYPE_WITH_CODE (GDummyProxyResolver, g_dummy_proxy_resolver, G_TYPE_OBJECT,
+@@ -125,7 +126,8 @@ static void
+ }
+ 
+ static void
+-g_dummy_proxy_resolver_iface_init (GProxyResolverInterface *iface)
++g_dummy_proxy_resolver_iface_init (GProxyResolverInterface *iface,
++                                   gpointer                 iface_data)
+ {
+   iface->is_supported = g_dummy_proxy_resolver_is_supported;
+   iface->lookup = g_dummy_proxy_resolver_lookup;
+Index: glib-2.56.4/gio/gdummytlsbackend.c
+===================================================================
+--- glib-2.56.4.orig/gio/gdummytlsbackend.c
++++ glib-2.56.4/gio/gdummytlsbackend.c
+@@ -51,7 +51,8 @@ struct _GDummyTlsBackend {
+   GTlsDatabase *database;
+ };
+ 
+-static void g_dummy_tls_backend_iface_init (GTlsBackendInterface *iface);
++static void g_dummy_tls_backend_iface_init (GTlsBackendInterface *iface,
++                                            gpointer              iface_data);
+ 
+ #define g_dummy_tls_backend_get_type _g_dummy_tls_backend_get_type
+ G_DEFINE_TYPE_WITH_CODE (GDummyTlsBackend, g_dummy_tls_backend, G_TYPE_OBJECT,
+@@ -103,7 +104,8 @@ static void
+ }
+ 
+ static void
+-g_dummy_tls_backend_iface_init (GTlsBackendInterface *iface)
++g_dummy_tls_backend_iface_init (GTlsBackendInterface *iface,
++                                gpointer              iface_data)
+ {
+   iface->get_certificate_type = _g_dummy_tls_certificate_get_type;
+   iface->get_client_connection_type = _g_dummy_tls_connection_get_type;
+@@ -138,7 +140,8 @@ enum
+   PROP_CERT_ISSUER
+ };
+ 
+-static void g_dummy_tls_certificate_initable_iface_init (GInitableIface *iface);
++static void g_dummy_tls_certificate_initable_iface_init (GInitableIface *iface,
++                                                         gpointer        iface_data);
+ 
+ #define g_dummy_tls_certificate_get_type _g_dummy_tls_certificate_get_type
+ G_DEFINE_TYPE_WITH_CODE (GDummyTlsCertificate, g_dummy_tls_certificate, G_TYPE_TLS_CERTIFICATE,
+@@ -197,7 +200,8 @@ static void
+ }
+ 
+ static void
+-g_dummy_tls_certificate_initable_iface_init (GInitableIface  *iface)
++g_dummy_tls_certificate_initable_iface_init (GInitableIface  *iface,
++                                             gpointer         iface_data)
+ {
+   iface->init = g_dummy_tls_certificate_initable_init;
+ }
+@@ -238,7 +242,8 @@ enum
+   PROP_CONN_AUTHENTICATION_MODE
+ };
+ 
+-static void g_dummy_tls_connection_initable_iface_init (GInitableIface *iface);
++static void g_dummy_tls_connection_initable_iface_init (GInitableIface *iface,
++                                                        gpointer        iface_data);
+ 
+ #define g_dummy_tls_connection_get_type _g_dummy_tls_connection_get_type
+ G_DEFINE_TYPE_WITH_CODE (GDummyTlsConnection, g_dummy_tls_connection, G_TYPE_TLS_CONNECTION,
+@@ -319,7 +324,8 @@ static void
+ }
+ 
+ static void
+-g_dummy_tls_connection_initable_iface_init (GInitableIface  *iface)
++g_dummy_tls_connection_initable_iface_init (GInitableIface  *iface,
++                                            gpointer         iface_data)
+ {
+   iface->init = g_dummy_tls_connection_initable_init;
+ }
+@@ -357,7 +363,8 @@ enum
+   PROP_DTLS_CONN_AUTHENTICATION_MODE,
+ };
+ 
+-static void g_dummy_dtls_connection_initable_iface_init (GInitableIface *iface);
++static void g_dummy_dtls_connection_initable_iface_init (GInitableIface *iface,
++                                                         gpointer        iface_data);
+ 
+ #define g_dummy_dtls_connection_get_type _g_dummy_dtls_connection_get_type
+ G_DEFINE_TYPE_WITH_CODE (GDummyDtlsConnection, g_dummy_dtls_connection, G_TYPE_OBJECT,
+@@ -421,7 +428,8 @@ static void
+ }
+ 
+ static void
+-g_dummy_dtls_connection_initable_iface_init (GInitableIface  *iface)
++g_dummy_dtls_connection_initable_iface_init (GInitableIface  *iface,
++                                             gpointer         iface_data)
+ {
+   iface->init = g_dummy_dtls_connection_initable_init;
+ }
+@@ -447,8 +455,10 @@ enum
+   PROP_ANCHORS,
+ };
+ 
+-static void g_dummy_tls_database_file_database_iface_init (GTlsFileDatabaseInterface *iface);
+-static void g_dummy_tls_database_initable_iface_init (GInitableIface *iface);
++static void g_dummy_tls_database_file_database_iface_init (GTlsFileDatabaseInterface *iface,
++                                                           gpointer                   iface_data);
++static void g_dummy_tls_database_initable_iface_init (GInitableIface *iface,
++                                                      gpointer        iface_data);
+ 
+ #define g_dummy_tls_database_get_type _g_dummy_tls_database_get_type
+ G_DEFINE_TYPE_WITH_CODE (GDummyTlsDatabase, g_dummy_tls_database, G_TYPE_TLS_DATABASE,
+@@ -496,7 +506,8 @@ static void
+ }
+ 
+ static void
+-g_dummy_tls_database_file_database_iface_init (GTlsFileDatabaseInterface  *iface)
++g_dummy_tls_database_file_database_iface_init (GTlsFileDatabaseInterface  *iface,
++                                               gpointer                    iface_data)
+ {
+ }
+ 
+@@ -511,7 +522,8 @@ static void
+ }
+ 
+ static void
+-g_dummy_tls_database_initable_iface_init (GInitableIface  *iface)
++g_dummy_tls_database_initable_iface_init (GInitableIface  *iface,
++                                          gpointer         iface_data)
+ {
+   iface->init = g_dummy_tls_database_initable_init;
+ }
+Index: glib-2.56.4/gio/gemblem.c
+===================================================================
+--- glib-2.56.4.orig/gio/gemblem.c
++++ glib-2.56.4/gio/gemblem.c
+@@ -42,7 +42,8 @@
+  * supported. More may be added in the future.
+  */
+ 
+-static void g_emblem_iface_init (GIconIface *iface);
++static void g_emblem_iface_init (GIconIface *iface,
++                                 gpointer    iface_data);
+ 
+ struct _GEmblem
+ {
+@@ -369,7 +370,8 @@ static void
+ }
+ 
+ static void
+-g_emblem_iface_init (GIconIface *iface)
++g_emblem_iface_init (GIconIface *iface,
++                     gpointer    iface_data)
+ {
+   iface->hash  = g_emblem_hash;
+   iface->equal = g_emblem_equal;
+Index: glib-2.56.4/gio/gemblemedicon.c
+===================================================================
+--- glib-2.56.4.orig/gio/gemblemedicon.c
++++ glib-2.56.4/gio/gemblemedicon.c
+@@ -56,7 +56,8 @@ static GParamSpec *properties[NUM_PROPERTIES] = { NULL
+ 
+ static GParamSpec *properties[NUM_PROPERTIES] = { NULL, };
+ 
+-static void g_emblemed_icon_icon_iface_init (GIconIface *iface);
++static void g_emblemed_icon_icon_iface_init (GIconIface *iface,
++                                             gpointer    iface_data);
+ 
+ G_DEFINE_TYPE_WITH_CODE (GEmblemedIcon, g_emblemed_icon, G_TYPE_OBJECT,
+                          G_ADD_PRIVATE (GEmblemedIcon)
+@@ -457,7 +458,8 @@ static void
+ }
+ 
+ static void
+-g_emblemed_icon_icon_iface_init (GIconIface *iface)
++g_emblemed_icon_icon_iface_init (GIconIface *iface,
++                                 gpointer    iface_data)
+ {
+   iface->hash = g_emblemed_icon_hash;
+   iface->equal = g_emblemed_icon_equal;
+Index: glib-2.56.4/gio/gfileicon.c
+===================================================================
+--- glib-2.56.4.orig/gio/gfileicon.c
++++ glib-2.56.4/gio/gfileicon.c
+@@ -41,8 +41,10 @@
+  * 
+  **/
+ 
+-static void g_file_icon_icon_iface_init          (GIconIface          *iface);
+-static void g_file_icon_loadable_icon_iface_init (GLoadableIconIface  *iface);
++static void g_file_icon_icon_iface_init          (GIconIface          *iface,
++                                                  gpointer             iface_data);
++static void g_file_icon_loadable_icon_iface_init (GLoadableIconIface  *iface,
++                                                  gpointer             iface_data);
+ static void g_file_icon_load_async               (GLoadableIcon       *icon,
+ 						  int                  size,
+ 						  GCancellable        *cancellable,
+@@ -264,7 +266,8 @@ static void
+ }
+ 
+ static void
+-g_file_icon_icon_iface_init (GIconIface *iface)
++g_file_icon_icon_iface_init (GIconIface *iface,
++                             gpointer    iface_data)
+ {
+   iface->hash = g_file_icon_hash;
+   iface->equal = g_file_icon_equal;
+@@ -344,7 +347,8 @@ static void
+ }
+ 
+ static void
+-g_file_icon_loadable_icon_iface_init (GLoadableIconIface *iface)
++g_file_icon_loadable_icon_iface_init (GLoadableIconIface *iface,
++                                      gpointer            iface_data)
+ {
+   iface->load = g_file_icon_load;
+   iface->load_async = g_file_icon_load_async;
+Index: glib-2.56.4/gio/gfileinputstream.c
+===================================================================
+--- glib-2.56.4.orig/gio/gfileinputstream.c
++++ glib-2.56.4/gio/gfileinputstream.c
+@@ -47,7 +47,8 @@
+  * To position a file input stream, use g_seekable_seek().
+  **/
+ 
+-static void       g_file_input_stream_seekable_iface_init    (GSeekableIface       *iface);
++static void       g_file_input_stream_seekable_iface_init    (GSeekableIface       *iface,
++                                                              gpointer              iface_data);
+ static goffset    g_file_input_stream_seekable_tell          (GSeekable            *seekable);
+ static gboolean   g_file_input_stream_seekable_can_seek      (GSeekable            *seekable);
+ static gboolean   g_file_input_stream_seekable_seek          (GSeekable            *seekable,
+@@ -88,7 +89,8 @@ static void
+ }
+ 
+ static void
+-g_file_input_stream_seekable_iface_init (GSeekableIface *iface)
++g_file_input_stream_seekable_iface_init (GSeekableIface *iface,
++                                         gpointer        iface_data)
+ {
+   iface->tell = g_file_input_stream_seekable_tell;
+   iface->can_seek = g_file_input_stream_seekable_can_seek;
+Index: glib-2.56.4/gio/gfileiostream.c
+===================================================================
+--- glib-2.56.4.orig/gio/gfileiostream.c
++++ glib-2.56.4/gio/gfileiostream.c
+@@ -60,7 +60,8 @@
+  * Since: 2.22
+  **/
+ 
+-static void       g_file_io_stream_seekable_iface_init    (GSeekableIface       *iface);
++static void       g_file_io_stream_seekable_iface_init    (GSeekableIface       *iface,
++                                                           gpointer              iface_data);
+ static goffset    g_file_io_stream_seekable_tell          (GSeekable            *seekable);
+ static gboolean   g_file_io_stream_seekable_can_seek      (GSeekable            *seekable);
+ static gboolean   g_file_io_stream_seekable_seek          (GSeekable            *seekable,
+@@ -93,7 +94,8 @@ static void
+ 						g_file_io_stream_seekable_iface_init))
+ 
+ static void
+-g_file_io_stream_seekable_iface_init (GSeekableIface *iface)
++g_file_io_stream_seekable_iface_init (GSeekableIface *iface,
++                                      gpointer        iface_data)
+ {
+   iface->tell = g_file_io_stream_seekable_tell;
+   iface->can_seek = g_file_io_stream_seekable_can_seek;
+Index: glib-2.56.4/gio/gfileoutputstream.c
+===================================================================
+--- glib-2.56.4.orig/gio/gfileoutputstream.c
++++ glib-2.56.4/gio/gfileoutputstream.c
+@@ -52,7 +52,8 @@
+  * stream, use g_seekable_truncate().
+  **/
+ 
+-static void       g_file_output_stream_seekable_iface_init    (GSeekableIface       *iface);
++static void       g_file_output_stream_seekable_iface_init    (GSeekableIface       *iface,
++                                                               gpointer              iface_data);
+ static goffset    g_file_output_stream_seekable_tell          (GSeekable            *seekable);
+ static gboolean   g_file_output_stream_seekable_can_seek      (GSeekable            *seekable);
+ static gboolean   g_file_output_stream_seekable_seek          (GSeekable            *seekable,
+@@ -92,7 +93,8 @@ static void
+ }
+ 
+ static void
+-g_file_output_stream_seekable_iface_init (GSeekableIface *iface)
++g_file_output_stream_seekable_iface_init (GSeekableIface *iface,
++                                          gpointer        iface_data)
+ {
+   iface->tell = g_file_output_stream_seekable_tell;
+   iface->can_seek = g_file_output_stream_seekable_can_seek;
+Index: glib-2.56.4/gio/ghttpproxy.c
+===================================================================
+--- glib-2.56.4.orig/gio/ghttpproxy.c
++++ glib-2.56.4/gio/ghttpproxy.c
+@@ -51,7 +51,8 @@ struct _GHttpProxyClass
+   GObjectClass parent_class;
+ };
+ 
+-static void g_http_proxy_iface_init (GProxyInterface *proxy_iface);
++static void g_http_proxy_iface_init (GProxyInterface *proxy_iface,
++                                     gpointer         iface_data);
+ 
+ #define g_http_proxy_get_type _g_http_proxy_get_type
+ G_DEFINE_TYPE_WITH_CODE (GHttpProxy, g_http_proxy, G_TYPE_OBJECT,
+@@ -363,7 +364,8 @@ static void
+ }
+ 
+ static void
+-g_http_proxy_iface_init (GProxyInterface *proxy_iface)
++g_http_proxy_iface_init (GProxyInterface *proxy_iface,
++                         gpointer         iface_data)
+ {
+   proxy_iface->connect = g_http_proxy_connect;
+   proxy_iface->connect_async = g_http_proxy_connect_async;
+Index: glib-2.56.4/gio/ginetaddressmask.c
+===================================================================
+--- glib-2.56.4.orig/gio/ginetaddressmask.c
++++ glib-2.56.4/gio/ginetaddressmask.c
+@@ -54,7 +54,8 @@ struct _GInetAddressMaskPrivate
+   guint         length;
+ };
+ 
+-static void     g_inet_address_mask_initable_iface_init (GInitableIface  *iface);
++static void     g_inet_address_mask_initable_iface_init (GInitableIface  *iface,
++                                                         gpointer         iface_data);
+ 
+ G_DEFINE_TYPE_WITH_CODE (GInetAddressMask, g_inet_address_mask, G_TYPE_OBJECT,
+                          G_ADD_PRIVATE (GInetAddressMask)
+@@ -228,7 +229,8 @@ static void
+ }
+ 
+ static void
+-g_inet_address_mask_initable_iface_init (GInitableIface  *iface)
++g_inet_address_mask_initable_iface_init (GInitableIface  *iface,
++                                         gpointer         iface_data)
+ {
+   iface->init = g_inet_address_mask_initable_init;
+ }
+Index: glib-2.56.4/gio/ginetsocketaddress.c
+===================================================================
+--- glib-2.56.4.orig/gio/ginetsocketaddress.c
++++ glib-2.56.4/gio/ginetsocketaddress.c
+@@ -55,7 +55,8 @@ struct _GInetSocketAddressPrivate
+   guint32       scope_id;
+ };
+ 
+-static void   g_inet_socket_address_connectable_iface_init (GSocketConnectableIface *iface);
++static void   g_inet_socket_address_connectable_iface_init (GSocketConnectableIface *iface,
++                                                            gpointer                 iface_data);
+ static gchar *g_inet_socket_address_connectable_to_string  (GSocketConnectable      *connectable);
+ 
+ G_DEFINE_TYPE_WITH_CODE (GInetSocketAddress, g_inet_socket_address, G_TYPE_SOCKET_ADDRESS,
+@@ -309,7 +310,8 @@ static void
+ }
+ 
+ static void
+-g_inet_socket_address_connectable_iface_init (GSocketConnectableIface *iface)
++g_inet_socket_address_connectable_iface_init (GSocketConnectableIface *iface,
++                                              gpointer                 iface_data)
+ {
+   GSocketConnectableIface *parent_iface = g_type_interface_peek_parent (iface);
+ 
+Index: glib-2.56.4/gio/gliststore.c
+===================================================================
+--- glib-2.56.4.orig/gio/gliststore.c
++++ glib-2.56.4/gio/gliststore.c
+@@ -64,7 +64,8 @@ enum
+   N_PROPERTIES
+ };
+ 
+-static void g_list_store_iface_init (GListModelInterface *iface);
++static void g_list_store_iface_init (GListModelInterface *iface,
++                                     gpointer             iface_data);
+ 
+ G_DEFINE_TYPE_WITH_CODE (GListStore, g_list_store, G_TYPE_OBJECT,
+                          G_IMPLEMENT_INTERFACE (G_TYPE_LIST_MODEL, g_list_store_iface_init));
+@@ -204,7 +205,8 @@ static void
+ }
+ 
+ static void
+-g_list_store_iface_init (GListModelInterface *iface)
++g_list_store_iface_init (GListModelInterface *iface,
++                         gpointer             iface_data)
+ {
+   iface->get_item_type = g_list_store_get_item_type;
+   iface->get_n_items = g_list_store_get_n_items;
+Index: glib-2.56.4/gio/glocalfile.c
+===================================================================
+--- glib-2.56.4.orig/gio/glocalfile.c
++++ glib-2.56.4/gio/glocalfile.c
+@@ -92,7 +92,8 @@
+ #endif
+ 
+ 
+-static void g_local_file_file_iface_init (GFileIface *iface);
++static void g_local_file_file_iface_init (GFileIface *iface,
++                                          gpointer    iface_data);
+ 
+ static GFileAttributeInfoList *local_writable_attributes = NULL;
+ static /* GFileAttributeInfoList * */ gsize local_writable_namespaces = 0;
+@@ -2941,7 +2942,8 @@ static void
+ }
+ 
+ static void
+-g_local_file_file_iface_init (GFileIface *iface)
++g_local_file_file_iface_init (GFileIface *iface,
++                              gpointer    iface_data)
+ {
+   iface->dup = g_local_file_dup;
+   iface->hash = g_local_file_hash;
+Index: glib-2.56.4/gio/glocalfileinputstream.c
+===================================================================
+--- glib-2.56.4.orig/gio/glocalfileinputstream.c
++++ glib-2.56.4/gio/glocalfileinputstream.c
+@@ -49,7 +49,8 @@ struct _GLocalFileInputStreamPrivate {
+ };
+ 
+ #ifdef G_OS_UNIX
+-static void       g_file_descriptor_based_iface_init   (GFileDescriptorBasedIface *iface);
++static void       g_file_descriptor_based_iface_init   (GFileDescriptorBasedIface *iface,
++                                                        gpointer                   iface_data);
+ #endif
+ 
+ #define g_local_file_input_stream_get_type _g_local_file_input_stream_get_type
+@@ -114,7 +115,8 @@ static void
+ 
+ #ifdef G_OS_UNIX
+ static void
+-g_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface)
++g_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface,
++                                    gpointer                   iface_data)
+ {
+   iface->get_fd = g_local_file_input_stream_get_fd;
+ }
+Index: glib-2.56.4/gio/glocalfileoutputstream.c
+===================================================================
+--- glib-2.56.4.orig/gio/glocalfileoutputstream.c
++++ glib-2.56.4/gio/glocalfileoutputstream.c
+@@ -67,7 +67,8 @@ struct _GLocalFileOutputStreamPrivate {
+ };
+ 
+ #ifdef G_OS_UNIX
+-static void       g_file_descriptor_based_iface_init   (GFileDescriptorBasedIface *iface);
++static void       g_file_descriptor_based_iface_init   (GFileDescriptorBasedIface *iface,
++                                                        gpointer                   iface_data);
+ #endif
+ 
+ #define g_local_file_output_stream_get_type _g_local_file_output_stream_get_type
+@@ -154,7 +155,8 @@ static void
+ 
+ #ifdef G_OS_UNIX
+ static void
+-g_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface)
++g_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface,
++                                    gpointer                   iface_data)
+ {
+   iface->get_fd = g_local_file_output_stream_get_fd;
+ }
+Index: glib-2.56.4/gio/gmemoryinputstream.c
+===================================================================
+--- glib-2.56.4.orig/gio/gmemoryinputstream.c
++++ glib-2.56.4/gio/gmemoryinputstream.c
+@@ -78,7 +78,8 @@ static gboolean g_memory_input_stream_close_finish (GI
+ 						    GAsyncResult         *result,
+ 						    GError              **error);
+ 
+-static void     g_memory_input_stream_seekable_iface_init (GSeekableIface  *iface);
++static void     g_memory_input_stream_seekable_iface_init (GSeekableIface  *iface,
++                                                           gpointer         iface_data);
+ static goffset  g_memory_input_stream_tell                (GSeekable       *seekable);
+ static gboolean g_memory_input_stream_can_seek            (GSeekable       *seekable);
+ static gboolean g_memory_input_stream_seek                (GSeekable       *seekable,
+@@ -92,7 +93,8 @@ static gboolean g_memory_input_stream_truncate        
+                                                            GCancellable    *cancellable,
+                                                            GError         **error);
+ 
+-static void     g_memory_input_stream_pollable_iface_init (GPollableInputStreamInterface *iface);
++static void     g_memory_input_stream_pollable_iface_init (GPollableInputStreamInterface *iface,
++                                                           gpointer                       iface_data);
+ static gboolean g_memory_input_stream_is_readable         (GPollableInputStream *stream);
+ static GSource *g_memory_input_stream_create_source       (GPollableInputStream *stream,
+ 							   GCancellable          *cancellable);
+@@ -143,7 +145,8 @@ static void
+ }
+ 
+ static void
+-g_memory_input_stream_seekable_iface_init (GSeekableIface *iface)
++g_memory_input_stream_seekable_iface_init (GSeekableIface *iface,
++                                           gpointer        iface_data)
+ {
+   iface->tell         = g_memory_input_stream_tell;
+   iface->can_seek     = g_memory_input_stream_can_seek;
+@@ -153,7 +156,8 @@ static void
+ }
+ 
+ static void
+-g_memory_input_stream_pollable_iface_init (GPollableInputStreamInterface *iface)
++g_memory_input_stream_pollable_iface_init (GPollableInputStreamInterface *iface,
++                                           gpointer                       iface_data)
+ {
+   iface->is_readable   = g_memory_input_stream_is_readable;
+   iface->create_source = g_memory_input_stream_create_source;
+Index: glib-2.56.4/gio/gmemoryoutputstream.c
+===================================================================
+--- glib-2.56.4.orig/gio/gmemoryoutputstream.c
++++ glib-2.56.4/gio/gmemoryoutputstream.c
+@@ -96,7 +96,8 @@ static gboolean g_memory_output_stream_close_finish (G
+                                                      GAsyncResult         *result,
+                                                      GError              **error);
+ 
+-static void     g_memory_output_stream_seekable_iface_init (GSeekableIface  *iface);
++static void     g_memory_output_stream_seekable_iface_init (GSeekableIface  *iface,
++                                                            gpointer         iface_data);
+ static goffset  g_memory_output_stream_tell                (GSeekable       *seekable);
+ static gboolean g_memory_output_stream_can_seek            (GSeekable       *seekable);
+ static gboolean g_memory_output_stream_seek                (GSeekable       *seekable,
+@@ -114,7 +115,8 @@ static GSource *g_memory_output_stream_create_source  
+ static GSource *g_memory_output_stream_create_source     (GPollableOutputStream *stream,
+                                                           GCancellable          *cancellable);
+ 
+-static void g_memory_output_stream_pollable_iface_init (GPollableOutputStreamInterface *iface);
++static void g_memory_output_stream_pollable_iface_init (GPollableOutputStreamInterface *iface,
++                                                        gpointer                        iface_data);
+ 
+ G_DEFINE_TYPE_WITH_CODE (GMemoryOutputStream, g_memory_output_stream, G_TYPE_OUTPUT_STREAM,
+                          G_ADD_PRIVATE (GMemoryOutputStream)
+@@ -221,7 +223,8 @@ static void
+ }
+ 
+ static void
+-g_memory_output_stream_pollable_iface_init (GPollableOutputStreamInterface *iface)
++g_memory_output_stream_pollable_iface_init (GPollableOutputStreamInterface *iface,
++                                            gpointer                        iface_data)
+ {
+   iface->is_writable = g_memory_output_stream_is_writable;
+   iface->create_source = g_memory_output_stream_create_source;
+@@ -310,7 +313,8 @@ static void
+ }
+ 
+ static void
+-g_memory_output_stream_seekable_iface_init (GSeekableIface *iface)
++g_memory_output_stream_seekable_iface_init (GSeekableIface *iface,
++                                            gpointer        iface_data)
+ {
+   iface->tell         = g_memory_output_stream_tell;
+   iface->can_seek     = g_memory_output_stream_can_seek;
+Index: glib-2.56.4/gio/gnetworkaddress.c
+===================================================================
+--- glib-2.56.4.orig/gio/gnetworkaddress.c
++++ glib-2.56.4/gio/gnetworkaddress.c
+@@ -83,7 +83,8 @@ static void g_network_address_get_property (GObject   
+                                             GValue       *value,
+                                             GParamSpec   *pspec);
+ 
+-static void                      g_network_address_connectable_iface_init       (GSocketConnectableIface *iface);
++static void                      g_network_address_connectable_iface_init       (GSocketConnectableIface *iface,
++                                                                                 gpointer                 iface_data);
+ static GSocketAddressEnumerator *g_network_address_connectable_enumerate        (GSocketConnectable      *connectable);
+ static GSocketAddressEnumerator	*g_network_address_connectable_proxy_enumerate  (GSocketConnectable      *connectable);
+ static gchar                    *g_network_address_connectable_to_string        (GSocketConnectable      *connectable);
+@@ -142,7 +143,8 @@ static void
+ }
+ 
+ static void
+-g_network_address_connectable_iface_init (GSocketConnectableIface *connectable_iface)
++g_network_address_connectable_iface_init (GSocketConnectableIface *connectable_iface,
++                                          gpointer                 iface_data)
+ {
+   connectable_iface->enumerate  = g_network_address_connectable_enumerate;
+   connectable_iface->proxy_enumerate = g_network_address_connectable_proxy_enumerate;
+Index: glib-2.56.4/gio/gnetworkmonitorbase.c
+===================================================================
+--- glib-2.56.4.orig/gio/gnetworkmonitorbase.c
++++ glib-2.56.4/gio/gnetworkmonitorbase.c
+@@ -31,8 +31,10 @@
+ #include "gtask.h"
+ #include "glibintl.h"
+ 
+-static void g_network_monitor_base_iface_init (GNetworkMonitorInterface *iface);
+-static void g_network_monitor_base_initable_iface_init (GInitableIface *iface);
++static void g_network_monitor_base_iface_init (GNetworkMonitorInterface *iface,
++                                               gpointer                  iface_data);
++static void g_network_monitor_base_initable_iface_init (GInitableIface *iface,
++                                                        gpointer        iface_data);
+ 
+ enum
+ {
+@@ -334,7 +336,8 @@ static void
+ }
+ 
+ static void
+-g_network_monitor_base_iface_init (GNetworkMonitorInterface *monitor_iface)
++g_network_monitor_base_iface_init (GNetworkMonitorInterface *monitor_iface,
++                                   gpointer                  iface_data)
+ {
+   monitor_iface->can_reach = g_network_monitor_base_can_reach;
+   monitor_iface->can_reach_async = g_network_monitor_base_can_reach_async;
+@@ -356,7 +359,8 @@ static void
+ }
+ 
+ static void
+-g_network_monitor_base_initable_iface_init (GInitableIface *iface)
++g_network_monitor_base_initable_iface_init (GInitableIface *iface,
++                                            gpointer        iface_data)
+ {
+   iface->init = g_network_monitor_base_initable_init;
+ }
+Index: glib-2.56.4/gio/gnetworkmonitornetlink.c
+===================================================================
+--- glib-2.56.4.orig/gio/gnetworkmonitornetlink.c
++++ glib-2.56.4/gio/gnetworkmonitornetlink.c
+@@ -40,8 +40,10 @@ static GInitableIface *initable_parent_iface;
+ #include <linux/rtnetlink.h>
+ 
+ static GInitableIface *initable_parent_iface;
+-static void g_network_monitor_netlink_iface_init (GNetworkMonitorInterface *iface);
+-static void g_network_monitor_netlink_initable_iface_init (GInitableIface *iface);
++static void g_network_monitor_netlink_iface_init (GNetworkMonitorInterface *iface,
++                                                  gpointer                  iface_data);
++static void g_network_monitor_netlink_initable_iface_init (GInitableIface *iface,
++                                                           gpointer        iface_data);
+ 
+ struct _GNetworkMonitorNetlinkPrivate
+ {
+@@ -468,12 +470,14 @@ static void
+ }
+ 
+ static void
+-g_network_monitor_netlink_iface_init (GNetworkMonitorInterface *monitor_iface)
++g_network_monitor_netlink_iface_init (GNetworkMonitorInterface *monitor_iface,
++                                      gpointer                  iface_data)
+ {
+ }
+ 
+ static void
+-g_network_monitor_netlink_initable_iface_init (GInitableIface *iface)
++g_network_monitor_netlink_initable_iface_init (GInitableIface *iface,
++                                               gpointer        iface_data)
+ {
+   initable_parent_iface = g_type_interface_peek_parent (iface);
+ 
+Index: glib-2.56.4/gio/gnetworkmonitornm.c
+===================================================================
+--- glib-2.56.4.orig/gio/gnetworkmonitornm.c
++++ glib-2.56.4/gio/gnetworkmonitornm.c
+@@ -32,8 +32,10 @@
+ #include "gnetworkmonitor.h"
+ #include "gdbusproxy.h"
+ 
+-static void g_network_monitor_nm_iface_init (GNetworkMonitorInterface *iface);
+-static void g_network_monitor_nm_initable_iface_init (GInitableIface *iface);
++static void g_network_monitor_nm_iface_init (GNetworkMonitorInterface *iface,
++                                             gpointer                  iface_data);
++static void g_network_monitor_nm_initable_iface_init (GInitableIface *iface,
++                                                      gpointer        iface_data);
+ 
+ enum
+ {
+@@ -356,12 +358,14 @@ static void
+ }
+ 
+ static void
+-g_network_monitor_nm_iface_init (GNetworkMonitorInterface *monitor_iface)
++g_network_monitor_nm_iface_init (GNetworkMonitorInterface *monitor_iface,
++                                 gpointer                  iface_data)
+ {
+ }
+ 
+ static void
+-g_network_monitor_nm_initable_iface_init (GInitableIface *iface)
++g_network_monitor_nm_initable_iface_init (GInitableIface *iface,
++                                          gpointer        iface_data)
+ {
+   iface->init = g_network_monitor_nm_initable_init;
+ }
+Index: glib-2.56.4/gio/gnetworkmonitorportal.c
+===================================================================
+--- glib-2.56.4.orig/gio/gnetworkmonitorportal.c
++++ glib-2.56.4/gio/gnetworkmonitorportal.c
+@@ -25,8 +25,10 @@ static GInitableIface *initable_parent_iface;
+ #include "gportalsupport.h"
+ 
+ static GInitableIface *initable_parent_iface;
+-static void g_network_monitor_portal_iface_init (GNetworkMonitorInterface *iface);
+-static void g_network_monitor_portal_initable_iface_init (GInitableIface *iface);
++static void g_network_monitor_portal_iface_init (GNetworkMonitorInterface *iface,
++                                                 gpointer                  iface_data);
++static void g_network_monitor_portal_initable_iface_init (GInitableIface *iface,
++                                                          gpointer        iface_data);
+ 
+ enum
+ {
+@@ -366,12 +368,14 @@ static void
+ }
+ 
+ static void
+-g_network_monitor_portal_iface_init (GNetworkMonitorInterface *monitor_iface)
++g_network_monitor_portal_iface_init (GNetworkMonitorInterface *monitor_iface,
++                                     gpointer                  iface_data)
+ {
+ }
+ 
+ static void
+-g_network_monitor_portal_initable_iface_init (GInitableIface *iface)
++g_network_monitor_portal_initable_iface_init (GInitableIface *iface,
++                                              gpointer        iface_data)
+ {
+   initable_parent_iface = g_type_interface_peek_parent (iface);
+ 
+Index: glib-2.56.4/gio/gnetworkservice.c
+===================================================================
+--- glib-2.56.4.orig/gio/gnetworkservice.c
++++ glib-2.56.4/gio/gnetworkservice.c
+@@ -86,7 +86,8 @@ static void g_network_service_get_property (GObject   
+                                             GValue       *value,
+                                             GParamSpec   *pspec);
+ 
+-static void                      g_network_service_connectable_iface_init       (GSocketConnectableIface *iface);
++static void                      g_network_service_connectable_iface_init       (GSocketConnectableIface *iface,
++                                                                                 gpointer                 iface_data);
+ static GSocketAddressEnumerator *g_network_service_connectable_enumerate        (GSocketConnectable      *connectable);
+ static GSocketAddressEnumerator *g_network_service_connectable_proxy_enumerate  (GSocketConnectable      *connectable);
+ static gchar                    *g_network_service_connectable_to_string        (GSocketConnectable      *connectable);
+@@ -156,7 +157,8 @@ static void
+ }
+ 
+ static void
+-g_network_service_connectable_iface_init (GSocketConnectableIface *connectable_iface)
++g_network_service_connectable_iface_init (GSocketConnectableIface *connectable_iface,
++                                          gpointer                 iface_data)
+ {
+   connectable_iface->enumerate = g_network_service_connectable_enumerate;
+   connectable_iface->proxy_enumerate = g_network_service_connectable_proxy_enumerate;
+Index: glib-2.56.4/gio/gpropertyaction.c
+===================================================================
+--- glib-2.56.4.orig/gio/gpropertyaction.c
++++ glib-2.56.4/gio/gpropertyaction.c
+@@ -106,7 +106,8 @@ typedef GObjectClass GPropertyActionClass;
+ 
+ typedef GObjectClass GPropertyActionClass;
+ 
+-static void g_property_action_iface_init (GActionInterface *iface);
++static void g_property_action_iface_init (GActionInterface *iface,
++                                          gpointer          iface_data);
+ G_DEFINE_TYPE_WITH_CODE (GPropertyAction, g_property_action, G_TYPE_OBJECT,
+   G_IMPLEMENT_INTERFACE (G_TYPE_ACTION, g_property_action_iface_init))
+ 
+@@ -401,7 +402,8 @@ void
+ }
+ 
+ void
+-g_property_action_iface_init (GActionInterface *iface)
++g_property_action_iface_init (GActionInterface *iface,
++                              gpointer          iface_data)
+ {
+   iface->get_name = g_property_action_get_name;
+   iface->get_parameter_type = g_property_action_get_parameter_type;
+Index: glib-2.56.4/gio/gproxyresolverportal.c
+===================================================================
+--- glib-2.56.4.orig/gio/gproxyresolverportal.c
++++ glib-2.56.4/gio/gproxyresolverportal.c
+@@ -31,7 +31,8 @@ struct _GProxyResolverPortal {
+   gboolean network_available;
+ };
+ 
+-static void g_proxy_resolver_portal_iface_init (GProxyResolverInterface *iface);
++static void g_proxy_resolver_portal_iface_init (GProxyResolverInterface *iface,
++                                                gpointer                 iface_data);
+ 
+ G_DEFINE_TYPE_WITH_CODE (GProxyResolverPortal, g_proxy_resolver_portal, G_TYPE_OBJECT,
+                          G_IMPLEMENT_INTERFACE (G_TYPE_PROXY_RESOLVER,
+@@ -199,7 +200,8 @@ static void
+ }
+ 
+ static void
+-g_proxy_resolver_portal_iface_init (GProxyResolverInterface *iface)
++g_proxy_resolver_portal_iface_init (GProxyResolverInterface *iface,
++                                    gpointer                 iface_data)
+ {
+   iface->is_supported = g_proxy_resolver_portal_is_supported;
+   iface->lookup = g_proxy_resolver_portal_lookup;
+Index: glib-2.56.4/gio/gresourcefile.c
+===================================================================
+--- glib-2.56.4.orig/gio/gresourcefile.c
++++ glib-2.56.4/gio/gresourcefile.c
+@@ -66,7 +66,8 @@ typedef struct _GResourceFileEnumeratorClass   GResour
+ typedef struct _GResourceFileEnumerator        GResourceFileEnumerator;
+ typedef struct _GResourceFileEnumeratorClass   GResourceFileEnumeratorClass;
+ 
+-static void g_resource_file_file_iface_init (GFileIface *iface);
++static void g_resource_file_file_iface_init (GFileIface *iface,
++                                             gpointer    iface_data);
+ 
+ static GFileAttributeInfoList *resource_writable_attributes = NULL;
+ static GFileAttributeInfoList *resource_writable_namespaces = NULL;
+@@ -645,7 +646,8 @@ static void
+ }
+ 
+ static void
+-g_resource_file_file_iface_init (GFileIface *iface)
++g_resource_file_file_iface_init (GFileIface *iface,
++                                 gpointer    iface_data)
+ {
+   iface->dup = g_resource_file_dup;
+   iface->hash = g_resource_file_hash;
+Index: glib-2.56.4/gio/gsettings.c
+===================================================================
+--- glib-2.56.4.orig/gio/gsettings.c
++++ glib-2.56.4/gio/gsettings.c
+@@ -3124,7 +3124,8 @@ static GType g_settings_action_get_type (void);
+ typedef GObjectClass GSettingsActionClass;
+ 
+ static GType g_settings_action_get_type (void);
+-static void g_settings_action_iface_init (GActionInterface *iface);
++static void g_settings_action_iface_init (GActionInterface *iface,
++                                          gpointer          iface_data);
+ G_DEFINE_TYPE_WITH_CODE (GSettingsAction, g_settings_action, G_TYPE_OBJECT,
+                          G_IMPLEMENT_INTERFACE (G_TYPE_ACTION, g_settings_action_iface_init))
+ 
+@@ -3284,7 +3285,8 @@ static void
+ }
+ 
+ static void
+-g_settings_action_iface_init (GActionInterface *iface)
++g_settings_action_iface_init (GActionInterface *iface,
++                              gpointer          iface_data)
+ {
+   iface->get_name = g_settings_action_get_name;
+   iface->get_parameter_type = g_settings_action_get_parameter_type;
+Index: glib-2.56.4/gio/gsimpleaction.c
+===================================================================
+--- glib-2.56.4.orig/gio/gsimpleaction.c
++++ glib-2.56.4/gio/gsimpleaction.c
+@@ -58,7 +58,8 @@ typedef GObjectClass GSimpleActionClass;
+ 
+ typedef GObjectClass GSimpleActionClass;
+ 
+-static void g_simple_action_iface_init (GActionInterface *iface);
++static void g_simple_action_iface_init (GActionInterface *iface,
++                                        gpointer          iface_data);
+ G_DEFINE_TYPE_WITH_CODE (GSimpleAction, g_simple_action, G_TYPE_OBJECT,
+   G_IMPLEMENT_INTERFACE (G_TYPE_ACTION, g_simple_action_iface_init))
+ 
+@@ -347,7 +348,8 @@ void
+ }
+ 
+ void
+-g_simple_action_iface_init (GActionInterface *iface)
++g_simple_action_iface_init (GActionInterface *iface,
++                            gpointer          iface_data)
+ {
+   iface->get_name = g_simple_action_get_name;
+   iface->get_parameter_type = g_simple_action_get_parameter_type;
+Index: glib-2.56.4/gio/gsimpleactiongroup.c
+===================================================================
+--- glib-2.56.4.orig/gio/gsimpleactiongroup.c
++++ glib-2.56.4/gio/gsimpleactiongroup.c
+@@ -40,8 +40,10 @@ struct _GSimpleActionGroupPrivate
+   GHashTable *table;  /* string -> GAction */
+ };
+ 
+-static void g_simple_action_group_iface_init (GActionGroupInterface *);
+-static void g_simple_action_group_map_iface_init (GActionMapInterface *);
++static void g_simple_action_group_iface_init (GActionGroupInterface *iface,
++                                              gpointer               iface_data);
++static void g_simple_action_group_map_iface_init (GActionMapInterface *iface,
++                                                  gpointer             iface_data);
+ G_DEFINE_TYPE_WITH_CODE (GSimpleActionGroup,
+   g_simple_action_group, G_TYPE_OBJECT,
+   G_ADD_PRIVATE (GSimpleActionGroup)
+@@ -272,7 +274,8 @@ static void
+ }
+ 
+ static void
+-g_simple_action_group_iface_init (GActionGroupInterface *iface)
++g_simple_action_group_iface_init (GActionGroupInterface *iface,
++                                  gpointer               iface_data)
+ {
+   iface->list_actions = g_simple_action_group_list_actions;
+   iface->query_action = g_simple_action_group_query_action;
+@@ -281,7 +284,8 @@ static void
+ }
+ 
+ static void
+-g_simple_action_group_map_iface_init (GActionMapInterface *iface)
++g_simple_action_group_map_iface_init (GActionMapInterface *iface,
++                                      gpointer             iface_data)
+ {
+   iface->add_action = g_simple_action_group_add_action;
+   iface->remove_action = g_simple_action_group_remove_action;
+Index: glib-2.56.4/gio/gsimpleasyncresult.c
+===================================================================
+--- glib-2.56.4.orig/gio/gsimpleasyncresult.c
++++ glib-2.56.4/gio/gsimpleasyncresult.c
+@@ -205,7 +205,8 @@ G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+ 
+ G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+ 
+-static void g_simple_async_result_async_result_iface_init (GAsyncResultIface       *iface);
++static void g_simple_async_result_async_result_iface_init (GAsyncResultIface       *iface,
++                                                           gpointer                 iface_data);
+ 
+ struct _GSimpleAsyncResult
+ {
+@@ -464,7 +465,8 @@ static void
+ }
+ 
+ static void
+-g_simple_async_result_async_result_iface_init (GAsyncResultIface *iface)
++g_simple_async_result_async_result_iface_init (GAsyncResultIface *iface,
++                                               gpointer           iface_data)
+ {
+   iface->get_user_data = g_simple_async_result_get_user_data;
+   iface->get_source_object = g_simple_async_result_get_source_object;
+Index: glib-2.56.4/gio/gsimpleproxyresolver.c
+===================================================================
+--- glib-2.56.4.orig/gio/gsimpleproxyresolver.c
++++ glib-2.56.4/gio/gsimpleproxyresolver.c
+@@ -62,7 +62,8 @@ struct _GSimpleProxyResolverPrivate {
+   GSimpleProxyResolverDomain *ignore_domains;
+ };
+ 
+-static void g_simple_proxy_resolver_iface_init (GProxyResolverInterface *iface);
++static void g_simple_proxy_resolver_iface_init (GProxyResolverInterface *iface,
++                                                gpointer                 iface_data);
+ 
+ G_DEFINE_TYPE_WITH_CODE (GSimpleProxyResolver, g_simple_proxy_resolver, G_TYPE_OBJECT,
+                          G_ADD_PRIVATE (GSimpleProxyResolver)
+@@ -477,7 +478,8 @@ static void
+ }
+ 
+ static void
+-g_simple_proxy_resolver_iface_init (GProxyResolverInterface *iface)
++g_simple_proxy_resolver_iface_init (GProxyResolverInterface *iface,
++                                    gpointer                 iface_data)
+ {
+   iface->lookup = g_simple_proxy_resolver_lookup;
+   iface->lookup_async = g_simple_proxy_resolver_lookup_async;
+Index: glib-2.56.4/gio/gsocket.c
+===================================================================
+--- glib-2.56.4.orig/gio/gsocket.c
++++ glib-2.56.4/gio/gsocket.c
+@@ -141,12 +141,14 @@
+  * Since: 2.22
+  */
+ 
+-static void     g_socket_initable_iface_init (GInitableIface  *iface);
++static void     g_socket_initable_iface_init (GInitableIface  *iface,
++                                              gpointer         iface_data);
+ static gboolean g_socket_initable_init       (GInitable       *initable,
+ 					      GCancellable    *cancellable,
+ 					      GError         **error);
+ 
+-static void     g_socket_datagram_based_iface_init       (GDatagramBasedInterface *iface);
++static void     g_socket_datagram_based_iface_init       (GDatagramBasedInterface *iface,
++                                                          gpointer                 iface_data);
+ static gint     g_socket_datagram_based_receive_messages (GDatagramBased  *self,
+                                                           GInputMessage   *messages,
+                                                           guint            num_messages,
+@@ -1056,13 +1058,15 @@ static void
+ }
+ 
+ static void
+-g_socket_initable_iface_init (GInitableIface *iface)
++g_socket_initable_iface_init (GInitableIface *iface,
++                              gpointer        iface_data)
+ {
+   iface->init = g_socket_initable_init;
+ }
+ 
+ static void
+-g_socket_datagram_based_iface_init (GDatagramBasedInterface *iface)
++g_socket_datagram_based_iface_init (GDatagramBasedInterface *iface,
++                                    gpointer                 iface_data)
+ {
+   iface->receive_messages = g_socket_datagram_based_receive_messages;
+   iface->send_messages = g_socket_datagram_based_send_messages;
+Index: glib-2.56.4/gio/gsocketaddress.c
+===================================================================
+--- glib-2.56.4.orig/gio/gsocketaddress.c
++++ glib-2.56.4/gio/gsocketaddress.c
+@@ -64,7 +64,8 @@ enum
+   PROP_FAMILY
+ };
+ 
+-static void                      g_socket_address_connectable_iface_init       (GSocketConnectableIface *iface);
++static void                      g_socket_address_connectable_iface_init       (GSocketConnectableIface *iface,
++                                                                                gpointer                 iface_data);
+ static GSocketAddressEnumerator *g_socket_address_connectable_enumerate	       (GSocketConnectable      *connectable);
+ static GSocketAddressEnumerator *g_socket_address_connectable_proxy_enumerate  (GSocketConnectable      *connectable);
+ 
+@@ -125,7 +126,8 @@ static void
+ }
+ 
+ static void
+-g_socket_address_connectable_iface_init (GSocketConnectableIface *connectable_iface)
++g_socket_address_connectable_iface_init (GSocketConnectableIface *connectable_iface,
++                                         gpointer                 iface_data)
+ {
+   connectable_iface->enumerate  = g_socket_address_connectable_enumerate;
+   connectable_iface->proxy_enumerate  = g_socket_address_connectable_proxy_enumerate;
+Index: glib-2.56.4/gio/gsocketinputstream.c
+===================================================================
+--- glib-2.56.4.orig/gio/gsocketinputstream.c
++++ glib-2.56.4/gio/gsocketinputstream.c
+@@ -39,9 +39,11 @@ struct _GSocketInputStreamPrivate
+   gsize count;
+ };
+ 
+-static void g_socket_input_stream_pollable_iface_init (GPollableInputStreamInterface *iface);
++static void g_socket_input_stream_pollable_iface_init (GPollableInputStreamInterface *iface,
++                                                       gpointer                       iface_data);
+ #ifdef G_OS_UNIX
+-static void g_socket_input_stream_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface);
++static void g_socket_input_stream_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface,
++                                                       gpointer                       iface_data);
+ #endif
+ 
+ #define g_socket_input_stream_get_type _g_socket_input_stream_get_type
+@@ -198,14 +200,16 @@ static void
+ 
+ #ifdef G_OS_UNIX
+ static void
+-g_socket_input_stream_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface)
++g_socket_input_stream_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface,
++                                                        gpointer                   iface_data)
+ {
+   iface->get_fd = g_socket_input_stream_get_fd;
+ }
+ #endif
+ 
+ static void
+-g_socket_input_stream_pollable_iface_init (GPollableInputStreamInterface *iface)
++g_socket_input_stream_pollable_iface_init (GPollableInputStreamInterface *iface,
++                                           gpointer                       iface_data)
+ {
+   iface->is_readable = g_socket_input_stream_pollable_is_readable;
+   iface->create_source = g_socket_input_stream_pollable_create_source;
+Index: glib-2.56.4/gio/gsocketoutputstream.c
+===================================================================
+--- glib-2.56.4.orig/gio/gsocketoutputstream.c
++++ glib-2.56.4/gio/gsocketoutputstream.c
+@@ -43,9 +43,11 @@ struct _GSocketOutputStreamPrivate
+   gsize count;
+ };
+ 
+-static void g_socket_output_stream_pollable_iface_init (GPollableOutputStreamInterface *iface);
++static void g_socket_output_stream_pollable_iface_init (GPollableOutputStreamInterface *iface,
++                                                        gpointer                        iface_data);
+ #ifdef G_OS_UNIX
+-static void g_socket_output_stream_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface);
++static void g_socket_output_stream_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface,
++                                                                     gpointer                   iface_data);
+ #endif
+ 
+ #define g_socket_output_stream_get_type _g_socket_output_stream_get_type
+@@ -202,14 +204,16 @@ static void
+ 
+ #ifdef G_OS_UNIX
+ static void
+-g_socket_output_stream_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface)
++g_socket_output_stream_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface,
++                                                         gpointer                   iface_data)
+ {
+   iface->get_fd = g_socket_output_stream_get_fd;
+ }
+ #endif
+ 
+ static void
+-g_socket_output_stream_pollable_iface_init (GPollableOutputStreamInterface *iface)
++g_socket_output_stream_pollable_iface_init (GPollableOutputStreamInterface *iface,
++                                            gpointer                        iface_data)
+ {
+   iface->is_writable = g_socket_output_stream_pollable_is_writable;
+   iface->create_source = g_socket_output_stream_pollable_create_source;
+Index: glib-2.56.4/gio/gsocks4aproxy.c
+===================================================================
+--- glib-2.56.4.orig/gio/gsocks4aproxy.c
++++ glib-2.56.4/gio/gsocks4aproxy.c
+@@ -48,7 +48,8 @@
+ #define SOCKS4_REP_NO_IDENT       92
+ #define SOCKS4_REP_BAD_IDENT      93
+ 
+-static void g_socks4a_proxy_iface_init (GProxyInterface *proxy_iface);
++static void g_socks4a_proxy_iface_init (GProxyInterface *proxy_iface,
++                                        gpointer         iface_data);
+ 
+ #define g_socks4a_proxy_get_type _g_socks4a_proxy_get_type
+ G_DEFINE_TYPE_WITH_CODE (GSocks4aProxy, g_socks4a_proxy, G_TYPE_OBJECT,
+@@ -449,7 +450,8 @@ static void
+ }
+ 
+ static void
+-g_socks4a_proxy_iface_init (GProxyInterface *proxy_iface)
++g_socks4a_proxy_iface_init (GProxyInterface *proxy_iface,
++                            gpointer         iface_data)
+ {
+   proxy_iface->connect  = g_socks4a_proxy_connect;
+   proxy_iface->connect_async = g_socks4a_proxy_connect_async;
+Index: glib-2.56.4/gio/gsocks5proxy.c
+===================================================================
+--- glib-2.56.4.orig/gio/gsocks5proxy.c
++++ glib-2.56.4/gio/gsocks5proxy.c
+@@ -80,7 +80,8 @@ struct _GSocks5ProxyClass
+   GObjectClass parent_class;
+ };
+ 
+-static void g_socks5_proxy_iface_init (GProxyInterface *proxy_iface);
++static void g_socks5_proxy_iface_init (GProxyInterface *proxy_iface,
++                                       gpointer         iface_data);
+ 
+ #define g_socks5_proxy_get_type _g_socks5_proxy_get_type
+ G_DEFINE_TYPE_WITH_CODE (GSocks5Proxy, g_socks5_proxy, G_TYPE_OBJECT,
+@@ -1033,7 +1034,8 @@ static void
+ }
+ 
+ static void
+-g_socks5_proxy_iface_init (GProxyInterface *proxy_iface)
++g_socks5_proxy_iface_init (GProxyInterface *proxy_iface,
++                           gpointer         iface_data)
+ {
+   proxy_iface->connect  = g_socks5_proxy_connect;
+   proxy_iface->connect_async = g_socks5_proxy_connect_async;
+Index: glib-2.56.4/gio/gsubprocess.c
+===================================================================
+--- glib-2.56.4.orig/gio/gsubprocess.c
++++ glib-2.56.4/gio/gsubprocess.c
+@@ -140,7 +140,8 @@
+  * via the worker thread so that we don't race with waitpid() and
+  * accidentally send a signal to an already-reaped child.
+  */
+-static void initable_iface_init (GInitableIface         *initable_iface);
++static void initable_iface_init (GInitableIface         *initable_iface,
++                                 gpointer                iface_data);
+ 
+ typedef GObjectClass GSubprocessClass;
+ 
+@@ -642,7 +643,8 @@ static void
+ }
+ 
+ static void
+-initable_iface_init (GInitableIface *initable_iface)
++initable_iface_init (GInitableIface *initable_iface,
++                     gpointer        iface_data)
+ {
+   initable_iface->init = initable_init;
+ }
+Index: glib-2.56.4/gio/gtask.c
+===================================================================
+--- glib-2.56.4.orig/gio/gtask.c
++++ glib-2.56.4/gio/gtask.c
+@@ -589,7 +589,8 @@ typedef enum
+   PROP_COMPLETED = 1,
+ } GTaskProperty;
+ 
+-static void g_task_async_result_iface_init (GAsyncResultIface *iface);
++static void g_task_async_result_iface_init (GAsyncResultIface *iface,
++                                            gpointer           iface_data);
+ static void g_task_thread_pool_init (void);
+ 
+ G_DEFINE_TYPE_WITH_CODE (GTask, g_task, G_TYPE_OBJECT,
+@@ -2042,7 +2043,8 @@ static void
+ }
+ 
+ static void
+-g_task_async_result_iface_init (GAsyncResultIface *iface)
++g_task_async_result_iface_init (GAsyncResultIface *iface,
++                                gpointer           iface_data)
+ {
+   iface->get_user_data = g_task_get_user_data;
+   iface->get_source_object = g_task_ref_source_object;
+Index: glib-2.56.4/gio/gthemedicon.c
+===================================================================
+--- glib-2.56.4.orig/gio/gthemedicon.c
++++ glib-2.56.4/gio/gthemedicon.c
+@@ -43,7 +43,8 @@
+  * themes that inherit other themes.
+  **/
+ 
+-static void g_themed_icon_icon_iface_init (GIconIface *iface);
++static void g_themed_icon_icon_iface_init (GIconIface *iface,
++                                           gpointer    iface_data);
+ 
+ struct _GThemedIcon
+ {
+@@ -541,7 +542,8 @@ static void
+ }
+ 
+ static void
+-g_themed_icon_icon_iface_init (GIconIface *iface)
++g_themed_icon_icon_iface_init (GIconIface *iface,
++                               gpointer    iface_data)
+ {
+   iface->hash = g_themed_icon_hash;
+   iface->equal = g_themed_icon_equal;
+Index: glib-2.56.4/gio/gunixinputstream.c
+===================================================================
+--- glib-2.56.4.orig/gio/gunixinputstream.c
++++ glib-2.56.4/gio/gunixinputstream.c
+@@ -67,8 +67,10 @@ struct _GUnixInputStreamPrivate {
+   guint is_pipe_or_socket : 1;
+ };
+ 
+-static void g_unix_input_stream_pollable_iface_init (GPollableInputStreamInterface *iface);
+-static void g_unix_input_stream_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface);
++static void g_unix_input_stream_pollable_iface_init (GPollableInputStreamInterface *iface,
++                                                     gpointer                       iface_data);
++static void g_unix_input_stream_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface,
++                                                                  gpointer                   iface_data);
+ 
+ G_DEFINE_TYPE_WITH_CODE (GUnixInputStream, g_unix_input_stream, G_TYPE_INPUT_STREAM,
+                          G_ADD_PRIVATE (GUnixInputStream)
+@@ -169,7 +171,8 @@ static void
+ }
+ 
+ static void
+-g_unix_input_stream_pollable_iface_init (GPollableInputStreamInterface *iface)
++g_unix_input_stream_pollable_iface_init (GPollableInputStreamInterface *iface,
++                                         gpointer                       iface_data)
+ {
+   iface->can_poll = g_unix_input_stream_pollable_can_poll;
+   iface->is_readable = g_unix_input_stream_pollable_is_readable;
+@@ -177,7 +180,8 @@ static void
+ }
+ 
+ static void
+-g_unix_input_stream_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface)
++g_unix_input_stream_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface,
++                                                      gpointer                   iface_data)
+ {
+   iface->get_fd = (int (*) (GFileDescriptorBased *))g_unix_input_stream_get_fd;
+ }
+Index: glib-2.56.4/gio/gunixmount.c
+===================================================================
+--- glib-2.56.4.orig/gio/gunixmount.c
++++ glib-2.56.4/gio/gunixmount.c
+@@ -61,7 +61,8 @@ struct _GUnixMount {
+   gboolean can_eject;
+ };
+ 
+-static void g_unix_mount_mount_iface_init (GMountIface *iface);
++static void g_unix_mount_mount_iface_init (GMountIface *iface,
++                                           gpointer     iface_data);
+ 
+ #define g_unix_mount_get_type _g_unix_mount_get_type
+ G_DEFINE_TYPE_WITH_CODE (GUnixMount, g_unix_mount, G_TYPE_OBJECT,
+@@ -375,7 +376,8 @@ static void
+ }
+ 
+ static void
+-g_unix_mount_mount_iface_init (GMountIface *iface)
++g_unix_mount_mount_iface_init (GMountIface *iface,
++                               gpointer     iface_data)
+ {
+   iface->get_root = g_unix_mount_get_root;
+   iface->get_name = g_unix_mount_get_name;
+Index: glib-2.56.4/gio/gunixoutputstream.c
+===================================================================
+--- glib-2.56.4.orig/gio/gunixoutputstream.c
++++ glib-2.56.4/gio/gunixoutputstream.c
+@@ -67,8 +67,10 @@ struct _GUnixOutputStreamPrivate {
+   guint is_pipe_or_socket : 1;
+ };
+ 
+-static void g_unix_output_stream_pollable_iface_init (GPollableOutputStreamInterface *iface);
+-static void g_unix_output_stream_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface);
++static void g_unix_output_stream_pollable_iface_init (GPollableOutputStreamInterface *iface,
++                                                      gpointer                        iface_data);
++static void g_unix_output_stream_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface,
++                                                                   gpointer                   iface_data);
+ 
+ G_DEFINE_TYPE_WITH_CODE (GUnixOutputStream, g_unix_output_stream, G_TYPE_OUTPUT_STREAM,
+                          G_ADD_PRIVATE (GUnixOutputStream)
+@@ -154,7 +156,8 @@ static void
+ }
+ 
+ static void
+-g_unix_output_stream_pollable_iface_init (GPollableOutputStreamInterface *iface)
++g_unix_output_stream_pollable_iface_init (GPollableOutputStreamInterface *iface,
++                                          gpointer                        iface_data)
+ {
+   iface->can_poll = g_unix_output_stream_pollable_can_poll;
+   iface->is_writable = g_unix_output_stream_pollable_is_writable;
+@@ -162,7 +165,8 @@ static void
+ }
+ 
+ static void
+-g_unix_output_stream_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface)
++g_unix_output_stream_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface,
++                                                       gpointer                   iface_data)
+ {
+   iface->get_fd = (int (*) (GFileDescriptorBased *))g_unix_output_stream_get_fd;
+ }
+Index: glib-2.56.4/gio/gunixsocketaddress.c
+===================================================================
+--- glib-2.56.4.orig/gio/gunixsocketaddress.c
++++ glib-2.56.4/gio/gunixsocketaddress.c
+@@ -77,7 +77,8 @@ struct _GUnixSocketAddressPrivate
+   GUnixSocketAddressType address_type;
+ };
+ 
+-static void   g_unix_socket_address_connectable_iface_init (GSocketConnectableIface *iface);
++static void   g_unix_socket_address_connectable_iface_init (GSocketConnectableIface *iface,
++                                                            gpointer                 iface_data);
+ static gchar *g_unix_socket_address_connectable_to_string  (GSocketConnectable      *connectable);
+ 
+ G_DEFINE_TYPE_WITH_CODE (GUnixSocketAddress, g_unix_socket_address, G_TYPE_SOCKET_ADDRESS,
+@@ -309,7 +310,8 @@ static void
+ }
+ 
+ static void
+-g_unix_socket_address_connectable_iface_init (GSocketConnectableIface *iface)
++g_unix_socket_address_connectable_iface_init (GSocketConnectableIface *iface,
++                                              gpointer                 iface_data)
+ {
+   GSocketConnectableIface *parent_iface = g_type_interface_peek_parent (iface);
+ 
+Index: glib-2.56.4/gio/gunixvolume.c
+===================================================================
+--- glib-2.56.4.orig/gio/gunixvolume.c
++++ glib-2.56.4/gio/gunixvolume.c
+@@ -59,7 +59,8 @@ struct _GUnixVolume {
+   GIcon *symbolic_icon;
+ };
+ 
+-static void g_unix_volume_volume_iface_init (GVolumeIface *iface);
++static void g_unix_volume_volume_iface_init (GVolumeIface *iface,
++                                             gpointer      iface_data);
+ 
+ #define g_unix_volume_get_type _g_unix_volume_get_type
+ G_DEFINE_TYPE_WITH_CODE (GUnixVolume, g_unix_volume, G_TYPE_OBJECT,
+@@ -417,7 +418,8 @@ static void
+ }
+ 
+ static void
+-g_unix_volume_volume_iface_init (GVolumeIface *iface)
++g_unix_volume_volume_iface_init (GVolumeIface *iface,
++                                 gpointer      iface_data)
+ {
+   iface->get_name = g_unix_volume_get_name;
+   iface->get_icon = g_unix_volume_get_icon;
+Index: glib-2.56.4/gio/gwin32appinfo.c
+===================================================================
+--- glib-2.56.4.orig/gio/gwin32appinfo.c
++++ glib-2.56.4/gio/gwin32appinfo.c
+@@ -3435,7 +3435,8 @@ g_win32_appinfo_init (void)
+ }
+ 
+ 
+-static void g_win32_app_info_iface_init (GAppInfoIface *iface);
++static void g_win32_app_info_iface_init (GAppInfoIface *iface,
++                                         gpointer       iface_data);
+ 
+ struct _GWin32AppInfo
+ {
+@@ -4419,7 +4420,8 @@ static void
+ /* GAppInfo interface init */
+ 
+ static void
+-g_win32_app_info_iface_init (GAppInfoIface *iface)
++g_win32_app_info_iface_init (GAppInfoIface *iface,
++                             gpointer       iface_data)
+ {
+   iface->dup = g_win32_app_info_dup;
+   iface->equal = g_win32_app_info_equal;
+Index: glib-2.56.4/gio/gwin32mount.c
+===================================================================
+--- glib-2.56.4.orig/gio/gwin32mount.c
++++ glib-2.56.4/gio/gwin32mount.c
+@@ -55,7 +55,8 @@ struct _GWin32Mount {
+   gboolean can_eject;
+ };
+ 
+-static void g_win32_mount_mount_iface_init (GMountIface *iface);
++static void g_win32_mount_mount_iface_init (GMountIface *iface,
++                                            gpointer     iface_data)
+ 
+ #define g_win32_mount_get_type _g_win32_mount_get_type
+ G_DEFINE_TYPE_WITH_CODE (GWin32Mount, g_win32_mount, G_TYPE_OBJECT,
+@@ -346,7 +347,8 @@ static void
+ }
+ 
+ static void
+-g_win32_mount_mount_iface_init (GMountIface *iface)
++g_win32_mount_mount_iface_init (GMountIface *iface,
++                                gpointer     iface_data)
+ {
+   iface->get_root = g_win32_mount_get_root;
+   iface->get_name = g_win32_mount_get_name;
+Index: glib-2.56.4/gio/gwin32networkmonitor.c
+===================================================================
+--- glib-2.56.4.orig/gio/gwin32networkmonitor.c
++++ glib-2.56.4/gio/gwin32networkmonitor.c
+@@ -44,8 +44,10 @@ static GInitableIface *initable_parent_iface;
+ #include "gioerror.h"
+ 
+ static GInitableIface *initable_parent_iface;
+-static void g_win32_network_monitor_iface_init (GNetworkMonitorInterface *iface);
+-static void g_win32_network_monitor_initable_iface_init (GInitableIface *iface);
++static void g_win32_network_monitor_iface_init (GNetworkMonitorInterface *iface,
++                                                gpointer                  iface_data);
++static void g_win32_network_monitor_initable_iface_init (GInitableIface *iface,
++                                                         gpointer        iface_data);
+ 
+ struct _GWin32NetworkMonitorPrivate
+ {
+@@ -326,12 +328,14 @@ static void
+ }
+ 
+ static void
+-g_win32_network_monitor_iface_init (GNetworkMonitorInterface *monitor_iface)
++g_win32_network_monitor_iface_init (GNetworkMonitorInterface *monitor_iface,
++                                    gpointer                  iface_data)
+ {
+ }
+ 
+ static void
+-g_win32_network_monitor_initable_iface_init (GInitableIface *iface)
++g_win32_network_monitor_initable_iface_init (GInitableIface *iface,
++                                             gpointer        iface_data)
+ {
+   initable_parent_iface = g_type_interface_peek_parent (iface);
+ 
+Index: glib-2.56.4/gio/gwin32registrykey.c
+===================================================================
+--- glib-2.56.4.orig/gio/gwin32registrykey.c
++++ glib-2.56.4/gio/gwin32registrykey.c
+@@ -414,7 +414,8 @@ struct _GWin32RegistryKeyPrivate {
+   gpointer user_data;
+ };
+ 
+-static void     g_win32_registry_key_initable_iface_init (GInitableIface  *iface);
++static void     g_win32_registry_key_initable_iface_init (GInitableIface  *iface,
++                                                          gpointer         iface_data);
+ static gboolean g_win32_registry_key_initable_init       (GInitable       *initable,
+                                                           GCancellable    *cancellable,
+                                                           GError         **error);
+@@ -521,7 +522,8 @@ static void
+ }
+ 
+ static void
+-g_win32_registry_key_initable_iface_init (GInitableIface *iface)
++g_win32_registry_key_initable_iface_init (GInitableIface *iface,
++                                          gpointer        iface_data)
+ {
+   iface->init = g_win32_registry_key_initable_init;
+ }
+Index: glib-2.56.4/gio/gzlibcompressor.c
+===================================================================
+--- glib-2.56.4.orig/gio/gzlibcompressor.c
++++ glib-2.56.4/gio/gzlibcompressor.c
+@@ -49,7 +49,8 @@ enum {
+  * compresses data using zlib.
+  */
+ 
+-static void g_zlib_compressor_iface_init          (GConverterIface *iface);
++static void g_zlib_compressor_iface_init          (GConverterIface *iface,
++                                                   gpointer         iface_data);
+ 
+ /**
+  * GZlibCompressor:
+@@ -429,7 +430,8 @@ static void
+ }
+ 
+ static void
+-g_zlib_compressor_iface_init (GConverterIface *iface)
++g_zlib_compressor_iface_init (GConverterIface *iface,
++                              gpointer         iface_data)
+ {
+   iface->convert = g_zlib_compressor_convert;
+   iface->reset = g_zlib_compressor_reset;
+Index: glib-2.56.4/gio/gzlibdecompressor.c
+===================================================================
+--- glib-2.56.4.orig/gio/gzlibdecompressor.c
++++ glib-2.56.4/gio/gzlibdecompressor.c
+@@ -48,7 +48,8 @@ enum {
+  * decompresses data compressed with zlib.
+  */
+ 
+-static void g_zlib_decompressor_iface_init          (GConverterIface *iface);
++static void g_zlib_decompressor_iface_init          (GConverterIface *iface,
++                                                     gpointer         iface_data);
+ 
+ typedef struct {
+   gz_header gzheader;
+@@ -406,7 +407,8 @@ static void
+ }
+ 
+ static void
+-g_zlib_decompressor_iface_init (GConverterIface *iface)
++g_zlib_decompressor_iface_init (GConverterIface *iface,
++                                gpointer         iface_data)
+ {
+   iface->convert = g_zlib_decompressor_convert;
+   iface->reset = g_zlib_decompressor_reset;
+Index: glib-2.56.4/gobject/gobject.c
+===================================================================
+--- glib-2.56.4.orig/gobject/gobject.c
++++ glib-2.56.4/gobject/gobject.c
+@@ -143,7 +143,8 @@ static void	g_object_base_class_finalize		(GObjectClas
+ /* --- prototypes --- */
+ static void	g_object_base_class_init		(GObjectClass	*class);
+ static void	g_object_base_class_finalize		(GObjectClass	*class);
+-static void	g_object_do_class_init			(GObjectClass	*class);
++static void	g_object_do_class_init			(GObjectClass	*class,
++							 gpointer	 class_data);
+ static void	g_object_init				(GObject	*object,
+ 							 GObjectClass	*class);
+ static GObject*	g_object_constructor			(GType                  type,
+@@ -451,7 +452,8 @@ static void
+ }
+ 
+ static void
+-g_object_do_class_init (GObjectClass *class)
++g_object_do_class_init (GObjectClass *class,
++                        gpointer      class_data)
+ {
+   /* read the comment about typedef struct CArray; on why not to change this quark */
+   quark_closure_array = g_quark_from_static_string ("GObject-closure-array");
+Index: glib-2.56.4/gobject/gparam.h
+===================================================================
+--- glib-2.56.4.orig/gobject/gparam.h
++++ glib-2.56.4/gobject/gparam.h
+@@ -380,7 +380,8 @@ struct _GParamSpecTypeInfo
+   /* type system portion */
+   guint16         instance_size;                               /* obligatory */
+   guint16         n_preallocs;                                 /* optional */
+-  void		(*instance_init)	(GParamSpec   *pspec); /* optional */
++  void		(*instance_init)	(GParamSpec   *pspec,  /* optional */
++					 gpointer      class_data);
+ 
+   /* class portion */
+   GType           value_type;				       /* obligatory */
+Index: glib-2.56.4/gobject/gparamspecs.c
+===================================================================
+--- glib-2.56.4.orig/gobject/gparamspecs.c
++++ glib-2.56.4/gobject/gparamspecs.c
+@@ -59,7 +59,8 @@ static void
+ 
+ /* --- param spec functions --- */
+ static void
+-param_char_init (GParamSpec *pspec)
++param_char_init (GParamSpec *pspec,
++                 gpointer    class_data)
+ {
+   GParamSpecChar *cspec = G_PARAM_SPEC_CHAR (pspec);
+   
+@@ -88,7 +89,8 @@ static void
+ }
+ 
+ static void
+-param_uchar_init (GParamSpec *pspec)
++param_uchar_init (GParamSpec *pspec,
++                  gpointer    class_data)
+ {
+   GParamSpecUChar *uspec = G_PARAM_SPEC_UCHAR (pspec);
+   
+@@ -135,7 +137,8 @@ static void
+ }
+ 
+ static void
+-param_int_init (GParamSpec *pspec)
++param_int_init (GParamSpec *pspec,
++                gpointer    class_data)
+ {
+   GParamSpecInt *ispec = G_PARAM_SPEC_INT (pspec);
+   
+@@ -175,7 +178,8 @@ static void
+ }
+ 
+ static void
+-param_uint_init (GParamSpec *pspec)
++param_uint_init (GParamSpec *pspec,
++                 gpointer    class_data)
+ {
+   GParamSpecUInt *uspec = G_PARAM_SPEC_UINT (pspec);
+   
+@@ -215,7 +219,8 @@ static void
+ }
+ 
+ static void
+-param_long_init (GParamSpec *pspec)
++param_long_init (GParamSpec *pspec,
++                 gpointer    class_data)
+ {
+   GParamSpecLong *lspec = G_PARAM_SPEC_LONG (pspec);
+   
+@@ -260,7 +265,8 @@ static void
+ }
+ 
+ static void
+-param_ulong_init (GParamSpec *pspec)
++param_ulong_init (GParamSpec *pspec,
++                  gpointer    class_data)
+ {
+   GParamSpecULong *uspec = G_PARAM_SPEC_ULONG (pspec);
+   
+@@ -304,7 +310,8 @@ static void
+ }
+ 
+ static void
+-param_int64_init (GParamSpec *pspec)
++param_int64_init (GParamSpec *pspec,
++                  gpointer    class_data)
+ {
+   GParamSpecInt64 *lspec = G_PARAM_SPEC_INT64 (pspec);
+   
+@@ -344,7 +351,8 @@ static void
+ }
+ 
+ static void
+-param_uint64_init (GParamSpec *pspec)
++param_uint64_init (GParamSpec *pspec,
++                   gpointer    class_data)
+ {
+   GParamSpecUInt64 *uspec = G_PARAM_SPEC_UINT64 (pspec);
+   
+@@ -384,7 +392,8 @@ static void
+ }
+ 
+ static void
+-param_unichar_init (GParamSpec *pspec)
++param_unichar_init (GParamSpec *pspec,
++                    gpointer    class_data)
+ {
+   GParamSpecUnichar *uspec = G_PARAM_SPEC_UNICHAR (pspec);
+   
+@@ -426,7 +435,8 @@ static void
+ }
+ 
+ static void
+-param_enum_init (GParamSpec *pspec)
++param_enum_init (GParamSpec *pspec,
++                 gpointer    class_data)
+ {
+   GParamSpecEnum *espec = G_PARAM_SPEC_ENUM (pspec);
+   
+@@ -471,7 +481,8 @@ static void
+ }
+ 
+ static void
+-param_flags_init (GParamSpec *pspec)
++param_flags_init (GParamSpec *pspec,
++                  gpointer    class_data)
+ {
+   GParamSpecFlags *fspec = G_PARAM_SPEC_FLAGS (pspec);
+   
+@@ -517,7 +528,8 @@ static void
+ }
+ 
+ static void
+-param_float_init (GParamSpec *pspec)
++param_float_init (GParamSpec *pspec,
++                  gpointer    class_data)
+ {
+   GParamSpecFloat *fspec = G_PARAM_SPEC_FLOAT (pspec);
+   
+@@ -560,7 +572,8 @@ static void
+ }
+ 
+ static void
+-param_double_init (GParamSpec *pspec)
++param_double_init (GParamSpec *pspec,
++                   gpointer    class_data)
+ {
+   GParamSpecDouble *dspec = G_PARAM_SPEC_DOUBLE (pspec);
+   
+@@ -603,7 +616,8 @@ static void
+ }
+ 
+ static void
+-param_string_init (GParamSpec *pspec)
++param_string_init (GParamSpec *pspec,
++                   gpointer    class_data)
+ {
+   GParamSpecString *sspec = G_PARAM_SPEC_STRING (pspec);
+   
+@@ -711,7 +725,8 @@ static void
+ }
+ 
+ static void
+-param_param_init (GParamSpec *pspec)
++param_param_init (GParamSpec *pspec,
++                  gpointer    class_data)
+ {
+   /* GParamSpecParam *spec = G_PARAM_SPEC_PARAM (pspec); */
+ }
+@@ -742,7 +757,8 @@ static void
+ }
+ 
+ static void
+-param_boxed_init (GParamSpec *pspec)
++param_boxed_init (GParamSpec *pspec,
++                  gpointer    class_data)
+ {
+   /* GParamSpecBoxed *bspec = G_PARAM_SPEC_BOXED (pspec); */
+ }
+@@ -780,7 +796,8 @@ static void
+ }
+ 
+ static void
+-param_pointer_init (GParamSpec *pspec)
++param_pointer_init (GParamSpec *pspec,
++                    gpointer    class_data)
+ {
+   /* GParamSpecPointer *spec = G_PARAM_SPEC_POINTER (pspec); */
+ }
+@@ -816,7 +833,8 @@ static void
+ }
+ 
+ static void
+-param_value_array_init (GParamSpec *pspec)
++param_value_array_init (GParamSpec *pspec,
++                        gpointer    class_data)
+ {
+   GParamSpecValueArray *aspec = G_PARAM_SPEC_VALUE_ARRAY (pspec);
+ 
+@@ -964,7 +982,8 @@ static void
+ }
+ 
+ static void
+-param_object_init (GParamSpec *pspec)
++param_object_init (GParamSpec *pspec,
++                   gpointer    class_data)
+ {
+   /* GParamSpecObject *ospec = G_PARAM_SPEC_OBJECT (pspec); */
+ }
+@@ -1008,7 +1027,8 @@ static void
+ }
+ 
+ static void
+-param_override_init (GParamSpec *pspec)
++param_override_init (GParamSpec *pspec,
++                     gpointer    class_data)
+ {
+   /* GParamSpecOverride *ospec = G_PARAM_SPEC_OVERRIDE (pspec); */
+ }
+@@ -1057,7 +1077,8 @@ static void
+ }
+ 
+ static void
+-param_gtype_init (GParamSpec *pspec)
++param_gtype_init (GParamSpec *pspec,
++                  gpointer    class_data)
+ {
+ }
+ 
+@@ -1101,7 +1122,8 @@ static void
+ }
+ 
+ static void
+-param_variant_init (GParamSpec *pspec)
++param_variant_init (GParamSpec *pspec,
++                    gpointer    class_data)
+ {
+   GParamSpecVariant *vspec = G_PARAM_SPEC_VARIANT (pspec);
+ 
+Index: glib-2.56.4/gobject/gtype.h
+===================================================================
+--- glib-2.56.4.orig/gobject/gtype.h
++++ glib-2.56.4/gobject/gtype.h
+@@ -1790,7 +1790,7 @@ guint     g_type_get_type_registration_serial (void);
+  */
+ #define G_IMPLEMENT_INTERFACE(TYPE_IFACE, iface_init)       { \
+   const GInterfaceInfo g_implement_interface_info = { \
+-    (GInterfaceInitFunc)(void (*)(void)) iface_init, NULL, NULL \
++    (GInterfaceInitFunc) iface_init, NULL, NULL \
+   }; \
+   g_type_add_interface_static (g_define_type_id, TYPE_IFACE, &g_implement_interface_info); \
+ }
+@@ -1926,7 +1926,8 @@ guint     g_type_get_type_registration_serial (void);
+  */
+ #if GLIB_VERSION_MAX_ALLOWED >= GLIB_VERSION_2_38
+ #define _G_DEFINE_TYPE_EXTENDED_CLASS_INIT(TypeName, type_name) \
+-static void     type_name##_class_intern_init (gpointer klass) \
++static void     type_name##_class_intern_init (gpointer klass, \
++                                               gpointer class_data) \
+ { \
+   type_name##_parent_class = g_type_class_peek_parent (klass); \
+   if (TypeName##_private_offset != 0) \
+@@ -1936,7 +1937,8 @@ static void     type_name##_class_intern_init (gpointe
+ 
+ #else
+ #define _G_DEFINE_TYPE_EXTENDED_CLASS_INIT(TypeName, type_name) \
+-static void     type_name##_class_intern_init (gpointer klass) \
++static void     type_name##_class_intern_init (gpointer klass, \
++                                               gpointer class_data) \
+ { \
+   type_name##_parent_class = g_type_class_peek_parent (klass); \
+   type_name##_class_init ((TypeName##Class*) klass); \
+@@ -1974,9 +1976,9 @@ type_name##_get_type (void) \
+         g_type_register_static_simple (TYPE_PARENT, \
+                                        g_intern_static_string (#TypeName), \
+                                        sizeof (TypeName##Class), \
+-                                       (GClassInitFunc)(void (*)(void)) type_name##_class_intern_init, \
++                                       (GClassInitFunc) type_name##_class_intern_init, \
+                                        sizeof (TypeName), \
+-                                       (GInstanceInitFunc)(void (*)(void)) type_name##_init, \
++                                       (GInstanceInitFunc) type_name##_init_adapter, \
+                                        (GTypeFlags) flags); \
+       { /* custom code follows */
+ #define _G_DEFINE_TYPE_EXTENDED_END()	\
+@@ -1996,7 +1998,12 @@ type_name##_get_type (void) \
+ 
+ #define _G_DEFINE_INTERFACE_EXTENDED_BEGIN(TypeName, type_name, TYPE_PREREQ) \
+ \
+-static void     type_name##_default_init        (TypeName##Interface *klass); \
++static void     type_name##_default_init         (TypeName##Interface *klass); \
++static void     type_name##_default_init_adapter (TypeName##Interface *klass, \
++                                                  gpointer             class_data) \
++{ \
++  type_name##_default_init (klass); \
++} \
+ \
+ GType \
+ type_name##_get_type (void) \
+@@ -2008,7 +2015,7 @@ type_name##_get_type (void) \
+         g_type_register_static_simple (G_TYPE_INTERFACE, \
+                                        g_intern_static_string (#TypeName), \
+                                        sizeof (TypeName##Interface), \
+-                                       (GClassInitFunc)(void (*)(void)) type_name##_default_init, \
++                                       (GClassInitFunc) type_name##_default_init_adapter, \
+                                        0, \
+                                        (GInstanceInitFunc)NULL, \
+                                        (GTypeFlags) 0); \
+Index: glib-2.56.4/gobject/gtypemodule.c
+===================================================================
+--- glib-2.56.4.orig/gobject/gtypemodule.c
++++ glib-2.56.4/gobject/gtypemodule.c
+@@ -126,7 +126,8 @@ static void
+ }
+ 
+ static void
+-g_type_module_iface_init (GTypePluginClass *iface)
++g_type_module_iface_init (GTypePluginClass *iface,
++                          gpointer          iface_data)
+ {
+   iface->use_plugin = g_type_module_use_plugin;
+   iface->unuse_plugin = (void (*) (GTypePlugin *))g_type_module_unuse;

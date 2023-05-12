@@ -1,0 +1,1132 @@
+Disables configure checks for threads, networking, and pcre, hard-coding the
+results for Wasm. Also disables the building of unrequired output binaries.
+
+Index: glib-2.56.4/configure
+===================================================================
+--- glib-2.56.4.orig/configure
++++ glib-2.56.4/configure
+@@ -24230,132 +24230,17 @@ fi
+ 
+   # We can't just use AC_CHECK_FUNC/AC_CHECK_LIB here. Bug 586150
+   NETWORK_LIBS=""
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for res_query" >&5
+-$as_echo_n "checking for res_query... " >&6; }
+-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-#include <sys/types.h>
+-	       #include <netinet/in.h>
+-	       #include <arpa/nameser.h>
+-	       #include <resolv.h>
+ 
+-int
+-main ()
+-{
++  $as_echo "#define THREADS_POSIX 1" >>confdefs.h
++  $as_echo "#define HAVE_PTHREAD_CONDATTR_SETCLOCK 1" >>confdefs.h
++  $as_echo "#define CLOCK_MONOTONIC 1" >>confdefs.h
++  THREADS_POSIX_TRUE=
++  THREADS_POSIX_FALSE='#'
++  THREADS_WIN32_TRUE='#'
++  THREADS_WIN32_FALSE=
++  THREADS_NONE_TRUE='#'
++  THREADS_NONE_FALSE=
+ 
+-	       res_query("test", 0, 0, (void *)0, 0);
+-
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-if ac_fn_c_try_link "$LINENO"; then :
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+-$as_echo "yes" >&6; }
+-else
+-  save_libs="$LIBS"
+-               LIBS="-lresolv $LIBS"
+-               cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-#include <sys/types.h>
+-			    #include <netinet/in.h>
+-			    #include <arpa/nameser.h>
+-			    #include <resolv.h>
+-
+-int
+-main ()
+-{
+-
+-			    res_query("test", 0, 0, (void *)0, 0);
+-
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-if ac_fn_c_try_link "$LINENO"; then :
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: in -lresolv" >&5
+-$as_echo "in -lresolv" >&6; }
+-                              NETWORK_LIBS="-lresolv $NETWORK_LIBS"
+-else
+-  LIBS="-lbind $save_libs"
+-                            cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-#include <resolv.h>
+-int
+-main ()
+-{
+-res_query("test", 0, 0, (void *)0, 0);
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-if ac_fn_c_try_link "$LINENO"; then :
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: in -lbind" >&5
+-$as_echo "in -lbind" >&6; }
+-                                         NETWORK_LIBS="-lbind $NETWORK_LIBS"
+-else
+-  as_fn_error $? "not found" "$LINENO" 5
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext conftest.$ac_ext
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext conftest.$ac_ext
+-               LIBS="$save_libs"
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext conftest.$ac_ext
+-  ac_fn_c_check_func "$LINENO" "socket" "ac_cv_func_socket"
+-if test "x$ac_cv_func_socket" = xyes; then :
+-  :
+-else
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for socket in -lsocket" >&5
+-$as_echo_n "checking for socket in -lsocket... " >&6; }
+-if ${ac_cv_lib_socket_socket+:} false; then :
+-  $as_echo_n "(cached) " >&6
+-else
+-  ac_check_lib_save_LIBS=$LIBS
+-LIBS="-lsocket  $LIBS"
+-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-
+-/* Override any GCC internal prototype to avoid an error.
+-   Use char because int might match the return type of a GCC
+-   builtin and then its argument prototype would still apply.  */
+-#ifdef __cplusplus
+-extern "C"
+-#endif
+-char socket ();
+-int
+-main ()
+-{
+-return socket ();
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-if ac_fn_c_try_link "$LINENO"; then :
+-  ac_cv_lib_socket_socket=yes
+-else
+-  ac_cv_lib_socket_socket=no
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext conftest.$ac_ext
+-LIBS=$ac_check_lib_save_LIBS
+-fi
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_socket_socket" >&5
+-$as_echo "$ac_cv_lib_socket_socket" >&6; }
+-if test "x$ac_cv_lib_socket_socket" = xyes; then :
+-  NETWORK_LIBS="-lsocket $NETWORK_LIBS"
+-else
+-  as_fn_error $? "Could not find socket()" "$LINENO" 5
+-fi
+-
+-fi
+-
+-  save_libs="$LIBS"
+-  LIBS="$LIBS $NETWORK_LIBS"
+-
+   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for res_init" >&5
+ $as_echo_n "checking for res_init... " >&6; }
+   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+@@ -26946,714 +26829,6 @@ fi
+   PLATFORM_WIN32_FALSE=
+ fi
+ 
+-
+-
+-
+-# Check whether --with-threads was given.
+-if test "${with_threads+set}" = set; then :
+-  withval=$with_threads;
+-else
+-  with_threads=yes
+-fi
+-
+-
+-
+-THREAD_NO_IMPLEMENTATION="No thread implementation found."
+-
+-FLAG_DOES_NOT_WORK="I can't find the MACRO to enable thread safety on your
+-                platform (normally it's "_REENTRANT"). I'll not use any flag on
+-                compilation now, but then your programs might not work.
+-                Please provide information on how it is done on your system."
+-
+-LIBS_NOT_FOUND_1="I can't find the libraries for the thread implementation
+-                 "
+-
+-LIBS_NOT_FOUND_2=". Please choose another thread implementation or
+-                  provide information on your thread implementation."
+-
+-FUNC_NO_GETPWUID_R="the 'g_get_(user_name|real_name|home_dir|tmp_dir)'
+-		functions will not be MT-safe during their first call because
+-		there is no working 'getpwuid_r' on your system."
+-
+-FUNC_NO_LOCALTIME_R="the 'g_date_set_time' function will not be MT-safe
+-		because there is no 'localtime_r' on your system."
+-
+-AIX_COMPILE_INFO="AIX's C compiler needs to be called by a different name, when
+-		linking threaded applications. As GLib cannot do that
+-		automatically, you will get an linkg error everytime you are
+-		not using the right compiler. In that case you have to relink
+-		with the right compiler. Ususally just '_r' is appended
+-		to the compiler name."
+-
+-
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for thread implementation" >&5
+-$as_echo_n "checking for thread implementation... " >&6; }
+-
+-have_threads=no
+-if  test "x$with_threads" = xyes || test "x$with_threads" = xposix; then :
+-
+-        if  test "x$have_threads" = xno; then :
+-
+-                cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-#include <pthread.h>
+-int
+-main ()
+-{
+-pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-if ac_fn_c_try_compile "$LINENO"; then :
+-  have_threads=posix
+-fi
+-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+-
+-fi
+-	# Tru64Unix requires -pthread to find pthread.h. See #103020
+-	if test "x$have_threads" = xno; then
+-		glib_save_CPPFLAGS="$CPPFLAGS"
+-		CPPFLAGS="$CPPFLAGS -pthread"
+-		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-#include <pthread.h>
+-int
+-main ()
+-{
+-pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-if ac_fn_c_try_compile "$LINENO"; then :
+-  have_threads=posix
+-fi
+-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+-		CPPFLAGS="$glib_save_CPPFLAGS"
+-        fi
+-
+-fi
+-if test "x$with_threads" = xyes || test "x$with_threads" = xwin32; then
+-        case $host in
+-                *-*-mingw*)
+-                have_threads=win32
+-                ;;
+-        esac
+-fi
+-
+-if test "x$have_threads" = xno; then
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: none available" >&5
+-$as_echo "none available" >&6; }
+-        as_fn_error $? "$THREAD_NO_IMPLEMENTATION" "$LINENO" 5
+-else
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: $have_threads" >&5
+-$as_echo "$have_threads" >&6; }
+-fi
+-
+-
+-
+-G_THREAD_LIBS=
+-G_THREAD_LIBS_EXTRA=
+-G_THREAD_CFLAGS=
+-
+-
+-
+-if  test x"$have_threads" = xposix; then :
+-
+-  # First we test for posix, whether -pthread or -pthreads do the trick as
+-  # both CPPFLAG and LIBS.
+-  # One of them does for most gcc versions and some other platforms/compilers
+-  # too and could be considered as the canonical way to go.
+-  case $host in
+-    *-*-cygwin*|*-*-darwin*)
+-       # skip cygwin and darwin -pthread or -pthreads test
+-       ;;
+-    *-solaris*)
+-      # These compiler/linker flags work with both Sun Studio and gcc
+-      # Sun Studio expands -mt to -D_REENTRANT and -lthread
+-      # gcc expands -pthreads to -D_REENTRANT -D_PTHREADS -lpthread
+-      G_THREAD_CFLAGS="-D_REENTRANT -D_PTHREADS"
+-      G_THREAD_LIBS="-lpthread -lthread"
+-      ;;
+-    *)
+-      for flag in pthread pthreads mt; do
+-        glib_save_CFLAGS="$CFLAGS"
+-        CFLAGS="$CFLAGS -$flag"
+-        if test "$cross_compiling" = yes; then :
+-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-
+-#include <pthread.h>
+-int check_me = 0;
+-void* func(void* data) {check_me = 42; return &check_me;}
+-int main()
+- { pthread_t t;
+-   void *ret;
+-   pthread_create (&t, 0, func, 0);
+-   pthread_join (t, &ret);
+-   return (check_me != 42 || ret != &check_me);
+-}
+-_ACEOF
+-if ac_fn_c_try_link "$LINENO"; then :
+-  glib_flag_works=yes
+-else
+-  glib_flag_works=no
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext conftest.$ac_ext
+-else
+-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-
+-#include <pthread.h>
+-int check_me = 0;
+-void* func(void* data) {check_me = 42; return &check_me;}
+-int main()
+- { pthread_t t;
+-   void *ret;
+-   pthread_create (&t, 0, func, 0);
+-   pthread_join (t, &ret);
+-   return (check_me != 42 || ret != &check_me);
+-}
+-_ACEOF
+-if ac_fn_c_try_run "$LINENO"; then :
+-  glib_flag_works=yes
+-else
+-  glib_flag_works=no
+-fi
+-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+-  conftest.$ac_objext conftest.beam conftest.$ac_ext
+-fi
+-
+-        CFLAGS="$glib_save_CFLAGS"
+-        if test $glib_flag_works = yes ; then
+-           G_THREAD_CFLAGS=-$flag
+-        G_THREAD_LIBS=-$flag
+-        break;
+-        fi
+-      done
+-       ;;
+-  esac
+-
+-fi
+-
+-if  test x"$G_THREAD_CFLAGS" = x; then :
+-
+-
+-  # The canonical -pthread[s] does not work. Try something different.
+-
+-  case $host in
+-	*-aix*)
+-		if test x"$GCC" = xyes; then
+-			# GCC 3.0 and above needs -pthread.
+-			# Should be coverd by the case above.
+-			# GCC 2.x and below needs -mthreads
+-			G_THREAD_CFLAGS="-mthreads"
+-			G_THREAD_LIBS=$G_THREAD_CFLAGS
+-		else
+-			# We are probably using the aix compiler. Normaly a
+-			# program would have to be compiled with the _r variant
+-			# of the corresponding compiler, but we as GLib cannot
+-			# do that: but the good news is that for compiling the
+-			# only difference is the added -D_THREAD_SAFE compile
+-			# option. This is according to the "C for AIX User's
+-			# Guide".
+-			G_THREAD_CFLAGS="-D_THREAD_SAFE"
+-		fi
+-		;;
+-	*-sysv5uw7*) # UnixWare 7
+-		# We are not using gcc with -pthread. Catched above.
+-		G_THREAD_CFLAGS="-Kthread"
+-		G_THREAD_LIBS=$G_THREAD_CFLAGS
+-		;;
+-	*-mingw*)
+-		# No flag needed when using MSVCRT.DLL
+-		G_THREAD_CFLAGS=""
+-		;;
+-	*)
+-		G_THREAD_CFLAGS="-D_REENTRANT" # good default guess otherwise
+-		;;
+-  esac
+-
+-fi
+-
+-# if we are not finding the localtime_r function, then we probably are
+-# not using the proper multithread flag
+-
+-glib_save_CPPFLAGS="$CPPFLAGS"
+-CPPFLAGS="$CPPFLAGS $G_THREAD_CFLAGS"
+-
+-# First we test, whether localtime_r is declared in time.h
+-# directly. Then we test whether a macro localtime_r exists, in
+-# which case localtime_r in the test program is replaced and thus
+-# if we still find localtime_r in the output, it is not defined as
+-# a macro.
+-
+-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-#include <time.h>
+-_ACEOF
+-if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+-  $EGREP "[^a-zA-Z1-9_]localtime_r[^a-zA-Z1-9_]" >/dev/null 2>&1; then :
+-
+-else
+-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-#include <time.h>
+-							   localtime_r(a,b)
+-_ACEOF
+-if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+-  $EGREP "[^a-zA-Z1-9_]localtime_r[^a-zA-Z1-9_]" >/dev/null 2>&1; then :
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $FLAG_DOES_NOT_WORK" >&5
+-$as_echo "$as_me: WARNING: $FLAG_DOES_NOT_WORK" >&2;}
+-fi
+-rm -f conftest*
+-
+-fi
+-rm -f conftest*
+-
+-
+-CPPFLAGS="$glib_save_CPPFLAGS"
+-
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking thread related cflags" >&5
+-$as_echo_n "checking thread related cflags... " >&6; }
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $G_THREAD_CFLAGS" >&5
+-$as_echo "$G_THREAD_CFLAGS" >&6; }
+-CPPFLAGS="$CPPFLAGS $G_THREAD_CFLAGS"
+-
+-
+-if test x$have_threads = xposix; then :
+-
+-	  glib_save_CPPFLAGS="$CPPFLAGS"
+-	  CPPFLAGS="$CPPFLAGS $GTHREAD_COMPILE_IMPL_DEFINES"
+-          if  test x"$G_THREAD_LIBS" = x ; then :
+-
+-            case $host in
+-              *-aix*)
+-                # We are not using gcc (would have set G_THREAD_LIBS) and thus
+-                # probably using the aix compiler.
+-		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $AIX_COMPILE_INFO" >&5
+-$as_echo "$as_me: WARNING: $AIX_COMPILE_INFO" >&2;}
+-                ;;
+-              *)
+-                G_THREAD_LIBS=error
+-	        glib_save_LIBS="$LIBS"
+-	        for thread_lib in "" pthread pthread32 pthreads thread; do
+-			if test x"$thread_lib" = x; then
+-				add_thread_lib=""
+-				IN=""
+-			else
+-				add_thread_lib="-l$thread_lib"
+-				IN=" in -l$thread_lib"
+-			fi
+-			if test x"$have_threads" = xposix; then
+-				defattr=0
+-			else
+-				defattr=pthread_attr_default
+-			fi
+-
+-			LIBS="$add_thread_lib $glib_save_LIBS"
+-
+-			{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_create/pthread_join$IN" >&5
+-$as_echo_n "checking for pthread_create/pthread_join$IN... " >&6; }
+-			if test "$cross_compiling" = yes; then :
+-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-
+-#include <pthread.h>
+-int check_me = 0;
+-void* func(void* data) {check_me = 42; return &check_me;}
+-int main()
+- { pthread_t t;
+-   void *ret;
+-   pthread_create (&t, $defattr, func, 0);
+-   pthread_join (t, &ret);
+-   return (check_me != 42 || ret != &check_me);
+-}
+-_ACEOF
+-if ac_fn_c_try_link "$LINENO"; then :
+-  glib_result=yes
+-else
+-  glib_result=no
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext conftest.$ac_ext
+-else
+-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-
+-#include <pthread.h>
+-int check_me = 0;
+-void* func(void* data) {check_me = 42; return &check_me;}
+-int main()
+- { pthread_t t;
+-   void *ret;
+-   pthread_create (&t, $defattr, func, 0);
+-   pthread_join (t, &ret);
+-   return (check_me != 42 || ret != &check_me);
+-}
+-_ACEOF
+-if ac_fn_c_try_run "$LINENO"; then :
+-  glib_result=yes
+-else
+-  glib_result=no
+-fi
+-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+-  conftest.$ac_objext conftest.beam conftest.$ac_ext
+-fi
+-
+-                        { $as_echo "$as_me:${as_lineno-$LINENO}: result: $glib_result" >&5
+-$as_echo "$glib_result" >&6; }
+-
+-                        if test "$glib_result" = "yes" ; then
+-			  G_THREAD_LIBS="$add_thread_lib"
+-                          break
+-                        fi
+-		done
+-		if test "x$G_THREAD_LIBS" = xerror; then
+-		  as_fn_error $? "$LIBS_NOT_FOUND_1$have_threads$LIBS_NOT_FOUND_2" "$LINENO" 5
+-		fi
+-		LIBS="$glib_save_LIBS"
+-                ;;
+-            esac
+-
+-fi
+-
+-	  g_threads_impl="POSIX"
+-
+-$as_echo "#define THREADS_POSIX 1" >>confdefs.h
+-
+-
+-          CPPFLAGS="$glib_save_CPPFLAGS"
+-
+-elif test x$have_threads = xwin32; then :
+-
+-
+-$as_echo "#define THREADS_WIN32 1" >>confdefs.h
+-
+-	   g_threads_impl="WIN32"
+-
+-else
+-
+-
+-$as_echo "#define THREADS_NONE 1" >>confdefs.h
+-
+-	   g_threads_impl="NONE"
+-           G_THREAD_LIBS=error
+-
+-fi
+- if test "$g_threads_impl" = "POSIX"; then
+-  THREADS_POSIX_TRUE=
+-  THREADS_POSIX_FALSE='#'
+-else
+-  THREADS_POSIX_TRUE='#'
+-  THREADS_POSIX_FALSE=
+-fi
+-
+- if test "$g_threads_impl" = "WIN32"; then
+-  THREADS_WIN32_TRUE=
+-  THREADS_WIN32_FALSE='#'
+-else
+-  THREADS_WIN32_TRUE='#'
+-  THREADS_WIN32_FALSE=
+-fi
+-
+- if test "$g_threads_impl" = "NONE"; then
+-  THREADS_NONE_TRUE=
+-  THREADS_NONE_FALSE='#'
+-else
+-  THREADS_NONE_TRUE='#'
+-  THREADS_NONE_FALSE=
+-fi
+-
+-
+-if test "x$G_THREAD_LIBS" = xerror; then
+-        as_fn_error $? "$LIBS_NOT_FOUND_1$have_threads$LIBS_NOT_FOUND_2" "$LINENO" 5
+-fi
+-
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking thread related libraries" >&5
+-$as_echo_n "checking thread related libraries... " >&6; }
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $G_THREAD_LIBS" >&5
+-$as_echo "$G_THREAD_LIBS" >&6; }
+-
+-
+-glib_save_LIBS="$LIBS"
+-# we are not doing the following for now, as this might require glib
+-# to always be linked with the thread libs on some platforms.
+-# LIBS="$LIBS $G_THREAD_LIBS"
+-for ac_func in localtime_r gmtime_r getpwuid_r getgrgid_r
+-do :
+-  as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
+-ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
+-if eval test \"x\$"$as_ac_var"\" = x"yes"; then :
+-  cat >>confdefs.h <<_ACEOF
+-#define `$as_echo "HAVE_$ac_func" | $as_tr_cpp` 1
+-_ACEOF
+-
+-fi
+-done
+-
+-
+-LIBS="$G_THREAD_LIBS $LIBS"
+-if  test x"$have_threads" = xposix; then :
+-
+-        glib_save_CPPFLAGS="$CPPFLAGS"
+-        CPPFLAGS="$CPPFLAGS $GTHREAD_COMPILE_IMPL_DEFINES"
+-        # This is not AC_CHECK_FUNC to also work with function
+-        # name mangling in header files.
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_attr_setstacksize" >&5
+-$as_echo_n "checking for pthread_attr_setstacksize... " >&6; }
+-        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-#include <pthread.h>
+-int
+-main ()
+-{
+-pthread_attr_t t; pthread_attr_setstacksize(&t,0)
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-if ac_fn_c_try_link "$LINENO"; then :
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+-$as_echo "yes" >&6; }
+-
+-$as_echo "#define HAVE_PTHREAD_ATTR_SETSTACKSIZE 1" >>confdefs.h
+-
+-else
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext conftest.$ac_ext
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_condattr_setclock" >&5
+-$as_echo_n "checking for pthread_condattr_setclock... " >&6; }
+-        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-#include <pthread.h>
+-int
+-main ()
+-{
+-pthread_condattr_t a; pthread_condattr_setclock(&a,0)
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-if ac_fn_c_try_link "$LINENO"; then :
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+-$as_echo "yes" >&6; }
+-
+-$as_echo "#define HAVE_PTHREAD_CONDATTR_SETCLOCK 1" >>confdefs.h
+-
+-else
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext conftest.$ac_ext
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_cond_timedwait_relative_np" >&5
+-$as_echo_n "checking for pthread_cond_timedwait_relative_np... " >&6; }
+-        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-#include <pthread.h>
+-int
+-main ()
+-{
+-pthread_cond_timedwait_relative_np(NULL, NULL, NULL)
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-if ac_fn_c_try_link "$LINENO"; then :
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+-$as_echo "yes" >&6; }
+-
+-$as_echo "#define HAVE_PTHREAD_COND_TIMEDWAIT_RELATIVE_NP 1" >>confdefs.h
+-
+-else
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext conftest.$ac_ext
+-                { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_setname_np(const char*)" >&5
+-$as_echo_n "checking for pthread_setname_np(const char*)... " >&6; }
+-        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-#include <pthread.h>
+-int
+-main ()
+-{
+-pthread_setname_np("example")
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-if ac_fn_c_try_link "$LINENO"; then :
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+-$as_echo "yes" >&6; }
+-
+-$as_echo "#define HAVE_PTHREAD_SETNAME_NP_WITHOUT_TID 1" >>confdefs.h
+-
+-else
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext conftest.$ac_ext
+-                { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_setname_np(pthread_t, const char*)" >&5
+-$as_echo_n "checking for pthread_setname_np(pthread_t, const char*)... " >&6; }
+-        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-#include <pthread.h>
+-int
+-main ()
+-{
+-pthread_setname_np(pthread_self(), "example")
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-if ac_fn_c_try_link "$LINENO"; then :
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+-$as_echo "yes" >&6; }
+-
+-$as_echo "#define HAVE_PTHREAD_SETNAME_NP_WITH_TID 1" >>confdefs.h
+-
+-else
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext conftest.$ac_ext
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_getname_np(pthread_t, name, len)" >&5
+-$as_echo_n "checking for pthread_getname_np(pthread_t, name, len)... " >&6; }
+-        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-#include <pthread.h>
+-int
+-main ()
+-{
+-char name[16]; pthread_getname_np(pthread_self(), name, 16);
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-if ac_fn_c_try_link "$LINENO"; then :
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+-$as_echo "yes" >&6; }
+-
+-$as_echo "#define HAVE_PTHREAD_GETNAME_NP 1" >>confdefs.h
+-
+-else
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext conftest.$ac_ext
+-        CPPFLAGS="$glib_save_CPPFLAGS"
+-
+-fi
+-
+-LIBS="$glib_save_LIBS"
+-
+-# now spit out all the warnings.
+-if test "$ac_cv_func_getpwuid_r" != "yes"; then
+-	{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $FUNC_NO_GETPWUID_R" >&5
+-$as_echo "$as_me: WARNING: $FUNC_NO_GETPWUID_R" >&2;}
+-fi
+-if test "$ac_cv_func_localtime_r" != "yes"; then
+-	{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $FUNC_NO_LOCALTIME_R" >&5
+-$as_echo "$as_me: WARNING: $FUNC_NO_LOCALTIME_R" >&2;}
+-fi
+-
+-#
+-# Hack to deal with:
+-#
+-#  a) GCC < 3.3 for Linux doesn't include -lpthread when
+-#     building shared libraries with linux.
+-#  b) FreeBSD doesn't do this either.
+-#
+-case $host in
+-  *android*)
+-    G_THREAD_LIBS_FOR_GTHREAD="$G_THREAD_LIBS"
+-    ;;
+-  *-*-freebsd*|*-*-linux*)
+-    G_THREAD_LIBS_FOR_GTHREAD="`echo $G_THREAD_LIBS | sed s/-pthread/-lpthread/`"
+-    ;;
+-  *)
+-    G_THREAD_LIBS_FOR_GTHREAD="$G_THREAD_LIBS"
+-    ;;
+-esac
+-
+-
+-
+-
+-
+-
+-for ac_func in clock_gettime
+-do :
+-  ac_fn_c_check_func "$LINENO" "clock_gettime" "ac_cv_func_clock_gettime"
+-if test "x$ac_cv_func_clock_gettime" = xyes; then :
+-  cat >>confdefs.h <<_ACEOF
+-#define HAVE_CLOCK_GETTIME 1
+-_ACEOF
+-
+-else
+-
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for clock_gettime in -lrt" >&5
+-$as_echo_n "checking for clock_gettime in -lrt... " >&6; }
+-if ${ac_cv_lib_rt_clock_gettime+:} false; then :
+-  $as_echo_n "(cached) " >&6
+-else
+-  ac_check_lib_save_LIBS=$LIBS
+-LIBS="-lrt  $LIBS"
+-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-
+-/* Override any GCC internal prototype to avoid an error.
+-   Use char because int might match the return type of a GCC
+-   builtin and then its argument prototype would still apply.  */
+-#ifdef __cplusplus
+-extern "C"
+-#endif
+-char clock_gettime ();
+-int
+-main ()
+-{
+-return clock_gettime ();
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-if ac_fn_c_try_link "$LINENO"; then :
+-  ac_cv_lib_rt_clock_gettime=yes
+-else
+-  ac_cv_lib_rt_clock_gettime=no
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext conftest.$ac_ext
+-LIBS=$ac_check_lib_save_LIBS
+-fi
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_rt_clock_gettime" >&5
+-$as_echo "$ac_cv_lib_rt_clock_gettime" >&6; }
+-if test "x$ac_cv_lib_rt_clock_gettime" = xyes; then :
+-
+-    G_THREAD_LIBS="$G_THREAD_LIBS -lrt"
+-    G_THREAD_LIBS_FOR_GTHREAD="$G_THREAD_LIBS_FOR_GTHREAD -lrt"
+-
+-fi
+-
+-
+-fi
+-done
+-
+-
+-
+-
+-
+-
+ { $as_echo "$as_me:${as_lineno-$LINENO}: checking for lock-free atomic intrinsics" >&5
+ $as_echo_n "checking for lock-free atomic intrinsics... " >&6; }
+ if ${glib_cv_g_atomic_lock_free+:} false; then :
+@@ -27998,208 +27173,13 @@ $as_echo "$broken_poll" >&6; }
+ $as_echo "$broken_poll" >&6; }
+ 
+ 
+-PCRE_REQUIRED_VERSION=8.13
+-
+-# Check if we should use the internal or the system-supplied pcre
+-
+-# Check whether --with-pcre was given.
+-if test "${with_pcre+set}" = set; then :
+-  withval=$with_pcre;
+-else
+-  with_pcre=system
+-fi
+-
+-
+- if test "x$with_pcre" = xsystem; then
+-  USE_SYSTEM_PCRE_TRUE=
+-  USE_SYSTEM_PCRE_FALSE='#'
+-else
+-  USE_SYSTEM_PCRE_TRUE='#'
+-  USE_SYSTEM_PCRE_FALSE=
+-fi
+-
+-
+-if  test "x$with_pcre" = xsystem; then :
+-
+-
+-pkg_failed=no
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for PCRE" >&5
+-$as_echo_n "checking for PCRE... " >&6; }
+-
+-if test -n "$PCRE_CFLAGS"; then
+-    pkg_cv_PCRE_CFLAGS="$PCRE_CFLAGS"
+- elif test -n "$PKG_CONFIG"; then
+-    if test -n "$PKG_CONFIG" && \
+-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libpcre >= \$PCRE_REQUIRED_VERSION\""; } >&5
+-  ($PKG_CONFIG --exists --print-errors "libpcre >= $PCRE_REQUIRED_VERSION") 2>&5
+-  ac_status=$?
+-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+-  test $ac_status = 0; }; then
+-  pkg_cv_PCRE_CFLAGS=`$PKG_CONFIG --cflags "libpcre >= $PCRE_REQUIRED_VERSION" 2>/dev/null`
+-		      test "x$?" != "x0" && pkg_failed=yes
+-else
+-  pkg_failed=yes
+-fi
+- else
+-    pkg_failed=untried
+-fi
+-if test -n "$PCRE_LIBS"; then
+-    pkg_cv_PCRE_LIBS="$PCRE_LIBS"
+- elif test -n "$PKG_CONFIG"; then
+-    if test -n "$PKG_CONFIG" && \
+-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libpcre >= \$PCRE_REQUIRED_VERSION\""; } >&5
+-  ($PKG_CONFIG --exists --print-errors "libpcre >= $PCRE_REQUIRED_VERSION") 2>&5
+-  ac_status=$?
+-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+-  test $ac_status = 0; }; then
+-  pkg_cv_PCRE_LIBS=`$PKG_CONFIG --libs "libpcre >= $PCRE_REQUIRED_VERSION" 2>/dev/null`
+-		      test "x$?" != "x0" && pkg_failed=yes
+-else
+-  pkg_failed=yes
+-fi
+- else
+-    pkg_failed=untried
+-fi
+-
+-
+-
+-if test $pkg_failed = yes; then
+-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-
+-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+-        _pkg_short_errors_supported=yes
+-else
+-        _pkg_short_errors_supported=no
+-fi
+-        if test $_pkg_short_errors_supported = yes; then
+-	        PCRE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libpcre >= $PCRE_REQUIRED_VERSION" 2>&1`
+-        else
+-	        PCRE_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libpcre >= $PCRE_REQUIRED_VERSION" 2>&1`
+-        fi
+-	# Put the nasty error message in config.log where it belongs
+-	echo "$PCRE_PKG_ERRORS" >&5
+-
+-	as_fn_error $? "Package requirements (libpcre >= $PCRE_REQUIRED_VERSION) were not met:
+-
+-$PCRE_PKG_ERRORS
+-
+-Consider adjusting the PKG_CONFIG_PATH environment variable if you
+-installed software in a non-standard prefix.
+-
+-Alternatively, you may set the environment variables PCRE_CFLAGS
+-and PCRE_LIBS to avoid the need to call pkg-config.
+-See the pkg-config man page for more details." "$LINENO" 5
+-elif test $pkg_failed = untried; then
+-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+-as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
+-is in your PATH or set the PKG_CONFIG environment variable to the full
+-path to pkg-config.
+-
+-Alternatively, you may set the environment variables PCRE_CFLAGS
+-and PCRE_LIBS to avoid the need to call pkg-config.
+-See the pkg-config man page for more details.
+-
+-To get pkg-config, see <http://pkg-config.freedesktop.org/>.
+-See \`config.log' for more details" "$LINENO" 5; }
+-else
+-	PCRE_CFLAGS=$pkg_cv_PCRE_CFLAGS
+-	PCRE_LIBS=$pkg_cv_PCRE_LIBS
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+-$as_echo "yes" >&6; }
+-
+-fi
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Unicode support in PCRE" >&5
+-$as_echo_n "checking for Unicode support in PCRE... " >&6; }
+-if ${glib_cv_pcre_has_unicode+:} false; then :
+-  $as_echo_n "(cached) " >&6
+-else
+-
+-                  glib_save_CFLAGS="$CFLAGS"
+-                  glib_save_LIBS="$LIBS"
+-                  CFLAGS="$CFLAGS $PCRE_CFLAGS" LIBS="$PCRE_LIBS"
+-                  if test "$cross_compiling" = yes; then :
+-  glib_cv_pcre_has_unicode=yes
+-else
+-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-#include <pcre.h>
+-                              int main () {
+-                                int support;
+-                                pcre_config (PCRE_CONFIG_UTF8, &support);
+-                                if (!support)
+-                                  return 1;
+-                                pcre_config (PCRE_CONFIG_UNICODE_PROPERTIES, &support);
+-                                if (!support)
+-                                  return 1;
+-                                return 0;
+-                              }
+-_ACEOF
+-if ac_fn_c_try_run "$LINENO"; then :
+-  glib_cv_pcre_has_unicode=yes
+-else
+-  glib_cv_pcre_has_unicode=no
+-fi
+-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+-  conftest.$ac_objext conftest.beam conftest.$ac_ext
+-fi
+-
+-                  CFLAGS="$glib_save_CFLAGS"
+-                  LIBS="$glib_save_LIBS"
+-
+-fi
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $glib_cv_pcre_has_unicode" >&5
+-$as_echo "$glib_cv_pcre_has_unicode" >&6; }
+-  if test "$glib_cv_pcre_has_unicode" = "no"; then
+-    as_fn_error $? "*** The system-supplied PCRE does not support Unicode properties or UTF-8." "$LINENO" 5
+-  fi
+-
+-
+-
+ $as_echo "#define USE_SYSTEM_PCRE /**/" >>confdefs.h
++USE_SYSTEM_PCRE_TRUE=
++USE_SYSTEM_PCRE_FALSE='#'
+ 
+-  PCRE_REQUIRES=libpcre
+-
+-
+-else
+-
+-  # If using gcc 4 pass -Wno-pointer-sign when compiling the internal PCRE
+-  if  test x"$GCC" = xyes; then :
+-
+-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler understands -Wno-pointer-sign" >&5
+-$as_echo_n "checking whether compiler understands -Wno-pointer-sign... " >&6; }
+-    save_CFLAGS="$CFLAGS"
+-    CFLAGS="$CFLAGS -Wno-pointer-sign"
+-    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-
+-int
+-main ()
+-{
+-
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-if ac_fn_c_try_compile "$LINENO"; then :
+-  PCRE_WARN_CFLAGS="$PCRE_WARN_CFLAGS -Wno-pointer-sign"
+-                          { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+-$as_echo "yes" >&6; }
+-else
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-fi
+-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+-    CFLAGS="$save_CFLAGS"
+-
+-fi
+-
+-fi
+-
+-
++G_THREAD_LIBS=' '
++G_THREAD_LIBS_EXTRA=' '
++G_THREAD_CFLAGS=' '
+ 
+ case $host in
+   *-*-cygwin*)
+Index: glib-2.56.4/gio/Makefile.in
+===================================================================
+--- glib-2.56.4.orig/gio/Makefile.in
++++ glib-2.56.4/gio/Makefile.in
+@@ -195,9 +195,7 @@ TESTS = $(am__EXEEXT_2)
+ @OS_COCOA_TRUE@am__append_39 = libgio-objc-2.0.la
+ @HAVE_LIBMOUNT_TRUE@am__append_40 = $(LIBMOUNT_CFLAGS)
+ @HAVE_LIBMOUNT_TRUE@am__append_41 = $(LIBMOUNT_LIBS)
+-bin_PROGRAMS = gio-querymodules$(EXEEXT) glib-compile-schemas$(EXEEXT) \
+-	glib-compile-resources$(EXEEXT) gsettings$(EXEEXT) \
+-	gdbus$(EXEEXT) $(am__EXEEXT_1) gresource$(EXEEXT) gio$(EXEEXT)
++bin_PROGRAMS = 
+ @ENABLE_DTRACE_TRUE@am__append_42 = gio_probes.h gio_probes.lo
+ @ENABLE_DTRACE_TRUE@am__append_43 = gio_probes.h gio_probes.h.tmp
+ @ENABLE_DTRACE_TRUE@am__append_44 = gio_probes.lo
+Index: glib-2.56.4/glib/Makefile.in
+===================================================================
+--- glib-2.56.4.orig/glib/Makefile.in
++++ glib-2.56.4/glib/Makefile.in
+@@ -170,7 +170,7 @@ TESTS = $(am__EXEEXT_5)
+ @ENABLE_SYSTEMTAP_TRUE@am__append_22 = $(tapset_DATA)
+ @OS_WIN32_TRUE@@OS_WIN32_X64_TRUE@am__append_23 = gspawn-win64-helper gspawn-win64-helper-console
+ @OS_WIN32_TRUE@@OS_WIN32_X64_FALSE@am__append_24 = gspawn-win32-helper gspawn-win32-helper-console
+-bin_PROGRAMS = $(am__EXEEXT_4)
++bin_PROGRAMS =
+ @OS_UNIX_TRUE@am__append_25 = gtester
+ @OS_UNIX_TRUE@am__append_26 = ${auto_config_binscripts}
+ subdir = glib
+Index: glib-2.56.4/gobject/Makefile.in
+===================================================================
+--- glib-2.56.4.orig/gobject/Makefile.in
++++ glib-2.56.4/gobject/Makefile.in
+@@ -165,7 +165,7 @@ TESTS = $(am__EXEEXT_1)
+ @ENABLE_DTRACE_TRUE@am__append_17 = gobject_probes.h
+ @ENABLE_DTRACE_TRUE@am__append_18 = gobject_probes.lo
+ @ENABLE_SYSTEMTAP_TRUE@am__append_19 = $(tapset_DATA)
+-bin_PROGRAMS = gobject-query$(EXEEXT)
++bin_PROGRAMS = 
+ subdir = gobject
+ ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
+ am__aclocal_m4_deps = $(top_srcdir)/m4macros/attributes.m4 \
+Index: glib-2.56.4/Makefile.in
+===================================================================
+--- glib-2.56.4.orig/Makefile.in
++++ glib-2.56.4/Makefile.in
+@@ -834,7 +834,7 @@ ACLOCAL_AMFLAGS = -I m4macros ${ACLOCAL_FLAGS}
+ 
+ @ENABLE_INSTALLED_TESTS_TRUE@installed_test_meta_DATA = $(installed_testcases:=.test)
+ ACLOCAL_AMFLAGS = -I m4macros ${ACLOCAL_FLAGS}
+-SUBDIRS = . m4macros glib gmodule gthread gobject gio po docs tests
++SUBDIRS = . m4macros glib gmodule gthread gobject gio po docs
+ DIST_SUBDIRS = $(SUBDIRS) build win32
+ bin_SCRIPTS = glib-gettextize
+ AM_CPPFLAGS = \

@@ -1,0 +1,2 @@
+GLIB_WASM_LIB = $(WASM)/lib/libglib-2.0.a
+DEFAULT_WASM_LIBS += $(GLIB_WASM_LIB)
