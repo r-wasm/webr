@@ -45,8 +45,12 @@ export EM_PKG_CONFIG_PATH = $(WASM)/lib/pkgconfig
 include recipes/**/targets.mk
 include recipes/**/rules.mk
 
-all: $(DEFAULT_WASM_LIBS) $(WASM)/usr/share/fonts
-.DEFAULT_GOAL := all
+.PHONY: default
+default: $(DEFAULT_WASM_LIBS) $(WASM)/usr/share/fonts
+.DEFAULT_GOAL := default
+
+.PHONY: all
+all: default $(OPTIONAL_WASM_LIBS)
 
 $(EM_PKG_CONFIG_PATH)/%.pc: recipes/**/%.pc
 	mkdir -p $(EM_PKG_CONFIG_PATH)
@@ -56,6 +60,7 @@ $(EM_PKG_CONFIG_PATH)/%.pc: recipes/**/%.pc
 clean:
 	rm -rf $(DOWNLOAD) $(BUILD)
 	rm -f $(DEFAULT_WASM_LIBS)
+	rm -f $(OPTIONAL_WASM_LIBS)
 	rm -f $(EM_PKG_CONFIG_PATH)/*.pc
 
 # Print Makefile variable

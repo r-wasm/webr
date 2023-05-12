@@ -1,1 +1,2 @@
 GDAL_WASM_LIB = $(WASM)/lib/libgdal.a
+OPTIONAL_WASM_LIBS += $(GDAL_WASM_LIB)
