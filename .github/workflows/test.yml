@@ -25,6 +25,8 @@ jobs:
           cp /opt/flang/emfc ./host/bin/emfc
       - name: Setup Emscripten PATH
         run: echo "/opt/emsdk:/opt/emsdk/upstream/emscripten" >> $GITHUB_PATH
+      - name: Set Emscripten EM_NODE_JS
+        run: echo "EM_NODE_JS=$(which node)" >> $GITHUB_ENV
       - name: Build webR
         env:
           EMSDK: /opt/emsdk
