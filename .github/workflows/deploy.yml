@@ -35,6 +35,8 @@ jobs:
           cp /opt/flang/emfc ./host/bin/emfc
       - name: Setup Emscripten PATH
         run: echo "/opt/emsdk:/opt/emsdk/upstream/emscripten" >> $GITHUB_PATH
+      - name: Set Emscripten EM_NODE_JS
+        run: echo "EM_NODE_JS=$(which node)" >> $GITHUB_ENV
       - name: Set the webR CDN URL as the BASE_URL
         run: echo "BASE_URL=https://webr.r-wasm.org/${{ github.ref_name }}/" > "$HOME/.webr-config.mk"
         shell: bash
