@@ -15,7 +15,6 @@ $(LIBXML2_WASM_LIB): $(LIBXML2_TARBALL) $(XZ_WASM_LIB)
 	mkdir -p $(BUILD)/libxml2-$(LIBXML2_VERSION)/build
 	tar -C $(BUILD) -xf $(LIBXML2_TARBALL)
 	cd $(BUILD)/libxml2-$(LIBXML2_VERSION)/build && \
-	  CFLAGS="$(WASM_CFLAGS)" \
 	  emconfigure ../configure \
 	    --enable-shared=no \
 	    --enable-static=yes \

@@ -13,7 +13,6 @@ $(LIBPNG_WASM_LIB): $(LIBPNG_TARBALL) $(EM_PKG_CONFIG_PATH)/zlib.pc
 	mkdir -p $(BUILD)/libpng-$(LIBPNG_VERSION)/build
 	tar -C $(BUILD) -xf $(LIBPNG_TARBALL)
 	cd $(BUILD)/libpng-$(LIBPNG_VERSION)/build && \
-	  CFLAGS="$(WASM_CFLAGS)" \
 	  emconfigure ../configure \
 	    --enable-shared=no \
 	    --enable-static=yes \
