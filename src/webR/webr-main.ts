@@ -194,7 +194,14 @@ export class WebR {
   Shelter;
 
   constructor(options: WebROptions = {}) {
-    const config: Required<WebROptions> = Object.assign(defaultOptions, options);
+    const config: Required<WebROptions> = {
+      ...defaultOptions,
+      ...options,
+      REnv: {
+        ...defaultOptions.REnv,
+        ...options.REnv,
+      }
+    };
     this.#chan = newChannelMain(config);
 
     this.objs = {} as typeof this.objs;
