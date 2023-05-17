@@ -1,6 +1,5 @@
 import { WebR } from '../../webR/webr-main';
 import { Message } from '../../webR/chan/message';
-import { promiseHandles } from '../../webR/utils';
 import {
   RDouble,
   RLogical,
@@ -88,37 +87,20 @@ describe('Evaluate R code', () => {
     expect((await webR.read()).data).toBe('Hello, stderr!');
   });
 
-  /* Since console.log and console.warn are called from the worker thread in the
-   * next two tests, we cannot mock them in the usual way. Instead we spy on
-   * node's process.stdout and process.stderr streams, where console logging is
-   * ultimately written.
-   */
   test('Send output to console.log while evaluating R code', async () => {
-    const waitForOutput = promiseHandles();
-    const spyStdout = jest.spyOn(process.stdout, 'write').mockImplementation(() => {
-      waitForOutput.resolve();
-      return true;
-    });
+    const logSpy = jest.spyOn(console, 'log').mockImplementation((...args) => {});
     await webR.evalR('print(c(30, 42, 66, 70, 78, 102))');
-    await waitForOutput.promise;
-    const buffer = spyStdout.mock.calls[0][0] as Buffer;
-    expect(buffer.includes('[1]  30  42  66  70  78 102')).toEqual(true);
-    spyStdout.mockReset();
-    spyStdout.mockRestore();
+    await webR.evalR('print(c("foo", "bar", "baz"))');
+    expect(logSpy).toHaveBeenCalledWith('[1]  30  42  66  70  78 102');
+    expect(logSpy).toHaveBeenCalledWith('[1] "foo" "bar" "baz"');
+    logSpy.mockRestore();
   });
 
   test('Send conditions to console.warn while evaluating R code', async () => {
-    const waitForOutput = promiseHandles();
-    const spyStderr = jest.spyOn(process.stderr, 'write').mockImplementation(() => {
-      waitForOutput.resolve();
-      return true;
-    });
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation((...args) => {});
     await webR.evalR('warning("This is a warning!")');
-    await waitForOutput.promise;
-    const buffer = spyStderr.mock.calls[0][0] as Buffer;
-    expect(buffer.includes('Warning message: \nThis is a warning!')).toEqual(true);
-    spyStderr.mockReset();
-    spyStderr.mockRestore();
+    expect(warnSpy).toHaveBeenCalledWith('Warning message: \nThis is a warning!');
+    warnSpy.mockRestore();
   });
 
   test('Error conditions are re-thrown in JS when evaluating R code', async () => {
