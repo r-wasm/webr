@@ -13,7 +13,7 @@ $(PROJ_TARBALL):
 
 # Somehow `-DBUILD_APPS` doesn't work and we need to turn off each app
 # individually.
-$(PROJ_WASM_LIB): $(PROJ_TARBALL) $(SQLITE3_WASM_LIB)
+$(PROJ_WASM_LIB): $(PROJ_TARBALL) $(SQLITE3_WASM_LIB) $(LIBTIFF_WASM_LIB)
 	mkdir -p $(BUILD)/proj-$(PROJ_VERSION)/build
 	tar -C $(BUILD) -xf $(PROJ_TARBALL)
 	cd $(BUILD)/proj-$(PROJ_VERSION)/build && \
