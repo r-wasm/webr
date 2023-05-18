@@ -684,6 +684,27 @@ test('Close webR communication channel', async () => {
   await expect(closedPromise).resolves.toEqual(true);
 });
 
+test('Default and user provided REnv properties are merged', async () => {
+  const tempR = new WebR({
+    baseUrl: '../dist/',
+    REnv: {
+      FOO: 'bar',
+    }
+  });
+  await tempR.init();
+
+  // Confirm default REnv settings
+  const jit = await tempR.evalRString('Sys.getenv("R_ENABLE_JIT")');
+  const home = await tempR.evalRString('Sys.getenv("R_HOME")');
+  expect(jit).toEqual('0');
+  expect(home).toEqual('/usr/lib/R');
+
+  // Confirm a user REnv setting
+  const foo = await tempR.evalRString('Sys.getenv("FOO")');
+  expect(foo).toEqual('bar');
+  tempR.close();
+});
+
 beforeEach(() => {
   jest.restoreAllMocks();
 });
