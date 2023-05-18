@@ -601,20 +601,26 @@ function evalR(code: string, options: EvalROptions = {}): RObject {
       const outputType = out.get('type').toString();
       switch (outputType) {
         case 'stdout':
-          console.log(out.get('data').toString());
+          chan?.writeSystem({ type: 'console.log', data: out.get('data').toString() });
           break;
         case 'stderr':
-          console.warn(out.get('data').toString());
+          chan?.writeSystem({ type: 'console.warn', data: out.get('data').toString() });
           break;
         case 'message':
-          console.warn(out.pluck('data', 'message')?.toString() || '');
+          chan?.writeSystem({
+            type: 'console.warn',
+            data: out.pluck('data', 'message')?.toString() || '',
+          });
           break;
         case 'warning':
-          console.warn(`Warning message: \n${out.pluck('data', 'message')?.toString() || ''}`);
+          chan?.writeSystem({
+            type: 'console.warn',
+            data: `Warning message: \n${out.pluck('data', 'message')?.toString() || ''}`,
+          });
           break;
         default:
-          console.warn(`Output of type ${outputType}:`);
-          console.warn(out.get('data').toJs());
+          chan?.writeSystem({ type: 'console.warn', data: `Output of type ${outputType}:` });
+          chan?.writeSystem({ type: 'console.warn', data: out.get('data').toJs() });
           break;
       }
     }

@@ -262,6 +262,15 @@ export class WebR {
             msg.data.args
           );
           break;
+        case 'console.log':
+          console.log(msg.data);
+          break;
+        case 'console.warn':
+          console.warn(msg.data);
+          break;
+        case 'console.error':
+          console.error(msg.data);
+          break;
         default:
           throw new Error('Unknown system message type `' + msg.type + '`');
       }
