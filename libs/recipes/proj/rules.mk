@@ -12,8 +12,7 @@ $(PROJ_TARBALL):
 # https://github.com/OSGeo/PROJ/blob/master/docs/source/install.rst
 
 # Somehow `-DBUILD_APPS` doesn't work and we need to turn off each app
-# individually. TIFF support is disabled but we probably should enable
-# it once we have built libtiff as a wasm lib.
+# individually.
 $(PROJ_WASM_LIB): $(PROJ_TARBALL) $(SQLITE3_WASM_LIB)
 	mkdir -p $(BUILD)/proj-$(PROJ_VERSION)/build
 	tar -C $(BUILD) -xf $(PROJ_TARBALL)
@@ -22,7 +21,8 @@ $(PROJ_WASM_LIB): $(PROJ_TARBALL) $(SQLITE3_WASM_LIB)
 	    -DCMAKE_INSTALL_PREFIX:PATH="$(WASM)" \
 	    -DSQLITE3_INCLUDE_DIR="$(WASM)/include" \
 	    -DSQLITE3_LIBRARY="$(SQLITE3_WASM_LIB)" \
-	    -DENABLE_TIFF=OFF \
+	    -DTIFF_INCLUDE_DIR="$(WASM)/include" \
+	    -DTIFF_LIBRARY="$(LIBTIFF_WASM_LIB)" \
 	    -DENABLE_CURL=OFF \
 	    -DBUILD_APPS=OFF \
 	    -DBUILD_CCT=OFF \
