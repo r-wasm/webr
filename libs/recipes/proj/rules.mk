@@ -18,6 +18,8 @@ $(PROJ_WASM_LIB): $(PROJ_TARBALL) $(SQLITE3_WASM_LIB) $(LIBTIFF_WASM_LIB)
 	tar -C $(BUILD) -xf $(PROJ_TARBALL)
 	cd $(BUILD)/proj-$(PROJ_VERSION)/build && \
 	  emcmake cmake \
+	    -DCMAKE_BUILD_TYPE=Release \
+	    -DCMAKE_CXX_FLAGS="$(CXXFLAGS)"' -UPROJ_DATA -DPROJ_DATA=\"/usr/share/proj\"' \
 	    -DCMAKE_INSTALL_PREFIX:PATH="$(WASM)" \
 	    -DSQLITE3_INCLUDE_DIR="$(WASM)/include" \
 	    -DSQLITE3_LIBRARY="$(SQLITE3_WASM_LIB)" \
@@ -32,6 +34,7 @@ $(PROJ_WASM_LIB): $(PROJ_TARBALL) $(SQLITE3_WASM_LIB) $(LIBTIFF_WASM_LIB)
 	    -DBUILD_PROJ=OFF \
 	    -DBUILD_PROJINFO=OFF \
 	    -DBUILD_PROJSYNC=OFF \
+	    -DBUILD_SHARED_LIBS=OFF \
 	    -DBUILD_TESTING=OFF \
 	    .. && \
 	  emmake make install
