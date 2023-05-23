@@ -40,6 +40,10 @@ jobs:
       - name: Set the webR CDN URL as the BASE_URL
         run: echo "BASE_URL=https://webr.r-wasm.org/${{ github.ref_name }}/" > "$HOME/.webr-config.mk"
         shell: bash
+      - name: Build all optional wasm libs
+        env:
+          EMSDK: /opt/emsdk
+        run: cd libs && make all
       - name: Build webR
         env:
           EMSDK: /opt/emsdk
