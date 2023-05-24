@@ -75,22 +75,13 @@ test_package <- function(pkg) {
   if (length(rfile)) {
     outfile <- paste0(pkg, "-Ex.Rout")
     failfile <- paste0(outfile, ".fail")
-    savefile <- paste0(outfile, ".prev")
-    if (file.exists(outfile)) file.rename(outfile, savefile)
     unlink(failfile)
-
     remove_lines_in_file(rfile, c("quit('no')", "q()"))
-    res <- tryCatch(
-      {
-        sink_source_to_file(rfile, failfile)
-      },
-      error = function() {
-        invisible(1L)
+    tryCatch(sink_source_to_file(rfile, failfile),
+      error = function(cond) {
+        stop(cond)
       }
     )
-    if (res) {
-      return(invisible(1L))
-    }
     file.rename(failfile, outfile)
   } else {
     warning(gettextf("no examples found for package %s", sQuote(pkg)),
@@ -116,18 +107,14 @@ test_package <- function(pkg) {
       remove_lines_in_file(f, c("quit('no')", "q()"))
       message(gettextf("  Running %s", sQuote(f)), domain = NA)
       outfile <- sub("rout$", "Rout", paste0(f, "out"))
-      res <- tryCatch(
-        {
-          sink_source_to_file(f, outfile)
-        },
-        error = function() {
-          file.rename(outfile, paste0(outfile, ".fail"))
-          invisible(1L)
+      failfile <- paste0(outfile, ".fail")
+      unlink(failfile)
+      tryCatch(sink_source_to_file(f, failfile),
+        error = function(cond) {
+          stop(cond)
         }
       )
-      if (res) {
-        return(invisible(1L))
-      }
+      file.rename(failfile, outfile)
     }
   }
   invisible(0L)

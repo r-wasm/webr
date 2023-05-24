@@ -126,42 +126,10 @@ Index: R-4.3.0/src/library/methods/tests/nextWithDots.R
 +removeClass("C"); removeClass("BB"); removeClass("A")
  removeGeneric("withDots")
  rm(a, bb, a2)
-Index: R-4.3.0/src/library/compiler/man/compile.Rd
-===================================================================
---- R-4.3.0.orig/src/library/compiler/man/compile.Rd
-+++ R-4.3.0/src/library/compiler/man/compile.Rd
-@@ -135,7 +135,7 @@ fc(2)
- f <- function(x) x+1
- fc <- cmpfun(f)
- fc(2)
--disassemble(fc)
-+# disassemble(fc) # disassemble() errors under emscripten - possibly because we disable bcEval
- 
- # old R version of lapply
- la1 <- function(X, FUN, ...) {
 Index: R-4.3.0/src/library/compiler/tests/basics.R
 ===================================================================
 --- R-4.3.0.orig/src/library/compiler/tests/basics.R
 +++ R-4.3.0/src/library/compiler/tests/basics.R
-@@ -5,7 +5,7 @@ stopifnot(eval(compile(quote(x + 1))) == 3)
- ## very minimal
- x <- 2
- stopifnot(eval(compile(quote(x + 1))) == 3)
--
-+if (FALSE) { # disassemble() errors under emscripten - possibly because we disable bcEval
- ## simple code generation
- checkCode <- function(expr, code, optimize = 2) {
-     v <- compile(expr, options = list(optimize = optimize))
-@@ -29,8 +29,8 @@ checkCode(quote({f(1); f(2)}),
-             PUSHCONSTARG.OP, 6L,
-             CALL.OP, 7L,
-             RETURN.OP))
-+}
- 
--
- ## names and ... args
- f <- function(...) list(...)
- stopifnot(identical(f(1, 2), cmpfun(f)(1, 2)))
 @@ -90,7 +90,7 @@ pp <- sapply(h, function(n) get(n, compiler:::inlineHa
  h <- ls(compiler:::inlineHandlers, all.names = TRUE)
  p <- sub("package:", "", sapply(h, find))
