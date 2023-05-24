@@ -80,6 +80,7 @@ describe('Run R default package examples and tests', () => {
 
   test('grid', async () => {
     await webR.evalR('options(expressions=5000)');
+    await webR.evalR('graphics.off()');
     const test = await evalTest('grid');
     expect(await test.toNumber()).toEqual(0);
   });
