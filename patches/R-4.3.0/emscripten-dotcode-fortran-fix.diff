@@ -2,10 +2,11 @@ Index: R-4.3.0/src/main/dotcode.c
 ===================================================================
 --- R-4.3.0.orig/src/main/dotcode.c
 +++ R-4.3.0/src/main/dotcode.c
-@@ -1772,6 +1772,342 @@ R_FindNativeSymbolFromDLL(char *name, DllReference *dl
+@@ -1772,6 +1772,343 @@ R_FindNativeSymbolFromDLL(char *name, DllReference *dl
  #define FILL 0xee
  #define NG 64
  
++typedef void (*FFUNS0)();
 +typedef void (*FFUNS1)(void**);
 +typedef void (*FFUNS2)(void**, void**);
 +typedef void (*FFUNS3)(void**, void**, void**);
@@ -345,8 +346,12 @@ Index: R-4.3.0/src/main/dotcode.c
  attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, SEXP args, SEXP env)
  {
      void **cargs, **cargs0 = NULL /* -Wall */;
-@@ -2072,132 +2408,132 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
- 	fun();
+@@ -2069,135 +2406,135 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+ 
+     switch (nargs) {
+     case 0:
+-	fun();
++	((FFUNS0)fun)();
  	break;
      case 1:
 -	((FUNS1)fun)(cargs[0]);
@@ -504,7 +509,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2205,7 +2541,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2205,7 +2542,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[25]);
  	break;
      case 27:
@@ -513,7 +518,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2213,7 +2549,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2213,7 +2550,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[25], cargs[26]);
  	break;
      case 28:
@@ -522,7 +527,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2221,7 +2557,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2221,7 +2558,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[25], cargs[26], cargs[27]);
  	break;
      case 29:
@@ -531,7 +536,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2229,7 +2565,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2229,7 +2566,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[25], cargs[26], cargs[27], cargs[28]);
  	break;
      case 30:
@@ -540,7 +545,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2237,7 +2573,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2237,7 +2574,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[25], cargs[26], cargs[27], cargs[28], cargs[29]);
  	break;
      case 31:
@@ -549,7 +554,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2246,7 +2582,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2246,7 +2583,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[30]);
  	break;
      case 32:
@@ -558,7 +563,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2255,7 +2591,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2255,7 +2592,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[30], cargs[31]);
  	break;
      case 33:
@@ -567,7 +572,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2264,7 +2600,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2264,7 +2601,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[30], cargs[31], cargs[32]);
  	break;
      case 34:
@@ -576,7 +581,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2273,7 +2609,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2273,7 +2610,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[30], cargs[31], cargs[32], cargs[33]);
  	break;
      case 35:
@@ -585,7 +590,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2282,7 +2618,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2282,7 +2619,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[30], cargs[31], cargs[32], cargs[33], cargs[34]);
  	break;
      case 36:
@@ -594,7 +599,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2292,7 +2628,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2292,7 +2629,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[35]);
  	break;
      case 37:
@@ -603,7 +608,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2302,7 +2638,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2302,7 +2639,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[35], cargs[36]);
  	break;
      case 38:
@@ -612,7 +617,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2312,7 +2648,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2312,7 +2649,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[35], cargs[36], cargs[37]);
  	break;
      case 39:
@@ -621,7 +626,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2322,7 +2658,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2322,7 +2659,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[35], cargs[36], cargs[37], cargs[38]);
  	break;
      case 40:
@@ -630,7 +635,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2332,7 +2668,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2332,7 +2669,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[35], cargs[36], cargs[37], cargs[38], cargs[39]);
  	break;
      case 41:
@@ -639,7 +644,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2343,7 +2679,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2343,7 +2680,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[40]);
  	break;
      case 42:
@@ -648,7 +653,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2354,7 +2690,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2354,7 +2691,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[40], cargs[41]);
  	break;
      case 43:
@@ -657,7 +662,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2365,7 +2701,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2365,7 +2702,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[40], cargs[41], cargs[42]);
  	break;
      case 44:
@@ -666,7 +671,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2376,7 +2712,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2376,7 +2713,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[40], cargs[41], cargs[42], cargs[43]);
  	break;
      case 45:
@@ -675,7 +680,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2387,7 +2723,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2387,7 +2724,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[40], cargs[41], cargs[42], cargs[43], cargs[44]);
  	break;
      case 46:
@@ -684,7 +689,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2399,7 +2735,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2399,7 +2736,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[45]);
  	break;
      case 47:
@@ -693,7 +698,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2411,7 +2747,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2411,7 +2748,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[45], cargs[46]);
  	break;
      case 48:
@@ -702,7 +707,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2423,7 +2759,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2423,7 +2760,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[45], cargs[46], cargs[47]);
  	break;
      case 49:
@@ -711,7 +716,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2435,7 +2771,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2435,7 +2772,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[45], cargs[46], cargs[47], cargs[48]);
  	break;
      case 50:
@@ -720,7 +725,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2447,7 +2783,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2447,7 +2784,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[45], cargs[46], cargs[47], cargs[48], cargs[49]);
  	break;
      case 51:
@@ -729,7 +734,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2460,7 +2796,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2460,7 +2797,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[50]);
  	break;
      case 52:
@@ -738,7 +743,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2473,7 +2809,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2473,7 +2810,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[50], cargs[51]);
  	break;
      case 53:
@@ -747,7 +752,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2486,7 +2822,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2486,7 +2823,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[50], cargs[51], cargs[52]);
  	break;
      case 54:
@@ -756,7 +761,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2499,7 +2835,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2499,7 +2836,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[50], cargs[51], cargs[52], cargs[53]);
  	break;
      case 55:
@@ -765,7 +770,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2512,7 +2848,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2512,7 +2849,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[50], cargs[51], cargs[52], cargs[53], cargs[54]);
  	break;
      case 56:
@@ -774,7 +779,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2526,7 +2862,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2526,7 +2863,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[55]);
  	break;
      case 57:
@@ -783,7 +788,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2540,7 +2876,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2540,7 +2877,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[55], cargs[56]);
  	break;
      case 58:
@@ -792,7 +797,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2554,7 +2890,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2554,7 +2891,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[55], cargs[56], cargs[57]);
  	break;
      case 59:
@@ -801,7 +806,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2568,7 +2904,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2568,7 +2905,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[55], cargs[56], cargs[57], cargs[58]);
  	break;
      case 60:
@@ -810,7 +815,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2582,7 +2918,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2582,7 +2919,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[55], cargs[56], cargs[57], cargs[58], cargs[59]);
  	break;
      case 61:
@@ -819,7 +824,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2597,7 +2933,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2597,7 +2934,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[60]);
  	break;
      case 62:
@@ -828,7 +833,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2612,7 +2948,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2612,7 +2949,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[60], cargs[61]);
  	break;
      case 63:
@@ -837,7 +842,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2627,7 +2963,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2627,7 +2964,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[60], cargs[61], cargs[62]);
  	break;
      case 64:
@@ -846,7 +851,7 @@ Index: R-4.3.0/src/main/dotcode.c
  	    cargs[5],  cargs[6],  cargs[7],  cargs[8],  cargs[9],
  	    cargs[10], cargs[11], cargs[12], cargs[13], cargs[14],
  	    cargs[15], cargs[16], cargs[17], cargs[18], cargs[19],
-@@ -2642,7 +2978,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
+@@ -2642,7 +2979,7 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  	    cargs[60], cargs[61], cargs[62], cargs[63]);
  	break;
      case 65:
