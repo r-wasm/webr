@@ -216,7 +216,7 @@ WASM_LAZY_VFS += $(foreach pkg,$(PKG_DEFS),$(foreach dir,$(PKG_DIRS),\
   -f "$(R_WASM)/lib/R/library/$(pkg)/$(dir)@/usr/lib/R/library/$(pkg)/$(dir)"))
 
 # Include extra directories registered by wasm libraries
-include ../libs/recipes/**/targets.mk
+include $(WEBR_ROOT)/libs/recipes/**/targets.mk
 export VFSDIR = $(R_WASM)/dist/vfs
 export LZFS = $(TOOLS)/lzfs
 export WASM_LAZY_VFS
