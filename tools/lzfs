@@ -78,12 +78,10 @@ fi
 
 write "var Module = globalThis.Module;"
 write "Module.createLazyFilesystem = function () {"
-write "var loadFile = ENVIRONMENT_IS_NODE
-    ? function (...args) {
-        args[2] = __dirname + '/' + args[2];
-        FS.createPreloadedFile(...args);
-    }
-    : FS.createLazyFile;
+write "var loadFile = function(dir, file, src) {
+    let fn = ENVIRONMENT_IS_NODE ? FS.createPreloadedFile : FS.createLazyFile;
+    fn(dir,file,Module.locateFile(src),true,true);
+}
 "
 if [[ ${#PARR[@]} -gt 0 ]]; then
     for i in "${PARR[@]}"; do
@@ -102,7 +100,7 @@ if [[ ${#PARR[@]} -gt 0 ]]; then
             DIR="$(dirname "${f}")"
             FILE="$(basename "${f}")"
             PARENT=`echo "${PATHS[1]}${DIR#.}"| tr -s /`
-            write "loadFile('${PARENT}','${FILE}','${URL%/}/${PARENT#/}/${FILE}',true,true);"
+            write "loadFile('${PARENT}','${FILE}','${URL%/}/${PARENT#/}/${FILE}');"
             [[ -n "$DEST" ]] && cp "${PATHS[0]}/$f" "${DEST}${PARENT}/${FILE}"
         done
     done

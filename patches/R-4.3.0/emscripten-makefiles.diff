@@ -62,7 +62,7 @@ Index: R-4.3.0/src/main/Makefile.in
 +	@cp "$(Rexeclibdir)/libRblas.so" "$(prefix)/dist/libRblas.so"
 +	@cp "$(Rexeclibdir)/libRlapack.so" "$(prefix)/dist/libRlapack.so"
 +	@echo "Building virtual filesystem:"
-+	@$(LZFS) -v -d $(VFSDIR) -u ./vfs $(WASM_LAZY_VFS) -o $(prefix)/pre.js
++	@$(LZFS) -v -d $(VFSDIR) -u vfs $(WASM_LAZY_VFS) -o $(prefix)/pre.js
 +	@$(MAKE) $(R_binary).js
 +
  libR.a: $(OBJECTS) $(STATIC_LIBS)
