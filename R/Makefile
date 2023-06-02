@@ -84,7 +84,6 @@ $(BUILD)/state/R-$(R_VERSION)/r-stage1-configured: $(BUILD)/state/R-$(R_VERSION)
 	    --with-x=no \
 	    --with-aqua=no \
 	    --with-readline=no \
-	    --with-jpeglib=no \
 	    --with-static-cairo=yes \
 	    --disable-openmp \
 	    --with-recommended-packages=no \
@@ -165,7 +164,6 @@ $(BUILD)/state/R-$(R_VERSION)/r-stage2-configured: $(BUILD)/state/R-$(R_VERSION)
 	    --prefix="$(R_WASM)" \
 	    --with-x=no \
 	    --with-readline=no \
-	    --with-jpeglib=no \
 	    --with-static-cairo=yes \
 	    --disable-openmp \
 	    --with-recommended-packages=no \

@@ -139,3 +139,20 @@ Index: R-4.3.0/src/library/compiler/tests/basics.R
  
  
  ## Check assumption about simple .Internals
+Index: R-4.3.0/src/library/grDevices/tests/saved-recordPlot.R
+===================================================================
+--- R-4.3.0.orig/src/library/grDevices/tests/saved-recordPlot.R
++++ R-4.3.0/src/library/grDevices/tests/saved-recordPlot.R
+@@ -3,6 +3,7 @@
+ ## Subject: [Rd] recordPlot/replayPlot not working with saveRDS/readRDS
+ ## Date: Mon, 2 Apr 2018 12:23:06 -0500
+ 
++if (FALSE) { # bitmap png() device is optional for webR
+ # Save displaylist for a simple plot
+ png('test.png')
+ dev.control(displaylist ="enable")
+@@ -32,3 +33,4 @@ stopifnot(
+ stopifnot(
+     identical(tt[[1]], tt[[2]]),
+     identical(tt[[3]], tt[[2]]))
++}

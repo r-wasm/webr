@@ -46,11 +46,11 @@ include recipes/**/targets.mk
 include recipes/**/rules.mk
 
 .PHONY: default
-default: $(DEFAULT_WASM_LIBS) $(WASM)/usr/share/fonts
+default: $(DEFAULT_WASM_LIBS)
 .DEFAULT_GOAL := default
 
 .PHONY: all
-all: default $(OPTIONAL_WASM_LIBS)
+all: default $(OPTIONAL_WASM_LIBS) $(WASM)/usr/share/fonts
 
 $(EM_PKG_CONFIG_PATH)/%.pc: recipes/**/%.pc
 	mkdir -p $(EM_PKG_CONFIG_PATH)
