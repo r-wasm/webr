@@ -50,7 +50,7 @@ default: $(DEFAULT_WASM_LIBS)
 .DEFAULT_GOAL := default
 
 .PHONY: all
-all: default $(OPTIONAL_WASM_LIBS) $(WASM)/usr/share/fonts
+all: default $(OPTIONAL_WASM_LIBS) fonts
 
 $(EM_PKG_CONFIG_PATH)/%.pc: recipes/**/%.pc
 	mkdir -p $(EM_PKG_CONFIG_PATH)

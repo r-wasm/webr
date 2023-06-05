@@ -1,5 +1,10 @@
 .PHONY: fonts
-fonts: $(WASM)/usr/share/fonts
+fonts: $(WASM)/usr/share/fonts $(FC_WASM_LIB)
+	rm -rf "$(WASM)/var/cache/fontconfig"
+	cp recipes/fonts/fonts.conf "$(WASM)/etc/fonts/fonts.conf"
+	node $(BUILD)/fontconfig-$(FC_VERSION)/build/fc-cache/fc-cache \
+	  -y "$(WASM)" -r -f -v /usr/share/fonts
+	rm -rf "$(WASM)/etc/fonts/conf.d" "$(WASM)/etc/fonts/fonts.conf.bak"
 
 $(WASM)/usr/share/fonts:
 	mkdir -p "$(FONTS)" "$(WASM)/usr/share/fonts" "$(WASM)/etc/fonts/"
@@ -20,8 +25,7 @@ $(WASM)/usr/share/fonts:
 	unzip -p $(FONTS)/NotoSansMono.zip static/NotoSansMono/NotoSansMono-Bold.ttf > $(FONTS)/NotoSansMono-Bold.ttf
 	rm $(FONTS)/NotoSansMono.zip
 	cp -r "$(FONTS)/." "$(WASM)/usr/share/fonts"
-	cp recipes/fonts/fonts.conf "$(WASM)/etc/fonts/local.conf"
 
 .PHONY: clean-fonts
 clean-fonts:
-	rm -rf "$(FONTS)" "$(WASM)/usr/share/fonts" "$(WASM)/etc/fonts/local.conf"
+	rm -rf "$(FONTS)" "$(WASM)/usr/share/fonts" "$(WASM)/var/cache/fontconfig"
