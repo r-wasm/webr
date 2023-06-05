@@ -218,7 +218,7 @@ WASM_LAZY_VFS += $(foreach pkg,$(PKG_DEFS),$(foreach dir,$(PKG_DIRS),\
 # Include extra directories registered by wasm libraries
 include $(WEBR_ROOT)/libs/recipes/**/targets.mk
 export VFSDIR = $(R_WASM)/dist/vfs
-export LZFS = $(TOOLS)/lzfs
+export LZFS = $(R_HOST)/bin/Rscript $(TOOLS)/lzfs.R
 export WASM_LAZY_VFS
 
 $(BUILD)/state/R-$(R_VERSION)/r-stage2: $(BUILD)/state/R-$(R_VERSION)/r-stage1 $(BUILD)/state/R-$(R_VERSION)/r-stage2-configured
