@@ -5,7 +5,8 @@
 #' @param packages Character vector containing the names of packages to install.
 #' @param repos Character vector containing the URIs of the webR repos to use.
 #' @param lib The library directory where the packages will be installed.
-install <- function(packages, repos = NULL, lib = NULL) {
+#' @param quiet Logical. If `TRUE`, do not output downloading messages.
+install <- function(packages, repos = NULL, lib = NULL, quiet = FALSE) {
   if (is.null(lib)) {
     lib <- .libPaths()[[1]]
   }
@@ -20,7 +21,7 @@ install <- function(packages, repos = NULL, lib = NULL) {
     if (length(find.package(dep, quiet = TRUE))) {
       next
     }
-    install(dep, repos, lib)
+    install(dep, repos, lib, quiet)
   }
 
   for (pkg in packages) {
@@ -45,7 +46,7 @@ install <- function(packages, repos = NULL, lib = NULL) {
     path <- file.path(repo, paste0(pkg, "_", pkg_ver, ".tgz"))
 
     tmp <- tempfile()
-    message(paste("Downloading webR package:", pkg))
+    if (!quiet) message(paste("Downloading webR package:", pkg))
     utils::download.file(path, tmp, quiet = TRUE)
 
     utils::untar(

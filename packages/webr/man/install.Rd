@@ -4,7 +4,7 @@
 \alias{install}
 \title{Install one or more packages from a webR binary package repo}
 \usage{
-install(packages, repos = NULL, lib = NULL)
+install(packages, repos = NULL, lib = NULL, quiet = FALSE)
 }
 \arguments{
 \item{packages}{Character vector containing the names of packages to install.}
@@ -12,6 +12,8 @@ install(packages, repos = NULL, lib = NULL)
 \item{repos}{Character vector containing the URIs of the webR repos to use.}
 
 \item{lib}{The library directory where the packages will be installed.}
+
+\item{quiet}{Logical. If \code{TRUE}, do not output downloading messages.}
 }
 \description{
 Install one or more packages from a webR binary package repo
