@@ -656,10 +656,10 @@ function init(config: Required<WebROptions>) {
     if (IN_NODE) {
       globalThis.FS = Module.FS;
     }
+    Module.createLazyFilesystem();
     Module.FS.mkdirTree(_config.homedir);
     Module.ENV.HOME = _config.homedir;
     Module.FS.chdir(_config.homedir);
-
     Module.ENV = Object.assign(Module.ENV, env);
   });
 

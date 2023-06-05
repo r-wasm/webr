@@ -140,7 +140,6 @@ MAIN_LDFLAGS += -s ERROR_ON_UNDEFINED_SYMBOLS=0
 MAIN_LDFLAGS += -s EXPORTED_FUNCTIONS=['getWasmTableEntry']
 MAIN_LDFLAGS += -s EXPORTED_RUNTIME_METHODS=$(EXPORTED_RUNTIME_METHODS)
 MAIN_LDFLAGS += -s FETCH=1
-MAIN_LDFLAGS += --extern-pre-js $(WEBR_ROOT)/src/webR/pre.js
 MAIN_LDFLAGS += $(FORTRAN_WASM_LDADD)
 MAIN_LDFLAGS += $(WASM_OPT_LDADD)
 
@@ -199,6 +198,29 @@ MAKE_WASM_BUILD += FORTRAN_WASM_LDADD="$(FORTRAN_WASM_LDADD)"
 
 MAKE_WASM_INSTALL := $(MAKE_WASM)
 
+# Build lazy virtual filesystem, backed by XHR when loaded in browsers
+WASM_LAZY_VFS := $(WASM_LAZY_VFS)
+WASM_LAZY_VFS += -f "$(R_WASM)/lib/R/doc@/usr/lib/R/doc"
+WASM_LAZY_VFS += -f "$(R_WASM)/lib/R/library/grDevices/libs@/usr/lib/R/library/grDevices/libs"
+WASM_LAZY_VFS += -f "$(R_WASM)/lib/R/library/parallel@/usr/lib/R/library/parallel"
+WASM_LAZY_VFS += -f "$(R_WASM)/lib/R/library/tcltk@/usr/lib/R/library/tcltk"
+WASM_LAZY_VFS += -f "$(R_WASM)/lib/R/library/translations@/usr/lib/R/library/translations"
+WASM_LAZY_VFS += -f "$(R_WASM)/lib/R/modules@/usr/lib/R/modules"
+WASM_LAZY_VFS += -f "$(R_WASM)/lib/R/share@/usr/lib/R/share"
+WASM_LAZY_VFS += -f "$(R_WASM)/lib/R/tests@/usr/lib/R/tests"
+
+# Include extra R package data not included in the base virtual filesystem
+PKG_DEFS := base compiler datasets grDevices graphics grid methods splines stats stats4 tools utils
+PKG_DIRS := afm demo enc doc fonts help html misc tests
+WASM_LAZY_VFS += $(foreach pkg,$(PKG_DEFS),$(foreach dir,$(PKG_DIRS),\
+  -f "$(R_WASM)/lib/R/library/$(pkg)/$(dir)@/usr/lib/R/library/$(pkg)/$(dir)"))
+
+# Include extra directories registered by wasm libraries
+include $(WEBR_ROOT)/libs/recipes/**/targets.mk
+export VFSDIR = $(R_WASM)/dist/vfs
+export LZFS = $(R_HOST)/bin/Rscript $(TOOLS)/lzfs.R
+export WASM_LAZY_VFS
+
 $(BUILD)/state/R-$(R_VERSION)/r-stage2: $(BUILD)/state/R-$(R_VERSION)/r-stage1 $(BUILD)/state/R-$(R_VERSION)/r-stage2-configured
 	cd $(WEBR_ROOT)/packages && \
 	  $(MAKE_WASM) clean && $(MAKE_WASM) all
@@ -219,8 +241,7 @@ Rprofile: $(BUILD)/state/R-$(R_VERSION)/r-stage2
 .PHONY: install
 install: install-tests Rprofile
 	mkdir -p $(R_SOURCE)/build/doc
-	cd $(R_SOURCE)/build/doc && \
-	  touch NEWS NEWS.pdf NEWS.rds NEWS.2.rds NEWS.3.rds
+	cd $(R_SOURCE)/build/doc && touch NEWS.pdf R.1 Rscript.1
 	cd $(R_SOURCE)/build && \
 	  $(MAKE_WASM_INSTALL) install-wasm
 	cp -r "$(R_WASM)/dist/." $(DIST)

@@ -1,5 +1,6 @@
 WEBR_ROOT = $(abspath .)
 WASM = $(WEBR_ROOT)/wasm
+HOST = $(WEBR_ROOT)/host
 TOOLS = $(WEBR_ROOT)/tools
 
 # This is symlinked at configure-time
@@ -54,12 +55,12 @@ clean: clean-wasm
 
 .PHONY: clean-wasm
 clean-wasm: clean-webr
-	rm -rf wasm
+	rm -rf $(WASM)
 	cd libs && $(MAKE) clean
 
 .PHONY: clean-webr
 clean-webr:
-	rm -rf host
+	rm -rf $(HOST) $(WASM)/R-*
 	cd R && $(MAKE) clean
 
 .PHONY: distclean

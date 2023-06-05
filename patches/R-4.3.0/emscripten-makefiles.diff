@@ -20,12 +20,13 @@ Index: R-4.3.0/src/main/Makefile.in
 ===================================================================
 --- R-4.3.0.orig/src/main/Makefile.in
 +++ R-4.3.0/src/main/Makefile.in
-@@ -149,6 +149,41 @@ $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
+@@ -149,6 +149,47 @@ $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
  $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
  	$(MAIN_LINK) -o $@ $(R_bin_OBJECTS) $(R_bin_LDADD)
  
 +MAIN_WEBR_LDADD  = --use-preload-plugins
 +MAIN_WEBR_LDADD += --preload-file "$(prefix)/tmp/lib@/usr/lib"
++MAIN_WEBR_LDADD += --extern-pre-js $(prefix)/pre.js
 +
 +ifdef WEBR_REPO
 +MAIN_WEBR_LDADD += --preload-file "$(WEBR_REPO)@/repo"
@@ -36,19 +37,22 @@ Index: R-4.3.0/src/main/Makefile.in
 +endif
 +
 +$(R_binary).js: $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
-+	@rm -rf "$(prefix)/tmp" && mkdir -p "$(prefix)/tmp"
-+	@cp -a "$(prefix)/lib" "$(prefix)/tmp/"
++	@rm -rf "$(prefix)/tmp" && mkdir -p "$(prefix)/tmp/lib/R/"
++	@cp -a "$(prefix)/lib/R/library" "$(prefix)/tmp/lib/R/"
++	@cp -a "$(prefix)/lib/R/etc" "$(prefix)/tmp/lib/R/"
 +	@rm -r "$(prefix)/tmp/lib/R/library/translations"
 +	@rm -r "$(prefix)/tmp/lib/R/library/tcltk"
 +	@rm -r "$(prefix)/tmp/lib/R/library/parallel"
-+	@rm -r "$(prefix)/tmp/lib/R/bin"
-+	@rm -r "$(prefix)/tmp/lib/R/include"
-+	@rm -r "$(prefix)/tmp/lib/R/lib"
-+	@find "$(prefix)/tmp/lib/R" -type d -name 'help' -exec rm -r "{}" +
-+	@find "$(prefix)/tmp/lib/R" -type d -name 'doc' -exec rm -r "{}" +
-+	@find "$(prefix)/tmp/lib/R" -type d -name 'html' -exec rm -r "{}" +
++	@rm -r "$(prefix)/tmp/lib/R/library/grDevices/libs"
++	@find "$(prefix)/tmp/lib/R" -type d -name 'afm' -exec rm -r "{}" +
 +	@find "$(prefix)/tmp/lib/R" -type d -name 'demo' -exec rm -r "{}" +
++	@find "$(prefix)/tmp/lib/R" -type d -name 'enc' -exec rm -r "{}" +
++	@find "$(prefix)/tmp/lib/R" -type d -name 'doc' -exec rm -r "{}" +
 +	@find "$(prefix)/tmp/lib/R" -type d -name 'fonts' -exec rm -r "{}" +
++	@find "$(prefix)/tmp/lib/R" -type d -name 'help' -exec rm -r "{}" +
++	@find "$(prefix)/tmp/lib/R" -type d -name 'html' -exec rm -r "{}" +
++	@find "$(prefix)/tmp/lib/R" -type d -name 'misc' -exec rm -r "{}" +
++	@find "$(prefix)/tmp/lib/R" -type d -name 'tests' -exec rm -r "{}" +
 +	$(MAIN_LINK) $(MAIN_WEBR_LDADD) \
 +	-o $(prefix)/dist/$(R_binary).js \
 +	$(R_bin_OBJECTS) -lRlapack $(FORTRAN_WASM_LDADD) $(R_bin_LDADD)
@@ -57,6 +61,8 @@ Index: R-4.3.0/src/main/Makefile.in
 +	@$(MKINSTALLDIRS) "$(prefix)/dist"
 +	@cp "$(Rexeclibdir)/libRblas.so" "$(prefix)/dist/libRblas.so"
 +	@cp "$(Rexeclibdir)/libRlapack.so" "$(prefix)/dist/libRlapack.so"
++	@echo "Building virtual filesystem:"
++	@$(LZFS) -v -d $(VFSDIR) -u vfs $(WASM_LAZY_VFS) -o $(prefix)/pre.js
 +	@$(MAKE) $(R_binary).js
 +
  libR.a: $(OBJECTS) $(STATIC_LIBS)
