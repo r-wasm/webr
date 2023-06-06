@@ -46,7 +46,6 @@
       "default": "./dist/webr.mjs"
     },
     "./chan/serviceworker": "./dist/webr-serviceworker.mjs",
-    "./console": "./dist/console.mjs",
     "./repl": "./dist/repl.mjs"
   },
   "typesVersions": {
@@ -56,12 +55,6 @@
       ],
       "repl/*": [
         "dist/repl/*"
-      ],
-      "console": [
-        "dist/console/console"
-      ],
-      "console/*": [
-        "dist/console/*"
       ],
       "*": [
         "dist/webR/*"
@@ -74,8 +67,11 @@
   "dependencies": {
     "@msgpack/msgpack": "^2.8.0",
     "@types/emscripten": "^1.39.6",
+    "esbuild": "^0.17.19",
+    "eslint-plugin-jsdoc": "^46.2.4",
     "jquery": "^3.6.0",
     "jstree": "^3.3.12",
+    "tsx": "^3.12.7",
     "xmlhttprequest-ssl": "^2.1.0",
     "xterm": "^5.1.0",
     "xterm-addon-fit": "^0.7.0",
@@ -89,12 +85,10 @@
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
     "c8": "^7.12.0",
-    "esbuild": "^0.14.39",
     "esbuild-css-modules-plugin": "^2.2.16",
     "eslint": "^8.33.0",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-jest": "^26.8.7",
-    "eslint-plugin-jsdoc": "^40.0.1",
     "gts": "^3.1.0",
     "jest": "^28.1.3",
     "ts-jest": "^28.0.8",
@@ -104,7 +98,8 @@
     "typescript": "^4.9.5"
   },
   "scripts": {
-    "build": "node ./esbuild.js && tsc --emitDeclarationOnly",
+    "build": "npx tsx ./esbuild.ts && tsc --emitDeclarationOnly",
+    "prod": "npx tsx ./esbuild.ts --prod && tsc --emitDeclarationOnly",
     "prepack": "cp ../LICENSE.md ../README.md .",
     "postpack": "rm LICENSE.md README.md"
   }
