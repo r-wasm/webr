@@ -388,8 +388,11 @@ function dispatch(msg: Message): void {
           }
 
           case 'installPackage': {
-            // TODO: Use `evalRVoid()`
-            evalR(`webr::install("${reqMsg.data.name as string}", repos="${_config.repoUrl}")`);
+            evalR(`webr::install(
+              "${reqMsg.data.name as string}",
+              repos = "${_config.repoUrl}",
+              quiet = ${reqMsg.data.quiet ? 'TRUE' : 'FALSE'}
+            )`);
 
             write({
               obj: true,

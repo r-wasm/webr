@@ -327,10 +327,11 @@ export class WebR {
   /**
    * Install a list of R packages from the default webR CRAN-like repo.
    * @param {string[]} packages An array of R pacakge names.
+   * @param {boolean} quiet If true, do not output downloading messages.
    */
-  async installPackages(packages: string[]) {
-    for (const pkg of packages) {
-      const msg = { type: 'installPackage', data: { name: pkg } };
+  async installPackages(packages: string[], quiet = false) {
+    for (const name of packages) {
+      const msg = { type: 'installPackage', data: { name, quiet } };
       await this.#chan.request(msg);
     }
   }
