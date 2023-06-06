@@ -19,6 +19,13 @@ describe('Download and install binary webR packages', () => {
     warnSpy.mockRestore();
   });
 
+  test('Install packages quietly', async () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation((...args) => {});
+    await webR.evalR('webr::install("Matrix", repos="https://repo.r-wasm.org/", quiet=TRUE)');
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
   test('Install packages via API', async () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation((...args) => {});
     await webR.installPackages(['MASS']);
