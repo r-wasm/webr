@@ -82,7 +82,6 @@ export type WebRData =
 /**
  * A subset of {@link WebRData} for JavaScript objects that can be converted
  * into R atomic vectors.
- *
  * @typeParam T The JavaScript scalar type associated with the atomic vector.
  */
 export type WebRDataAtomic<T> =
@@ -136,7 +135,6 @@ export type WebRDataJsAtomic<T> = {
 
 /**
  * Test for a {@link WebRDataJs} instance.
- *
  * @param {any} value The object to test.
  * @returns {boolean} True if the object is an instance of a {@link WebRDataJs}.
  */
@@ -151,7 +149,6 @@ export type WebRDataScalar<T> = T | RMain.RObject | RWorker.RObjectBase;
 
 /**
  * Test if an object is of type {@link Complex}.
- *
  * @param {any} value The object to test.
  * @returns {boolean} True if the object is of type {@link Complex}.
  */

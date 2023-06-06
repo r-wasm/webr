@@ -349,7 +349,6 @@ export class WebR {
    *
    * Stream outputs and any conditions raised during exectution are written to
    * the JavaScript console.
-   *
    * @param {string} code The R code to evaluate.
    * @param {EvalROptions} [options] Options for the execution environment.
    * @returns {Promise<RObject>} The result of the computation.
@@ -376,7 +375,6 @@ export class WebR {
 
   /**
    * Evaluate the given R code, returning the result as a raw JavaScript object.
-   *
    * @param {string} code The R code to evaluate.
    * @param {EvalRMessageOutputType} outputType JavaScript type to return the result as.
    * @param {EvalROptions} [options] Options for the execution environment.
@@ -527,7 +525,6 @@ export class Shelter {
    *
    * Stream outputs and any conditions raised during exectution are written to
    * the JavaScript console. The returned R object is protected by the shelter.
-   *
    * @param {string} code The R code to evaluate.
    * @param {EvalROptions} [options] Options for the execution environment.
    * @returns {Promise<RObject>} The result of the computation.
@@ -554,7 +551,6 @@ export class Shelter {
    * Stream outputs and conditions raised during exectution are captured and
    * returned as part of the output of this function. Returned R objects are
    * protected by the shelter.
-   *
    * @param {string} code The R code to evaluate.
    * @param {EvalROptions} [options] Options for the execution environment.
    * @returns {Promise<{result: RObject, output: unknown[]}>} An object

@@ -82,7 +82,7 @@ if (serve) {
               http.request(
                 { hostname: '127.0.0.1', port: 8001, path: url, method, headers },
                 (proxyRes) => {
-                  const client = res.writeHead(proxyRes.statusCode!, {
+                  res.writeHead(proxyRes.statusCode!, {
                     ...proxyRes.headers,
                     'cross-origin-opener-policy': 'same-origin',
                     'cross-origin-embedder-policy': 'require-corp',

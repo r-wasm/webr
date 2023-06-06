@@ -15,7 +15,6 @@ const encoder = new TextEncoder();
  * Respond to a blocking request. Most of the work has already been done in
  * asynclink, we are just responsible here for getting the return value back to
  * the requester through this slightly convoluted Atomics protocol.
- *
  * @param {Endpoint} endpoint  A message port to receive messages from. Other
  *        thread is blocked, so we can't send messages back.
  * @param {SyncRequestData} data The message that was recieved. We will use it

@@ -10,6 +10,7 @@ import { RType, WebRData, WebRDataRaw } from './robj';
 import { isRObject, RObject, isRFunction } from './robj-main';
 import * as RWorker from './robj-worker';
 import { ShelterID, CallRObjectMethodMessage, NewRObjectMessage } from './webr-chan';
+import type * as Payload from './payload';
 
 /**
  * Obtain a union of the keys corresponding to methods of a given class `T`.
@@ -24,7 +25,6 @@ export type Methods<T> = {
  *
  * Distributes {@link RProxy} over any {@link RWorker.RObject} in the given
  * union type U.
- *
  * @typeParam U The type union to distribute {@link RProxy} over.
  */
 export type DistProxy<U> = U extends RWorker.RObject ? RProxy<U> : U;
@@ -40,7 +40,6 @@ export type DistProxy<U> = U extends RWorker.RObject ? RProxy<U> : U;
  * type instead take {@link RProxy}<{@link RWorker.RObject}> type. Other
  * function arguments remain as they are. The function return type is also
  * converted to a corresponding type using `RProxify` recursively.
- *
  * @typeParam T The type to convert.
  */
 export type RProxify<T> = T extends Array<any>
@@ -69,7 +68,6 @@ export type RProxify<T> = T extends Array<any>
  *
  * If required, the {@link Payload.WebRPayloadPtr} object associated with the
  * proxy can be accessed directly through the `_payload` property.
- *
  * @typeParam T The {@link RWorker.RObject} type to convert into `RProxy` type.
  */
 export type RProxy<T extends RWorker.RObject> = { [P in Methods<T>]: RProxify<T[P]> } & {
@@ -83,7 +81,6 @@ export type RProxy<T extends RWorker.RObject> = { [P in Methods<T>]: RProxify<T[
  * The class constructors and static methods of the given subclass of
  * {@link RWorker.RObject} are proxied, and the proxied constructor returns a
  * promise to an R object of a given {@link RProxy} type.
- *
  * @typeParam T The type of the {@link RWorker.RObject} class to be proxied.
  * @typeParam R The type to be returned from the proxied class constructor.
  */
@@ -209,7 +206,6 @@ async function newRObject(
  * The proxy targets a particular R object in WebAssembly memory. Methods of the
  * relevant subclass of {@link RWorker.RObject} are proxied, enabling
  * structured manipulation of R objects from the main thread.
- *
  * @param {ChannelMain} chan The current main thread communication channel.
  * @param {WebRPayloadPtr} payload A webR payload referencing an R object.
  * @returns {RProxy<RWorker.RObject>} An {@link RObject} corresponding to the
@@ -239,8 +235,7 @@ export function newRProxy(chan: ChannelMain, payload: WebRPayloadPtr): RProxy<RW
 }
 
 /**
- * Proxy an {@link RWorker.RObject} class.
- *
+ * Proxy an {@link RWorker.RObject} class.s
  * @param {ChannelMain} chan The current main thread communication channel.
  * @param {ShelterID} shelter The shelter ID to protect returned objects with.
  * @param {(RType | 'object')} objType The R object type, or `'object'` for the

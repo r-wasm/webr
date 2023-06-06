@@ -33,7 +33,6 @@ export type RFunction = RProxy<RWorker.RFunction> & ((...args: unknown[]) => Pro
  * Test for an RObject instance
  *
  * RObject is the user facing interface to R objects.
- *
  * @param {any} value The object to test.
  * @returns {boolean} True if the object is an instance of an RObject.
  */
@@ -48,7 +47,6 @@ export function isRObject(value: any): value is RObject {
 
 /**
  * Test for an RNull instance
- *
  * @param {any} value The object to test.
  * @returns {boolean} True if the object is an instance of an RNull.
  */
@@ -58,7 +56,6 @@ export function isRNull(value: any): value is RNull {
 
 /**
  * Test for an RSymbol instance
- *
  * @param {any} value The object to test.
  * @returns {boolean} True if the object is an instance of an RSymbol.
  */
@@ -68,7 +65,6 @@ export function isRSymbol(value: any): value is RSymbol {
 
 /**
  * Test for an RPairlist instance
- *
  * @param {any} value The object to test.
  * @returns {boolean} True if the object is an instance of an RPairlist.
  */
@@ -78,7 +74,6 @@ export function isRPairlist(value: any): value is RPairlist {
 
 /**
  * Test for an REnvironment instance
- *
  * @param {any} value The object to test.
  * @returns {boolean} True if the object is an instance of an REnvironment.
  */
@@ -88,7 +83,6 @@ export function isREnvironment(value: any): value is REnvironment {
 
 /**
  * Test for an RLogical instance
- *
  * @param {any} value The object to test.
  * @returns {boolean} True if the object is an instance of an RLogical.
  */
@@ -98,7 +92,6 @@ export function isRLogical(value: any): value is RLogical {
 
 /**
  * Test for an RInteger instance
- *
  * @param {any} value The object to test.
  * @returns {boolean} True if the object is an instance of an RInteger.
  */
@@ -108,7 +101,6 @@ export function isRInteger(value: any): value is RInteger {
 
 /**
  * Test for an RDouble instance
- *
  * @param {any} value The object to test.
  * @returns {boolean} True if the object is an instance of an RDouble.
  */
@@ -118,7 +110,6 @@ export function isRDouble(value: any): value is RDouble {
 
 /**
  * Test for an RComplex instance
- *
  * @param {any} value The object to test.
  * @returns {boolean} True if the object is an instance of an RComplex.
  */
@@ -128,7 +119,6 @@ export function isRComplex(value: any): value is RComplex {
 
 /**
  * Test for an RCharacter instance
- *
  * @param {any} value The object to test.
  * @returns {boolean} True if the object is an instance of an RCharacter.
  */
@@ -138,7 +128,6 @@ export function isRCharacter(value: any): value is RCharacter {
 
 /**
  * Test for an RList instance
- *
  * @param {any} value The object to test.
  * @returns {boolean} True if the object is an instance of an RList.
  */
@@ -148,7 +137,6 @@ export function isRList(value: any): value is RList {
 
 /**
  * Test for an RRaw instance
- *
  * @param {any} value The object to test.
  * @returns {boolean} True if the object is an instance of an RRaw.
  */
@@ -158,7 +146,6 @@ export function isRRaw(value: any): value is RRaw {
 
 /**
  * Test for an RCall instance
- *
  * @param {any} value The object to test.
  * @returns {boolean} True if the object is an instance of an RCall.
  */
@@ -168,7 +155,6 @@ export function isRCall(value: any): value is RCall {
 
 /**
  * Test for an RFunction instance
- *
  * @param {any} value The object to test.
  * @returns {boolean} True if the object is an instance of an RFunction.
  */
