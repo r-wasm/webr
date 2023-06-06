@@ -98,8 +98,8 @@
     "typescript": "^4.9.5"
   },
   "scripts": {
-    "build": "npx tsx ./esbuild.ts && tsc --emitDeclarationOnly",
-    "prod": "npx tsx ./esbuild.ts --prod && tsc --emitDeclarationOnly",
+    "build": "tsc --emitDeclarationOnly && tsx ./esbuild.ts",
+    "serve": "tsx ./esbuild.ts --serve",
     "prepack": "cp ../LICENSE.md ../README.md .",
     "postpack": "rm LICENSE.md README.md"
   }
