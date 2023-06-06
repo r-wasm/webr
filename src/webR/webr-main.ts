@@ -31,7 +31,7 @@ import {
   ShelterMessage,
 } from './webr-chan';
 
-export { Console, ConsoleCallbacks } from '../console/console';
+export { Console, ConsoleCallbacks } from './console';
 
 /**
  * The webR FS API for interacting with the Emscripten Virtual File System.
