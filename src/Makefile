@@ -4,7 +4,7 @@ DIST = $(WEBR_ROOT)/dist
 ROOT = $(abspath .)
 PKG_DIST = $(ROOT)/dist
 
-HTML_TEMPLATES = console.html repl.html
+HTML_TEMPLATES = repl.html
 HTML_INDEX = repl.html
 
 TS_SOURCES = $(shell find $(ROOT) \
