@@ -4,9 +4,11 @@ import http from 'http';
 
 let serve = false;
 let prod = false;
+let pkg = true;
 
 if (process.argv.some((x) => x === '--serve')) {
   serve = true;
+  pkg = false;
 }
 
 if (process.argv.some((x) => x === '--prod')) {
@@ -53,7 +55,7 @@ const outputs = {
     build('webR/webr-main.ts', './dist/webr.mjs', 'neutral'),
   ]
 };
-const allOutputs = outputs.browser.concat(outputs.npm);
+const allOutputs = outputs.browser.concat(pkg ? outputs.npm : []);
 
 allOutputs.forEach((build) => {
   build
