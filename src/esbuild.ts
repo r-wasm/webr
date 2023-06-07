@@ -15,7 +15,7 @@ if (process.argv.some((x) => x === '--prod')) {
   prod = true;
 }
 
-function build(input: string, output: string, platform: esbuild.Platform) {
+function build(input: string, output: string, platform: esbuild.Platform, minify: boolean) {
   return esbuild.context({
     assetNames: 'assets/[name]-[hash]',
     bundle: true,
@@ -27,7 +27,7 @@ function build(input: string, output: string, platform: esbuild.Platform) {
       '.gif': 'file',
     },
     mainFields: ['main', 'module'],
-    minify: prod,
+    minify: minify,
     outfile: output,
     platform: platform,
     plugins: [
@@ -42,17 +42,17 @@ function build(input: string, output: string, platform: esbuild.Platform) {
 
 const outputs = {
   browser: [
-    build('repl/repl.ts', '../dist/repl.mjs', 'neutral'),
-    build('webR/chan/serviceworker.ts', '../dist/webr-serviceworker.js', 'browser'),
-    build('webR/webr-worker.ts', '../dist/webr-worker.js', 'node'),
-    build('webR/webr-main.ts', '../dist/webr.mjs', 'neutral'),
+    build('repl/repl.ts', '../dist/repl.mjs', 'neutral', prod),
+    build('webR/chan/serviceworker.ts', '../dist/webr-serviceworker.js', 'browser', false),
+    build('webR/webr-worker.ts', '../dist/webr-worker.js', 'node', false),
+    build('webR/webr-main.ts', '../dist/webr.mjs', 'neutral', prod),
   ],
   npm: [
-    build('webR/chan/serviceworker.ts', './dist/webr-serviceworker.mjs', 'neutral'),
-    build('webR/chan/serviceworker.ts', './dist/webr-serviceworker.js', 'browser'),
-    build('webR/webr-worker.ts', './dist/webr-worker.js', 'node'),
-    build('webR/webr-main.ts', './dist/webr.cjs', 'node'),
-    build('webR/webr-main.ts', './dist/webr.mjs', 'neutral'),
+    build('webR/chan/serviceworker.ts', './dist/webr-serviceworker.mjs', 'neutral', false),
+    build('webR/chan/serviceworker.ts', './dist/webr-serviceworker.js', 'browser', false),
+    build('webR/webr-worker.ts', './dist/webr-worker.js', 'node', false),
+    build('webR/webr-main.ts', './dist/webr.cjs', 'node', prod),
+    build('webR/webr-main.ts', './dist/webr.mjs', 'neutral', prod),
   ]
 };
 const allOutputs = outputs.browser.concat(pkg ? outputs.npm : []);
