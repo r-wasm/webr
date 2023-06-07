@@ -1,5 +1,5 @@
-import { IN_NODE } from '../webR/compat';
-import { WebR, WebROptions } from '../webR/webr-main';
+import { IN_NODE } from './compat';
+import { WebR, WebROptions } from './webr-main';
 
 export interface ConsoleCallbacks {
   stdout?: (line: string) => void;

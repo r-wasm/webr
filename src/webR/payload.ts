@@ -43,7 +43,6 @@ export function webRPayloadError(payload: WebRPayloadErr): Error {
 
 /**
  * Test for an WebRPayload instance.
- *
  * @param {any} value The object to test.
  * @returns {boolean} True if the object is an instance of an WebRPayload.
  */
@@ -53,7 +52,6 @@ export function isWebRPayload(value: any): value is WebRPayload {
 
 /**
  * Test for an WebRPayloadPtr instance.
- *
  * @param {any} value The object to test.
  * @returns {boolean} True if the object is an instance of an WebRPayloadPtr.
  */
@@ -63,7 +61,6 @@ export function isWebRPayloadPtr(value: any): value is WebRPayloadPtr {
 
 /**
  * Test for an WebRPayloadRaw instance.
- *
  * @param {any} value The object to test.
  * @returns {boolean} True if the object is an instance of an WebRPayloadRaw.
  */

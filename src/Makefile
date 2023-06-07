@@ -4,7 +4,7 @@ DIST = $(WEBR_ROOT)/dist
 ROOT = $(abspath .)
 PKG_DIST = $(ROOT)/dist
 
-HTML_TEMPLATES = console.html repl.html
+HTML_TEMPLATES = repl.html
 HTML_INDEX = repl.html
 
 TS_SOURCES = $(shell find $(ROOT) \
@@ -20,7 +20,7 @@ PKG_BASE_URL ?= "https://repo.r-wasm.org"
 
 HTML_DIST = $(addprefix $(DIST)/,$(HTML_TEMPLATES))
 $(DIST): $(TS_SOURCES) $(HTML_DIST) \
-  Makefile webR/config.ts node_modules esbuild.js
+  Makefile webR/config.ts node_modules esbuild.ts
 	cp $(DIST)/$(HTML_INDEX) $(DIST)/index.html
 	npm run build
 	rm -rf "$(PKG_DIST)"
@@ -52,8 +52,8 @@ node_modules: package.json
 	touch $@
 
 .PHONY: serve
-serve:
-	cd $(DIST) && $(ROOT)/serve.py
+serve: esbuild.ts
+	npm run serve
 
 .PHONY: package
 package: $(PKG_DIST)
@@ -64,8 +64,8 @@ package: $(PKG_DIST)
 publish: $(PKG_DIST)
 	npm publish --access=public
 
-$(PKG_DIST): Makefile webR/config.ts node_modules esbuild.js
-	npm run build
+$(PKG_DIST): Makefile webR/config.ts node_modules esbuild.ts
+	npm run build -- --prod
 # Copy R binaries into npm package for distribution
 	cd "$(DIST)" && cp -r vfs R.bin.* *.so "$(PKG_DIST)"
 	touch $@
