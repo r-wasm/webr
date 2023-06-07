@@ -18,6 +18,10 @@
 
 * Add a `quiet` argument to `webr::install()` and `webR.installPackages()` APIs that allows for silencing webR package downloading messages.
 
+## Breaking changes
+
+ * Removed the legacy `console.mjs` build target. The `Console` class is re-exported on the default `WebR` entrypoint, and so the extra build target is not required. This is technically a breaking change, but the legacy entrypoint was never documented and so we believe the change has only minor effect.
+
 ## Bug fixes
 
 * The `REnv` property of a user provided `WebROptions` is now merged with the default value, rather than replacing it. With this a user need not explicitly include the default `R_HOME` value when adding new environment variables.
