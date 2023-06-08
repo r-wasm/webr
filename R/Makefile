@@ -201,11 +201,10 @@ MAKE_WASM_INSTALL := $(MAKE_WASM)
 # Build lazy virtual filesystem, backed by XHR when loaded in browsers
 WASM_LAZY_VFS := $(WASM_LAZY_VFS)
 WASM_LAZY_VFS += -f "$(R_WASM)/lib/R/doc@/usr/lib/R/doc"
-WASM_LAZY_VFS += -f "$(R_WASM)/lib/R/library/grDevices/libs@/usr/lib/R/library/grDevices/libs"
+WASM_LAZY_VFS += -f "$(R_WASM)/lib/R/library/grDevices/libs/cairo.so@/usr/lib/R/library/grDevices/libs"
 WASM_LAZY_VFS += -f "$(R_WASM)/lib/R/library/parallel@/usr/lib/R/library/parallel"
 WASM_LAZY_VFS += -f "$(R_WASM)/lib/R/library/tcltk@/usr/lib/R/library/tcltk"
 WASM_LAZY_VFS += -f "$(R_WASM)/lib/R/library/translations@/usr/lib/R/library/translations"
-WASM_LAZY_VFS += -f "$(R_WASM)/lib/R/modules@/usr/lib/R/modules"
 WASM_LAZY_VFS += -f "$(R_WASM)/lib/R/share@/usr/lib/R/share"
 WASM_LAZY_VFS += -f "$(R_WASM)/lib/R/tests@/usr/lib/R/tests"
 
