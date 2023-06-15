@@ -23,7 +23,7 @@ The normal stream output is written to the JavaScript console. The error stream 
 
 ### Returning JavaScript values when evaluating R code
 
-A selection of convenience methods return the result of evaluating R code as a promise resolving to a JavaScript object, rather than an `RObject` reference. The benefit is that since the returned object is of a raw JavaScript type, it does not need to be memory managed like an `RObject` result would be.
+A selection of convenience methods return the result of evaluating R code as a promise  to a JavaScript object, rather than an `RObject` reference. The benefit is that since the returned object is of a raw JavaScript type, it does not need to be memory managed like an `RObject` result would be.
 
 | Method                                                            | Returned object type |
 |-----------------------------------------------|------------------------|
@@ -59,7 +59,7 @@ The method takes two arguments,
 -   `code` - The R code to evaluate
 -   `options` - Optional: A [`EvalROptions`](api/js/interfaces/WebRChan.EvalROptions.md) object controlling how the code is evaluated.
 
-A promise is returned resolving resolving to a JavaScript object with two properties,
+A promise is returned resolving to a JavaScript object with two properties,
 
 -   `result` - The result of the computation, as an [`RObject`](api/js/modules/RMain.md#robject) proxy.
 -   `output` - Output captured during execution, an array of objects with properties `type` and `data`.
