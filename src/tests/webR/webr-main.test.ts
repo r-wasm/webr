@@ -687,6 +687,23 @@ test('Default and user provided REnv properties are merged', async () => {
   tempR.close();
 });
 
+test('WebR starts and is usable without lazy filesystem entries', async () => {
+  const tempR = new WebR({
+    baseUrl: '../dist/',
+    createLazyFilesystem: false,
+  });
+  await tempR.init();
+
+  // Confirm webR is able to startup and run
+  const sum = await tempR.evalRNumber('2 + 276709');
+  expect(sum).toEqual(276711);
+
+  // Confirm no lazy filesystem entries have been added
+  await expect(tempR.FS.lookupPath('/usr/lib/R/doc/NEWS.rds')).rejects.toThrow('FS error');
+
+  tempR.close();
+});
+
 beforeEach(() => {
   jest.restoreAllMocks();
 });
