@@ -23,7 +23,6 @@ $(DIST): $(TS_SOURCES) $(HTML_DIST) \
   Makefile webR/config.ts node_modules esbuild.ts
 	cp $(DIST)/$(HTML_INDEX) $(DIST)/index.html
 	npm run build
-	rm -rf "$(PKG_DIST)"
 	touch $@
 
 $(DIST)/%.html: templates/%.html
@@ -56,19 +55,21 @@ serve: esbuild.ts
 	npm run serve
 
 .PHONY: package
-package: $(PKG_DIST)
+package: $(PKG_DIST)/webr.mjs $(PKG_DIST)/vfs
 	npm pack
 	rm -rf "$(PKG_DIST)"
 
 .PHONY: publish
-publish: $(PKG_DIST)
+publish: $(PKG_DIST)/webr.mjs $(PKG_DIST)/vfs
 	npm publish --access=public
+	rm -rf "$(PKG_DIST)"
 
-$(PKG_DIST): Makefile webR/config.ts node_modules esbuild.ts
+# Prepare the PKG_DIST directory for npm packaging and/or publication.
+# Builds the webR npm package for distribution, then copies the required R
+# binaries and lazy vfs into the npm package.
+$(PKG_DIST)/webr.mjs $(PKG_DIST)/vfs: webR/config.ts node_modules esbuild.ts
 	npm run build -- --prod
-# Copy R binaries into npm package for distribution
 	cd "$(DIST)" && cp -r vfs R.bin.* *.so "$(PKG_DIST)"
-	touch $@
 
 clean:
 	rm -rf "$(PKG_DIST)"
