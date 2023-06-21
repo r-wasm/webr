@@ -19,6 +19,19 @@ Arguments:
     quit(status = 1)
 }
 
+list_files <- function(src_path, full = TRUE, ...) {
+    if (dir.exists(src_path)) list.files(src_path, full.names = full, ...)
+    else if (full) src_path
+    else basename(src_path)
+}
+
+list_dirs <- function(src_path, full = TRUE, ...) {
+    if (!file.exists(src_path)) character(0)
+    else if (dir.exists(src_path)) list.dirs(src_path, full.names = full, ...)
+    else if (full) dirname(src_path)
+    else ""
+}
+
 dest <- ""
 out <- stdout()
 url <- "."
@@ -80,15 +93,15 @@ for (paths in strsplit(path_vec, "@")) {
     }
     if (verbose) message(paste("Adding", paths[1]))
 
-    for (src_dir in paths[1]) {
+    for (src_path in paths[1]) {
         # Create directory structure
         dest_dir <- gsub("/$", "", paths[2])
-        new_dirs <- file.path(dest_dir, list.dirs(src_dir, full.names = FALSE))
+        new_dirs <- file.path(dest_dir, list_dirs(src_path, full = FALSE))
         dirs_out <- append(dirs_out, sprintf(mkdir_tmpl, new_dirs, new_dirs))
 
         # Create lazy files
         files <- file.path(dest_dir,
-            list.files(src_dir, full.names = FALSE, recursive = TRUE)
+            list_files(src_path, full = FALSE, recursive = TRUE)
         )
         parents <- gsub("^/", "", dirname(files))
         files <- basename(files)
@@ -105,7 +118,7 @@ for (paths in strsplit(path_vec, "@")) {
             recursive = TRUE
         )
         file.copy(
-            list.files(src_dir, full.names = TRUE, recursive = TRUE),
+            list_files(src_path, full = TRUE, recursive = TRUE),
             file.path(dest, parents, files),
             overwrite = TRUE
         )

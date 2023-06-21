@@ -14,7 +14,7 @@
 
 * Include additional type predicate functions for subclasses of `RObject`, such as `isRDouble()`. These can be used by TypeScript applications to narrow the typing of an `RObject` without assertion using the `as` keyword. The new type predicate functions have also been re-exported through the default `WebR` module.
 
-* Introduce lazy virtual filesystem entries. The webR filesystem is populated at initialisation time with only the files required to startup R. Other files made available (e.g. documentation and HTML pages) are downloaded on demand when the files are opened for reading by some process.
+* Introduce lazy virtual filesystem entries. The webR filesystem is populated at initialisation time with only the files required to startup R. Other files made available (e.g. documentation and HTML pages) are downloaded on demand when the files are opened for reading by some process. The optional lazy filesystem entries can be avoided in entirety by setting `createLazyFilesystem: false` in `WebROptions`.
 
 * Add a `quiet` argument to `webr::install()` and `webR.installPackages()` APIs that allows for silencing webR package downloading messages.
 
