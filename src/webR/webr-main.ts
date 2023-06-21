@@ -139,6 +139,12 @@ export interface WebROptions {
    * Default: `channelType.Automatic`
    */
   channelType?: (typeof ChannelType)[keyof typeof ChannelType];
+
+  /**
+   * Create the lazy virtual filesystem entries before starting R?
+   * Default: `true`.
+   */
+  createLazyFilesystem?: boolean;
 }
 
 const defaultEnv = {
@@ -156,6 +162,7 @@ const defaultOptions = {
   homedir: '/home/web_user',
   interactive: true,
   channelType: ChannelType.Automatic,
+  createLazyFilesystem: true,
 };
 
 /**
