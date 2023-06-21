@@ -56,16 +56,19 @@ serve: esbuild.ts
 	npm run serve
 
 .PHONY: package
-package: Makefile webR/config.ts node_modules esbuild.ts
-	npm run build -- --prod
-# Copy R binaries into npm package for distribution
-	cd "$(DIST)" && cp -r vfs R.bin.* *.so "$(PKG_DIST)"
+package: $(PKG_DIST)
 	npm pack
 	rm -rf "$(PKG_DIST)"
 
 .PHONY: publish
-publish: package
+publish: $(PKG_DIST)
 	npm publish --access=public
+
+$(PKG_DIST): Makefile webR/config.ts node_modules esbuild.ts
+	npm run build -- --prod
+# Copy R binaries into npm package for distribution
+	cd "$(DIST)" && cp -r vfs R.bin.* *.so "$(PKG_DIST)"
+	touch $@
 
 clean:
 	rm -rf "$(PKG_DIST)"
