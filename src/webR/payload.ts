@@ -35,7 +35,7 @@ export type WebRPayload = WebRPayloadRaw | WebRPayloadPtr;
 export type WebRPayloadWorker = WebRPayloadRaw | WebRPayloadPtr | WebRPayloadErr;
 
 /* @internal */
-export function webRPayloadError(payload: WebRPayloadErr): Error {
+export function webRPayloadAsError(payload: WebRPayloadErr): Error {
   const e = new WebRWorkerError(payload.obj.message);
   // Forward the error name to the main thread, if more specific than a general `Error`
   if (payload.obj.name !== 'Error') {
