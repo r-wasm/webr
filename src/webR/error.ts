@@ -24,3 +24,8 @@ export class WebRWorkerError extends WebRError {}
  * Exceptions related to issues with the webR communication channel.
  */
 export class WebRChannelError extends WebRError {}
+
+/**
+ * Exceptions related to issues with webR object payloads.
+ */
+export class WebRPayloadError extends WebRError {}

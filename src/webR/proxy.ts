@@ -11,7 +11,7 @@ import { isRObject, RObject, isRFunction } from './robj-main';
 import * as RWorker from './robj-worker';
 import { ShelterID, CallRObjectMethodMessage, NewRObjectMessage } from './webr-chan';
 import type * as Payload from './payload';
-import { WebRError } from './error';
+import { WebRError, WebRPayloadError } from './error';
 
 /**
  * Obtain a union of the keys corresponding to methods of a given class `T`.
@@ -195,7 +195,7 @@ async function newRObject(
   const payload = await chan.request(msg);
   switch (payload.payloadType) {
     case 'raw':
-      throw new Error('Unexpected raw payload type returned from newRObject');
+      throw new WebRPayloadError('Unexpected raw payload type returned from newRObject');
     case 'ptr':
       return newRProxy(chan, payload);
   }

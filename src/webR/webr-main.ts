@@ -15,7 +15,7 @@ import { REnvironment, RSymbol, RInteger } from './robj-main';
 import { RList, RLogical, RNull, RObject, RPairlist, RRaw, RString, RCall } from './robj-main';
 import { replaceInObject } from './utils';
 import * as RWorker from './robj-worker';
-import { WebRError } from './error';
+import { WebRError, WebRPayloadError } from './error';
 
 import {
   CaptureRMessage,
@@ -409,7 +409,7 @@ export class WebR {
       case 'raw':
         return payload.obj;
       case 'ptr':
-        throw new Error('Unexpected ptr payload type returned from evalRVoid');
+        throw new WebRPayloadError('Unexpected ptr payload type returned from evalRVoid');
     }
   }
 
@@ -549,7 +549,7 @@ export class Shelter {
 
     switch (payload.payloadType) {
       case 'raw':
-        throw new Error('Unexpected payload type returned from evalR');
+        throw new WebRPayloadError('Unexpected payload type returned from evalR');
       default:
         return newRProxy(this.#chan, payload);
     }
@@ -583,7 +583,7 @@ export class Shelter {
 
     switch (payload.payloadType) {
       case 'ptr':
-        throw new Error('Unexpected payload type returned from evalR');
+        throw new WebRPayloadError('Unexpected payload type returned from evalR');
 
       case 'raw': {
         const data = payload.obj as {
