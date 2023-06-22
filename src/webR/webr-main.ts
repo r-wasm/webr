@@ -15,6 +15,7 @@ import { REnvironment, RSymbol, RInteger } from './robj-main';
 import { RList, RLogical, RNull, RObject, RPairlist, RRaw, RString, RCall } from './robj-main';
 import { replaceInObject } from './utils';
 import * as RWorker from './robj-worker';
+import { WebRError } from './error';
 
 import {
   CaptureRMessage,
@@ -281,7 +282,7 @@ export class WebR {
           console.error(msg.data);
           break;
         default:
-          throw new Error('Unknown system message type `' + msg.type + '`');
+          throw new WebRError('Unknown system message type `' + msg.type + '`');
       }
     }
   }
