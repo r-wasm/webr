@@ -19,3 +19,8 @@ export class WebRError extends Error {
  * main thread through the communication channel.
  */
 export class WebRWorkerError extends WebRError {}
+
+/**
+ * Exceptions related to issues with the webR communication channel.
+ */
+export class WebRChannelError extends WebRError {}

@@ -1,6 +1,7 @@
 import { promiseHandles } from '../utils';
 import { encode, decode } from '@msgpack/msgpack';
 import { ServiceWorkerHandlers } from './channel';
+import { WebRChannelError } from '../error';
 
 declare let self: ServiceWorkerGlobalScope;
 
@@ -25,7 +26,7 @@ export function handleActivate(event: ExtendableEvent) {
 async function sendRequest(clientId: string, uuid: string): Promise<Response> {
   const client = await self.clients.get(clientId);
   if (!client) {
-    throw new Error('Service worker client not found');
+    throw new WebRChannelError('Service worker client not found');
   }
 
   if (!(uuid in requests)) {
@@ -62,7 +63,7 @@ export function handleMessage(event: ExtendableMessageEvent) {
       const source = event.source as WindowClient;
       self.clients.get(source.id).then((client) => {
         if (!client) {
-          throw new Error("Can't respond to client in service worker message handler");
+          throw new WebRChannelError("Can't respond to client in service worker message handler");
         }
         client.postMessage({
           type: 'registration-successful',
