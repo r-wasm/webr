@@ -4,6 +4,7 @@
  * @module Payload
  */
 import { WebRDataRaw, RPtr, RType } from './robj';
+import { WebRWorkerError } from './error';
 
 export type WebRPayloadRaw = {
   obj: WebRDataRaw;
@@ -35,8 +36,11 @@ export type WebRPayloadWorker = WebRPayloadRaw | WebRPayloadPtr | WebRPayloadErr
 
 /* @internal */
 export function webRPayloadError(payload: WebRPayloadErr): Error {
-  const e = new Error(payload.obj.message);
-  e.name = payload.obj.name;
+  const e = new WebRWorkerError(payload.obj.message);
+  // Forward the error name to the main thread, if more specific than a general `Error`
+  if (payload.obj.name !== 'Error') {
+    e.name = payload.obj.name;
+  }
   e.stack = payload.obj.stack;
   return e;
 }

@@ -33,6 +33,7 @@ import {
 
 export { Console, ConsoleCallbacks } from './console';
 export * from './robj-main';
+export * from './error';
 
 /**
  * The webR FS API for interacting with the Emscripten Virtual File System.
