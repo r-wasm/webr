@@ -21,7 +21,7 @@ module.exports = {
       project: ['./tsconfig.json'],
   },
   ignorePatterns: ['.eslintrc.js', 'pre.js', 'esbuild.js', 'jest.config.js'],
-  plugins: ['@typescript-eslint', 'jest', 'jsdoc'],
+  plugins: ['@typescript-eslint', 'jest', 'jsdoc', 'react'],
   rules: {
      "@typescript-eslint/no-explicit-any": "off",
      "@typescript-eslint/no-unsafe-member-access": "off",

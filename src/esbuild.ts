@@ -37,6 +37,9 @@ function build(input: string, output: string, platform: esbuild.Platform, minify
     ],
     sourcemap: true,
     target: ['es2020', 'node12'],
+    define: {
+      'process.env.NODE_ENV': prod ? '"production"' : '"development"',
+    },
   });
 }
 
