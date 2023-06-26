@@ -1,0 +1,12 @@
+.plot canvas {
+  max-width: 90%;
+  max-height: 90%;
+  aspect-ratio: 1 / 1;
+  background-color: white;
+}
+
+.plot .save {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}

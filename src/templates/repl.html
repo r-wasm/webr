@@ -1,134 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link href="repl.css" rel="stylesheet"/>
-    <style>
-        body {
-            margin: 0;
-            font-family: sans-serif;
-            overflow:hidden;
-        }
-        .tabs {
-            display: flex;
-            flex-wrap: wrap;
-            background: #eee;
-            height: 100%;
-            min-height: 100%;
-            align-items: flex-start;
-            align-content: flex-start;
-        }
-        .tabs label {
-            order: 1;
-            display: block;
-            padding: 6px 25px;
-            margin-right: 0.2rem;
-            cursor: pointer;
-            background: #ccc;
-            font-weight: bold;
-            transition: background ease 0.2s;
-        }
-        .tabs .tab {
-            order: 99;
-            flex-grow: 1;
-            width: 100%;
-            display: none;
-            background: #fff;
-            padding-top: 5px;
-            height: calc(100% - 30px);
-        }
-        .tabs input[type="radio"] {
-            display: none;
-        }
-        .tabs input[type="radio"]:checked + label {
-            background: #fff;
-        }
-        .tabs input[type="radio"]:checked + label + .tab {
-            display: block;
-        }
-        .dispbox {
-            display: flex;
-            justify-content: center;
-        }
-        .main {
-            height: 100vh;
-        }
-        .box {
-            position: relative;
-            width: 50vw;
-            height: 100vh;
-            background-color: #191919;
-        }
-        #plot {
-            background-color: #727272;
-            align-items: center;
-            height: 100%;
-            position: relative;
-        }
-        #plot-canvas {
-            background-color: #FFFFFF;
-            width: 40vw;
-            height: 40vw;
-            max-height: 80vh;
-            max-width: 80vh;
-        }
-        #plot-save {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-        }
-        #files-bar {
-            display: flex;
-            flex-wrap: wrap;
-            flex-direction: row;
-            align-items: stretch;
-            width: 100%;
-        }
-        @media (orientation: portrait) {
-            .dispbox {
-                flex-flow: column;
-            }
-            .box {
-                width: 100vw;
-                height: 50vh;
-            }
-            #plot-canvas {
-                width: 40vh;
-                height: 40vh;
-                max-height: 80vw;
-                max-width: 80vw;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link href="repl.css" rel="stylesheet"/>
+  <title>webR REPL app</title>
 </head>
 <body>
-    <div class="main dispbox">
-        <div id='term' class="box"></div>
-        <div class="box">
-            <div class="tabs">
-                <input type="radio" id="plots-tab" name="tab-group-1" checked="checked">
-                <label for="plots-tab">Plotting</label>
-                <div class="tab">
-                    <div id='plot' class="dispbox">
-                        <button id="plot-save">Save Plot</button>
-                        <canvas id='plot-canvas' class="box" width="1008" height="1008"></canvas>
-                    </div>
-                </div>
-                <input type="radio" id="files-tab" name="tab-group-1">
-                <label for="files-tab">Files</label>
-                <div class="tab">
-                    <div>
-                        <div id="files-bar">
-                            <button id="upload-file" disabled onclick="document.getElementById('input-upload').click();" style="flex: 1">Upload File</button>
-                            <input id="input-upload" type="file" style="display: none"/>
-                            <button id="download-file" disabled style="flex: 1">Download File</button>
-                        </div>
-                    </div>
-                    <div id="jstree_fs">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+  <div id="root"></div>
+  <noscript>
+    You need to enable JavaScript to run this app.
+  </noscript>
+  <script type="module" src="repl.mjs"></script>
 </body>
-<script type="module" src="repl.mjs"></script>
 </html>
