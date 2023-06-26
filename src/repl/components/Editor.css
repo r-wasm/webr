@@ -1,0 +1,84 @@
+.editor {
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #aaa;
+  padding: 5px 5px 0 5px;
+}
+
+.editor-actions, .editor-actions > button {
+  line-height: 0px;
+}
+
+.editor-actions > button {
+  background-color: transparent;
+  border: none;
+  color: #999;
+}
+
+.editor-actions > button:hover {
+  color: #333;
+}
+
+.editor-files > button {
+  font-size: 14px;
+  height: 26px;
+  background-color: #f6f6f6;
+  color: #444;
+  border: 1px solid #ddd;
+  border-bottom: none;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  padding: 0 5px;
+}
+
+.editor-files > button.active {
+  color: black;
+  background-color: #fff;
+  border-color: #aaa;
+  border-bottom-color: transparent;
+  position: relative;
+}
+
+.editor-files > button.active::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 4px;
+  bottom: -2px;
+  left: 0;
+  background-color: #fff;
+}
+
+.editor-files .editor-closebutton {
+  padding-left: 5px;
+  display: inline-block;
+  color: #999;
+  font-weight: bold;
+}
+
+.editor-files .editor-closebutton:hover {
+  color: #333;
+}
+
+.editor-container {
+  min-width: 0;
+  min-height: 0;
+}
+
+.cm-editor {
+  border: none;
+  outline: none;
+  height: 100%;
+  font-size: 16px;
+}
+
+.cm-editor.cm-focused {
+  border: none;
+  outline: none;
+}
