@@ -45,7 +45,7 @@ function build(input: string, output: string, platform: esbuild.Platform, minify
 
 const outputs = {
   browser: [
-    build('repl/repl.ts', '../dist/repl.mjs', 'neutral', prod),
+    build('repl/App.tsx', '../dist/repl.mjs', 'neutral', prod),
     build('webR/chan/serviceworker.ts', '../dist/webr-serviceworker.js', 'browser', false),
     build('webR/webr-worker.ts', '../dist/webr-worker.js', 'node', false),
     build('webR/webr-main.ts', '../dist/webr.mjs', 'neutral', prod),

@@ -1,0 +1,51 @@
+body {
+  padding: 0;
+  margin: 0;
+  font-family: sans-serif;
+}
+
+:root {
+  --gap-color: #EEE;
+}
+
+.repl {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  width: 100vw;
+  height: 100vh;
+}
+
+.term {
+  border-style: solid;
+  border-color: var(--gap-color);
+  border-width: 0px 2px 0px 0px;
+  grid-column: 1;
+  grid-row: 1 / 7;
+  overflow: hidden;
+  padding: 0px 5px;
+}
+
+.files {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  border-style: solid;
+  border-color: var(--gap-color);
+  border-width: 0px 0px 2px 2px;
+  overflow: auto;
+  padding: 5px;
+}
+
+.plot {
+  grid-row: 3 / -1;
+  grid-column: 2;
+  border-style: solid;
+  border-color: var(--gap-color);
+  border-width: 2px 0px 0px 2px;
+  overflow: hidden;
+  background-color: #AAA;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
