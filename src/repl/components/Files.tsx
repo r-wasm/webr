@@ -11,6 +11,7 @@ const FolderIcon = ({ isOpen }: { isOpen: boolean }) => isOpen
   : <FaFolder color="e8a87c" className="icon" />;
 
 interface ITreeNode {
+  id: number
   name: string;
   children?: ITreeNode[];
   metadata?: { [x: string]: string | number | null | undefined };
@@ -18,6 +19,7 @@ interface ITreeNode {
 
 export function createTreefromFSNode(fsNode: FSNode): ITreeNode {
   const tree: ITreeNode = {
+    id: fsNode.id,
     name: fsNode.name,
     metadata: { type: fsNode.isFolder ? 'folder' : 'file' },
   };
@@ -105,6 +107,12 @@ export function Files({
     });
   }
 
+  const onOpen: React.MouseEventHandler<HTMLButtonElement> = () => {
+    if (!selectedNode || !webR) return;
+    const path = getNodePath(selectedNode);
+    filesInterface.openFileInEditor(selectedNode.name, path, false);
+  }
+
   React.useEffect(() => {
     filesInterface.refreshFilesystem = async () => {
       const node = await webR.FS.lookupPath('/');
@@ -142,6 +150,12 @@ export function Files({
             disabled={!isFileSelected}
           >
             Download File
+          </button>
+          <button
+            onClick={onOpen}
+            disabled={!isFileSelected}
+          >
+            Open
           </button>
       </div>
       <div className="directory">

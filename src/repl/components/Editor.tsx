@@ -1,9 +1,9 @@
 import React from "react";
 import { WebR } from "../../webR/webr-main";
-import { FaPlay } from "react-icons/fa";
+import { FaPlay, FaRegSave } from "react-icons/fa";
 import { basicSetup, EditorView } from 'codemirror';
 import { EditorState, Compartment } from "@codemirror/state";
-import { TerminalInterface } from '../App';
+import { FilesInterface, TerminalInterface } from '../App';
 import { r } from 'codemirror-lang-r';
 import "./Editor.css";
 
@@ -44,7 +44,7 @@ export function FileTabs({
             className="editor-closebutton"
             aria-label="Close file"
             onClick={(e) => {
-              if (!confirm("Close " + f.name + "?")) {
+              if (!f.ref.editorState.readOnly && !confirm("Close " + f.name + "?")) {
                 e.stopPropagation();
                 return;
               }
@@ -62,9 +62,11 @@ export function FileTabs({
 export function Editor({
   webR,
   terminalInterface,
+  filesInterface,
 }: {
   webR: WebR
   terminalInterface: TerminalInterface;
+  filesInterface: FilesInterface;
 }) {
   const editorRef = React.useRef<HTMLDivElement | null>(null);
   const [editorView, setEditorView] = React.useState<EditorView>();
@@ -72,6 +74,14 @@ export function Editor({
   const [activeFileIdx, setActiveFileIdx] = React.useState(0);
 
   const activeFile = files[activeFileIdx];
+  const isRFile = activeFile && activeFile.name.endsWith(".R");
+  const isReadOnly = activeFile && activeFile.ref.editorState.readOnly;
+
+  const editorExtensions = [
+    basicSetup,
+    language.of(r()),
+    tabSize.of(EditorState.tabSize.of(2))
+  ];
 
   const closeFile = (e: React.SyntheticEvent, index: number) => {
     e.stopPropagation();
@@ -100,13 +110,7 @@ export function Editor({
   React.useEffect(() => {
     if (!editorRef.current) return;
     
-    let state = EditorState.create({
-      extensions: [
-        basicSetup,
-        language.of(r()),
-        tabSize.of(EditorState.tabSize.of(2))
-      ]
-    });
+    let state = EditorState.create({ extensions: editorExtensions });
 
     const view = new EditorView({
       state,
@@ -126,6 +130,37 @@ export function Editor({
       view.destroy();
     };
   }, []);
+
+  React.useEffect(() => {
+    filesInterface.openFileInEditor = (name: string, path: string, readOnly: boolean) => {
+      if (!webR) throw new Error('Unable to open file, webR is not initialised.');
+      return webR.FS.readFile(path).then((data) => {
+        syncActiveFileState();
+        const updatedFiles = [...files];
+        const extensions = name.toLowerCase().endsWith(".r") ? editorExtensions : [];
+        if(readOnly) extensions.push(EditorState.readOnly.of(true));
+
+        // Get file content, dealing with backspace characters until none remain
+        let content = new TextDecoder().decode(data);
+        while(content.match(/\w\x08/)){
+          content = content.replace(/\w\x08/g,"");
+        }
+
+        const index = updatedFiles.push({
+          name,
+          path,
+          ref: {
+            editorState: EditorState.create({
+              doc: content,
+              extensions,
+            }),
+          }
+        });
+        setFiles(updatedFiles);
+        setActiveFileIdx(index-1);
+      });
+    };
+  }, [files, webR, filesInterface]);
 
   React.useEffect(() => {
     if (!editorView || files.length === 0) return;
@@ -156,7 +191,7 @@ export function Editor({
           closeFile={closeFile}
         />
         <div className="editor-actions">
-          <button onClick={runFile}><FaPlay className="icon" /></button>
+          {isRFile && <button onClick={runFile}><FaPlay className="icon" /></button>}
         </div>
       </div>
       <div className="editor-container" ref={editorRef}></div>

@@ -28,6 +28,7 @@ export interface TerminalInterface {
 
 export interface FilesInterface {
   refreshFilesystem: () => void;
+  openFileInEditor: (name: string, path: string, readOnly: boolean) => Promise<void>;
 }
 
 const terminalInterface: TerminalInterface = {
@@ -38,12 +39,17 @@ const terminalInterface: TerminalInterface = {
 
 const filesInterface: FilesInterface = {
   refreshFilesystem: () => {},
+  openFileInEditor: () => {throw new Error('Unable to open file, editor not initialised.')},
 }
 
 function App() {
   return (
     <div className='repl'>
-      <Editor webR={webR} terminalInterface={terminalInterface}/>
+      <Editor
+        webR={webR}
+        terminalInterface={terminalInterface}
+        filesInterface={filesInterface}
+      />
       <Terminal webR={webR} terminalInterface={terminalInterface}/>
       <Files webR={webR} filesInterface={filesInterface}/>
       <Plot/>
@@ -56,6 +62,26 @@ root.render(<StrictMode><App /></StrictMode>);
 
 (async () => {
   await webR.init();
+
+  // Set the R pager to forward file details to the main thread for display
+  await webR.evalRVoid(`
+    options(
+      pager=function(files, header, title, delete.file){
+        webr::eval_js(paste0(
+          "chan.write({",
+          "  type: 'pager',",
+          "  data: {",
+          "    path: '", files[1], "',",
+          "    header: '", header[1], "',",
+          "    title: '", title, "',",
+          "    deleteFile: ", if (delete.file) "true" else "false", ",",
+          "  },",
+          "});"
+        ))
+        return(invisible(NULL))
+      }
+    )
+  `);
   await webR.evalRVoid('webr::global_prompt_install()', { withHandlers: false });
   await webR.evalRVoid('options(device=webr::canvas)');
 
@@ -87,6 +113,18 @@ root.render(<StrictMode><App /></StrictMode>);
         }
         break;
       }
+      case 'pager':
+        const { path, title, deleteFile } = output.data as {
+          path: string;
+          header: string;
+          title: string;
+          deleteFile: boolean;
+        }
+        await filesInterface.openFileInEditor(title, path, true);
+        if (deleteFile) {
+          webR.FS.unlink(path);
+        }
+        break;
       case 'closed':
         throw new Error('The webR communication channel has been closed');
       default:
