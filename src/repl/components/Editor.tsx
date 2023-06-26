@@ -107,6 +107,15 @@ export function Editor({
     webR.writeConsole(code);
   }, [syncActiveFileState, editorView]);
 
+  const saveFile = React.useCallback(async () => {
+    if (!editorView) return;
+    syncActiveFileState();
+    const code = editorView.state.doc.toString();
+    const data = new TextEncoder().encode(code);
+    await webR?.FS.writeFile(activeFile.path, data);
+    filesInterface.refreshFilesystem();
+  }, [webR, syncActiveFileState, editorView]);
+
   React.useEffect(() => {
     if (!editorRef.current) return;
     
@@ -120,7 +129,7 @@ export function Editor({
 
     setFiles([{
       name: 'Untitled1.R',
-      path: '/home/web_user/Untitled.R',
+      path: '/home/web_user/Untitled1.R',
       ref: {
         editorState: state,
       }
@@ -191,6 +200,7 @@ export function Editor({
           closeFile={closeFile}
         />
         <div className="editor-actions">
+          {!isReadOnly && <button onClick={saveFile}><FaRegSave className="icon" /></button>}
           {isRFile && <button onClick={runFile}><FaPlay className="icon" /></button>}
         </div>
       </div>
