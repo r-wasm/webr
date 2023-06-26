@@ -16,14 +16,28 @@ body {
   height: 100vh;
 }
 
-.term {
+.editor {
+  grid-row: 1 / 5;
+  grid-column: 1;
+  overflow: auto;
   border-style: solid;
   border-color: var(--gap-color);
-  border-width: 0px 2px 0px 0px;
+  border-width: 0px 2px 2px 0px;
+}
+
+.term {
+  grid-row-start: 5;
+  grid-row-end: -1;
   grid-column: 1;
-  grid-row: 1 / 7;
+  border-style: solid;
+  border-color: var(--gap-color);
+  border-width: 2px 2px 0px 0px;
   overflow: hidden;
   padding: 0px 5px;
+}
+
+.editor[style*='display: none'] ~ .term {
+  grid-row-start: 1;
 }
 
 .files {

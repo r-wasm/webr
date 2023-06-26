@@ -1,6 +1,7 @@
 import React, { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
 import Terminal from './components/Terminal';
+import Editor from './components/Editor';
 import Plot from './components/Plot';
 import Files from './components/Files';
 import { Readline } from 'xterm-readline';
@@ -42,6 +43,7 @@ const filesInterface: FilesInterface = {
 function App() {
   return (
     <div className='repl'>
+      <Editor webR={webR} terminalInterface={terminalInterface}/>
       <Terminal webR={webR} terminalInterface={terminalInterface}/>
       <Files webR={webR} filesInterface={filesInterface}/>
       <Plot/>
