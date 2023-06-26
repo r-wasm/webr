@@ -18,6 +18,8 @@
 
 * Add a `quiet` argument to `webr::install()` and `webR.installPackages()` APIs that allows for silencing webR package downloading messages.
 
+* Add custom `WebRError` classes so that errors from webR can be identified by testing thrown exceptions with `instanceof WebRError`.
+
 ## Breaking changes
 
  * Removed the legacy `console.mjs` build target. The `Console` class is re-exported on the default `WebR` entrypoint, and so the extra build target is not required. This is technically a breaking change, but the legacy entrypoint was never documented and so we believe the change has only minor effect.

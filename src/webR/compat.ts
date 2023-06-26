@@ -1,3 +1,5 @@
+import { WebRError } from './error';
+
 interface Process {
   browser: string | undefined;
   release: { [key: string]: string };
@@ -38,5 +40,5 @@ if (globalThis.document) {
     await import(nodePathMod.resolve(url));
   };
 } else {
-  throw new Error('Cannot determine runtime environment');
+  throw new WebRError('Cannot determine runtime environment');
 }

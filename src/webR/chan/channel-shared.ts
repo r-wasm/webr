@@ -5,6 +5,7 @@ import { syncResponse } from './task-main';
 import { ChannelMain, ChannelWorker } from './channel';
 import { ChannelType } from './channel-common';
 import { WebROptions } from '../webr-main';
+import { WebRChannelError } from '../error';
 
 import { IN_NODE } from '../compat';
 import type { Worker as NodeWorker } from 'worker_threads';
@@ -50,7 +51,7 @@ export class SharedBufferChannelMain extends ChannelMain {
 
   interrupt() {
     if (!this.#interruptBuffer) {
-      throw new Error('Failed attempt to interrupt before initialising interruptBuffer');
+      throw new WebRChannelError('Failed attempt to interrupt before initialising interruptBuffer');
     }
     this.inputQueue.reset();
     this.#interruptBuffer[0] = 1;
@@ -102,12 +103,12 @@ export class SharedBufferChannelMain extends ChannelMain {
             break;
           }
           default:
-            throw new TypeError(`Unsupported request type '${payload.type}'.`);
+            throw new WebRChannelError(`Unsupported request type '${payload.type}'.`);
         }
         return;
       }
       case 'request':
-        throw new TypeError(
+        throw new WebRChannelError(
           "Can't send messages of type 'request' from a worker. Please Use 'sync-request' instead."
         );
     }

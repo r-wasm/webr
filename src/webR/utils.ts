@@ -1,4 +1,5 @@
 import { IN_NODE } from './compat';
+import { WebRError } from './error';
 
 export type ResolveFn = (_value?: unknown) => void;
 export type RejectFn = (_reason?: any) => void;
@@ -86,5 +87,5 @@ export function throwUnreachable(context?: string) {
   let msg = 'Reached the unreachable';
   msg = msg + (context ? ': ' + context : '.');
 
-  throw new Error(msg);
+  throw new WebRError(msg);
 }

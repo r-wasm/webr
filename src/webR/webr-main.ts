@@ -15,6 +15,7 @@ import { REnvironment, RSymbol, RInteger } from './robj-main';
 import { RList, RLogical, RNull, RObject, RPairlist, RRaw, RString, RCall } from './robj-main';
 import { replaceInObject } from './utils';
 import * as RWorker from './robj-worker';
+import { WebRError, WebRPayloadError } from './error';
 
 import {
   CaptureRMessage,
@@ -33,6 +34,7 @@ import {
 
 export { Console, ConsoleCallbacks } from './console';
 export * from './robj-main';
+export * from './error';
 
 /**
  * The webR FS API for interacting with the Emscripten Virtual File System.
@@ -280,7 +282,7 @@ export class WebR {
           console.error(msg.data);
           break;
         default:
-          throw new Error('Unknown system message type `' + msg.type + '`');
+          throw new WebRError('Unknown system message type `' + msg.type + '`');
       }
     }
   }
@@ -407,7 +409,7 @@ export class WebR {
       case 'raw':
         return payload.obj;
       case 'ptr':
-        throw new Error('Unexpected ptr payload type returned from evalRVoid');
+        throw new WebRPayloadError('Unexpected ptr payload type returned from evalRVoid');
     }
   }
 
@@ -547,7 +549,7 @@ export class Shelter {
 
     switch (payload.payloadType) {
       case 'raw':
-        throw new Error('Unexpected payload type returned from evalR');
+        throw new WebRPayloadError('Unexpected payload type returned from evalR');
       default:
         return newRProxy(this.#chan, payload);
     }
@@ -581,7 +583,7 @@ export class Shelter {
 
     switch (payload.payloadType) {
       case 'ptr':
-        throw new Error('Unexpected payload type returned from evalR');
+        throw new WebRPayloadError('Unexpected payload type returned from evalR');
 
       case 'raw': {
         const data = payload.obj as {

@@ -11,6 +11,7 @@ import { isRObject, RObject, isRFunction } from './robj-main';
 import * as RWorker from './robj-worker';
 import { ShelterID, CallRObjectMethodMessage, NewRObjectMessage } from './webr-chan';
 import type * as Payload from './payload';
+import { WebRError, WebRPayloadError } from './error';
 
 /**
  * Obtain a union of the keys corresponding to methods of a given class `T`.
@@ -120,7 +121,7 @@ function targetAsyncIterator(chan: ChannelMain, proxy: RProxy<RWorker.RObject>) 
 
     // Throw an error if there was some problem accessing the object length
     if (typeof reply.obj !== 'number') {
-      throw new Error('Cannot iterate over object, unexpected type for length property.');
+      throw new WebRError('Cannot iterate over object, unexpected type for length property.');
     }
 
     // Loop through the object and yield values
@@ -194,7 +195,7 @@ async function newRObject(
   const payload = await chan.request(msg);
   switch (payload.payloadType) {
     case 'raw':
-      throw new Error('Unexpected raw payload type returned from newRObject');
+      throw new WebRPayloadError('Unexpected raw payload type returned from newRObject');
     case 'ptr':
       return newRProxy(chan, payload);
   }

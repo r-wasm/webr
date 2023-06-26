@@ -11,6 +11,7 @@ import { Endpoint } from './task-common';
 import { ChannelMain, ChannelWorker } from './channel';
 import { ChannelType } from './channel-common';
 import { WebROptions } from '../webr-main';
+import { WebRChannelError } from '../error';
 
 import { IN_NODE } from '../compat';
 import type { Worker as NodeWorker } from 'worker_threads';
@@ -68,7 +69,7 @@ export class ServiceWorkerChannelMain extends ChannelMain {
 
   activeRegistration(): ServiceWorker {
     if (!this.#registration?.active) {
-      throw new Error('Attempted to obtain a non-existent active registration.');
+      throw new WebRChannelError('Attempted to obtain a non-existent active registration.');
     }
     return this.#registration.active;
   }
@@ -111,7 +112,7 @@ export class ServiceWorkerChannelMain extends ChannelMain {
       const uuid = event.data.data as string;
       const message = this.#syncMessageCache.get(uuid);
       if (!message) {
-        throw new Error('Request not found during service worker XHR request');
+        throw new WebRChannelError('Request not found during service worker XHR request');
       }
       this.#syncMessageCache.delete(uuid);
       switch (message.type) {
@@ -136,7 +137,7 @@ export class ServiceWorkerChannelMain extends ChannelMain {
           break;
         }
         default:
-          throw new TypeError(`Unsupported request type '${message.type}'.`);
+          throw new WebRChannelError(`Unsupported request type '${message.type}'.`);
       }
       return;
     }
@@ -182,7 +183,7 @@ export class ServiceWorkerChannelMain extends ChannelMain {
       }
 
       case 'request':
-        throw new TypeError(
+        throw new WebRChannelError(
           "Can't send messages of type 'request' from a worker." +
             'Use service worker fetch request instead.'
         );
@@ -204,7 +205,7 @@ export class ServiceWorkerChannelWorker implements ChannelWorker {
 
   constructor(data: { clientId?: string; location?: string }) {
     if (!data.clientId || !data.location) {
-      throw Error("Can't start service worker channel");
+      throw new WebRChannelError("Can't start service worker channel");
     }
     this.#mainThreadId = data.clientId;
     this.#location = data.location;

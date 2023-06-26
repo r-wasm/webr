@@ -2,6 +2,7 @@ import { SharedBufferChannelMain, SharedBufferChannelWorker } from './channel-sh
 import { ServiceWorkerChannelMain, ServiceWorkerChannelWorker } from './channel-service';
 import { WebROptions } from '../webr-main';
 import { isCrossOrigin } from '../utils';
+import { WebRChannelError } from '../error';
 
 // This file refers to objects imported from `./channel-shared` and
 // `./channel-service.` These can't be included in `./channel` as this
@@ -45,7 +46,7 @@ export function newChannelMain(data: Required<WebROptions>) {
       if ('serviceWorker' in navigator && !isCrossOrigin(data.serviceWorkerUrl)) {
         return new ServiceWorkerChannelMain(data);
       }
-      throw new Error("Can't initialise main thread communication channel");
+      throw new WebRChannelError("Can't initialise main thread communication channel");
   }
 }
 
@@ -56,6 +57,6 @@ export function newChannelWorker(msg: ChannelInitMessage) {
     case ChannelType.ServiceWorker:
       return new ServiceWorkerChannelWorker(msg.data);
     default:
-      throw new Error('Unknown worker channel type recieved');
+      throw new WebRChannelError('Unknown worker channel type recieved');
   }
 }
