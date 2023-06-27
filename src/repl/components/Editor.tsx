@@ -1,11 +1,15 @@
 import React from 'react';
-import { WebR } from '../../webR/webr-main';
+import { WebR, RFunction, Shelter } from '../../webR/webr-main';
 import { FaPlay, FaRegSave } from 'react-icons/fa';
 import { basicSetup, EditorView } from 'codemirror';
 import { EditorState, Compartment } from '@codemirror/state';
+import { autocompletion, CompletionContext } from '@codemirror/autocomplete';
+import { keymap } from '@codemirror/view';
+import { indentWithTab } from '@codemirror/commands';
 import { FilesInterface, TerminalInterface } from '../App';
 import { r } from 'codemirror-lang-r';
 import './Editor.css';
+import { WebRDataJsAtomic } from '../../webR/robj';
 
 const language = new Compartment();
 const tabSize = new Compartment();
@@ -77,10 +81,66 @@ export function Editor({
   const isRFile = activeFile && activeFile.name.endsWith('.R');
   const isReadOnly = activeFile && activeFile.ref.editorState.readOnly;
 
+  const completionMethods = React.useRef<null | {
+    assignLineBuffer: RFunction;
+    assignToken: RFunction;
+    assignStart: RFunction;
+    assignEnd: RFunction;
+    completeToken: RFunction;
+    retrieveCompletions: RFunction;
+  }>(null);
+
+  React.useEffect(() => {
+    if (!webR) return;
+    let shelter: Shelter | null = null;
+
+    webR.init().then(async () => {
+      shelter = await new webR.Shelter();
+      await webR.evalRVoid('rc.settings(func=TRUE, fuzzy=TRUE)');
+      completionMethods.current = {
+        assignLineBuffer: await shelter.evalR('utils:::.assignLinebuffer') as RFunction,
+        assignToken: await shelter.evalR('utils:::.assignToken') as RFunction,
+        assignStart: await shelter.evalR('utils:::.assignStart') as RFunction,
+        assignEnd: await shelter.evalR('utils:::.assignEnd') as RFunction,
+        completeToken: await shelter.evalR('utils:::.completeToken') as RFunction,
+        retrieveCompletions: await shelter.evalR('utils:::.retrieveCompletions') as RFunction,
+      };
+    });
+
+    return function cleanup() {
+      if (shelter) shelter.purge();
+    };
+  }, [webR]);
+
+  const completion = React.useCallback(async (context: CompletionContext) => {
+    if (!webR || !completionMethods.current) return null;
+    const line = context.state.doc.lineAt(context.state.selection.main.head).text;
+    const {from, to, text} = context.matchBefore(/[a-zA-Z0-9_.:]*/) ?? {from: 0, to: 0, text: ''};
+    if (from === to && !context.explicit) {
+      return null;
+    }
+    await completionMethods.current.assignLineBuffer(line);
+    await completionMethods.current.assignToken(text);
+    await completionMethods.current.assignStart(from + 1);
+    await completionMethods.current.assignEnd(to + 1);
+    await completionMethods.current.completeToken();
+    const compl = await completionMethods.current.retrieveCompletions() as WebRDataJsAtomic<string>;
+    const options = compl.values.map((val) => {
+      if (!val){
+        throw new Error('Missing values in completion result.');
+      }
+      return { label: val };
+    });
+
+    return { from: from, options };
+  }, [webR]);
+
   const editorExtensions = [
     basicSetup,
     language.of(r()),
-    tabSize.of(EditorState.tabSize.of(2))
+    tabSize.of(EditorState.tabSize.of(2)),
+    keymap.of([indentWithTab]),
+    autocompletion({override: [completion]})
   ];
 
   const closeFile = (e: React.SyntheticEvent, index: number) => {
