@@ -130,8 +130,13 @@ export function Editor({
   React.useEffect(() => {
     if (!editorView || files.length === 0) return;
     editorView.setState(activeFile.ref.editorState);
-    editorView.scrollDOM.scrollTop = activeFile.ref.scrollTop ?? 0;
-    editorView.scrollDOM.scrollLeft = activeFile.ref.scrollLeft ?? 0;
+    editorView.requestMeasure({
+      read: () => {
+        editorView.scrollDOM.scrollTop = activeFile.ref.scrollTop ?? 0;
+        editorView.scrollDOM.scrollLeft = activeFile.ref.scrollLeft ?? 0;
+        return editorView.domAtPos(0).node;
+      }
+    });
     editorView.focus();
 
     return function cleanup() {
