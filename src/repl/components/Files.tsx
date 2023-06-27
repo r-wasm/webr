@@ -113,6 +113,24 @@ export function Files({
     filesInterface.openFileInEditor(selectedNode.name, path, false);
   }
 
+  const onNewDirectory: React.MouseEventHandler<HTMLButtonElement> = async() => {
+    if (!selectedNode || !webR) return;
+    const path = getNodePath(selectedNode);
+    const name = prompt("Please enter the new directory name");
+    if (!name) {
+      return;
+    }
+    try {
+      await webR.FS.mkdir(`${path}/${name}`);
+    } catch (e) {
+      if (e instanceof WebRError) {
+        throw new Error(`Unable to create directory: "${path}/${name}".`);
+      }
+      throw e;
+    }
+    await filesInterface.refreshFilesystem();
+  }
+
   const onDelete: React.MouseEventHandler<HTMLButtonElement> = async () => {
     if (!selectedNode || !webR) return;
     const path = getNodePath(selectedNode);
@@ -168,6 +186,7 @@ export function Files({
               <Fa.FaFileUpload className="icon" /> Upload file
           </button>
           <button
+            onClick={onNewDirectory}
             disabled={!selectedNode || isFileSelected}
           >
             <Fa.FaFolderPlus className="icon" /> New directory
