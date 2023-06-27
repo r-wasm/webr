@@ -139,12 +139,12 @@ export function Files({
             ref={uploadButtonRef} 
             onClick={() => uploadRef.current!.click()}
             className="upload-file"
-            disabled={isFileSelected}
+            disabled={!selectedNode || isFileSelected}
           >
               <Fa.FaFileUpload className="icon" /> Upload file
           </button>
           <button
-            disabled={isFileSelected}
+            disabled={!selectedNode || isFileSelected}
           >
             <Fa.FaFolderPlus className="icon" /> New directory
           </button>
@@ -153,13 +153,13 @@ export function Files({
             ref={downloadButtonRef}
             onClick={onDownload}
             className="download-file"
-            disabled={!isFileSelected}
+            disabled={!selectedNode || !isFileSelected}
           >
             <Fa.FaFileDownload className="icon" /> Download file
           </button>
           <button
             onClick={onOpen}
-            disabled={!isFileSelected}
+            disabled={!selectedNode || !isFileSelected}
           >
             <Fa.FaFileCode className="icon" /> Open in editor
           </button>
@@ -173,7 +173,7 @@ export function Files({
           data={treeData}
           defaultExpandedIds={[1]}
           aria-label="directory tree"
-          onNodeSelect = {onNodeSelect}
+          onNodeSelect={onNodeSelect}
           nodeRenderer={nodeRenderer}
         />
       </div>
