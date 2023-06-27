@@ -200,8 +200,8 @@ export function Editor({
           closeFile={closeFile}
         />
         <div className="editor-actions">
-          {!isReadOnly && <button onClick={saveFile}><FaRegSave className="icon" /></button>}
-          {isRFile && <button onClick={runFile}><FaPlay className="icon" /></button>}
+          {!isReadOnly && <button onClick={saveFile}><FaRegSave className="icon" /> Save</button>}
+          {isRFile && <button onClick={runFile}><FaPlay className="icon" /> Run</button>}
         </div>
       </div>
       <div className="editor-container" ref={editorRef}></div>

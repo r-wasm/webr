@@ -11,10 +11,6 @@
   padding: 5px 5px 0 5px;
 }
 
-.editor-actions, .editor-actions > button {
-  line-height: 0px;
-}
-
 .editor-actions > button {
   background-color: transparent;
   border: none;
