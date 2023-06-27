@@ -1,5 +1,5 @@
 import React, { ChangeEventHandler } from "react";
-import { FaRegFile, FaFolder, FaFolderOpen } from "react-icons/fa";
+import * as Fa from "react-icons/fa";
 import TreeView, { flattenTree, INode, ITreeViewProps } from "react-accessible-treeview";
 import { WebR } from "../../webR/webr-main";
 import type { FSNode } from '../../webR/webr-main';
@@ -7,8 +7,8 @@ import { FilesInterface } from '../App';
 import "./Files.css";
 
 const FolderIcon = ({ isOpen }: { isOpen: boolean }) => isOpen
-  ? <FaFolderOpen color="e8a87c" className="icon" />
-  : <FaFolder color="e8a87c" className="icon" />;
+  ? <Fa.FaFolderOpen color="e8a87c" className="icon" />
+  : <Fa.FaFolder color="e8a87c" className="icon" />;
 
 interface ITreeNode {
   id: number
@@ -55,7 +55,7 @@ export function Files({
     level,
   }) => (
     <div {...getNodeProps()} style={{ paddingLeft: 20 * (level - 1) }}>
-      { isBranch ? <FolderIcon isOpen={ isExpanded } /> : <FaRegFile className="icon" />}
+      { isBranch ? <FolderIcon isOpen={ isExpanded } /> : <Fa.FaRegFile className="icon" />}
       { element.name }
     </div>
   )
@@ -133,14 +133,20 @@ export function Files({
 
   return (
     <div className='files'>
-      <div className="top-bar">
+      <div className="files-header">
+        <div className="files-actions">
           <button
             ref={uploadButtonRef} 
             onClick={() => uploadRef.current!.click()}
             className="upload-file"
             disabled={isFileSelected}
           >
-              Upload File
+              <Fa.FaFileUpload className="icon" /> Upload file
+          </button>
+          <button
+            disabled={isFileSelected}
+          >
+            <Fa.FaFolderPlus className="icon" /> New directory
           </button>
           <input onChange={onUpload} ref={uploadRef} type="file"/>
           <button
@@ -149,14 +155,18 @@ export function Files({
             className="download-file"
             disabled={!isFileSelected}
           >
-            Download File
+            <Fa.FaFileDownload className="icon" /> Download file
           </button>
           <button
             onClick={onOpen}
             disabled={!isFileSelected}
           >
-            Open
+            <Fa.FaFileCode className="icon" /> Open in editor
           </button>
+          <button>
+          <Fa.FaTimesCircle className="icon" /> Delete
+          </button>
+        </div>
       </div>
       <div className="directory">
         <TreeView

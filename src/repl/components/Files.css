@@ -1,7 +1,37 @@
+.files {
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.files-header {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #aaa;
+}
+
+.files-header input {
+  display: none;
+}
+
+.files-actions > button {
+  background-color: transparent;
+  border: none;
+  color: #999;
+  padding: 5px;
+}
+
+.files-actions > button:hover {
+  color: #333;
+}
+.files-actions > button:disabled {
+  color: #ccc;
+}
+
 .directory {
   font-size: 16px;
   user-select: none;
   padding: 0 10px;
+  overflow: auto;
 }
 
 .directory .tree,
@@ -45,20 +75,4 @@
 .directory .icon {
   vertical-align: middle;
   padding-right: 5px;
-}
-
-.files .top-bar {
-  display: flex;
-  flex-wrap: wrap;
-  flex-direction: row;
-  align-items: stretch;
-  width: 100%;
-}
-
-.files .top-bar input {
-  display: none;
-}
-
-.files .top-bar button {
-  flex: 1
 }

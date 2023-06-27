@@ -47,7 +47,7 @@ body {
   border-color: var(--gap-color);
   border-width: 0px 0px 2px 2px;
   overflow: auto;
-  padding: 5px;
+  padding: 4px 0;
 }
 
 .plot {
