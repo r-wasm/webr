@@ -1,7 +1,7 @@
 import React, { ChangeEventHandler } from "react";
 import * as Fa from "react-icons/fa";
 import TreeView, { flattenTree, INode, ITreeViewProps } from "react-accessible-treeview";
-import { WebR } from "../../webR/webr-main";
+import { WebR, WebRError } from "../../webR/webr-main";
 import type { FSNode } from '../../webR/webr-main';
 import { FilesInterface } from '../App';
 import "./Files.css";
@@ -113,6 +113,30 @@ export function Files({
     filesInterface.openFileInEditor(selectedNode.name, path, false);
   }
 
+  const onDelete: React.MouseEventHandler<HTMLButtonElement> = async () => {
+    if (!selectedNode || !webR) return;
+    const path = getNodePath(selectedNode);
+    if (!confirm("Delete " + selectedNode.name + "?")) {
+      return;
+    }
+    try {
+      if (selectedNode.isBranch) {
+        await webR.FS.rmdir(path);
+      } else {
+        await webR.FS.unlink(path);
+      }
+    } catch (e) {
+      if (e instanceof WebRError) {
+        throw new Error(
+          `Unable to delete filesystem entry: "${path}". Possibly a non-empty directory?`
+        );
+      }
+      throw e;
+    }
+    await filesInterface.refreshFilesystem();
+    setSelectedNode(null);
+  }
+
   React.useEffect(() => {
     filesInterface.refreshFilesystem = async () => {
       const node = await webR.FS.lookupPath('/');
@@ -163,7 +187,10 @@ export function Files({
           >
             <Fa.FaFileCode className="icon" /> Open in editor
           </button>
-          <button>
+          <button
+            onClick={onDelete}
+            disabled={!selectedNode}
+          >
           <Fa.FaTimesCircle className="icon" /> Delete
           </button>
         </div>
