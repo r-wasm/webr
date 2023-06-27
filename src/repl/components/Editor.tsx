@@ -143,6 +143,11 @@ export function Editor({
   React.useEffect(() => {
     filesInterface.openFileInEditor = (name: string, path: string, readOnly: boolean) => {
       if (!webR) throw new Error('Unable to open file, webR is not initialised.');
+      const existsIndex = files.findIndex((f) => f.path === path);
+      if (existsIndex >= 0) {
+        setActiveFileIdx(existsIndex);
+        return Promise.resolve();
+      }
       return webR.FS.readFile(path).then((data) => {
         syncActiveFileState();
         const updatedFiles = [...files];
