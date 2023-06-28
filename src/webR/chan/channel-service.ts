@@ -199,6 +199,7 @@ export class ServiceWorkerChannelWorker implements ChannelWorker {
   #ep: Endpoint;
   #mainThreadId: string;
   #location: string;
+  #lastInterruptReq = Date.now();
   #dispatch: (msg: Message) => void = () => 0;
   #interrupt = () => {};
   onMessageFromMainThread: (msg: Message) => void = () => {};
@@ -289,11 +290,17 @@ export class ServiceWorkerChannelWorker implements ChannelWorker {
      * thread. Instead, we hook into R's PolledEvents. Since we are not using
      * SharedArrayBuffer as a signal method, we instead send a message to the
      * main thread to ask if we should interrupt R.
+     *
+     * The rate of requests is limited to once per second. This stops the
+     * browser being overloaded with XHR sync requests while R is working.
      */
-    const response = this.syncRequest({ type: 'interrupt' });
-    const interrupted = response.data.resp as boolean;
-    if (interrupted) {
-      this.#interrupt();
+    if (Date.now() > this.#lastInterruptReq + 1000) {
+      this.#lastInterruptReq = Date.now();
+      const response = this.syncRequest({ type: 'interrupt' });
+      const interrupted = response.data.resp as boolean;
+      if (interrupted) {
+        this.#interrupt();
+      }
     }
   }
 
