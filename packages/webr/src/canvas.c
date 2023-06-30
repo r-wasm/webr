@@ -1,7 +1,7 @@
 /*
  * R graphics device targeting the HTML canvas element
  * Description: R graphics device that generates HTML canvas API calls and
- *              transmits them to the main webR thread for plotting.
+ *              draws the resulting image using a JavaScript OffscreenCanvas.
  * Author: George Stagg, based on the canvas package created by Jeffrey Horner.
  * License: GPL version 2
  */
@@ -29,33 +29,10 @@
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 
-/* Interact with the HTML canvas 2D context API by building Javascript
- * commands and running them with emscripten_run_script().
- * We avoid using EM_ASM and friends because this code will be compiled
- * in an emscripten SIDE_MODULE, where they do not work at time of writing.
- */
-#define canvasExecBufferMax 8192
-#define _E(op) "chan.write({ type: 'canvasExec', data: `" op "` });"
-
-#define canvasContextRender(cGD, op, ...) {                                          \
-    const char template[] = _E op;                                                   \
-    int ret = snprintf(cGD->buffer, canvasExecBufferMax, template, ##  __VA_ARGS__); \
-    if (ret < 0 || ret >= canvasExecBufferMax)                                       \
-        error("problem writing canvas context property in canvas graphics device");  \
-    }
-
-#define canvasContextExec(cGD, op, ...)          \
-    canvasContextRender(cGD, op, ## __VA_ARGS__) \
-    emscripten_run_script(cGD->buffer)
-
-#define canvasColor(prop, col) {                                               \
-    if (CALPHA(col)==255) {                                                    \
-        canvasContextExec(cGD, (#prop "='rgb(%d, %d, %d)'"), CREDC(col),       \
-            CGREENC(col), CBLUEC(col));                                        \
-    } else {                                                                   \
-        canvasContextExec(cGD, (#prop "='rgba(%d, %d, %d, %f)'"), CREDC(col),  \
-            CGREENC(col), CBLUEC(col), ((double)CALPHA(col))/255.);            \
-    }                                                                          \
+#define canvasColor(prop, col) {                                           \
+    EM_ASM({                                                               \
+        Module.canvasCtx.prop=`rgba(${$0}, ${$1}, ${$2}, ${$3})`;          \
+    }, CREDC(col), CGREENC(col), CBLUEC(col), ((double)CALPHA(col))/255.); \
 }
 
 typedef struct _canvasDesc {
@@ -70,7 +47,6 @@ typedef struct _canvasDesc {
     R_GE_linejoin ljoin;
     double lmitre;
 
-    char buffer[canvasExecBufferMax];
     pGEDevDesc RGE;
 } canvasDesc;
 
@@ -79,35 +55,35 @@ void canvasSetLineType( canvasDesc *cGD, pGEcontext gc)
     /* Line width */
     if (cGD->lwd != gc->lwd){
         cGD->lwd = gc->lwd;
-        canvasContextExec(cGD, ("lineWidth = %f"), 2*cGD->lwd);
+        EM_ASM({Module.canvasCtx.lineWidth = $0;}, 2*cGD->lwd);
     }
 
     /* Line end: par lend  */
     if (cGD->lend != gc->lend){
         cGD->lend = gc->lend;
         if (cGD->lend == GE_ROUND_CAP)
-            canvasContextExec(cGD, ("lineCap = 'round'"));
+            EM_ASM({Module.canvasCtx.lineCap = 'round';});
         if (cGD->lend == GE_BUTT_CAP)
-            canvasContextExec(cGD, ("lineCap = 'butt'"));
+            EM_ASM({Module.canvasCtx.lineCap = 'butt';});
         if (cGD->lend == GE_SQUARE_CAP)
-            canvasContextExec(cGD, ("lineCap = 'butt'"));
+            EM_ASM({Module.canvasCtx.lineCap = 'butt';});
     }
 
     /* Line join: par ljoin */
     if (cGD->ljoin != gc->ljoin){
         cGD->ljoin = gc->ljoin;
         if (cGD->ljoin == GE_ROUND_JOIN)
-            canvasContextExec(cGD, ("lineJoin = 'round'"));
+            EM_ASM({Module.canvasCtx.lineJoin = 'round';});
         if (cGD->ljoin == GE_MITRE_JOIN)
-            canvasContextExec(cGD, ("lineJoin = 'miter'"));
+            EM_ASM({Module.canvasCtx.lineJoin = 'miter';});
         if (cGD->ljoin == GE_BEVEL_JOIN)
-            canvasContextExec(cGD, ("lineJoin = 'bevel'"));
+            EM_ASM({Module.canvasCtx.lineJoin = 'bevel';});
     }
 
     /* Miter limit */
     if (cGD->lmitre != gc->lmitre){
         cGD->lmitre = gc->lmitre;
-        canvasContextExec(cGD, ("miterLimit = %f"), cGD->lmitre);
+        EM_ASM({Module.canvasCtx.miterLimit = $0;}, cGD->lmitre);
     }
 }
 
@@ -121,16 +97,18 @@ void canvasCircle(double x, double y, double r,
 {
     canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
 
-    canvasContextExec(cGD, ("beginPath()"));
-    canvasContextExec(cGD, ("arc(%f,%f,%f,0,Math.PI*2,true)"), 2*x, 2*y, 2*r);
+    EM_ASM({Module.canvasCtx.beginPath();});
+    EM_ASM({
+        Module.canvasCtx.arc($0, $1, $2, 0, Math.PI*2, true);
+    }, 2*x, 2*y, 2*r);
     if (CALPHA(gc->fill)){
         canvasColor(fillStyle,gc->fill);
-        canvasContextExec(cGD, ("fill()"));
+        EM_ASM({Module.canvasCtx.fill();});
     }
     if (CALPHA(gc->col) && gc->lty!=-1){
         canvasSetLineType(cGD,gc);
         canvasColor(strokeStyle,gc->col);
-        canvasContextExec(cGD, ("stroke()"));
+        EM_ASM({Module.canvasCtx.stroke();});
     }
 }
 
@@ -165,21 +143,51 @@ void canvasLine(double x1, double y1, double x2, double y2,
     if (CALPHA(gc->col) && gc->lty!=-1){
         canvasSetLineType(cGD,gc);
         canvasColor(strokeStyle,gc->col);
-        canvasContextExec(cGD, ("beginPath()"));
-        canvasContextExec(cGD, ("moveTo(%f,%f)"), 2*x1, 2*y1);
-        canvasContextExec(cGD, ("lineTo(%f,%f)"), 2*x2, 2*y2);
-        canvasContextExec(cGD, ("stroke()"));
+        EM_ASM({Module.canvasCtx.beginPath();});
+        EM_ASM({Module.canvasCtx.moveTo($0, $1);}, 2*x1, 2*y1);
+        EM_ASM({Module.canvasCtx.lineTo($0, $1);}, 2*x2, 2*y2);
+        EM_ASM({Module.canvasCtx.stroke();});
     }
 }
 
 void canvasMetricInfo(int c, const pGEcontext gc, double* ascent,
                       double* descent, double* width, pDevDesc RGD)
 {
-    // This depends on the web fonts installed on the browser
-    *ascent = *descent = *width = 0.0;
+    EM_ASM({
+        const fface = (["", "", "bold", "italic", "bold italic"]);
+        const fsans = (["", "sans-serif", "sans"]);
+        const ffamily = (f) => fsans.includes(f) ? "sans-serif" : f;
+        const font = `${fface[$2]} ${$0}px ${ffamily(UTF8ToString($1))}`;
+        Module.canvasCtx.font = font;
+    }, 2*gc->ps, gc->fontfamily, gc->fontface);
+
+    *ascent = EM_ASM_DOUBLE({
+        return Module.canvasCtx.measureText(
+            String.fromCharCode($0)
+        ).actualBoundingBoxAscent;
+    }, c) / 2.0;
+
+    *descent = EM_ASM_DOUBLE({
+        return Module.canvasCtx.measureText(
+            String.fromCharCode($0)
+        ).actualBoundingBoxDescent;
+    }, c) / 2.0;
+
+    *width = EM_ASM_DOUBLE({
+        return Module.canvasCtx.measureText(
+            String.fromCharCode($0)
+        ).width;
+    }, c) / 2.0;
 }
 
 void canvasMode(int mode, pDevDesc RGD) {
+    if (mode == 0) {
+        canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
+        EM_ASM({
+            const image = Module.offscreenCanvas.transferToImageBitmap();
+            chan.write({ type: 'canvasImage', data: { image } }, [image]);
+        });
+    }
     return;
 }
 
@@ -187,14 +195,16 @@ void canvasNewPage(const pGEcontext gc, pDevDesc RGD)
 {
     canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
 
-    canvasContextExec(cGD, ("clearRect(0,0,%f,%f)"),
-                      2*RGD->right,2*RGD->bottom);
+    EM_ASM({
+        Module.canvasCtx.clearRect(0, 0, $0, $1);
+    }, 2*RGD->right, 2*RGD->bottom);
 
     /* Set background only if we have a color */
     if (CALPHA(gc->fill)){
         canvasColor(fillStyle,gc->fill);
-        canvasContextExec(cGD, ("fillRect(0,0,%f,%f)"),
-                          2*RGD->right,2*RGD->bottom);
+        EM_ASM({
+            Module.canvasCtx.fillRect(0, 0, $0, $1);
+        }, 2*RGD->right, 2*RGD->bottom);
     }
 }
 
@@ -208,19 +218,20 @@ void canvasPolygon(int n, double *x, double *y,
 
     canvasSetLineType(cGD,gc);
 
-    canvasContextExec(cGD, ("beginPath()"));
-    canvasContextExec(cGD, ("moveTo(%f,%f)"), 2*x[0], 2*y[0]);
+    EM_ASM({Module.canvasCtx.beginPath();});
+    EM_ASM({Module.canvasCtx.moveTo($0, $1);}, 2*x[0], 2*y[0]);
     while (i<n) {
-        canvasContextExec(cGD, ("lineTo(%f, %f)"), 2*x[i], 2*y[i]); i++;
+        EM_ASM({Module.canvasCtx.lineTo($0, $1);}, 2*x[i], 2*y[i]);
+        i++;
     }
-    canvasContextExec(cGD, ("closePath()"));
+    EM_ASM({Module.canvasCtx.closePath();});
     if (CALPHA(gc->fill)) {
-        canvasColor(fillStyle,gc->fill);
-        canvasContextExec(cGD, ("fill()"));
+        canvasColor(fillStyle, gc->fill);
+        EM_ASM({Module.canvasCtx.fill();});
     }
     if (CALPHA(gc->col) && gc->lty!=-1) {
-        canvasColor(strokeStyle,gc->col);
-        canvasContextExec(cGD, ("stroke()"));
+        canvasColor(strokeStyle, gc->col);
+        EM_ASM({Module.canvasCtx.stroke();});
     }
 }
 
@@ -233,14 +244,15 @@ void canvasPolyline(int n, double *x, double *y,
     if (n<2) return;
 
     if (CALPHA(gc->col) && gc->lty!=-1) {
-    canvasContextExec(cGD, ("beginPath()"));
-    canvasContextExec(cGD, ("moveTo(%f,%f)"), 2*x[0], 2*y[0]);
+        EM_ASM({Module.canvasCtx.beginPath();});
+        EM_ASM({Module.canvasCtx.moveTo($0, $1);}, 2*x[0], 2*y[0]);
         while(i<n) {
-            canvasContextExec(cGD, ("lineTo(%f, %f)"), 2*x[i], 2*y[i]); i++;
+            EM_ASM({Module.canvasCtx.lineTo($0, $1);}, 2*x[i], 2*y[i]);
+            i++;
         }
-        canvasSetLineType(cGD,gc);
-        canvasColor(strokeStyle,gc->col);
-        canvasContextExec(cGD, ("stroke()"));
+        canvasSetLineType(cGD, gc);
+        canvasColor(strokeStyle, gc->col);
+        EM_ASM({Module.canvasCtx.stroke();});
     }
 }
 
@@ -249,15 +261,17 @@ void canvasRect(double x0, double y0, double x1, double y1,
 {
     canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
     if (CALPHA(gc->fill)){
-        canvasColor(fillStyle,gc->fill);
-        canvasContextExec(cGD, ("fillRect(%f,%f,%f,%f)"),
-                          2*x0, 2*y0, 2*x1-2*x0, 2*y1-2*y0);
+        canvasColor(fillStyle, gc->fill);
+        EM_ASM({
+            Module.canvasCtx.fillRect($0, $1, $2, $3);
+        }, 2*x0, 2*y0, 2*x1-2*x0, 2*y1-2*y0);
     }
     if (CALPHA(gc->col) && gc->lty!=-1){
-        canvasSetLineType(cGD,gc);
-        canvasColor(strokeStyle,gc->col);
-        canvasContextExec(cGD, ("strokeRect(%f,%f,%f,%f)"),
-                          2*x0, 2*y0, 2*x1-2*x0, 2*y1-2*y0);
+        canvasSetLineType(cGD, gc);
+        canvasColor(strokeStyle, gc->col);
+        EM_ASM({
+            Module.canvasCtx.strokeRect($0, $1, $2, $3);
+        }, 2*x0, 2*y0, 2*x1-2*x0, 2*y1-2*y0);
     }
 }
 
@@ -269,60 +283,46 @@ void canvasSize(double *left, double *right, double *bottom, double *top,
     *bottom = RGD->bottom;
 }
 
-// Estimate the width of a string using character width heuristics
-double canvasTextWidthEstimate(const char *str, double ps){
-    double w = 0;
-    for (int i = 0; i < strlen(str); i++) {
-        char c = str[i];
-        if (c == 'W' || c == 'M') w += 15;
-        else if (c == 'w' || c == 'm') w += 12;
-        else if (c == 'I' || c == 'i' || c == 'l' || c == 't' ||
-                 c == 'f' || c == '[' || c == ']' || c == '1' ||
-                 c == '(' || c == ')') w += 4;
-        else if (c == 'r') w += 8;
-        else if (isupper(c)) w += 12;
-        else w += 10;
-    }
-    return ps*w/16.;
-}
-
 static double canvasStrWidth(const char *str, const pGEcontext gc, pDevDesc RGD)
 {
-    return canvasTextWidthEstimate(str, gc->ps);
+    return EM_ASM_DOUBLE({
+        const fface = (["", "", "bold", "italic", "bold italic"]);
+        const fsans = (["", "sans-serif", "sans"]);
+        const ffamily = (f) => fsans.includes(f) ? "sans-serif" : f;
+        const font = `${fface[$2]} ${$0}px ${ffamily(UTF8ToString($1))}`;
+        Module.canvasCtx.font = font;
+        return Module.canvasCtx.measureText(UTF8ToString($3)).width;
+    }, 2*gc->ps, gc->fontfamily, gc->fontface, str) / 2.0;
 }
 
 void canvasText(double x, double y, const char *str, double rot, double hadj,
                 const pGEcontext gc, pDevDesc RGD)
 {
     canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
-    canvasContextExec(cGD, ("font = %f+'px sans-serif'"), 2*gc->ps);
-    double wi = canvasTextWidthEstimate(str, gc->ps);
-
-    char *enc = malloc(3 * strlen(str) + 1);
-    for (int n = 0; n < strlen(str); n++) {
-        snprintf(enc + 3 * n, 4, "%%%02X", str[n]);
-    }
+    double wi = canvasStrWidth(str, gc, RGD);
 
     if (hadj!=0. || rot != 0.){
         if (rot!=0.){
-            canvasContextExec(cGD, ("save()"));
-            canvasColor(fillStyle,gc->col);
-            canvasContextExec(cGD, ("translate(%f,%f)"), 2*x, 2*y);
-            canvasContextExec(cGD, ("rotate(%f / 180 * Math.PI)"), -rot);
-            canvasContextExec(cGD, ("fillText(decodeURIComponent(\\`%s\\`),-%f*%f,0)"),
-                              enc, 2*wi, hadj);
-            canvasContextExec(cGD, ("restore()"));
+            EM_ASM({Module.canvasCtx.save();});
+            canvasColor(fillStyle, gc->col);
+            EM_ASM({Module.canvasCtx.translate($0, $1);}, 2*x, 2*y);
+            EM_ASM({Module.canvasCtx.rotate($0 / 180 * Math.PI);}, -rot);
+            EM_ASM({
+                Module.canvasCtx.fillText(UTF8ToString($0), -$1*$2, 0);
+            }, str, 2*wi, hadj);
+            EM_ASM({Module.canvasCtx.restore();});
         } else {
-            canvasColor(fillStyle,gc->col);
-            canvasContextExec(cGD, ("fillText(decodeURIComponent(\\`%s\\`),%f-%f*%f,%f)"),
-                              enc, 2*x, 2*wi, hadj, 2*y);
+            canvasColor(fillStyle, gc->col);
+            EM_ASM({
+                Module.canvasCtx.fillText(UTF8ToString($0), $1-$2*$3, $4);
+            }, str, 2*x, 2*wi, hadj, 2*y);
         }
     } else {
-        canvasColor(fillStyle,gc->col);
-        canvasContextExec(cGD, ("fillText(decodeURIComponent(\\`%s\\`),%f,%f)"),
-                          enc, 2*x, 2*y);
+        canvasColor(fillStyle, gc->col);
+        EM_ASM({
+            Module.canvasCtx.fillText(UTF8ToString($0), $1, $2);
+        }, str, 2*x, 2*y);
     }
-    free(enc);
 }
 
 SEXP void_setPattern(SEXP pattern, pDevDesc RGD) {
@@ -460,6 +460,22 @@ SEXP ffi_dev_canvas(SEXP w, SEXP h, SEXP ps, SEXP bg)
     cGD->RGE = RGE;
     GEaddDevice(RGE);
     GEinitDisplayList(RGE);
+
+    int no_canvas =  EM_ASM_INT({
+        return typeof OffscreenCanvas === "undefined";
+    });
+
+    if (no_canvas) {
+        Rf_error(
+            "This browser does not have support for OffscreenCanvas rendering. "
+            "Consider instead using a bitmap graphics device, such as png()."
+        );
+    }
+
+    EM_ASM({
+        Module.offscreenCanvas = new OffscreenCanvas($0, $1);
+        Module.canvasCtx = Module.offscreenCanvas.getContext('2d');
+    }, 2*width, 2*height);
 
     return R_NilValue;
 }
