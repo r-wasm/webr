@@ -183,6 +183,11 @@ const webR = new WebR({
            document.getElementById('plot-canvas').getContext('2d').${output.data as string}
          `)();
         break;
+      case 'canvasImage': {
+        const canvas = document.getElementById('plot-canvas') as HTMLCanvasElement;
+        canvas.getContext('2d')!.drawImage(output.data.image as ImageBitmap, 0, 0);
+        break;
+      }
       case 'closed':
         throw new Error('The webR communication channel has been closed');
       default:
