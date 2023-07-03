@@ -131,6 +131,24 @@ export function Files({
     await filesInterface.refreshFilesystem();
   }
 
+  const onNewFile: React.MouseEventHandler<HTMLButtonElement> = async() => {
+    if (!selectedNode || !webR) return;
+    const path = getNodePath(selectedNode);
+    const name = prompt("Please enter the new filename");
+    if (!name) {
+      return;
+    }
+    try {
+      await webR.FS.writeFile(`${path}/${name}`, new Uint8Array([]));
+    } catch (e) {
+      if (e instanceof WebRError) {
+        throw new Error(`Unable to create file: "${path}/${name}".`);
+      }
+      throw e;
+    }
+    await filesInterface.refreshFilesystem();
+  }
+
   const onDelete: React.MouseEventHandler<HTMLButtonElement> = async () => {
     if (!selectedNode || !webR) return;
     const path = getNodePath(selectedNode);
@@ -184,6 +202,12 @@ export function Files({
             disabled={!selectedNode || isFileSelected}
           >
               <Fa.FaFileUpload className="icon" /> Upload file
+          </button>
+          <button
+            onClick={onNewFile}
+            disabled={!selectedNode || isFileSelected}
+          >
+            <Fa.FaFileAlt className="icon" /> New file
           </button>
           <button
             onClick={onNewDirectory}
