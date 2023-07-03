@@ -4,7 +4,7 @@
 \alias{canvas}
 \title{Graphics device for webR HTML canvas element}
 \usage{
-canvas(width = 504, height = 504, pointsize = 12, bg = "transparent", ...)
+canvas(width = 504, height = 504, pointsize = 12, bg = "white", ...)
 }
 \arguments{
 \item{width}{The width of the device.}
@@ -18,9 +18,10 @@ canvas(width = 504, height = 504, pointsize = 12, bg = "transparent", ...)
 \item{...}{Additional graphics device arguments (ignored).}
 }
 \description{
-A graphics device that generates HTML canvas API calls and transmits them to
-the main webR thread for plotting. The resulting messages are of type
-\code{canvasExec}.
+A graphics device that generates HTML canvas API calls and executes them on
+the worker thread using a JavaScript \code{OffscreenCanvas}. Once drawing has
+finished, a JavaScript \code{ImageBitmap} object is transmitted to the main webR
+thread for display. The resulting messages are of type \code{canvasImage}.
 }
 \details{
 A 2x scaling is used to improve the bitmap output visual quality. As such,

@@ -1,8 +1,9 @@
 #' Graphics device for webR HTML canvas element
 #'
-#' A graphics device that generates HTML canvas API calls and transmits them to
-#' the main webR thread for plotting. The resulting messages are of type
-#' `canvasExec`.
+#' A graphics device that generates HTML canvas API calls and executes them on
+#' the worker thread using a JavaScript `OffscreenCanvas`. Once drawing has
+#' finished, a JavaScript `ImageBitmap` object is transmitted to the main webR
+#' thread for display. The resulting messages are of type `canvasImage`.
 #'
 #' A 2x scaling is used to improve the bitmap output visual quality. As such,
 #' the width and height of the HTML canvas element should be twice the width and
