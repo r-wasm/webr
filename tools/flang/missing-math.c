@@ -2,6 +2,22 @@
 #include <complex.h>
 #include <math.h>
 
+double __fd_asin_1(double x) {
+  return asin(x);
+}
+
+double __fd_acos_1(double x) {
+  return acos(x);
+}
+
+double __fd_atan_1(double x) {
+  return atan(x);
+}
+
+double __fd_mod_1(double x, double y) {
+  return fmod(x, y);
+}
+
 double __fd_atan2_1(double y, double x) {
   return atan2(y, x);
 }
