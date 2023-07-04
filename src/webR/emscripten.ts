@@ -74,6 +74,7 @@ export interface Module extends EmscriptenModule {
   _Rf_findVarInFrame: (rho: RPtr, symbol: RPtr) => RPtr;
   _Rf_listAppend: (source: RPtr, target: RPtr) => RPtr;
   _Rf_getAttrib: (ptr1: RPtr, ptr2: RPtr) => RPtr;
+  _Rf_initialize_R: (argc: number, argv: RPtr) => void;
   _Rf_install: (ptr: number) => RPtr;
   _Rf_installTrChar: (name: RPtr) => RPtr;
   _Rf_lang1: (ptr1: RPtr) => RPtr;
@@ -110,6 +111,7 @@ export interface Module extends EmscriptenModule {
   _R_UnboundValue: RPtr;
   _SET_STRING_ELT: (ptr: RPtr, idx: number, val: RPtr) => void;
   _SET_VECTOR_ELT: (ptr: RPtr, idx: number, val: RPtr) => void;
+  _setup_Rmainloop: () => void;
   // TODO: Namespace all webR properties
   webr: {
     UnwindProtectException: typeof UnwindProtectException;

@@ -155,7 +155,7 @@ const defaultEnv = {
   R_ENABLE_JIT: '0',
 };
 
-const defaultOptions = {
+export const defaultOptions = {
   RArgs: [],
   REnv: defaultEnv,
   baseUrl: BASE_URL,

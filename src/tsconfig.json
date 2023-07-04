@@ -26,6 +26,7 @@
       "webR/robj-main.ts",
       "webR/robj-worker.ts",
       "webR/webr-main.ts",
+      "webR/webr-worker.ts",
       "webR/webr-chan.ts"
     ],
     "name": "WebR - R in the browser",

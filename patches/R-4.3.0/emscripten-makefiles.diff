@@ -20,7 +20,7 @@ Index: R-4.3.0/src/main/Makefile.in
 ===================================================================
 --- R-4.3.0.orig/src/main/Makefile.in
 +++ R-4.3.0/src/main/Makefile.in
-@@ -149,6 +149,48 @@ $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
+@@ -149,6 +149,50 @@ $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
  $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
  	$(MAIN_LINK) -o $@ $(R_bin_OBJECTS) $(R_bin_LDADD)
  
@@ -57,6 +57,8 @@ Index: R-4.3.0/src/main/Makefile.in
 +	$(MAIN_LINK) $(MAIN_WEBR_LDADD) \
 +	-o $(prefix)/dist/$(R_binary).js \
 +	$(R_bin_OBJECTS) -lRlapack $(FORTRAN_WASM_LDADD) $(R_bin_LDADD)
++# Fix loading Emscripten in a web worker module
++	sed -i.bak -e 's/global:this/global:globalThis/' $(prefix)/dist/$(R_binary).js
 +
 +install-wasm: $(R_bin_DEPENDENCIES)
 +	@$(MKINSTALLDIRS) "$(prefix)/dist"

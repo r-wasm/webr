@@ -1,18 +1,32 @@
+/**
+ * WebR worker thread module.
+ *
+ * This module exports functions for initialising and evaluating R code on the
+ * webR worker thread.
+ *
+ * Most users will not need to interact directly with this module. By default,
+ * webR automatically selects an appropriate of a communication channel and
+ * launches its own R worker thread.
+ * @module WebRWorker
+ */
+
 import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
-import { newChannelWorker, ChannelInitMessage } from './chan/channel-common';
 import { Message, Request, newResponse } from './chan/message';
-import { FSNode, WebROptions } from './webr-main';
+import { FSNode, defaultOptions, WebROptions } from './webr-main';
 import { EmPtr, Module } from './emscripten';
 import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadRaw, WebRPayloadPtr, WebRPayloadWorker, isWebRPayloadPtr } from './payload';
 import { RObject, isRObject, REnvironment, RList, getRWorkerClass } from './robj-worker';
 import { RCharacter, RString, keep, destroy, purge, shelters } from './robj-worker';
-import { RLogical, RInteger, RDouble, initPersistentObjects, objs } from './robj-worker';
+import { RLogical, RInteger, RDouble, RNull, initPersistentObjects, objs } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
 import { protect, protectInc, unprotect, parseEvalBare, UnwindProtectException, safeEval } from './utils-r';
 import { generateUUID } from './chan/task-common';
+import { RCall, RSymbol, RPairlist, RRaw, RComplex } from './robj-worker';
+import { EmbeddedChannel } from './chan/channel-embed';
+import type { WebR } from './webr-main';
 
 import {
   CallRObjectMethodMessage,
@@ -29,29 +43,7 @@ import {
   ShelterDestroyMessage,
 } from './webr-chan';
 
-let initialised = false;
-let chan: ChannelWorker | undefined;
-
-const onWorkerMessage = function (msg: Message) {
-  if (!msg || !msg.type || msg.type !== 'init') {
-    return;
-  }
-  if (initialised) {
-    throw new Error("Can't initialise worker multiple times.");
-  }
-  const messageInit = msg as ChannelInitMessage;
-  chan = newChannelWorker(messageInit);
-  init(messageInit.data.config);
-  initialised = true;
-};
-
-if (IN_NODE) {
-  require('worker_threads').parentPort.on('message', onWorkerMessage);
-  (globalThis as any).XMLHttpRequest = require('xmlhttprequest-ssl')
-    .XMLHttpRequest as XMLHttpRequest;
-} else {
-  globalThis.onmessage = (ev: MessageEvent<Message>) => onWorkerMessage(ev.data);
-}
+let chan: ChannelWorker;
 
 type XHRResponse = {
   status: number;
@@ -67,7 +59,7 @@ function dispatch(msg: Message): void {
       const reqMsg = req.data.msg;
 
       const write = (resp: WebRPayloadWorker, transferables?: [Transferable]) =>
-        chan?.write(newResponse(req.data.uuid, resp, transferables));
+        chan.write(newResponse(req.data.uuid, resp, transferables));
       try {
         switch (reqMsg.type) {
           case 'lookupPath': {
@@ -604,26 +596,26 @@ function evalR(code: string, options: EvalROptions = {}): RObject {
       const outputType = out.get('type').toString();
       switch (outputType) {
         case 'stdout':
-          chan?.writeSystem({ type: 'console.log', data: out.get('data').toString() });
+          chan.writeSystem({ type: 'console.log', data: out.get('data').toString() });
           break;
         case 'stderr':
-          chan?.writeSystem({ type: 'console.warn', data: out.get('data').toString() });
+          chan.writeSystem({ type: 'console.warn', data: out.get('data').toString() });
           break;
         case 'message':
-          chan?.writeSystem({
+          chan.writeSystem({
             type: 'console.warn',
             data: out.pluck('data', 'message')?.toString() || '',
           });
           break;
         case 'warning':
-          chan?.writeSystem({
+          chan.writeSystem({
             type: 'console.warn',
             data: `Warning message: \n${out.pluck('data', 'message')?.toString() || ''}`,
           });
           break;
         default:
-          chan?.writeSystem({ type: 'console.warn', data: `Output of type ${outputType}:` });
-          chan?.writeSystem({ type: 'console.warn', data: out.get('data').toJs() });
+          chan.writeSystem({ type: 'console.warn', data: `Output of type ${outputType}:` });
+          chan.writeSystem({ type: 'console.warn', data: out.get('data').toJs() });
           break;
       }
     }
@@ -633,8 +625,9 @@ function evalR(code: string, options: EvalROptions = {}): RObject {
   }
 }
 
-function init(config: Required<WebROptions>) {
+export function workerInit(config: Required<WebROptions>, workerChannel: ChannelWorker) {
   _config = config;
+  (globalThis as any).chan = chan = workerChannel;
 
   const env = { ...config.REnv };
   if (!env.TZ) {
@@ -668,20 +661,20 @@ function init(config: Required<WebROptions>) {
     Module.ENV = Object.assign(Module.ENV, env);
   });
 
-  chan?.setDispatchHandler(dispatch);
+  chan.setDispatchHandler(dispatch);
 
   Module.onRuntimeInitialized = () => {
-    chan?.run(_config.RArgs);
+    chan.run(_config.RArgs);
   };
 
   Module.webr = {
     UnwindProtectException: UnwindProtectException,
     resolveInit: () => {
       initPersistentObjects();
-      chan?.setInterrupt(Module._Rf_onintr);
+      chan.setInterrupt(Module._Rf_onintr);
       Module.setValue(Module._R_Interactive, _config.interactive, '*');
       evalR(`options(webr_pkg_repos="${_config.repoUrl}")`);
-      chan?.resolve();
+      chan.resolve();
     },
 
     readConsole: () => {
@@ -692,7 +685,7 @@ function init(config: Required<WebROptions>) {
     },
 
     handleEvents: () => {
-      chan?.handleInterrupt();
+      chan.handleInterrupt();
     },
 
     evalJs: (code: RPtr): number => {
@@ -720,7 +713,7 @@ function init(config: Required<WebROptions>) {
     },
 
     setTimeoutWasm: (ptr: EmPtr, delay: number, ...args: number[]): void => {
-      chan?.writeSystem({ type: 'setTimeoutWasm', data: { ptr, delay, args } });
+      chan.writeSystem({ type: 'setTimeoutWasm', data: { ptr, delay, args } });
     },
   };
 
@@ -728,16 +721,16 @@ function init(config: Required<WebROptions>) {
   Module.downloadFileContent = downloadFileContent;
 
   Module.print = (text: string) => {
-    chan?.write({ type: 'stdout', data: text });
+    chan.write({ type: 'stdout', data: text });
   };
   Module.printErr = (text: string) => {
-    chan?.write({ type: 'stderr', data: text });
+    chan.write({ type: 'stderr', data: text });
   };
   Module.setPrompt = (prompt: string) => {
-    chan?.write({ type: 'prompt', data: prompt });
+    chan.write({ type: 'prompt', data: prompt });
   };
   Module.canvasExec = (op: string) => {
-    chan?.write({ type: 'canvasExec', data: op });
+    chan.write({ type: 'canvasExec', data: op });
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -748,4 +741,111 @@ function init(config: Required<WebROptions>) {
     const scriptSrc = `${_config.baseUrl}R.bin.js`;
     loadScript(scriptSrc);
   });
+}
+
+export interface EmbeddedCallbacks {
+  stdout: (line: string) => void;
+  stderr: (line: string) => void;
+  canvasImage: (image: ImageBitmap) => void;
+}
+
+/**
+ * Embed and start the webR system in a pre-existing Web Worker.
+ *
+ * Creating an instance of this class starts webR in the currently running
+ * JavaScript thread. On instantiation WebR will begin to download and a version
+ * of R built for WebAssembly will start.
+ *
+ * The `options` argument of type {@link WebROptions} can be optionally
+ * provided to override the default webR configuration.
+ *
+ * When started in this mode, it is the responibility of the calling Web Worker
+ * to handle communication of results back to the main thread. As such, webR is
+ * started with a minimal communication channel that simply calls back into
+ * provided callback functions given as a {@link EmbeddedCallbacks} object
+ * passed as the `callbacks` argument to the constructor.
+ *
+ * To avoid disrupting the containing Web Worker, webR does not block for input
+ * when using this communication channel. As such, in this mode reading from
+ * `stdin`, interrupts, and the built-in R REPL are unavailable.
+ *
+ * WebR relies on features of Emscripten that require running in a Web Worker.
+ * Constructing an instance of this class on the main JavaScript thread will not
+ * work, thowing an Emscripten exception.
+ *
+ * The properties provided by an instance of this class are similar to that
+ * provided on the main thread by {@link WebR}. The primary difference is that
+ * since webR is running in the current thread operations act synchronously,
+ * returning results directly rather than as a `Promise`. The sheltering
+ * mechanism is also not available. If required, R object lifetime should be
+ * managed manually using the {@link protect} and {@link unprotect} functions.
+ *
+ * This class is considered experimental.
+ */
+export class WebRWorkerEmbedded {
+  #initialised: Promise<void>;
+  FS = Module.FS;
+  objs: {
+    baseEnv: REnvironment;
+    globalEnv: REnvironment;
+    null: RNull;
+    true: RLogical;
+    false: RLogical;
+    na: RLogical;
+  };
+
+  RObject = RObject;
+  RLogical = RLogical;
+  RInteger = RInteger;
+  RDouble = RDouble;
+  RCharacter = RCharacter;
+  RComplex = RComplex;
+  RRaw = RRaw;
+  RList = RList;
+  RPairlist = RPairlist;
+  REnvironment = REnvironment;
+  RSymbol = RSymbol;
+  RString = RString;
+  RCall = RCall;
+
+  evalR = evalR;
+  captureR = captureR;
+
+  constructor(
+    options: WebROptions = {},
+    callbacks: EmbeddedCallbacks = {
+      stdout: (line) => console.log(line),
+      stderr: (line) => console.error(line),
+      canvasImage: () => {},
+    }
+  ) {
+    const config: Required<WebROptions> = {
+      ...defaultOptions,
+      ...options,
+      REnv: {
+        ...defaultOptions.REnv,
+        ...options.REnv,
+      }
+    };
+
+    this.objs = {} as typeof this.objs;
+
+    this.#initialised = new Promise<void>((resolve) => {
+      const channel = new EmbeddedChannel(resolve, callbacks);
+      workerInit(config, channel);
+    });
+  }
+
+  async init() {
+    await this.#initialised;
+    this.objs = {
+      baseEnv: (RObject.getPersistentObject('baseEnv')) as REnvironment,
+      globalEnv: (RObject.getPersistentObject('globalEnv')) as REnvironment,
+      null: (RObject.getPersistentObject('null')) as RNull,
+      true: (RObject.getPersistentObject('true')) as RLogical,
+      false: (RObject.getPersistentObject('false')) as RLogical,
+      na: (RObject.getPersistentObject('na')) as RLogical,
+    };
+    this.FS = Module.FS;
+  }
 }

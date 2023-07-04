@@ -20,7 +20,8 @@ function build(input: string, output: string, platform: esbuild.Platform, minify
     assetNames: 'assets/[name]-[hash]',
     bundle: true,
     entryPoints: [ input ],
-    external: ['worker_threads', 'path', 'fs'],
+    external: ['worker_threads', 'path', 'fs', 'child_process', 'http', 'https', 'url'],
+    supported: { 'dynamic-import': platform !== 'node' },
     loader: {
       '.jpg': 'file',
       '.png': 'file',
@@ -44,13 +45,15 @@ const outputs = {
   browser: [
     build('repl/repl.ts', '../dist/repl.mjs', 'neutral', prod),
     build('webR/chan/serviceworker.ts', '../dist/webr-serviceworker.js', 'browser', false),
-    build('webR/webr-worker.ts', '../dist/webr-worker.js', 'node', false),
+    build('webR/worker.ts', '../dist/webr-worker.js', 'node', false),
+    build('webR/webr-worker.ts', '../dist/webr-worker.mjs', 'neutral', prod),
     build('webR/webr-main.ts', '../dist/webr.mjs', 'neutral', prod),
   ],
   npm: [
     build('webR/chan/serviceworker.ts', './dist/webr-serviceworker.mjs', 'neutral', false),
     build('webR/chan/serviceworker.ts', './dist/webr-serviceworker.js', 'browser', false),
-    build('webR/webr-worker.ts', './dist/webr-worker.js', 'node', false),
+    build('webR/worker.ts', './dist/webr-worker.js', 'node', false),
+    build('webR/webr-worker.ts', '../dist/webr-worker.mjs', 'neutral', prod),
     build('webR/webr-main.ts', './dist/webr.cjs', 'node', prod),
     build('webR/webr-main.ts', './dist/webr.mjs', 'neutral', prod),
   ]
