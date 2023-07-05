@@ -149,22 +149,19 @@ This type of message can be a useful signal to break out of an otherwise infinit
 
 #### Plotting with the webR HTML canvas
 
-WebR's version of R built for WebAssembly includes a built in graphics device, `canvas()`, designed for drawing using the JavaScript [Canvas API](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API). This graphics device is implemented by sending messages of type `canvasExec` to the main thread for processing.
+WebR's support package includes a built in graphics device, `webr::canvas()`, designed for drawing graphics using the JavaScript [Canvas API](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API). This graphics device is implemented by rendering with an [`OffscreenCanvas`](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas) object on the worker thread, and then transmitting the resulting image data back to the main thread as an [`ImageBitmap`](https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap).
 
-The Canvas API messages are of the form,
+Output messages containing canvas image data are of the form,
 
 ``` javascript
-{ type: 'canvasExec', data: string }
+{ type: 'canvasImage', data: { image: ImageBitmap } }
 ```
 
-where the `data` property contains a string that is to be interpreted as a single Canvas API call. Canvas message data can be append to any 2D canvas context that is available on the main thread, and then executed by constructing a JavaScript [`Function()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/Function).
-
-For example, for a fixed HTML canvas element with `id="plot-canvas"`, messages of type `canvasExec` could be handled by executing,
+The resulting image can be redrawn to any 2D canvas context that is available on the main thread. For example, for a fixed HTML canvas element with `id="plot-canvas"`, messages of type `canvasImage` could be handled by executing,
 
 ``` javascript
-Function(`
-  document.getElementById('plot-canvas').getContext('2d').${message.data}
-`)();
+const canvas = document.getElementById('plot-canvas');
+canvas.getContext('2d').drawImage(message.data.image, 0, 0);
 ```
 
 ### Emscripten virtual filesystem
@@ -204,6 +201,6 @@ A long running R computation can be interrupted by calling the [`Console.interru
 
 The `prompt` callback function is called when webR produces a prompt at the REPL and is awaiting user input. The prompt character (usually `>` or `+`) is given as the first argument to the callback function. The default implementation of `prompt` shows a JavaScript prompt asking the user for input, and then sends the user input to `stdin`.
 
-The `canvasExec` callback function is called when webR writes plots to the built-in HTML canvas graphics device. Once the default HTML canvas has been written to (e.g. by plotting something in R), the HTML canvas element can be accessed with the [`Console.canvas`](api/js/classes/WebR.Console.html#canvas) instance property.
+The `canvasImage` callback function is called when webR writes plots to the built-in HTML canvas graphics device. Once the default HTML canvas has been written to (e.g. by plotting something in R), the HTML canvas element can be accessed with the [`Console.canvas`](api/js/classes/WebR.Console.html#canvas) instance property.
 
 See the [Example Usage](examples.qmd) page to see a worked example of a HTML web page loading webR and starting a `Console`, creating an interactive R REPL directly in the page.
