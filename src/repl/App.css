@@ -5,7 +5,12 @@ body {
 }
 
 :root {
-  --gap-color: #EEE;
+  --bg-primary: #FFF;
+  --bg-secondary: #EEE;
+  --bg-dark: #AAA;
+  --primary: #111;
+  --secondary: #777;
+  --disabled: #AAA;
 }
 
 .repl {
@@ -21,7 +26,7 @@ body {
   grid-column: 1;
   overflow: auto;
   border-style: solid;
-  border-color: var(--gap-color);
+  border-color: var(--bg-secondary);
   border-width: 0px 2px 2px 0px;
 }
 
@@ -30,7 +35,8 @@ body {
   grid-row-end: -1;
   grid-column: 1;
   border-style: solid;
-  border-color: var(--gap-color);
+  background-color: var(--bg-primary);
+  border-color: var(--bg-secondary);
   border-width: 2px 2px 0px 0px;
   overflow: hidden;
   padding: 0px 5px;
@@ -44,7 +50,7 @@ body {
   grid-row: 1 / 3;
   grid-column: 2;
   border-style: solid;
-  border-color: var(--gap-color);
+  border-color: var(--bg-secondary);
   border-width: 0px 0px 2px 2px;
   overflow: auto;
   padding: 4px 0;
@@ -54,10 +60,10 @@ body {
   grid-row: 3 / -1;
   grid-column: 2;
   border-style: solid;
-  border-color: var(--gap-color);
+  border-color: var(--bg-secondary);
   border-width: 2px 0px 0px 2px;
   overflow: hidden;
-  background-color: #AAA;
+  background-color: var(--bg-dark);
   display: flex;
   justify-content: center;
   align-items: center;
