@@ -6,7 +6,7 @@
 .files-header {
   display: flex;
   align-items: center;
-  border-bottom: 1px solid #aaa;
+  border-bottom: 1px solid var(--bg-dark);
 }
 
 .files-header input {
@@ -16,15 +16,15 @@
 .files-actions > button {
   background-color: transparent;
   border: none;
-  color: #999;
+  color: var(--secondary);
   padding: 5px;
 }
 
 .files-actions > button:hover {
-  color: #333;
+  color: var(--primary);
 }
 .files-actions > button:disabled {
-  color: #ccc;
+  color: var(--disabled);
 }
 
 .directory {
@@ -32,6 +32,7 @@
   user-select: none;
   padding: 0 10px;
   overflow: auto;
+  color: var(--primary);
 }
 
 .directory .tree,
@@ -57,15 +58,15 @@
 }
 
 .directory .tree-node:hover {
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--bg-secondary);
 }
 
 .directory .tree .tree-node--focused {
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--bg-secondary);
 }
 
 .directory .tree .tree-node--selected {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bg-secondary);
 }
 
 .directory .tree-node__branch {

@@ -37,10 +37,10 @@ export function Terminal({
 
     const term = new XTerminal({
       theme: {
-        background: "#FFFFFF",
-        foreground: "#000000",
-        cursor: "#000000",
-        selectionBackground: "#9999CC",
+        background: "#FFF",
+        foreground: "#111",
+        cursor: "#111",
+        selectionBackground: "#99C",
       },
       screenReaderMode: true,
     });
