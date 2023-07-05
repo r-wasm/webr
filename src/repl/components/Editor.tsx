@@ -118,7 +118,7 @@ export function Editor({
 
   React.useEffect(() => {
     if (!editorRef.current) return;
-    
+
     let state = EditorState.create({ extensions: editorExtensions });
 
     const view = new EditorView({

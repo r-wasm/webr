@@ -34,7 +34,7 @@ export function Terminal({
 
   React.useEffect(() => {
     if (!divRef.current || termRef.current) return;
-  
+
     const term = new XTerminal({
       theme: {
         background: "#FFFFFF",
@@ -45,7 +45,7 @@ export function Terminal({
       screenReaderMode: true,
     });
     term.write('webR is downloading, please wait...');
-  
+
     const fitAddon = new FitAddon();
     const readline = new Readline();
     readline.setCtrlCHandler(() => webR.interrupt());
