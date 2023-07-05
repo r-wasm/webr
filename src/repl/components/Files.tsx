@@ -196,7 +196,7 @@ export function Files({
       <div className="files-header">
         <div className="files-actions">
           <button
-            ref={uploadButtonRef} 
+            ref={uploadButtonRef}
             onClick={() => uploadRef.current!.click()}
             className="upload-file"
             disabled={!selectedNode || isFileSelected}
