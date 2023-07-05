@@ -5,7 +5,7 @@ export interface ConsoleCallbacks {
   stdout?: (line: string) => void;
   stderr?: (line: string) => void;
   prompt?: (line: string) => void;
-  canvasExec?: (line: string) => void;
+  canvasImage?: (image: ImageBitmap) => void;
 }
 
 /**
@@ -30,7 +30,7 @@ export interface ConsoleCallbacks {
  * function. The default implementation of `prompt` shows a JavaScript prompt
  * asking the user for input, and then sends the user input to `stdin`.
  *
- * The ``canvasExec`` callback function is called when webR writes plots to
+ * The ``canvasImage`` callback function is called when webR writes plots to
  * the built-in HTML canvas graphics device.
  *
  * Once constructed, start the Console using the ``run`` method. The `run`
@@ -54,7 +54,7 @@ export class Console {
   /** Called when webR prompts for input */
   #prompt: (line: string) => void;
   /** Called when webR writes to the HTML canvas element */
-  #canvasExec: (line: string) => void;
+  #canvasImage: (image: ImageBitmap) => void;
 
   /**
    * @param {ConsoleCallbacks} callbacks A list of webR Console callbacks to
@@ -69,7 +69,6 @@ export class Console {
         R_HOME: '/usr/lib/R',
         FONTCONFIG_PATH: '/etc/fonts',
         R_ENABLE_JIT: '0',
-        R_DEFAULT_DEVICE: 'canvas',
       },
     }
   ) {
@@ -82,7 +81,8 @@ export class Console {
     this.#stdout = callbacks.stdout || this.#defaultStdout;
     this.#stderr = callbacks.stderr || this.#defaultStderr;
     this.#prompt = callbacks.prompt || this.#defaultPrompt;
-    this.#canvasExec = callbacks.canvasExec || this.#defaultCanvasExec;
+    this.#canvasImage = callbacks.canvasImage || this.#defaultcanvasImage;
+    this.webR.evalRVoid('options(device=webr::canvas)');
   }
 
   /**
@@ -127,13 +127,13 @@ export class Console {
 
   /**
    * The default function called when webR writes to HTML canvas
-   * @param {string} exec The canvas API command as a text string.
+   * @param {ImageBitmap} image An ImageBitmap containing the image data.
    */
-  #defaultCanvasExec = (exec: string) => {
+  #defaultcanvasImage = (image: ImageBitmap) => {
     if (IN_NODE) {
       throw new Error('Plotting with HTML canvas is not yet supported under Node');
     }
-    Function(`this.getContext('2d').${exec}`).bind(this.canvas)();
+    this.canvas!.getContext('2d')!.drawImage(image, 0, 0);
   };
 
   /**
@@ -165,8 +165,8 @@ export class Console {
         case 'prompt':
           this.#prompt(output.data as string);
           break;
-        case 'canvasExec':
-          this.#canvasExec(output.data as string);
+        case 'canvasImage':
+          this.#canvasImage(output.data.image as ImageBitmap);
           break;
         case 'closed':
           return;
