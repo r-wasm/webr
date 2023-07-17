@@ -63,9 +63,4 @@ body {
   border-color: var(--bg-secondary);
   border-width: 2px 0px 0px 2px;
   overflow: hidden;
-  background-color: var(--bg-dark);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
 }
