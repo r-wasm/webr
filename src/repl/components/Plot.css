@@ -36,3 +36,6 @@
 .plot-actions > button:hover {
   color: var(--primary);
 }
+.plot-actions > button:disabled {
+  color: var(--disabled);
+}
