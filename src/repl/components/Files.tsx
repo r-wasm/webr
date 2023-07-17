@@ -1,10 +1,10 @@
-import React, { ChangeEventHandler } from "react";
-import * as Fa from "react-icons/fa";
-import TreeView, { flattenTree, INode, ITreeViewProps } from "react-accessible-treeview";
-import { WebR, WebRError } from "../../webR/webr-main";
+import React, { ChangeEventHandler } from 'react';
+import * as Fa from 'react-icons/fa';
+import TreeView, { flattenTree, INode, ITreeViewProps } from 'react-accessible-treeview';
+import { WebR, WebRError } from '../../webR/webr-main';
 import type { FSNode } from '../../webR/webr-main';
 import { FilesInterface } from '../App';
-import "./Files.css";
+import './Files.css';
 
 const FolderIcon = ({ isOpen }: { isOpen: boolean }) => isOpen
   ? <Fa.FaFolderOpen color="e8a87c" className="icon" />
@@ -17,6 +17,9 @@ interface ITreeNode {
   metadata?: { [x: string]: string | number | null | undefined };
 }
 
+/* Convert a VFS node from Emscripten's FS API into a `ITreeNode`, so that it
+ * can be displayed by react-accessible-treeview.
+ */
 export function createTreefromFSNode(fsNode: FSNode): ITreeNode {
   const tree: ITreeNode = {
     id: fsNode.id,
@@ -31,7 +34,7 @@ export function createTreefromFSNode(fsNode: FSNode): ITreeNode {
   return tree;
 }
 
-const initialData = flattenTree({ name: "", children: [] });
+const initialData = flattenTree({ name: '', children: [] });
 
 export function Files({
   webR,
@@ -47,7 +50,7 @@ export function Files({
   const uploadButtonRef = React.useRef<HTMLButtonElement | null>(null);
   const downloadButtonRef = React.useRef<HTMLButtonElement | null>(null);
 
-  const nodeRenderer: ITreeViewProps["nodeRenderer"] = ({
+  const nodeRenderer: ITreeViewProps['nodeRenderer'] = ({
     element,
     isExpanded,
     isBranch,
@@ -58,7 +61,7 @@ export function Files({
       { isBranch ? <FolderIcon isOpen={ isExpanded } /> : <Fa.FaRegFile className="icon" />}
       { element.name }
     </div>
-  )
+  );
 
   const getNodePath = (node?: INode): string => {
     if (!node || !node.parent) return '';
@@ -66,16 +69,15 @@ export function Files({
       ? getNodePath(treeData.find((value) => value.id === node.parent))
       : '';
     return `${prefix}/${node.name}`;
-  }
+  };
 
-  const onNodeSelect: ITreeViewProps["onNodeSelect"] = ({ element }) => {
+  const onNodeSelect: ITreeViewProps['onNodeSelect'] = ({ element }) => {
     setSelectedNode(element);
     setIsFileSelected(!element.isBranch);
-  }
+  };
 
   const onUpload: ChangeEventHandler = () => {
-    if (!selectedNode) return;
-    if (!uploadRef.current || !uploadRef.current.files || uploadRef.current.files.length === 0) {
+    if (!selectedNode || !uploadRef.current || !uploadRef.current.files) {
       return;
     }
     const path = getNodePath(selectedNode);
@@ -86,14 +88,16 @@ export function Files({
       uploadRef.current!.value = '';
       const data = new Uint8Array(fr.result as ArrayBuffer);
       await webR.FS.writeFile(path + '/' + file.name, data);
-      filesInterface.refreshFilesystem();
+      await filesInterface.refreshFilesystem();
     };
 
     fr.readAsArrayBuffer(file as Blob);
-  }
+  };
 
   const onDownload: React.MouseEventHandler<HTMLButtonElement> = () => {
-    if (!selectedNode) return;
+    if (!selectedNode) {
+      return;
+    }
     const path = getNodePath(selectedNode);
     webR.FS.readFile(path).then((data) => {
       const filename = selectedNode.name;
@@ -105,21 +109,27 @@ export function Files({
       link.click();
       link.remove();
     });
-  }
+  };
 
-  const onOpen: React.MouseEventHandler<HTMLButtonElement> = () => {
-    if (!selectedNode || !webR) return;
+  const onOpen = () => {
+    if (!selectedNode) {
+      return;
+    }
     const path = getNodePath(selectedNode);
     filesInterface.openFileInEditor(selectedNode.name, path, false);
-  }
+  };
 
-  const onNewDirectory: React.MouseEventHandler<HTMLButtonElement> = async() => {
-    if (!selectedNode || !webR) return;
+  const onNewDirectory = async () => {
+    if (!selectedNode) {
+      return;
+    }
+
     const path = getNodePath(selectedNode);
-    const name = prompt("Please enter the new directory name");
+    const name = prompt('Please enter the new directory name');
     if (!name) {
       return;
     }
+
     try {
       await webR.FS.mkdir(`${path}/${name}`);
     } catch (e) {
@@ -129,15 +139,19 @@ export function Files({
       throw e;
     }
     await filesInterface.refreshFilesystem();
-  }
+  };
 
-  const onNewFile: React.MouseEventHandler<HTMLButtonElement> = async() => {
-    if (!selectedNode || !webR) return;
+  const onNewFile = async () => {
+    if (!selectedNode) {
+      return;
+    }
+
     const path = getNodePath(selectedNode);
-    const name = prompt("Please enter the new filename");
+    const name = prompt('Please enter the new filename');
     if (!name) {
       return;
     }
+
     try {
       await webR.FS.writeFile(`${path}/${name}`, new Uint8Array([]));
     } catch (e) {
@@ -147,14 +161,18 @@ export function Files({
       throw e;
     }
     await filesInterface.refreshFilesystem();
-  }
+  };
 
-  const onDelete: React.MouseEventHandler<HTMLButtonElement> = async () => {
-    if (!selectedNode || !webR) return;
-    const path = getNodePath(selectedNode);
-    if (!confirm("Delete " + selectedNode.name + "?")) {
+  const onDelete = async () => {
+    if (!selectedNode) {
       return;
     }
+
+    const path = getNodePath(selectedNode);
+    if (!confirm('Delete ' + selectedNode.name + '?')) {
+      return;
+    }
+
     try {
       if (selectedNode.isBranch) {
         await webR.FS.rmdir(path);
@@ -171,7 +189,7 @@ export function Files({
     }
     await filesInterface.refreshFilesystem();
     setSelectedNode(null);
-  }
+  };
 
   React.useEffect(() => {
     filesInterface.refreshFilesystem = async () => {
@@ -204,13 +222,13 @@ export function Files({
               <Fa.FaFileUpload className="icon" /> Upload file
           </button>
           <button
-            onClick={onNewFile}
+            onClick={() => { onNewFile(); }}
             disabled={!selectedNode || isFileSelected}
           >
             <Fa.FaFileAlt className="icon" /> New file
           </button>
           <button
-            onClick={onNewDirectory}
+            onClick={() => { onNewDirectory(); }}
             disabled={!selectedNode || isFileSelected}
           >
             <Fa.FaFolderPlus className="icon" /> New directory
@@ -231,7 +249,7 @@ export function Files({
             <Fa.FaFileCode className="icon" /> Open in editor
           </button>
           <button
-            onClick={onDelete}
+            onClick={() => { onDelete(); }}
             disabled={!selectedNode}
           >
           <Fa.FaTimesCircle className="icon" /> Delete

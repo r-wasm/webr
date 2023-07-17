@@ -1,5 +1,5 @@
-import React from "react";
-import "./Plot.css";
+import React from 'react';
+import './Plot.css';
 
 export function Plot() {
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);

@@ -1,11 +1,11 @@
-import React from "react";
-import { WebR } from "../../webR/webr-main";
-import { FaPlay, FaRegSave } from "react-icons/fa";
+import React from 'react';
+import { WebR } from '../../webR/webr-main';
+import { FaPlay, FaRegSave } from 'react-icons/fa';
 import { basicSetup, EditorView } from 'codemirror';
-import { EditorState, Compartment } from "@codemirror/state";
+import { EditorState, Compartment } from '@codemirror/state';
 import { FilesInterface, TerminalInterface } from '../App';
 import { r } from 'codemirror-lang-r';
-import "./Editor.css";
+import './Editor.css';
 
 const language = new Compartment();
 const tabSize = new Compartment();
@@ -36,7 +36,7 @@ export function FileTabs({
       {files.map((f, index) =>
         <button
           key={index}
-          className={activeFileIdx === index ? "active" : undefined}
+          className={activeFileIdx === index ? 'active' : undefined}
           onClick={() => setActiveFileIdx(index)}
         >
           {f.name}
@@ -44,7 +44,7 @@ export function FileTabs({
             className="editor-closebutton"
             aria-label="Close file"
             onClick={(e) => {
-              if (!f.ref.editorState.readOnly && !confirm("Close " + f.name + "?")) {
+              if (!f.ref.editorState.readOnly && !confirm('Close ' + f.name + '?')) {
                 e.stopPropagation();
                 return;
               }
@@ -56,7 +56,7 @@ export function FileTabs({
         </button>
       )}
     </div>
-  )
+  );
 }
 
 export function Editor({
@@ -74,7 +74,7 @@ export function Editor({
   const [activeFileIdx, setActiveFileIdx] = React.useState(0);
 
   const activeFile = files[activeFileIdx];
-  const isRFile = activeFile && activeFile.name.endsWith(".R");
+  const isRFile = activeFile && activeFile.name.endsWith('.R');
   const isReadOnly = activeFile && activeFile.ref.editorState.readOnly;
 
   const editorExtensions = [
@@ -90,37 +90,45 @@ export function Editor({
     setFiles(updatedFiles);
     const prevFile = activeFileIdx - 1;
     setActiveFileIdx(prevFile < 0 ? 0 : prevFile);
-  }
+  };
 
   const syncActiveFileState = React.useCallback(() => {
-    if (!editorView || !activeFile) return;
+    if (!editorView || !activeFile) {
+      return;
+    }
     activeFile.ref.editorState = editorView.state;
     activeFile.ref.scrollTop = editorView.scrollDOM.scrollTop;
     activeFile.ref.scrollLeft = editorView.scrollDOM.scrollLeft;
   }, [activeFile, editorView]);
 
   const runFile = React.useCallback(() => {
-    if (!editorView) return;
+    if (!editorView) {
+      return;
+    }
     syncActiveFileState();
     const code = editorView.state.doc.toString();
     terminalInterface.write('\x1b[2K\r');
     webR.writeConsole(code);
   }, [syncActiveFileState, editorView]);
 
-  const saveFile = React.useCallback(async () => {
-    if (!editorView) return;
-    syncActiveFileState();
-    const code = editorView.state.doc.toString();
-    const data = new TextEncoder().encode(code);
-    await webR?.FS.writeFile(activeFile.path, data);
-    filesInterface.refreshFilesystem();
+  const saveFile: React.MouseEventHandler<HTMLButtonElement> = React.useCallback(() => {
+    if (!editorView) {
+      return;
+    }
+    (async () => {
+      syncActiveFileState();
+      const code = editorView.state.doc.toString();
+      const data = new TextEncoder().encode(code);
+      await webR.FS.writeFile(activeFile.path, data);
+      filesInterface.refreshFilesystem();
+    })();
   }, [webR, syncActiveFileState, editorView]);
 
   React.useEffect(() => {
-    if (!editorRef.current) return;
-
-    let state = EditorState.create({ extensions: editorExtensions });
-
+    if (!editorRef.current) {
+      return;
+    }
+    const state = EditorState.create({ extensions: editorExtensions });
     const view = new EditorView({
       state,
       parent: editorRef.current,
@@ -140,26 +148,32 @@ export function Editor({
     };
   }, []);
 
+  /*
+   * Register this component with the files interface so that when it comes to
+   * opening files they are displayed in this codemirror instance.
+   */
   React.useEffect(() => {
     filesInterface.openFileInEditor = (name: string, path: string, readOnly: boolean) => {
-      if (!webR) throw new Error('Unable to open file, webR is not initialised.');
+      // Don't reopen the file if it's already open, switch to that tab instead
       const existsIndex = files.findIndex((f) => f.path === path);
       if (existsIndex >= 0) {
         setActiveFileIdx(existsIndex);
         return Promise.resolve();
       }
+
       return webR.FS.readFile(path).then((data) => {
         syncActiveFileState();
         const updatedFiles = [...files];
-        const extensions = name.toLowerCase().endsWith(".r") ? editorExtensions : [];
-        if(readOnly) extensions.push(EditorState.readOnly.of(true));
+        const extensions = name.toLowerCase().endsWith('.r') ? editorExtensions : [];
+        if (readOnly) extensions.push(EditorState.readOnly.of(true));
 
         // Get file content, dealing with backspace characters until none remain
         let content = new TextDecoder().decode(data);
-        while(content.match(/\w\x08/)){
-          content = content.replace(/\w\x08/g,"");
+        while(content.match(/.[\b]/)){
+          content = content.replace(/.[\b]/g, '');
         }
 
+        // Add this new file content to the list of open files
         const index = updatedFiles.push({
           name,
           path,
@@ -174,10 +188,13 @@ export function Editor({
         setActiveFileIdx(index-1);
       });
     };
-  }, [files, webR, filesInterface]);
+  }, [files, filesInterface]);
 
   React.useEffect(() => {
-    if (!editorView || files.length === 0) return;
+    if (!editorView || files.length === 0) {
+      return;
+    }
+    // Update the editor's state and scroll position for currently active file
     editorView.setState(activeFile.ref.editorState);
     editorView.requestMeasure({
       read: () => {
@@ -188,6 +205,7 @@ export function Editor({
     });
     editorView.focus();
 
+    // Before switching to a new file, save the state and scroll position
     return function cleanup() {
       syncActiveFileState();
     };
@@ -205,13 +223,15 @@ export function Editor({
           closeFile={closeFile}
         />
         <div className="editor-actions">
-          {!isReadOnly && <button onClick={saveFile}><FaRegSave className="icon" /> Save</button>}
+          {!isReadOnly && <button onClick={saveFile}>
+            <FaRegSave className="icon" /> Save
+          </button>}
           {isRFile && <button onClick={runFile}><FaPlay className="icon" /> Run</button>}
         </div>
       </div>
       <div className="editor-container" ref={editorRef}></div>
     </div>
-  )
+  );
 }
 
 export default Editor;
