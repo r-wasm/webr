@@ -1,9 +1,9 @@
-import React from "react";
+import React from 'react';
 import { Terminal as XTerminal } from 'xterm';
 import { Readline } from 'xterm-readline';
 import { FitAddon } from 'xterm-addon-fit';
 import { TerminalInterface } from '../App';
-import { WebR } from "../../webR/webr-main";
+import { WebR } from '../../webR/webr-main';
 import 'xterm/css/xterm.css';
 
 export function Terminal({
@@ -23,24 +23,26 @@ export function Terminal({
     }
   }, []);
 
+  // Handle ctrl-c here so that code executed by the Editor can be interrupted
   React.useEffect(() => {
-    if (!divRef.current) return;
-    divRef.current.addEventListener('keydown', handleCtrlC, true);
-
+    divRef.current!.addEventListener('keydown', handleCtrlC, true);
     return () => {
       divRef.current!.removeEventListener('keydown', handleCtrlC);
     };
   }, [handleCtrlC]);
 
   React.useEffect(() => {
-    if (!divRef.current || termRef.current) return;
+    // Don't reinitialise XTerminal after an instance has been created
+    if (termRef.current || !divRef.current) {
+      return;
+    }
 
     const term = new XTerminal({
       theme: {
-        background: "#FFF",
-        foreground: "#111",
-        cursor: "#111",
-        selectionBackground: "#99C",
+        background: '#FFF',
+        foreground: '#111',
+        cursor: '#111',
+        selectionBackground: '#99C',
       },
       screenReaderMode: true,
     });
@@ -48,7 +50,6 @@ export function Terminal({
 
     const fitAddon = new FitAddon();
     const readline = new Readline();
-    readline.setCtrlCHandler(() => webR.interrupt());
     setReadline(readline);
 
     term.loadAddon(fitAddon);
@@ -69,8 +70,14 @@ export function Terminal({
     termRef.current = term;
   }, []);
 
+  /*
+   * Setup an interface so that other components can read from and write to this
+   * component's xterm instance.
+   */
   React.useEffect(() => {
-    if (!readline) return;
+    if (!readline){
+      return;
+    }
 
     terminalInterface.println = (msg: string) => {
       readline.println(msg);

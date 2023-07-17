@@ -10,7 +10,7 @@ HTML_INDEX = repl.html
 TS_SOURCES = $(shell find $(ROOT) \
   -not \( -path '$(ROOT)/node_modules' -prune \) \
   -not \( -path '$(PKG_DIST)' -prune \) \
-  -name '*.ts')
+  -name '*.ts' -o -name '*.tsx')
 
 # Configure your local environment in this file
 -include ~/.webr-config.mk
