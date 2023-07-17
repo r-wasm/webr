@@ -35,6 +35,14 @@
     }, CREDC(col), CGREENC(col), CBLUEC(col), ((double)CALPHA(col))/255.); \
 }
 
+#define canvasClip(){                               \
+    EM_ASM({                                        \
+        Module.canvasCtx.beginPath();               \
+        Module.canvasCtx.rect($0, $1, $2, $3);      \
+        Module.canvasCtx.clip();                    \
+    }, 2*cGD->cx, 2*cGD->cy, 2*cGD->cw, 2*cGD->ch); \
+}
+
 typedef struct _canvasDesc {
     /* device specific stuff */
     int col;
@@ -46,6 +54,9 @@ typedef struct _canvasDesc {
     R_GE_lineend lend;
     R_GE_linejoin ljoin;
     double lmitre;
+
+    /* Current clipping state */
+    double cx, cy, cw, ch;
 
     pGEDevDesc RGE;
 } canvasDesc;
@@ -97,6 +108,9 @@ void canvasCircle(double x, double y, double r,
 {
     canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
 
+    EM_ASM({Module.canvasCtx.save();});
+    canvasClip();
+
     EM_ASM({Module.canvasCtx.beginPath();});
     EM_ASM({
         Module.canvasCtx.arc($0, $1, $2, 0, Math.PI*2, true);
@@ -110,18 +124,26 @@ void canvasCircle(double x, double y, double r,
         canvasColor(strokeStyle,gc->col);
         EM_ASM({Module.canvasCtx.stroke();});
     }
+
+    EM_ASM({Module.canvasCtx.restore();});
 }
 
-void canvasClip(double x0, double x1, double y0, double y1, pDevDesc RGD)
+void canvasSetClip(double x0, double x1, double y0, double y1, pDevDesc RGD)
 {
     canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
+
+    if (x1 < x0) { double t = x1; x1 = x0; x0 = t; };
+    if (y1 < y0) { double t = y1; y1 = y0; y0 = t; };
+
+    cGD->cx = x0;
+    cGD->cy = y0;
+    cGD->cw = (x1 - x0);
+    cGD->ch = (y1 - y0);
 }
 
 void canvasClose(pDevDesc RGD)
 {
     canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
-
-    /* Save plot */
     free(cGD);
     RGD->deviceSpecific = NULL;
 }
@@ -139,6 +161,8 @@ void canvasLine(double x1, double y1, double x2, double y2,
                 const pGEcontext gc, pDevDesc RGD)
 {
     canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
+    EM_ASM({Module.canvasCtx.save();});
+    canvasClip();
 
     if (CALPHA(gc->col) && gc->lty!=-1){
         canvasSetLineType(cGD,gc);
@@ -148,6 +172,8 @@ void canvasLine(double x1, double y1, double x2, double y2,
         EM_ASM({Module.canvasCtx.lineTo($0, $1);}, 2*x2, 2*y2);
         EM_ASM({Module.canvasCtx.stroke();});
     }
+
+    EM_ASM({Module.canvasCtx.restore();});
 }
 
 void canvasMetricInfo(int c, const pGEcontext gc, double* ascent,
@@ -220,6 +246,9 @@ void canvasPolygon(int n, double *x, double *y,
 
     if(n<2) return;
 
+    EM_ASM({Module.canvasCtx.save();});
+    canvasClip();
+
     canvasSetLineType(cGD,gc);
 
     EM_ASM({Module.canvasCtx.beginPath();});
@@ -237,6 +266,8 @@ void canvasPolygon(int n, double *x, double *y,
         canvasColor(strokeStyle, gc->col);
         EM_ASM({Module.canvasCtx.stroke();});
     }
+
+    EM_ASM({Module.canvasCtx.restore();});
 }
 
 void canvasPolyline(int n, double *x, double *y,
@@ -246,6 +277,9 @@ void canvasPolyline(int n, double *x, double *y,
     canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
 
     if (n<2) return;
+
+    EM_ASM({Module.canvasCtx.save();});
+    canvasClip();
 
     if (CALPHA(gc->col) && gc->lty!=-1) {
         EM_ASM({Module.canvasCtx.beginPath();});
@@ -258,12 +292,17 @@ void canvasPolyline(int n, double *x, double *y,
         canvasColor(strokeStyle, gc->col);
         EM_ASM({Module.canvasCtx.stroke();});
     }
+
+    EM_ASM({Module.canvasCtx.restore();});
 }
 
 void canvasRect(double x0, double y0, double x1, double y1,
                 const pGEcontext gc, pDevDesc RGD)
 {
     canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
+    EM_ASM({Module.canvasCtx.save();});
+    canvasClip();
+
     if (CALPHA(gc->fill)){
         canvasColor(fillStyle, gc->fill);
         EM_ASM({
@@ -277,6 +316,8 @@ void canvasRect(double x0, double y0, double x1, double y1,
             Module.canvasCtx.strokeRect($0, $1, $2, $3);
         }, 2*x0, 2*y0, 2*x1-2*x0, 2*y1-2*y0);
     }
+
+    EM_ASM({Module.canvasCtx.restore();});
 }
 
 void canvasSize(double *left, double *right, double *bottom, double *top,
@@ -303,6 +344,9 @@ void canvasText(double x, double y, const char *str, double rot, double hadj,
                 const pGEcontext gc, pDevDesc RGD)
 {
     canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
+    EM_ASM({Module.canvasCtx.save();});
+    canvasClip();
+
     double wi = canvasStrWidth(str, gc, RGD);
 
     if (hadj!=0. || rot != 0.){
@@ -327,6 +371,8 @@ void canvasText(double x, double y, const char *str, double rot, double hadj,
             Module.canvasCtx.fillText(UTF8ToString($0), $1, $2);
         }, str, 2*x, 2*y);
     }
+
+    EM_ASM({Module.canvasCtx.restore();});
 }
 
 SEXP void_setPattern(SEXP pattern, pDevDesc RGD) {
@@ -409,7 +455,7 @@ SEXP ffi_dev_canvas(SEXP w, SEXP h, SEXP ps, SEXP bg)
     RGD->deactivate = canvasDeactivate;
     RGD->size = canvasSize;
     RGD->newPage = canvasNewPage;
-    RGD->clip = canvasClip;
+    RGD->clip = canvasSetClip;
     RGD->strWidth = canvasStrWidth;
     RGD->text = canvasText;
     RGD->rect = canvasRect;
