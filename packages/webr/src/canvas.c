@@ -185,7 +185,7 @@ void canvasMode(int mode, pDevDesc RGD) {
         canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
         EM_ASM({
             const image = Module.offscreenCanvas.transferToImageBitmap();
-            chan.write({ type: 'canvasImage', data: { image } }, [image]);
+            chan.write({ type: 'canvas', data: { event: 'canvasImage', image } }, [image]);
         });
     }
     return;
@@ -206,6 +206,10 @@ void canvasNewPage(const pGEcontext gc, pDevDesc RGD)
             Module.canvasCtx.fillRect(0, 0, $0, $1);
         }, 2*RGD->right, 2*RGD->bottom);
     }
+
+    EM_ASM({
+        chan.write({ type: 'canvas', data: { event: 'canvasNewPage' } });
+    });
 }
 
 void canvasPolygon(int n, double *x, double *y,

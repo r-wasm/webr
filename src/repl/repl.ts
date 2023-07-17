@@ -178,14 +178,14 @@ const webR = new WebR({
         console.log(`Loading package: ${output.data as string}`);
         FSTree.refresh();
         break;
-      case 'canvasExec':
-        Function(`
-           document.getElementById('plot-canvas').getContext('2d').${output.data as string}
-         `)();
-        break;
-      case 'canvasImage': {
+      case 'canvas': {
         const canvas = document.getElementById('plot-canvas') as HTMLCanvasElement;
-        canvas.getContext('2d')!.drawImage(output.data.image as ImageBitmap, 0, 0);
+        const context = canvas.getContext('2d');
+        if (output.data.event === 'canvasImage') {
+          context!.drawImage(output.data.image as ImageBitmap, 0, 0);
+        } else if (output.data.event === 'canvasNewPage') {
+          context!.clearRect(0, 0, canvas.width, canvas.height);
+        }
         break;
       }
       case 'closed':
