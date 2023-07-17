@@ -2,7 +2,7 @@ import React from 'react';
 import { WebR, RFunction, Shelter } from '../../webR/webr-main';
 import { FaPlay, FaRegSave } from 'react-icons/fa';
 import { basicSetup, EditorView } from 'codemirror';
-import { EditorState, Compartment } from '@codemirror/state';
+import { EditorState, Compartment, Prec } from '@codemirror/state';
 import { autocompletion, CompletionContext } from '@codemirror/autocomplete';
 import { keymap } from '@codemirror/view';
 import { indentWithTab } from '@codemirror/commands';
@@ -10,6 +10,7 @@ import { FilesInterface, TerminalInterface } from '../App';
 import { r } from 'codemirror-lang-r';
 import './Editor.css';
 import { WebRDataJsAtomic } from '../../webR/robj';
+import * as utils from './utils';
 
 const language = new Compartment();
 const tabSize = new Compartment();
@@ -76,6 +77,7 @@ export function Editor({
   const [editorView, setEditorView] = React.useState<EditorView>();
   const [files, setFiles] = React.useState<EditorFile[]>([]);
   const [activeFileIdx, setActiveFileIdx] = React.useState(0);
+  const runSelectedCode = React.useRef((): void => {});
 
   const activeFile = files[activeFileIdx];
   const isRFile = activeFile && activeFile.name.endsWith('.R');
@@ -139,7 +141,19 @@ export function Editor({
     basicSetup,
     language.of(r()),
     tabSize.of(EditorState.tabSize.of(2)),
-    keymap.of([indentWithTab]),
+    Prec.high(
+      keymap.of([
+        indentWithTab,
+        {
+          key: 'Mod-Enter',
+          run: (_: EditorView) => {
+            if (!runSelectedCode.current) return false;
+            runSelectedCode.current();
+            return true;
+          },
+        },
+      ]
+    )),
     autocompletion({override: [completion]})
   ];
 
@@ -151,6 +165,18 @@ export function Editor({
     const prevFile = activeFileIdx - 1;
     setActiveFileIdx(prevFile < 0 ? 0 : prevFile);
   };
+
+  React.useEffect(() => {
+    runSelectedCode.current = (): void => {
+      if (!editorView || !webR) return;
+      let code = utils.getSelectedText(editorView);
+      if (code === '') {
+        code = utils.getCurrentLineText(editorView);
+        utils.moveCursorToNextLine(editorView);
+      }
+      webR.writeConsole(code);
+    };
+  }, [webR, editorView]);
 
   const syncActiveFileState = React.useCallback(() => {
     if (!editorView || !activeFile) {
