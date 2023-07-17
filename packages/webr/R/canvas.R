@@ -21,6 +21,6 @@
 #' @param pointsize	The default point size of plotted text.
 #' @param bg The initial background colour.
 #' @param ... Additional graphics device arguments (ignored).
-canvas <- function(width=504, height=504, pointsize=12, bg="white", ...) {
+canvas <- function(width=504, height=504, pointsize=12, bg="transparent", ...) {
   .Call(ffi_dev_canvas, width, height, pointsize, bg)
 }

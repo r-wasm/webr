@@ -1,5 +1,6 @@
 import { initFSTree, FSTreeInterface, JSTreeNode } from './fstree';
 import { WebR, FSNode } from '../webR/webr-main';
+import { CanvasMessage } from '../webR/webr-chan';
 
 import 'xterm/css/xterm.css';
 import { Terminal } from 'xterm';
@@ -178,14 +179,15 @@ const webR = new WebR({
         console.log(`Loading package: ${output.data as string}`);
         FSTree.refresh();
         break;
-      case 'canvasExec':
-        Function(`
-           document.getElementById('plot-canvas').getContext('2d').${output.data as string}
-         `)();
-        break;
-      case 'canvasImage': {
+      case 'canvas': {
         const canvas = document.getElementById('plot-canvas') as HTMLCanvasElement;
-        canvas.getContext('2d')!.drawImage(output.data.image as ImageBitmap, 0, 0);
+        const context = canvas.getContext('2d');
+        const msgData = output.data as CanvasMessage['data'];
+        if (msgData.event === 'canvasImage') {
+          context!.drawImage(msgData.image, 0, 0);
+        } else if (msgData.event === 'canvasNewPage') {
+          context!.clearRect(0, 0, canvas.width, canvas.height);
+        }
         break;
       }
       case 'closed':
