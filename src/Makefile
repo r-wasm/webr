@@ -51,7 +51,7 @@ node_modules: package.json
 	touch $@
 
 .PHONY: serve
-serve: esbuild.ts
+serve: esbuild.ts $(DIST)
 	npm run serve
 
 .PHONY: package
