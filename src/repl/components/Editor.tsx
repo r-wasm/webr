@@ -93,7 +93,6 @@ export function Editor({
   }>(null);
 
   React.useEffect(() => {
-    if (!webR) return;
     let shelter: Shelter | null = null;
 
     webR.init().then(async () => {
@@ -112,10 +111,12 @@ export function Editor({
     return function cleanup() {
       if (shelter) shelter.purge();
     };
-  }, [webR]);
+  }, []);
 
   const completion = React.useCallback(async (context: CompletionContext) => {
-    if (!webR || !completionMethods.current) return null;
+    if (!completionMethods.current) {
+      return null;
+    }
     const line = context.state.doc.lineAt(context.state.selection.main.head).text;
     const {from, to, text} = context.matchBefore(/[a-zA-Z0-9_.:]*/) ?? {from: 0, to: 0, text: ''};
     if (from === to && !context.explicit) {
@@ -135,7 +136,7 @@ export function Editor({
     });
 
     return { from: from, options };
-  }, [webR]);
+  }, []);
 
   const editorExtensions = [
     basicSetup,
@@ -168,7 +169,9 @@ export function Editor({
 
   React.useEffect(() => {
     runSelectedCode.current = (): void => {
-      if (!editorView || !webR) return;
+      if (!editorView) {
+        return;
+      }
       let code = utils.getSelectedText(editorView);
       if (code === '') {
         code = utils.getCurrentLineText(editorView);
@@ -176,7 +179,7 @@ export function Editor({
       }
       webR.writeConsole(code);
     };
-  }, [webR, editorView]);
+  }, [editorView]);
 
   const syncActiveFileState = React.useCallback(() => {
     if (!editorView || !activeFile) {
@@ -208,7 +211,7 @@ export function Editor({
       await webR.FS.writeFile(activeFile.path, data);
       filesInterface.refreshFilesystem();
     })();
-  }, [webR, syncActiveFileState, editorView]);
+  }, [syncActiveFileState, editorView]);
 
   React.useEffect(() => {
     if (!editorRef.current) {
