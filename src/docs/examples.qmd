@@ -28,6 +28,9 @@ await webR.init();
 
 This example demonstrates running R code with [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) and getting the result [in the form of an `RObject` proxy](objects.qmd). The result is then [converted into a JavaScript object](convert-r-to-js.qmd) before being output to the JavaScript console.
 
+::: {.panel-tabset}
+## JavaScript
+
 ``` javascript
 let result = await webR.evalR('rnorm(10,5,1)');
 let output = await result.toArray();
@@ -35,12 +38,27 @@ let output = await result.toArray();
 console.log('Result of running `rnorm` from webR: ', output);
 ```
 
+## TypeScript
+
+``` typescript
+import type { RDouble } from '@r-wasm/webr';
+
+let result = await webR.evalR('rnorm(10,5,1)') as RDouble;
+let output = await result.toArray();
+
+console.log('Result of running `rnorm` from webR: ', output);
+```
+
+:::
+
     Result of running `rnorm` from webR: [4.811743371393964,
     3.9713199286446246, 5.752161964201946, 4.699964764731866,
     6.793839154500917, 5.80036239061935, 5.342100112394279,
     5.555879371932934, 4.314676418095938, 5.113592217724398]
 
 The `options` argument of [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) has been designed so that the default is sufficient for general R evaluation. However, the default behaviour can be changed by passing an `options` argument of type [`EvalROptions`](api/js/interfaces/WebRChan.EvalROptions.md), if required.
+
+See the [Evaluating R Code](evaluating.qmd) section for more detailed documentation.
 
 ### Capturing console output from R code
 
@@ -68,6 +86,9 @@ shelter.purge();
 
 The following snippet demonstrates executing an R function from JavaScript. A reference to the R function is first obtained as an [`RFunction`](api/js/modules/RMain.md#rfunction) JavaScript proxy, and then executed in a similar way to a normal JavaScript function.
 
+::: {.panel-tabset}
+## JavaScript
+
 ``` javascript
 let sin = await webR.evalR('sin');
 let result = await sin([1,2,3]);
@@ -76,19 +97,57 @@ console.log('Result of running `await sin([1,2,3])`:')
 console.log(result.values);
 ```
 
+## TypeScript
+
+``` typescript
+import type { RFunction } from '@r-wasm/webr';
+
+let sin = await webR.evalR('sin') as RFunction;
+let result = await sin([1,2,3]);
+
+console.log('Result of running `await sin([1,2,3])`:')
+console.log(result);
+```
+
+:::
+
     Result of running `await sin([1,2,3])`:
-    [0.8414709848078965, 0.9092974268256817, 0.1411200080598672]
+    {
+      type: 'double',
+      names: null,
+      values: [ 0.8414709848078965, 0.9092974268256817, 0.1411200080598672 ]
+    }
 
 ### Evaluating R code within an environment
 
 The `options` argument of [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) can be used to control how R code is executed. In this example the options argument is used to create a new environment for the R code to be evaluated in.
 
+::: {.panel-tabset}
+## JavaScript
+
 ``` javascript
-let result = await webR.evalR('foo + bar', { env: { foo: 1234, bar: 1 } });
+let result = await webR.evalR('foo + bar', {
+  env: { foo: 1234, bar: 1, baz: 'abc' }
+});
 let output = await result.toNumber();
 
 console.log(output);
 ```
+
+## TypeScript
+
+``` typescript
+import type { RDouble } from '@r-wasm/webr';
+
+let result = await webR.evalR('foo + bar', {
+  env: { foo: 1234, bar: 1, baz: 'abc' }
+}) as RDouble;
+
+let output = await result.toNumber();
+console.log(output);
+```
+
+:::
 
     1235
 
@@ -106,9 +165,39 @@ console.log(output);
 
     [2, 9, 6]
 
+### Testing and narrowing R object types
+
+Since functions such as [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) may run arbitrary R code, it is not always clear what type of R object will be returned. To help manage the ambiguity, webR provides [type predicate functions](api/js/modules/RMain.md#functions) for several types of `RObject`.
+
+These functions return boolean `true` if the argument's R object type matches, and so different actions can be taken at runtime depending on the type of a given R object. This is particularly useful for TypeScript users, where the compiler is able to use the functions to narrow the R object type automatically.
+
+In this example, an R numeric, character, or list could be returned randomly by the `sample` function. Type predicate functions are used to detect and handle each case.
+
+``` typescript
+import { isRDouble, isRCharacter, isRList } from '@r-wasm/webr';
+
+let result = await webR.evalR(`
+  sample( list(50.75, "foo", list(1,2,3)) , 1)[[1]]
+`);
+
+if (isRDouble(result)) {
+  let output = await result.toNumber();
+  console.log('A number: ', output)
+} else if (isRCharacter(result)) {
+  let output = await result.toString();
+  console.log('A string: ', output)
+} else if (isRList(result)) {
+  let output = (await result.toArray()).length;
+  console.log('A list with ', output, 'elements.')
+}
+```
+
 ### Cleaning up after an R object is no longer in use
 
 R object references in the form of an `RObject` are subject to [memory management](objects.qmd#memory-management) and should be destroyed when they are no longer required. This signals to R that the object referenced may be deleted by the garbage collector.
+
+::: {.panel-tabset}
+## JavaScript
 
 ``` javascript
 let result = await webR.evalR('rnorm(3,5,1)');
@@ -117,6 +206,20 @@ console.log(output);
 
 webR.destroy(result);
 ```
+
+## TypeScript
+
+``` typescript
+import type { RDouble } from '@r-wasm/webr';
+
+let result = await webR.evalR('rnorm(3,5,1)') as RDouble;
+let output = await result.toArray();
+console.log(output);
+
+webR.destroy(result);
+```
+
+:::
 
     [5.373198157561013, 4.493213148077507, 5.134879842881727]
 
