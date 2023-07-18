@@ -206,65 +206,15 @@ After loading, the resulting web page should present an interactive R console si
   );
 </script>
 ```
-### Creating a webR React app using `create-react-app`
+### Integrating webR with other frameworks
 
-A simple React app incorporating webR can be bootstrapped using `create-react-app`. First, ensure `create-react-app` is available. For example, install it with npm using,
+See the example repositories below for examples of integrating webR into other JavaScript/TypeScript systems and frameworks.
 
-``` bash
-npm i -g create-react-app
-```
+* <https://github.com/georgestagg/webr-node-example>
+* <https://github.com/georgestagg/webr-react-example>
+* <https://github.com/georgestagg/webr-vue-example>
+* <https://github.com/georgestagg/webr-nextjs-example>
+* <https://github.com/georgestagg/webr-webpack-example>
 
-Next, bootstrap a new React app with `create-react-app`. Enter the new app directory and install webR using npm.
 
-``` bash
-npx create-react-app my-app
-cd my-app
-npm i @r-wasm/webr
-```
 
-Next, set up a middleware for the app's Express instance so that the app is served with the required [cross-origin isolation headers](serving.qmd). To do this, create the following JavaScript file with the path `my-app/src/setupProxy.js`,
-
-``` javascript
-module.exports = function (app) {
-    app.use(function (req, res, next) {
-        res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
-        res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
-        next();
-    });
-};
-```
-
-Finally, update `src/App.js` to load and use webR,
-
-``` javascript
-import './App.css';
-import React, { useEffect, useState } from 'react'
-import { WebR } from '@r-wasm/webr';
-const webR = new WebR();
-
-function App() {
-  const [ result, updateResult ] = useState(['Loading webR...']);
-  useEffect(() => {
-    async function runRCode() {
-      await webR.init();
-      const rnorm = await webR.evalR('rnorm(5,1,1)');
-      try {
-        const result = await rnorm.toArray();
-        updateResult(result);
-      } finally {
-        webR.destroy(rnorm);
-      }
-    }
-    runRCode();
-  }, []);
-  return (
-    <div className="App">
-      <p>Result of running R code: {result.join(',')}</p>
-    </div>
-  );
-}
-
-export default App;
-```
-
-Test the new app by running `npm start`. The app should automatically open in your browser and show the result of evaluating R code.
