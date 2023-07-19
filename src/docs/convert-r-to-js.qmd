@@ -61,10 +61,24 @@ await primes.toJs()
 
 [Subclasses of `RObject`](api/js/modules/RWorker.md#classes) provide additional methods to convert objects into a JavaScript representation. For example, the [`toTypedArray()`](api/js/classes/RWorker.RDouble.md#totypedarray) method can be invoked on atomic vectors, such as an [`RDouble`](api/js/classes/RWorker.RDouble.md), to access a copy of the raw buffer as it exists in WebAssembly memory.
 
+::: {.panel-tabset}
+## JavaScript
+
 ``` javascript
-const primes = await webR.evalR('c(2,3,5,7,11,13)')
-await primes.toTypedArray()
+const primes = await webR.evalR('c(2,3,5,7,11,13)');
+await primes.toTypedArray();
 ```
+
+## TypeScript
+
+``` typescript
+import type { RDouble } from '@r-wasm/webr';
+
+const primes = await webR.evalR('c(2,3,5,7,11,13)') as RDouble;
+await primes.toTypedArray();
+```
+
+:::
 
     Float64Array(6) [2, 3, 5, 7, 11, 13, buffer: ArrayBuffer(48), ... ]
 
@@ -103,20 +117,49 @@ At the moment, R functions cannot be directly converted into JavaScript function
 
 In either case, both JavaScript or [`RObject`](api/js/modules/RMain.md#robject) proxies can be passed as arguments to the associated R function. In the case of JavaScript values they are [converted to R objects](convert-r-to-js.qmd) before function execution.
 
+::: {.panel-tabset}
+## JavaScript
+
 ``` javascript
 const fn = await webR.evalR('function(x) { 2 * x }');
 const result = await fn.exec([1,2,3]);
 await result.toArray()
 ```
 
+## TypeScript
+
+``` typescript
+import type { RDouble, RFunction } from '@r-wasm/webr';
+
+const fn = await webR.evalR('function(x) { 2 * x }') as RFunction;
+const result = await fn.exec([1,2,3]) as RDouble;
+await result.toArray()
+```
+
+:::
+
     [2, 4, 6]
 
 The result of the R computation is automatically converted back into a JavaScript representation using [`RObject.toJs()`](api/js/classes/RWorker.RObject.md#tojs) if the `RFunction` proxy was executed using `()`.
+
+::: {.panel-tabset}
+## JavaScript
 
 ``` javascript
 const sin = await webR.evalR('sin');
 await sin([1,2,3]);
 ```
+
+## TypeScript
+
+``` typescript
+import type { RFunction } from '@r-wasm/webr';
+
+const sin = await webR.evalR('sin') as RFunction;
+await sin([1,2,3]);
+```
+
+:::
 
     {
       type: 'double'
@@ -128,14 +171,32 @@ await sin([1,2,3]);
 
 [`RObject`](api/js/modules/RMain.md#robject) proxies are async iterable for objects with a `length` property. As such, R vectors can be looped over using the JavaScript [`for await...of`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of) syntax. For example,
 
+::: {.panel-tabset}
+## JavaScript
+
 ``` javascript
-const list = await webR.evalR('list(2,4,6,"abc")')
-for await (i of list){
-  console.log(await i.toArray())
+const list = await webR.evalR('list(2,4,6,"abc")');
+for await (const i of list){
+  const out = await i.toJs();
+  console.log(out);
 }
 ```
 
-    [2]
-    [4]
-    [6]
-    ['abc']
+## TypeScript
+
+``` typescript
+import type { RList } from '@r-wasm/webr';
+
+const list = await webR.evalR('list(2,4,6,"abc")') as RList;
+for await (const i of list){
+  const out = await i.toJs();
+  console.log(out);
+}
+```
+
+:::
+
+    { type: 'double', names: null, values: [2] }
+    { type: 'double', names: null, values: [4] }
+    { type: 'double', names: null, values: [6] }
+    { type: 'character', names: null, values: ["abc"] }
