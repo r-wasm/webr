@@ -1,9 +1,6 @@
 project:
   type: website
   output-dir: _site
-  preview:
-    port: 8001
-  pre-render: make api/js
   resources:
     - /webr-serviceworker.js
     - /webr-worker.js
