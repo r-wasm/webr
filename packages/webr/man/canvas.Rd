@@ -21,11 +21,20 @@ canvas(width = 504, height = 504, pointsize = 12, bg = "transparent", ...)
 A graphics device that generates HTML canvas API calls and executes them on
 the worker thread using a JavaScript \code{OffscreenCanvas}. Once drawing has
 finished, a JavaScript \code{ImageBitmap} object is transmitted to the main webR
-thread for display. The resulting webR output messages are of type \code{Message}
-with the \code{type} property set to \code{'canvasImage'} and the \code{data} property set
-to an object containing the image data, \code{{ image: ImageBitmap }}.
+thread for display.
 }
 \details{
+The resulting webR output messages are of type \code{Message} with the \code{type}
+property set as \code{'canvas'} and the \code{data} property populated with further
+details about the event that triggered the message.
+
+When the graphics device creates a new page an output message is emitted with
+the \code{data} property set to \code{{ event: 'canvasNewPage' }}.
+
+When bitmap image data is sent to the main thread for display, a message is
+emitted with the the bitmap additionally included as part of the \code{data}
+property, \verb{\{ event: 'canvasImage', image: ImageBitmap \}}.
+
 A 2x scaling is used to improve the bitmap output visual quality. As such,
 the width and height of the HTML canvas element should be twice the width and
 height of the graphics device.

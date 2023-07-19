@@ -1,6 +1,9 @@
 ---
 title: "WebR - R in the Browser"
-format: html
+format:
+  html:
+    include-in-header:
+      - file: ace-editor.html
 toc: true
 ---
 
@@ -22,29 +25,49 @@ Try a [demo of the webR REPL](https://webr.r-wasm.org/latest/) directly in your 
 
 ```{=html}
 <button class="btn btn-success btn-sm" disabled type="button" id="runButton">Loading webR...</button>
-<div id="editor"></div>
+<div id="editor">fit <- lm(mpg ~ am, data=mtcars)
+summary(fit)</div>
 <pre><code id="out"></code></pre>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/r/r.js"></script>
+<canvas
+  id="canvas"
+  width="1008"
+  height="1008"
+  style="display: none; margin: auto; width: 700px;"
+></canvas>
 <script type="module">
-  const editor = CodeMirror((elt) => {
-    elt.style.border = '1px solid #eee';
-    elt.style.height = 'auto';
-    document.getElementById('editor').append(elt);
-  },{
-    value: 'fit <- lm(mpg ~ am, data=mtcars)\nsummary(fit)',
-    lineNumbers: true,
-    mode: 'r',
-    theme: 'light default',
-    viewportMargin: Infinity,
-  });
-  import { WebR } from 'https://webr.r-wasm.org/v0.1.1/webr.mjs';
+  var editor = ace.edit("editor");
+  editor.setOptions({ fontSize: "11pt", maxLines: Infinity });
+  editor.session.setMode("ace/mode/r");
+
+  import { WebR } from 'https://webr.r-wasm.org/latest/webr.mjs';
   const webR = new WebR();
   await webR.init();
+  await webR.evalRVoid('options(device=webr::canvas)');
   const shelter = await new webR.Shelter();
 
+  // Handle webR output messages in an async loop
+  (async ()=>{
+    for (;;) {
+      const output = await webR.read();
+      switch (output.type) {
+        case 'canvas':
+          let canvas = document.getElementById('canvas');
+          if (output.data.event === 'canvasNewPage') {
+            canvas.style.display = 'block';
+            canvas.getContext('2d').clearRect(0, 0, 1008, 1008);
+          }
+          if (output.data.event === 'canvasImage') {
+            canvas.getContext('2d').drawImage(output.data.image, 0, 0);
+          }
+          break;
+        default:
+          break;
+      }
+    }
+  })();
+
   async function runR() {
+    document.getElementById('canvas').style.display = 'none';
     let code = editor.getValue();
     const result = await shelter.captureR(code, {
       withAutoprint: true,
