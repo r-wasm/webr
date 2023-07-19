@@ -7,8 +7,8 @@ import { FilesInterface } from '../App';
 import './Files.css';
 
 const FolderIcon = ({ isOpen }: { isOpen: boolean }) => isOpen
-  ? <Fa.FaFolderOpen color="e8a87c" className="icon" />
-  : <Fa.FaFolder color="e8a87c" className="icon" />;
+  ? <Fa.FaFolderOpen className="icon icon-folder" />
+  : <Fa.FaFolder className="icon icon-folder" />;
 
 interface ITreeNode {
   id: number

@@ -77,3 +77,7 @@
   vertical-align: middle;
   padding-right: 5px;
 }
+
+.directory .icon-folder {
+  color: #e8a87c;
+}
