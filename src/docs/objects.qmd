@@ -1,5 +1,5 @@
 ---
-title: "R Object Memory Management"
+title: "Managing R Objects"
 format: html
 toc: true
 ---
@@ -54,6 +54,9 @@ Unlike normal shelters, the global shelter can't be purged all at once. A purge 
 
 To avoid memory leaks, all `RObject` instances should be destroyed once they are no longer in use. This requires precautions to ensure destruction when a JavaScript error is thrown and interrupts execution. A useful pattern is to wrap code manipulating an `RObject` within a JavaScript `try`/`finally` block to ensure that the R object reference is always destroyed once the work is complete.
 
+::: {.panel-tabset}
+## JavaScript
+
 ``` javascript
 const obj = await webR.evalR('42 + 123');
 try {
@@ -63,6 +66,22 @@ try {
   webR.destroy(obj);
 }
 ```
+
+## TypeScript
+
+``` typescript
+import type { RDouble } from '@r-wasm/webr';
+
+const obj = await webR.evalR('42 + 123') as RDouble;
+try {
+  const result = await obj.toNumber();
+  console.log(result);
+} finally {
+  webR.destroy(obj);
+}
+```
+
+:::
 
 However this pattern quickly shows its limits when multiple objects are transferred from R because each object requires its own `try` / `finally` blocks.
 
@@ -95,7 +114,10 @@ To avoid increasingly nested blocks, it is often preferable to work with a shelt
 
 The nested `try` / `finally` blocks example can be refactored as:
 
-```javascript
+::: {.panel-tabset}
+## JavaScript
+
+``` javascript
 const myShelter = await new webR.Shelter();
 
 try {
@@ -108,6 +130,26 @@ try {
   myShelter.purge();
 }
 ```
+
+## TypeScript
+
+``` typescript
+import type { RDouble } from '@r-wasm/webr';
+
+const myShelter = await new webR.Shelter();
+
+try {
+  const obj1 = await myShelter.evalR('42 + 123') as RDouble;
+  const obj2 = await myShelter.evalR('42 * 123') as RDouble;
+
+  const result = await obj1.toNumber() + await obj2.toNumber();
+  console.log(result);
+} finally {
+  myShelter.purge();
+}
+```
+
+:::
 
 A list of available methods can be found in the methods section of the [`Shelter` class reference](api/js/classes/WebR.Shelter.md#methods). This includes similar methods for interacting with R or evaluating code to those provided on the [`WebR`](api/js/classes/WebR.WebR.md#methods) class.
 

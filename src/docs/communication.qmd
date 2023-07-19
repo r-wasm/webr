@@ -74,7 +74,7 @@ The [`WebR.close()`](api/js/classes/WebR.WebR.md#close) method closes down the c
 A useful pattern for a web application making use of webR is to handle output messages in an asynchronous loop,
 
 ``` javascript
-async run() {
+async function run() {
   for (;;) {
     const output = await webR.read();
     switch (output.type) {

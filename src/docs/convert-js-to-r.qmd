@@ -14,11 +14,26 @@ When an R object is instantiated in this way, webR communicates with the worker 
 
 Once the object has been created on the worker thread, a promise is returned resolving as a reference to the new R object [in the form of an `RObject`](objects.qmd). In a modern asynchronous JavaScript environment, the `await` and `new` keywords can be combined.
 
+::: {.panel-tabset}
+## JavaScript
+
 ``` javascript
 await webR.init();
 let d = await new webR.RObject([2, 4, 6]);
 await d.toArray();
 ```
+
+## TypeScript
+
+``` typescript
+import type { RDouble } from '@r-wasm/webr';
+
+await webR.init();
+let d = await new webR.RObject([2, 4, 6]) as RDouble;
+await d.toArray();
+```
+
+:::
 
     [2, 4, 6]
 
@@ -98,9 +113,9 @@ await webR.evalR('print(foo)');
 Alternatively, and to avoid adding to the global scope, a new environment can be directly constructed to be used with [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr),
 
 ``` javascript
-let arr = await new webR.RObject([10, 21, 32]);
-let env = await new webR.REnvironment({ foo: arr });
-await webR.evalR('print(foo)', env);
+const arr = await new webR.RObject([10, 21, 32]);
+const env = await new webR.REnvironment({ foo: arr });
+await webR.evalR('print(foo)', { env });
 ```
 
     [1] 10 21 32

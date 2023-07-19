@@ -155,6 +155,9 @@ console.log(output);
 
 The following snippet demonstrates binding a JavaScript object into the R global environment. The JavaScript object is automatically converted into an R object, and the value is then used in the subsequent R evaluation.
 
+::: {.panel-tabset}
+## JavaScript
+
 ``` javascript
 await webR.objs.globalEnv.bind('arr', [2,4,6,8,9]);
 let result = await webR.evalR('sample(arr, 3)');
@@ -162,6 +165,20 @@ let output = await result.toArray();
 
 console.log(output);
 ```
+
+## TypeScript
+
+``` typescript
+import type { RDouble } from '@r-wasm/webr';
+
+await webR.objs.globalEnv.bind('arr', [2,4,6,8,9]);
+let result = await webR.evalR('sample(arr, 3)') as RDouble;
+let output = await result.toArray();
+
+console.log(output);
+```
+
+:::
 
     [2, 9, 6]
 
