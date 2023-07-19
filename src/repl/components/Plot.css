@@ -37,6 +37,7 @@
   border: none;
   color: var(--secondary);
   padding: 5px;
+  font-size: 14px;
 }
 
 .plot-actions > button:hover {

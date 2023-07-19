@@ -15,6 +15,7 @@
   background-color: transparent;
   border: none;
   color: var(--secondary);
+  font-size: 14px;
 }
 
 .editor-actions > button:hover {
