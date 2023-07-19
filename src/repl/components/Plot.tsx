@@ -87,7 +87,9 @@ export function Plot({
           </button>
         </div>
       </div>
-      <div ref={plotContainterRef} className="plot-container"></div>
+      <div className='plot-background'>
+        <div ref={plotContainterRef} className="plot-container"></div>
+      </div>
     </div>
   );
 }
