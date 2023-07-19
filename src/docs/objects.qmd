@@ -160,3 +160,46 @@ Shelters also provide a range of [R object class proxies](api/js/classes/WebR.Sh
 ``` javascript
 const obj = await new myShelter.RDouble([1, 1.5, 2, 2.5, 3]);
 ```
+
+
+## Typing an `RObject`
+
+When working with TypeScript, it becomes important to pay attention to the typing for a given R object reference, as the methods available for use depends on the kind of data referenced. Unfortunately, functions such as [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) may run arbitrary R code and so it is not clear what type of R object will be returned. As such, they are typed to return R object references as a generic `RObject`.
+
+If you are sure of the type of data referenced by the returned R object, it is possible to use the TypeScript `as` keyword to assert the type that you are expecting. We make use of this method throughout this documentation in the TypeScript examples, so that the relevant methods can be invoked without error.
+
+``` typescript
+import type { RDouble } from '@r-wasm/webr';
+
+let result = await webR.evalR('rnorm(10,5,1)') as RDouble;
+let output = await result.toTypedArray();
+```
+
+### Type predicate functions
+
+For the case where type assertion is not appropriate, such as when the data referenced by an R object is unknown, webR provides a selection of [type predicate functions](api/js/modules/RMain.md#functions). The functions return boolean `true` if the argument's R object type matches, and so different actions can be taken at runtime depending on the type. In addition, the TypeScript compiler is able to use the result of the functions to narrow the `RObject` type.
+
+A useful pattern is to check the type of a returned R object and throwing an `Error` early if it is not as expected. After the check, Typescript will narrow the R object type automatically while it remains in scope.
+
+``` typescript
+import { isREnvironment } from '@r-wasm/webr';
+
+let result = await webR.evalR('as.environment(list(foo=1, bar=2, baz=3))');
+
+if (!isREnvironment(result)) {
+  throw new Error("Unexpected type of result from evalR evaluation.");
+}
+
+let output = await result.ls();
+console.log('The result is an environment containing: ', output);
+```
+
+Notice that TypeScript is able to deduce that the [`ls()`](api/js/classes/RWorker.REnvironment.md#ls) method is indeed valid for use with the `result` object, despite the method not existing on the generic `RObject` class. Typescript has successfully narrowed the object type to an [`REnvironment`](api/js/modules/RMain.md#renvironment).
+
+### Typing of JavaScript conversions
+
+Explicitly converting an `RObject` to JavaScript can be done by invoking the [`toJs()`](api/js/classes/RWorker.RObject.md#tojs) method, which returns a JavaScript representation of the referenced R object data. In general, the JavaScript object returned by `toJs()` is of type [`WebRDataJs`](api/js/modules/RObject.md#webrdatajs), a type union covering all possible R object data.
+
+Subclasses of `RObject` will return different types from the `WebRDataJs` type union. For example, an `RNull` object will return a JavaScript representation with type [`WebRDataJsNull`](api/js/modules/RObject.html#webrdatajsnull).
+
+Further information about converting R objects to JavaScript can be found in the next section.
