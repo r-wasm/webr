@@ -3,9 +3,18 @@
 #' A graphics device that generates HTML canvas API calls and executes them on
 #' the worker thread using a JavaScript `OffscreenCanvas`. Once drawing has
 #' finished, a JavaScript `ImageBitmap` object is transmitted to the main webR
-#' thread for display. The resulting webR output messages are of type `Message`
-#' with the `type` property set to `'canvasImage'` and the `data` property set
-#' to an object containing the image data, `{ image: ImageBitmap }`.
+#' thread for display.
+#'
+#' The resulting webR output messages are of type `Message` with the `type`
+#' property set as `'canvas'` and the `data` property populated with further
+#' details about the event that triggered the message.
+#'
+#' When the graphics device creates a new page an output message is emitted with
+#' the `data` property set to `{ event: 'canvasNewPage' }`.
+#'
+#' When bitmap image data is sent to the main thread for display, a message is
+#' emitted with the the bitmap additionally included as part of the `data`
+#' property, `{ event: 'canvasImage', image: ImageBitmap }`.
 #'
 #' A 2x scaling is used to improve the bitmap output visual quality. As such,
 #' the width and height of the HTML canvas element should be twice the width and

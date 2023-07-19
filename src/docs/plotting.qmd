@@ -1,0 +1,268 @@
+---
+title: "Plotting"
+format:
+  html:
+    include-in-header:
+      - file: ace-editor.html
+toc: true
+---
+
+## Plotting with a HTML canvas
+
+WebR's supporting R package includes a built in graphics device, [`webr::canvas()`](api/r.html#canvas). When R uses this device, messages are sent to the main thread containing bitmap image data. The image data can then be displayed using a HTML [Canvas](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) element on the page.
+
+A 2x scaling is used to improve the visual quality of the bitmap output. For the best results the width and height of the HTML canvas element displaying the final plot should be twice that of the graphics device. For example, the default arguments for `webr::canvas()` create a device with a width and height of `504`, and so a correctly sized HTML canvas will have `width` and `height` attributes set to `1008`.
+
+The background colour for the plot can be set with the `bg` argument, and the text size may be changed by setting the `pointsize` argument.
+
+::: callout-warning
+The `webr::canvas()` graphics device relies on [`OffscreenCanvas`](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas) support in the web browser or JavaScript engine running webR. A modern and up-to-date browser will be required for plotting with this device. Older browsers without `OffscreenCanvas` support should still be able to plot using the [Cairo-based](#cairo) graphics devices, such as `png()`.
+:::
+
+### Output Messages
+
+The `webr::canvas()` graphics device emits [webR output messages](communication.qmd#messages) when triggered by certain events. The resulting output messages are of type [`Message`](api/js/interfaces/Message.Message.md) with the `type` property set as `'canvas'` and the `data` property populated with further details about the event that caused the message.
+
+#### New plot page
+
+When the graphics device creates a new page for plotting, a message is emitted of the form,
+
+``` javascript
+{ type: 'canvas', data: { event: 'canvasNewPage' } }
+```
+
+This message can be used as a signal to clear any existing plots, or create a new empty HTML canvas element.
+
+#### Bitmap image data
+
+When the graphics device is ready to send image data to the main thread for display, a message is emitted with the the image additionally included in the form of a JavaScript [`ImageBitmap`](https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap) object. The message emitted is of the form,
+
+``` javascript
+{ type: 'canvas', data: { event: 'canvasImage', image: ImageBitmap } }
+```
+
+### Drawing the bitmap image data
+
+Once the [`ImageBitmap`](https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap) data has been received by the main thread, it can be displayed on the containing web page. A HTML canvas element can be used to display the image data using its [2D rendering context](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D). The HTML canvas element can be created dynamically by the running JavaScript environment, or it may already exist in the page.
+
+Once a 2D rendering context has been obtained, the image data can be displayed using the [`drawImage()`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage) method.
+
+### Setting the default device
+
+R's default graphics device can be set so that `webr::canvas()` is always used for new plots. Before running any plotting code, evaluate the following R code to set the default device,
+
+``` javascript
+await webR.evalRVoid('options(device=webr::canvas)');
+```
+
+### Text rendering and font support
+When the `webr::canvas()` graphics device is used it is the web browser that handles the specifics of text rendering, and so any fonts installed on the host machine can be used with the `family` argument when plotting. Modern features provided by the browser such as RTL text, ligatures, colour emoji, or the use of Arabic, Japanese or Cyrillic script should also be handled automatically.
+
+The editable R code in this example demonstrates font and text features, feel free to experiment.
+
+```{=html}
+<button class="btn btn-success btn-sm" disabled type="button" id="runButton">Loading webR...</button>
+<div id="editor">plot(rnorm(1000), rnorm(1000), col=rgb(0,0,0,0.5),
+     xlim=c(-5, 5), ylim=c(-5, 5), main="This is the title 🚀",
+     xlab="This is the x label", ylab="This is the y label",
+     family="Comic Sans MS")
+text(-4, 4, "This is English", family="cursive")
+text(-4, -4, "هذا مكتوب باللغة العربية")
+text(4, 4, "これは日本人です")
+text(4, -4, "זה כתוב בעברית")</div>
+<pre><code id="out"></code></pre>
+<canvas
+  id="canvas"
+  width="1000"
+  height="600"
+  style="display: none; margin: auto; width: 700px;"
+></canvas>
+<script type="module">
+  var editor = ace.edit("editor");
+  editor.setOptions({ fontSize: "11pt", maxLines: Infinity });
+  editor.session.setMode("ace/mode/r");
+
+  import { WebR } from 'https://webr.r-wasm.org/main/webr.mjs';
+  const webR = new WebR();
+  await webR.init();
+  await webR.evalRVoid('options(device=function(...){webr::canvas(width=500, height=300)})');
+  const shelter = await new webR.Shelter();
+  let canvas = undefined;
+
+  // Handle webR output messages in an async loop
+  (async ()=>{
+    for (;;) {
+      const output = await webR.read();
+      switch (output.type) {
+        case 'canvas':
+          let canvas = document.getElementById('canvas');
+          if (output.data.event === 'canvasNewPage') {
+            canvas.style.display = 'block';
+            canvas.getContext('2d').clearRect(0, 0, 1000, 600);
+          }
+          if (output.data.event === 'canvasImage') {
+            canvas.getContext('2d').drawImage(output.data.image, 0, 0);
+          }
+          break;
+        default:
+          break;
+      }
+    }
+  })();
+
+  async function runR() {
+    document.getElementById('canvas').style.display = 'none';
+    let code = editor.getValue();
+    const result = await shelter.captureR(code, {
+      withAutoprint: true,
+      captureStreams: true,
+      captureConditions: false
+    });
+    try {
+      const out = result.output.filter(
+        evt => evt.type == 'stdout' || evt.type == 'stderr'
+      ).map((evt) => evt.data);
+      document.getElementById('out').innerText = out.join('\n');
+    } finally {
+      shelter.purge();
+    }
+  }
+  document.getElementById('runButton').onclick = runR;
+  document.getElementById('runButton').innerText = 'Run code';
+  document.getElementById('runButton').disabled = false;
+</script>
+```
+
+### Example: Handling multiple plots
+
+In the following fully worked example, multiple plots are handled by listening for `'canvasNewPage'` events from the graphics device and dynamically adding new HTML canvas elements to the page.
+
+``` html
+<html>
+  <head>
+      <title>WebR Multiple Plots Example</title>
+  </head>
+  <body>
+    <h1>WebR Multiple Plots Example</h1>
+    <p><div id="loading">Please wait, webR is loading...</div></p>
+    <button id="plot-button" disabled="true">Run graphics demo</button>
+    <p>See the JavaScript console for additional output messages.</p>
+    <div id="plot-container"></div>
+    <script type="module">
+      import { WebR } from 'https://webr.r-wasm.org/latest/webr.mjs';
+      const webR = new WebR();
+      let canvas = null;
+      let loading = document.getElementById('loading');
+      let container = document.getElementById('plot-container');
+      let button = document.getElementById('plot-button');
+
+      button.onclick = () => {
+        container.replaceChildren();
+        webR.evalRVoid(`
+          webr::canvas()
+          demo(graphics)
+          demo(persp)
+          dev.off()
+        `);
+      }
+
+      (async () => {
+        // Remove the loading message once webR is ready
+        await webR.init();
+        loading.remove();
+        button.removeAttribute('disabled');
+
+        // Handle webR output messages in an async loop
+        for (;;) {
+          const output = await webR.read();
+          switch (output.type) {
+            case 'canvas':
+              if (output.data.event === 'canvasImage') {
+                // Add plot image data to the current canvas element
+                canvas.getContext('2d').drawImage(output.data.image, 0, 0);
+              } else if (output.data.event === 'canvasNewPage') {
+                // Create a new canvas element
+                canvas = document.createElement('canvas');
+                canvas.setAttribute('width', '1008');
+                canvas.setAttribute('height', '1008');
+                canvas.style.width = "450px";
+                canvas.style.height = "450px";
+                canvas.style.display = "inline-block";
+                container.appendChild(canvas);
+              }
+              break;
+            default:
+              console.log(output);
+          }
+        }
+      })();
+    </script>
+  </body>
+</html>
+```
+
+Click the button below to see the output of this demo,
+
+```{=html}
+<button id="plot-button" class="btn btn-success btn-sm" disabled="true">Run graphics demo</button>
+<div style="text-align: center" id="plot-container"></div>
+<script type="module">
+    import { WebR } from 'https://webr.r-wasm.org/latest/webr.mjs';
+    const webR = new WebR();
+    let canvas = null;
+    let container = document.getElementById('plot-container');
+    let button = document.getElementById('plot-button');
+
+    button.onclick = () => {
+      container.replaceChildren();
+      webR.evalRVoid(`
+        webr::canvas()
+        demo(graphics)
+        demo(persp)
+        dev.off()
+      `);
+    }
+
+    (async () => {
+      await webR.init();
+      button.removeAttribute('disabled');
+
+      // Handle webR output messages in an async loop
+      for (;;) {
+        const output = await webR.read();
+        switch (output.type) {
+          case 'canvas':
+            if (output.data.event === 'canvasImage') {
+              // Add plot image data to the current canvas element
+              canvas.getContext('2d').drawImage(output.data.image, 0, 0);
+            } else if (output.data.event === 'canvasNewPage') {
+              // Create a new canvas element
+              canvas = document.createElement('canvas');
+              canvas.setAttribute('width', '1008');
+              canvas.setAttribute('height', '1008');
+              canvas.style.width = "360px";
+              canvas.style.height = "360px";
+              canvas.style.display = "inline-block";
+              container.appendChild(canvas);
+            }
+            break;
+          default:
+            console.log(output);
+        }
+      }
+    })();
+</script>
+```
+
+
+## Plotting with other graphics devices
+
+### Bitmap graphics using Cairo for Wasm, e.g. `png()` {#cairo}
+
+### Vector graphics using `pdf()` and `svglite()`
+
+### Obtaining the plot data from the VFS
+
+### Text rendering and font support
+
+

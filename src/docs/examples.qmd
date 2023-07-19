@@ -223,6 +223,41 @@ webR.destroy(result);
 
     [5.373198157561013, 4.493213148077507, 5.134879842881727]
 
+### Plotting with a HTML canvas element
+
+WebR's support package includes a built in graphics device, [`webr::canvas()`](api/r.html#canvas). When R uses this device, messages are sent to the main thread containing bitmap image data. The image data can then be displayed using a HTML [Canvas](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) element on the page.
+
+In this example, R executes a plotting command and webR's output message queue is then [flushed](api/js/classes/WebR.WebR.md#flush). The image data is retrieved from the output messages and drawn to the HTML Canvas element with fixed `id="plot-canvas"`.
+
+``` html
+<canvas id="plot-canvas" width="1008" height="1008"></canvas>
+
+<script type="module">
+    import { WebR } from 'https://webr.r-wasm.org/latest/webr.mjs';
+    const webR = new WebR();
+
+    await webR.evalRVoid(`
+      webr::canvas()
+      plot(rnorm(1000), rnorm(1000),
+           xlab="x axis label", ylab="y axis label",
+           main="An rnorm plot")
+      dev.off()
+    `);
+
+    const msgs = await webR.flush();
+    msgs.forEach(msg => {
+      if (msg.type === 'canvas' && msg.data.event === 'canvasImage') {
+        const canvas = document.getElementById('plot-canvas');
+        canvas.getContext('2d').drawImage(msg.data.image, 0, 0);
+      } else {
+        console.log(msg);
+      }
+    });
+</script>
+```
+
+See the [Plotting](plotting.qmd) section for further information about plotting with webR.
+
 ## Fully worked examples
 
 ### Creating an interactive webR REPL console
@@ -282,7 +317,7 @@ After loading, the resulting web page should present an interactive R console si
   </div>
 </div>
 <script type="module">
-  import { Console } from 'https://webr.r-wasm.org/v0.1.1/webr.mjs';
+  import { Console } from 'https://webr.r-wasm.org/latest/webr.mjs';
   const webRConsole = new Console({
     stdout: line => document.getElementById('out').append(line + '\n'),
     stderr: line => document.getElementById('out').append(line + '\n'),

@@ -47,7 +47,7 @@ webR.read().then((message) => {
 
     { type: 'stdout', data: 'R is a collaborative project with many contributors.' }
 
-## Message passing and requests
+## Message passing and requests {#messages}
 
 Communication between the main thread and the webR worker thread is in the form of messages sent over an established communication channel. A web application making use of webR should send input messages and handle output messages.
 
@@ -147,22 +147,17 @@ A message of type `closed` is issued when the webR worker thread and communicati
 
 This type of message can be a useful signal to break out of an otherwise infinite asynchronous loop of reading webR output messages.
 
-#### Plotting with the webR HTML canvas
+#### Canvas
 
-WebR's support package includes a built in graphics device, `webr::canvas()`, designed for drawing graphics using the JavaScript [Canvas API](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API). This graphics device is implemented by rendering with an [`OffscreenCanvas`](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas) object on the worker thread, and then transmitting the resulting image data back to the main thread as an [`ImageBitmap`](https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap).
-
-Output messages containing canvas image data are of the form,
+Messages from webR's supporting `webr::canvas()` graphics device are of the form,
 
 ``` javascript
-{ type: 'canvasImage', data: { image: ImageBitmap } }
+{ type: 'canvas', data: { event: string, image?: ImageBitmap } }
 ```
 
-The resulting image can be redrawn to any 2D canvas context that is available on the main thread. For example, for a fixed HTML canvas element with `id="plot-canvas"`, messages of type `canvasImage` could be handled by executing,
+The `event` property gives the name of the event type emitted from the graphics device. Plot image data is transmitted to the main thread in a `'canvasImage'` event. Other types of event may be emitted, for example to signify that a new plot has begun.
 
-``` javascript
-const canvas = document.getElementById('plot-canvas');
-canvas.getContext('2d').drawImage(message.data.image, 0, 0);
-```
+Further information about plotting with webR can be found in the [Plotting](plotting.qmd) section.
 
 ### Emscripten virtual filesystem
 
