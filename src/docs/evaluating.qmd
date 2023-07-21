@@ -23,7 +23,7 @@ The normal stream output is written to the JavaScript console. The error stream 
 
 ### Returning JavaScript values when evaluating R code
 
-A selection of convenience methods return the result of evaluating R code as a promise  to a JavaScript object, rather than an `RObject` reference. The benefit is that since the returned object is of a raw JavaScript type, it does not need to be memory managed like an `RObject` result would be.
+A selection of convenience methods return the result of evaluating R code as a promise to a JavaScript object, rather than an `RObject` reference. The benefit is that since the returned object is of a raw JavaScript type, it does not need to be memory managed like an `RObject` result would be.
 
 | Method                                                            | Returned object type |
 |-----------------------------------------------|------------------------|
