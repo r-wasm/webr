@@ -36,6 +36,12 @@ Clone the repo into a new directory, `cd` into the directory, then run `./config
 
 A `dist` directory is created which when finished contains the R Wasm files and an `index.html` file ready to serve the included R REPL app.
 
+### WebAssembly libraries
+
+WebR relies on additional libraries compiled for Wasm for both Cairo graphics support and for building R packages that depend on certain system libraries. By default, only a minimal set of libraries are built for use with webR.
+
+If you'd prefer to build all of the available system libraries for Wasm, `cd` into the `libs` directory and run `make all` to build the additional libraries, then finally `cd ..` and run `make clean-webr && make` to rebuild webR. R will automatically detect the additional Wasm libraries and integrate Cairo graphics support as part of the build.
+
 ### Node and Emscripten versioning
 
 WebR requires compiler and runtime support for [WebAssembly.Exception](https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/Exception), used internally for R error handling. This requires a version of Emscripten >= 3.1.25 and Node >= 17.0.0, which may be newer than the versions provided by your system package manager. An easy way to install and manage multiple versions of Node and Emscripten is by using [nvm](https://github.com/nvm-sh/nvm) and [emsdk](https://github.com/emscripten-core/emsdk).

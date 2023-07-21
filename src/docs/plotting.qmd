@@ -56,7 +56,7 @@ await webR.evalRVoid('options(device=webr::canvas)');
 ```
 
 ### Text rendering and font support
-When the `webr::canvas()` graphics device is used it is the web browser that handles the specifics of text rendering, and so any fonts installed on the host machine can be used with the `family` argument when plotting. Modern features provided by the browser such as RTL text, ligatures, colour emoji, or the use of Arabic, Japanese or Cyrillic script should also be handled automatically.
+When the `webr::canvas()` graphics device is used it is the web browser that handles the specifics of text rendering, and so any fonts installed on the host system can be used with the `family` argument when plotting. Modern features provided by the browser such as RTL text, ligatures, colour emoji, or the use of Arabic, Japanese or Cyrillic script should also be handled automatically.
 
 The editable R code in this example demonstrates font and text features, feel free to experiment.
 
@@ -257,12 +257,35 @@ Click the button below to see the output of this demo,
 
 ## Plotting with other graphics devices
 
+In older browsers or JavaScript engines without `OffscreenCanvas` support, alternative graphics devices may still be used to produce plots. The following methods do not rely on direct rendering in the web browser, but instead the resulting image data is created entirely within the WebAssembly environment and written to the Emscripten virtual filesystem.
+
 ### Bitmap graphics using Cairo for Wasm, e.g. `png()` {#cairo}
+
+WebR may be built with bitmap graphics support though the use of a WebAssembly version of the [Cairo graphics library](https://www.cairographics.org/) and its prerequisites. This support is not enabled by default when [building webR from source](https://github.com/r-wasm/webr#build-instructions), as it significantly increases the output WebAssembly binary size and build time, but Cairo graphics support is explicitly enabled for the publicly available distributions of [webR via CDN](downloading.qmd#download-from-cdn).
+
+When webR is built with Cairo support the following graphics devices are available for use with R in the usual way:
+
+ * [cairo_pdf()](https://stat.ethz.ch/R-manual/R-devel/library/grDevices/html/cairo.html)
+ * [cairo_ps()](https://stat.ethz.ch/R-manual/R-devel/library/grDevices/html/cairo.html)
+ * [svg()](https://stat.ethz.ch/R-manual/R-devel/library/grDevices/html/cairo.html)
+ * [png()](https://stat.ethz.ch/R-manual/R-devel/library/grDevices/html/png.html)
+ * [jpeg()](https://stat.ethz.ch/R-manual/R-devel/library/grDevices/html/png.html)
+ * [bmp()](https://stat.ethz.ch/R-manual/R-devel/library/grDevices/html/png.html)
+ * [tiff()](https://stat.ethz.ch/R-manual/R-devel/library/grDevices/html/png.html)
+
+
+### Text rendering and font support
+
+Unlike the HTML canvas device described in the previous section, rendering graphics entirely within the WebAssembly environment presents a challenge in that the sandbox does not have access to the font data installed in the host system. As such, fonts must be made available for use on the Emscripten virtual filesystem before plotting occurs.
+
+When built with Cairo support, webR bundles a minimal selection of fonts. The [Noto](https://fonts.google.com/noto) series of fonts was chosen for this purpose for its open licence and notably high support for internationalisation,
+
+ * [Noto Sans](https://fonts.google.com/noto/specimen/Noto+Sans)
+ * [Noto Serif](https://fonts.google.com/noto/specimen/Noto+Serif)
+ * [Noto Sans Mono](https://fonts.google.com/noto/specimen/Noto+Sans+Mono)
+
+Access to font data is managed through a WebAssembly build of [Fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/). The fonts bundled by webR support Latin, Cyrillic and Greek scripts, and additional fonts can be uploaded to the Emscripten virtual filesystem in the directory `/home/web_user/fonts` to allow for different typefaces or additional script support.
 
 ### Vector graphics using `pdf()` and `svglite()`
 
 ### Obtaining the plot data from the VFS
-
-### Text rendering and font support
-
-
