@@ -288,4 +288,49 @@ Access to font data is managed through a WebAssembly build of [Fontconfig](https
 
 ### Vector graphics using `pdf()` and `svglite()`
 
+Vector graphics can be produced with webR through use of the built-in [`pdf()`](https://stat.ethz.ch/R-manual/R-devel/library/grDevices/html/pdf.html) graphics device, or through the `svglite` package, which can be [installed in webR](packages.qmd#downloading-packages-from-a-webr-binary-repository) using the command `webr::install("svglite")`.
+
 ### Obtaining the plot data from the VFS
+
+The contents of graphics output that has been written to the Emscripten virtual filesystem can be obtained as a JavaScript `UInt8Array` using the [Filesystem API](api/js/interfaces/WebR.WebRFS.md). The data can then be offered for display or download by working with the resulting `ArrayBuffer`.
+
+In this example, a vector graphics plot is created using the `pdf()` graphics device, the contents of the file is read from the Emscripten virtual filesystem, and finally the PDF file is offered to the user via a download link.
+
+``` html
+<html>
+  <head>
+    <title>WebR PDF Plot Download Example</title>
+  </head>
+  <body>
+    <h1>WebR PDF Plot Download Example</h1>
+    <p id="loading">Please wait, webR is working on producing a plot...</div>
+    <p id="link-container"></p>
+    <script type="module">
+      import { WebR } from 'https://webr.r-wasm.org/latest/webr.mjs';
+      const webR = new WebR();
+      await webR.init();
+
+      // Create a PDF file containing a plot
+      await webR.evalRVoid(`
+        pdf()
+        hist(rnorm(10000))
+        dev.off()
+      `);
+
+      // Obtain the contents of the file from the VFS
+      const plotData = await webR.FS.readFile('/home/web_user/Rplots.pdf');
+
+      // Create a link for the user to download the file contents
+      const blob = new Blob([plotData], { type: 'application/octet-stream' });
+      const link = document.createElement('a');
+      link.download = 'Rplots.pdf';
+      link.href = URL.createObjectURL(blob);
+      link.textContent = 'Click to download PDF';
+      document.getElementById('link-container').appendChild(link);
+
+      // Everything is ready, remove the loading message
+      document.getElementById('loading').remove();
+    </script>
+  </body>
+</html>
+```
