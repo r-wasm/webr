@@ -20,6 +20,8 @@
 
 * Add custom `WebRError` classes so that errors from webR can be identified by testing thrown exceptions with `instanceof WebRError`.
 
+* Reimplemented the demo webR REPL app using the React framework, allowing us to drop jQuery as a dependency. The reworked app has various new features and improvements: now includes a tabbed CodeMirror editor with R syntax highlighting and autocomplete, support for text document paging and displaying built-in R help/demos/documentation, expanded UI for virtual filesystem management, improved plot handling including paged multiple plots.
+
 ## Breaking changes
 
  * Removed the legacy `console.mjs` build target. The `Console` class is re-exported on the default `WebR` entrypoint, and so the extra build target is not required. This is technically a breaking change, but the legacy entrypoint was never documented and so we believe the change has only minor effect.
