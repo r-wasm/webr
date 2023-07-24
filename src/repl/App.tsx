@@ -63,27 +63,10 @@ root.render(<StrictMode><App /></StrictMode>);
 (async () => {
   await webR.init();
 
-  // Set the R pager to forward file details to the main thread for display
-  await webR.evalRVoid(`
-    options(
-      pager=function(files, header, title, delete.file){
-        webr::eval_js(paste0(
-          "chan.write({",
-          "  type: 'pager',",
-          "  data: {",
-          "    path: '", files[1], "',",
-          "    header: '", header[1], "',",
-          "    title: '", title, "',",
-          "    deleteFile: ", if (delete.file) "true" else "false", ",",
-          "  },",
-          "});"
-        ))
-        return(invisible(NULL))
-      }
-    )
-  `);
+  // Set the default graphics device, pager, and missing package handler
+  await webR.evalRVoid('webr::pager_install()');
+  await webR.evalRVoid('webr::canvas_install()');
   await webR.evalRVoid('webr::global_prompt_install()', { withHandlers: false });
-  await webR.evalRVoid('options(device=webr::canvas)');
 
   terminalInterface.write('\x1b[2K\r'); // Clear the loading message
 
