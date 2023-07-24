@@ -68,7 +68,7 @@ The editable R code in this example demonstrates font and text features, feel fr
      family="Comic Sans MS")
 text(-4, 4, "This is English", family="cursive")
 text(-4, -4, "هذا مكتوب باللغة العربية")
-text(4, 4, "これは日本人です")
+text(4, 4, "これは日本語です")
 text(4, -4, "זה כתוב בעברית")</div>
 <pre><code id="out"></code></pre>
 <canvas
