@@ -1,11 +1,16 @@
 import React from 'react';
-import { WebR } from '../../webR/webr-main';
+import { WebR, RFunction, Shelter } from '../../webR/webr-main';
 import { FaPlay, FaRegSave } from 'react-icons/fa';
 import { basicSetup, EditorView } from 'codemirror';
-import { EditorState, Compartment } from '@codemirror/state';
+import { EditorState, Compartment, Prec } from '@codemirror/state';
+import { autocompletion, CompletionContext } from '@codemirror/autocomplete';
+import { keymap } from '@codemirror/view';
+import { indentWithTab } from '@codemirror/commands';
 import { FilesInterface, TerminalInterface } from '../App';
 import { r } from 'codemirror-lang-r';
 import './Editor.css';
+import { WebRDataJsAtomic } from '../../webR/robj';
+import * as utils from './utils';
 
 const language = new Compartment();
 const tabSize = new Compartment();
@@ -72,15 +77,85 @@ export function Editor({
   const [editorView, setEditorView] = React.useState<EditorView>();
   const [files, setFiles] = React.useState<EditorFile[]>([]);
   const [activeFileIdx, setActiveFileIdx] = React.useState(0);
+  const runSelectedCode = React.useRef((): void => {});
 
   const activeFile = files[activeFileIdx];
   const isRFile = activeFile && activeFile.name.endsWith('.R');
   const isReadOnly = activeFile && activeFile.ref.editorState.readOnly;
 
+  const completionMethods = React.useRef<null | {
+    assignLineBuffer: RFunction;
+    assignToken: RFunction;
+    assignStart: RFunction;
+    assignEnd: RFunction;
+    completeToken: RFunction;
+    retrieveCompletions: RFunction;
+  }>(null);
+
+  React.useEffect(() => {
+    let shelter: Shelter | null = null;
+
+    webR.init().then(async () => {
+      shelter = await new webR.Shelter();
+      await webR.evalRVoid('rc.settings(func=TRUE, fuzzy=TRUE)');
+      completionMethods.current = {
+        assignLineBuffer: await shelter.evalR('utils:::.assignLinebuffer') as RFunction,
+        assignToken: await shelter.evalR('utils:::.assignToken') as RFunction,
+        assignStart: await shelter.evalR('utils:::.assignStart') as RFunction,
+        assignEnd: await shelter.evalR('utils:::.assignEnd') as RFunction,
+        completeToken: await shelter.evalR('utils:::.completeToken') as RFunction,
+        retrieveCompletions: await shelter.evalR('utils:::.retrieveCompletions') as RFunction,
+      };
+    });
+
+    return function cleanup() {
+      if (shelter) shelter.purge();
+    };
+  }, []);
+
+  const completion = React.useCallback(async (context: CompletionContext) => {
+    if (!completionMethods.current) {
+      return null;
+    }
+    const line = context.state.doc.lineAt(context.state.selection.main.head).text;
+    const {from, to, text} = context.matchBefore(/[a-zA-Z0-9_.:]*/) ?? {from: 0, to: 0, text: ''};
+    if (from === to && !context.explicit) {
+      return null;
+    }
+    await completionMethods.current.assignLineBuffer(line);
+    await completionMethods.current.assignToken(text);
+    await completionMethods.current.assignStart(from + 1);
+    await completionMethods.current.assignEnd(to + 1);
+    await completionMethods.current.completeToken();
+    const compl = await completionMethods.current.retrieveCompletions() as WebRDataJsAtomic<string>;
+    const options = compl.values.map((val) => {
+      if (!val){
+        throw new Error('Missing values in completion result.');
+      }
+      return { label: val };
+    });
+
+    return { from: from, options };
+  }, []);
+
   const editorExtensions = [
     basicSetup,
     language.of(r()),
-    tabSize.of(EditorState.tabSize.of(2))
+    tabSize.of(EditorState.tabSize.of(2)),
+    Prec.high(
+      keymap.of([
+        indentWithTab,
+        {
+          key: 'Mod-Enter',
+          run: (_: EditorView) => {
+            if (!runSelectedCode.current) return false;
+            runSelectedCode.current();
+            return true;
+          },
+        },
+      ]
+    )),
+    autocompletion({override: [completion]})
   ];
 
   const closeFile = (e: React.SyntheticEvent, index: number) => {
@@ -91,6 +166,20 @@ export function Editor({
     const prevFile = activeFileIdx - 1;
     setActiveFileIdx(prevFile < 0 ? 0 : prevFile);
   };
+
+  React.useEffect(() => {
+    runSelectedCode.current = (): void => {
+      if (!editorView) {
+        return;
+      }
+      let code = utils.getSelectedText(editorView);
+      if (code === '') {
+        code = utils.getCurrentLineText(editorView);
+        utils.moveCursorToNextLine(editorView);
+      }
+      webR.writeConsole(code);
+    };
+  }, [editorView]);
 
   const syncActiveFileState = React.useCallback(() => {
     if (!editorView || !activeFile) {
@@ -122,7 +211,7 @@ export function Editor({
       await webR.FS.writeFile(activeFile.path, data);
       filesInterface.refreshFilesystem();
     })();
-  }, [webR, syncActiveFileState, editorView]);
+  }, [syncActiveFileState, editorView]);
 
   React.useEffect(() => {
     if (!editorRef.current) {
