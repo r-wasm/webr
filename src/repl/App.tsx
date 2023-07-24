@@ -6,7 +6,7 @@ import Plot from './components/Plot';
 import Files from './components/Files';
 import { Readline } from 'xterm-readline';
 import { WebR } from '../webR/webr-main';
-import { CanvasMessage } from '../webR/webr-chan';
+import { CanvasMessage, PagerMessage } from '../webR/webr-chan';
 import './App.css';
 
 const webR = new WebR({
@@ -41,6 +41,24 @@ const filesInterface: FilesInterface = {
   refreshFilesystem: () => Promise.resolve(),
   openFileInEditor: () => { throw new Error('Unable to open file, editor not initialised.'); },
 };
+
+async function handleCanvasMessage(msg: CanvasMessage) {
+  const canvas = document.getElementById('plot-canvas') as HTMLCanvasElement;
+  const context = canvas.getContext('2d');
+  if (msg.data.event === 'canvasImage') {
+    context!.drawImage(msg.data.image, 0, 0);
+  } else if (msg.data.event === 'canvasNewPage') {
+    context!.clearRect(0, 0, canvas.width, canvas.height);
+  }
+}
+
+async function handlePagerMessage(msg: PagerMessage){
+    const { path, title, deleteFile } = msg.data;
+    await filesInterface.openFileInEditor(title, path, true);
+    if (deleteFile) {
+      webR.FS.unlink(path);
+    }
+}
 
 function App() {
   return (
@@ -85,30 +103,12 @@ root.render(<StrictMode><App /></StrictMode>);
           webR.writeConsole(command);
         });
         break;
-      case 'canvas': {
-        const canvas = document.getElementById('plot-canvas') as HTMLCanvasElement;
-        const context = canvas.getContext('2d');
-        const msgData = output.data as CanvasMessage['data'];
-        if (msgData.event === 'canvasImage') {
-          context!.drawImage(msgData.image, 0, 0);
-        } else if (msgData.event === 'canvasNewPage') {
-          context!.clearRect(0, 0, canvas.width, canvas.height);
-        }
+      case 'canvas':
+        await handleCanvasMessage(output as CanvasMessage);
         break;
-      }
-      case 'pager': {
-        const { path, title, deleteFile } = output.data as {
-          path: string;
-          header: string;
-          title: string;
-          deleteFile: boolean;
-        };
-        await filesInterface.openFileInEditor(title, path, true);
-        if (deleteFile) {
-          webR.FS.unlink(path);
-        }
+      case 'pager':
+        await handlePagerMessage(output as PagerMessage);
         break;
-      }
       case 'closed':
         throw new Error('The webR communication channel has been closed');
       default:
