@@ -91,6 +91,7 @@ if (serve) {
                     ...proxyRes.headers,
                     'cross-origin-opener-policy': 'same-origin',
                     'cross-origin-embedder-policy': 'require-corp',
+                    'cross-origin-resource-policy': 'cross-origin',
                   });
                   proxyRes.pipe(res, { end: true });
                 }
