@@ -24,3 +24,10 @@
 canvas <- function(width=504, height=504, pointsize=12, bg="transparent", ...) {
   .Call(ffi_dev_canvas, width, height, pointsize, bg)
 }
+
+#' Use the webR canvas device as the default graphics device
+#' @param ... Arguments to be passed to the canvas graphics device.
+#' @export
+canvas_install <- function(...) {
+  options(device = function() { webr::canvas(...) })
+}
