@@ -31,6 +31,11 @@ export interface FilesInterface {
   openFileInEditor: (name: string, path: string, readOnly: boolean) => Promise<void>;
 }
 
+export interface PlotInterface {
+  newPlot: () => void;
+  drawImage: (img: ImageBitmap) => void;
+}
+
 const terminalInterface: TerminalInterface = {
   println: (msg: string) => { console.log(msg); },
   read: () => Promise.reject(new Error('Unable to read from webR terminal.')),
@@ -42,13 +47,18 @@ const filesInterface: FilesInterface = {
   openFileInEditor: () => { throw new Error('Unable to open file, editor not initialised.'); },
 };
 
+const plotInterface: PlotInterface = {
+  newPlot: () => {},
+  drawImage: (img: ImageBitmap) => {
+    throw new Error('Unable to plot, plotting not initialised.');
+  },
+};
+
 async function handleCanvasMessage(msg: CanvasMessage) {
-  const canvas = document.getElementById('plot-canvas') as HTMLCanvasElement;
-  const context = canvas.getContext('2d');
   if (msg.data.event === 'canvasImage') {
-    context!.drawImage(msg.data.image, 0, 0);
+    plotInterface.drawImage(msg.data.image);
   } else if (msg.data.event === 'canvasNewPage') {
-    context!.clearRect(0, 0, canvas.width, canvas.height);
+    plotInterface.newPlot();
   }
 }
 
@@ -70,7 +80,7 @@ function App() {
       />
       <Terminal webR={webR} terminalInterface={terminalInterface}/>
       <Files webR={webR} filesInterface={filesInterface}/>
-      <Plot/>
+      <Plot plotInterface={plotInterface}/>
     </div>
   );
 }

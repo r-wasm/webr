@@ -1,12 +1,48 @@
-.plot canvas {
+.plot {
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.plot-background {
+  background-color: var(--bg-dark);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 0;
+  min-width: 0;
+}
+
+.plot-container {
   max-width: 90%;
   max-height: 90%;
   aspect-ratio: 1 / 1;
   background-color: white;
 }
 
-.plot .save {
-  position: absolute;
-  top: 5px;
-  right: 5px;
+.plot-container canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.plot-header {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--bg-dark);
+  background-color: var(--bg-primary);
+}
+
+.plot-actions > button {
+  background-color: transparent;
+  border: none;
+  color: var(--secondary);
+  padding: 5px;
+  font-size: 14px;
+}
+
+.plot-actions > button:hover {
+  color: var(--primary);
+}
+.plot-actions > button:disabled {
+  color: var(--disabled);
 }
