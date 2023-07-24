@@ -163,3 +163,13 @@ export interface CanvasMessage extends Message {
     image: ImageBitmap;
   };
 }
+
+export interface PagerMessage extends Message {
+  type: 'pager';
+  data: {
+    path: string;
+    header: string;
+    title: string;
+    deleteFile: boolean;
+  };
+}
