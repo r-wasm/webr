@@ -2,7 +2,7 @@
 % Please edit documentation in R/canvas.R
 \name{canvas}
 \alias{canvas}
-\title{Graphics device for webR HTML canvas element}
+\title{Graphics device for drawing to a HTML canvas element}
 \usage{
 canvas(width = 504, height = 504, pointsize = 12, bg = "transparent", ...)
 }
@@ -24,16 +24,21 @@ finished, a JavaScript \code{ImageBitmap} object is transmitted to the main webR
 thread for display.
 }
 \details{
-The resulting webR output messages are of type \code{Message} with the \code{type}
-property set as \code{'canvas'} and the \code{data} property populated with further
-details about the event that triggered the message.
+The resulting webR output messages are of type
+\href{./js/interfaces/WebRChan.CanvasMessage.html}{\code{CanvasMessage}}, with
+the \href{./js/interfaces/WebRChan.CanvasMessage.html#type}{\code{type}}
+property set as \code{'canvas'} and the
+\href{./js/interfaces/WebRChan.CanvasMessage.html#data}{\code{data}} property
+populated with further details about the event that triggered the message.
 
 When the graphics device creates a new page an output message is emitted with
-the \code{data} property set to \code{{ event: 'canvasNewPage' }}.
+the \href{./js/interfaces/WebRChan.CanvasMessage.html#data}{\code{data}}
+property set to \code{{ event: 'canvasNewPage' }}.
 
 When bitmap image data is sent to the main thread for display, a message is
-emitted with the the bitmap additionally included as part of the \code{data}
-property, \verb{\{ event: 'canvasImage', image: ImageBitmap \}}.
+emitted with the the bitmap additionally included as part of the
+\href{./js/interfaces/WebRChan.CanvasMessage.html#data}{\code{data}} property,
+\verb{\{ event: 'canvasImage', image: ImageBitmap \}}.
 
 A 2x scaling is used to improve the bitmap output visual quality. As such,
 the width and height of the HTML canvas element should be twice the width and
