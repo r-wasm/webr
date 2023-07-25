@@ -79,6 +79,7 @@ $(BUILD)/state/R-$(R_VERSION)/r-stage1-configured: $(BUILD)/state/R-$(R_VERSION)
 	  CPPFLAGS="$(STAGE1_CPPFLAGS)" \
 	  CFLAGS="$(STAGE1_CFLAGS)" \
 	  LDFLAGS="$(STAGE1_LDFLAGS)" \
+	  LIBnn="lib" \
 	  ../configure \
 	    --prefix="$(R_HOST)" \
 	    --with-x=no \
@@ -156,6 +157,7 @@ $(BUILD)/state/R-$(R_VERSION)/r-stage2-configured: $(BUILD)/state/R-$(R_VERSION)
 	  CPPFLAGS="$(STAGE2_CPPFLAGS)" \
 	  CFLAGS="$(STAGE2_CFLAGS)" \
 	  LDFLAGS="$(STAGE2_LDFLAGS)" \
+	  LIBnn="lib" \
 	  FFLAGS="" \
 	  FPICFLAGS="-fPIC" \
 	  FC="$(EMFC)" \
