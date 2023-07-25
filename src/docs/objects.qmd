@@ -164,15 +164,45 @@ const obj = await new myShelter.RDouble([1, 1.5, 2, 2.5, 3]);
 
 ## Typing an `RObject`
 
-When working with TypeScript, it becomes important to pay attention to the typing for a given R object reference, as the methods available for use depends on the kind of data referenced. Unfortunately, functions such as [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) may run arbitrary R code and so it is not clear what type of R object will be returned. As such, they are typed to return R object references as a generic `RObject`.
+When working with TypeScript, it becomes important to pay attention to the typing for a given R object reference since the methods available depends on the kind of data referenced. Unfortunately, functions such as [`WebR.evalR()`](api/js/classes/WebR.WebR.md#evalr) may run arbitrary R code and so it is not clear what type of R object will be returned. As such, they are typed to return R object references as a generic `RObject` instance.
 
-If you are sure of the type of data referenced by the returned R object, it is possible to use the TypeScript `as` keyword to assert the type that you are expecting. We make use of this method throughout this documentation in the TypeScript examples, so that the relevant methods can be invoked without error.
+If you are sure of the type of data referenced by the returned R object, it is possible to use the TypeScript `as` keyword to assert the type that you are expecting. We make use of this method throughout the TypeScript examples in this documentation, so that the relevant methods can be invoked without error.
 
 ``` typescript
 import type { RDouble } from '@r-wasm/webr';
 
 let result = await webR.evalR('rnorm(10,5,1)') as RDouble;
 let output = await result.toTypedArray();
+```
+
+### Converting types using `RObject` constructors
+An alternative to the TypeScript `as` keyword is to [construct a new `RObject` with a specific type](convert-js-to-r.qmd#creating-an-r-object-with-specific-type), passing an existing `RObject` reference as the constructor argument. The returned object will be a reference to the same point in WebAssembly memory as the source object, but narrowed to the specific type. After conversion, methods can be invoked without error.
+
+``` typescript
+const foo = await webR.evalR('123');
+console.log(await foo.toJs());
+
+// The next line causes a "missing property" error in TypeScript
+// await foo.toNumber();
+
+// Construct an `RDouble` referencing the same R object
+const bar = await new webR.RDouble(foo);
+console.log(await bar.toNumber());
+```
+```
+{ type: 'double', names: null, values: [123] }
+123
+```
+
+If the R object is unable be converted into the selected type, a [`WebRError`](/api/js/classes/WebR.WebRError.md) will be thrown,
+
+``` typescript
+const baz = await new webR.RLogical(foo);
+console.log(await baz.toBoolean());
+```
+
+```
+Uncaught Error: Unexpected object type "double" when expecting type "logical"
 ```
 
 ### Type predicate functions
