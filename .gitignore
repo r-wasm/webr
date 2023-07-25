@@ -11,6 +11,7 @@
 /tools/flang/*llvm-project
 /R/download
 /R/build
+/src/examples/serve.R
 /src/coverage
 /src/webR/config.[jt]s
 /src/dist
