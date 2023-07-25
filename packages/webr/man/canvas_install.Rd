@@ -2,13 +2,14 @@
 % Please edit documentation in R/canvas.R
 \name{canvas_install}
 \alias{canvas_install}
-\title{Use the webR canvas device as the default graphics device}
+\title{Use the webR canvas graphics device}
 \usage{
 canvas_install(...)
 }
 \arguments{
-\item{...}{Arguments to be passed to the canvas graphics device.}
+\item{...}{Arguments to be passed to the graphics device.}
 }
 \description{
-Use the webR canvas device as the default graphics device
+Set R options so that the webR canvas graphics device is used as the default
+graphics device for new plots.
 }
