@@ -59,9 +59,10 @@ package: $(PKG_DIST)/webr.mjs $(PKG_DIST)/vfs
 	npm pack
 	rm -rf "$(PKG_DIST)"
 
+DIST_TAG ?= "latest"
 .PHONY: publish
 publish: $(PKG_DIST)/webr.mjs $(PKG_DIST)/vfs
-	npm publish --access=public
+	npm publish --access=public --tag $(DIST_TAG)
 	rm -rf "$(PKG_DIST)"
 
 # Prepare the PKG_DIST directory for npm packaging and/or publication.
