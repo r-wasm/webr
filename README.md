@@ -11,7 +11,7 @@ Documentation showing how to use webR in your own projects can be found at
 https://docs.r-wasm.org/webr/latest/
 
 ## Downloading webR
-The webR JavaScript package is available for download through [npm](https://www.npmjs.com/package/@r-wasm/webr) and on [CDN](https://docs.r-wasm.org/webr/latest/downloading.html#download-from-cdn).
+The webR JavaScript package is available for download through [npm](https://www.npmjs.com/package/webr) and on [CDN](https://docs.r-wasm.org/webr/latest/downloading.html#download-from-cdn).
 
 Complete release packages, including R WebAssembly binaries, are available to download for self hosting in the [GitHub Releases section](https://github.com/r-wasm/webr/releases).
 

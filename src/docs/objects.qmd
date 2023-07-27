@@ -70,7 +70,7 @@ try {
 ## TypeScript
 
 ``` typescript
-import type { RDouble } from '@r-wasm/webr';
+import type { RDouble } from 'webr';
 
 const obj = await webR.evalR('42 + 123') as RDouble;
 try {
@@ -134,7 +134,7 @@ try {
 ## TypeScript
 
 ``` typescript
-import type { RDouble } from '@r-wasm/webr';
+import type { RDouble } from 'webr';
 
 const myShelter = await new webR.Shelter();
 
@@ -169,7 +169,7 @@ When working with TypeScript, it becomes important to pay attention to the typin
 If you are sure of the type of data referenced by the returned R object, it is possible to use the TypeScript `as` keyword to assert the type that you are expecting. We make use of this method throughout the TypeScript examples in this documentation, so that the relevant methods can be invoked without error.
 
 ``` typescript
-import type { RDouble } from '@r-wasm/webr';
+import type { RDouble } from 'webr';
 
 let result = await webR.evalR('rnorm(10,5,1)') as RDouble;
 let output = await result.toTypedArray();
@@ -212,7 +212,7 @@ For the case where type assertion is not appropriate, such as when the data refe
 A useful pattern is to check the type of a returned R object and throwing an `Error` early if it is not as expected. After the check, Typescript will narrow the R object type automatically while it remains in scope.
 
 ``` typescript
-import { isREnvironment } from '@r-wasm/webr';
+import { isREnvironment } from 'webr';
 
 let result = await webR.evalR('as.environment(list(foo=1, bar=2, baz=3))');
 

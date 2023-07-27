@@ -72,7 +72,7 @@ await primes.toTypedArray();
 ## TypeScript
 
 ``` typescript
-import type { RDouble } from '@r-wasm/webr';
+import type { RDouble } from 'webr';
 
 const primes = await webR.evalR('c(2,3,5,7,11,13)') as RDouble;
 await primes.toTypedArray();
@@ -129,7 +129,7 @@ await result.toArray()
 ## TypeScript
 
 ``` typescript
-import type { RDouble, RFunction } from '@r-wasm/webr';
+import type { RDouble, RFunction } from 'webr';
 
 const fn = await webR.evalR('function(x) { 2 * x }') as RFunction;
 const result = await fn.exec([1,2,3]) as RDouble;
@@ -153,7 +153,7 @@ await sin([1,2,3]);
 ## TypeScript
 
 ``` typescript
-import type { RFunction } from '@r-wasm/webr';
+import type { RFunction } from 'webr';
 
 const sin = await webR.evalR('sin') as RFunction;
 await sin([1,2,3]);
@@ -185,7 +185,7 @@ for await (const i of list){
 ## TypeScript
 
 ``` typescript
-import type { RList } from '@r-wasm/webr';
+import type { RList } from 'webr';
 
 const list = await webR.evalR('list(2,4,6,"abc")') as RList;
 for await (const i of list){
