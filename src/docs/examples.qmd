@@ -41,7 +41,7 @@ console.log('Result of running `rnorm` from webR: ', output);
 ## TypeScript
 
 ``` typescript
-import type { RDouble } from '@r-wasm/webr';
+import type { RDouble } from 'webr';
 
 let result = await webR.evalR('rnorm(10,5,1)') as RDouble;
 let output = await result.toArray();
@@ -100,7 +100,7 @@ console.log(result.values);
 ## TypeScript
 
 ``` typescript
-import type { RFunction } from '@r-wasm/webr';
+import type { RFunction } from 'webr';
 
 let sin = await webR.evalR('sin') as RFunction;
 let result = await sin([1,2,3]);
@@ -137,7 +137,7 @@ console.log(output);
 ## TypeScript
 
 ``` typescript
-import type { RDouble } from '@r-wasm/webr';
+import type { RDouble } from 'webr';
 
 let result = await webR.evalR('foo + bar', {
   env: { foo: 1234, bar: 1, baz: 'abc' }
@@ -169,7 +169,7 @@ console.log(output);
 ## TypeScript
 
 ``` typescript
-import type { RDouble } from '@r-wasm/webr';
+import type { RDouble } from 'webr';
 
 await webR.objs.globalEnv.bind('arr', [2,4,6,8,9]);
 let result = await webR.evalR('sample(arr, 3)') as RDouble;
@@ -191,7 +191,7 @@ These functions return boolean `true` if the argument's R object type matches, a
 In this example, an R numeric, character, or list could be returned randomly by the `sample` function. Type predicate functions are used to detect and handle each case.
 
 ``` typescript
-import { isRDouble, isRCharacter, isRList } from '@r-wasm/webr';
+import { isRDouble, isRCharacter, isRList } from 'webr';
 
 let result = await webR.evalR(`
   sample( list(50.75, "foo", list(1,2,3)) , 1)[[1]]
@@ -227,7 +227,7 @@ webR.destroy(result);
 ## TypeScript
 
 ``` typescript
-import type { RDouble } from '@r-wasm/webr';
+import type { RDouble } from 'webr';
 
 let result = await webR.evalR('rnorm(3,5,1)') as RDouble;
 let output = await result.toArray();

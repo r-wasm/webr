@@ -26,7 +26,7 @@ await d.toArray();
 ## TypeScript
 
 ``` typescript
-import type { RDouble } from '@r-wasm/webr';
+import type { RDouble } from 'webr';
 
 await webR.init();
 let d = await new webR.RObject([2, 4, 6]) as RDouble;

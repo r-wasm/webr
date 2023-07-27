@@ -6,18 +6,18 @@ toc: true
 
 ## Download from npm
 
-The webR JavaScript loader has been published as an [npm package](https://www.npmjs.com/package/@r-wasm/webr) so that it can be bundled as part of your npm managed JavaScript or TypeScript project.
+The webR JavaScript loader has been published as an [npm package](https://www.npmjs.com/package/webr) so that it can be bundled as part of your npm managed JavaScript or TypeScript project.
 
 Install the package by running,
 
 ``` bash
-npm i @r-wasm/webr
+npm i webr
 ```
 
 Then import the [`WebR`](api/js/classes/WebR.WebR.md) class into your project and initialise a new instance of webR.
 
 ``` javascript
-import { WebR } from '@r-wasm/webr';
+import { WebR } from 'webr';
 
 const webR = new WebR();
 await webR.init();
