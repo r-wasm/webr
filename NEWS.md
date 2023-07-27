@@ -1,5 +1,7 @@
 # webR (development version)
 
+# webR 0.2.0
+
 ## New features
 
 * Improve accessibility of xterm.js in the webR REPL app by enabling `screenReaderMode`.

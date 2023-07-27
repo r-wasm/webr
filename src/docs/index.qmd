@@ -39,7 +39,7 @@ summary(fit)</div>
   editor.setOptions({ fontSize: "11pt", maxLines: Infinity });
   editor.session.setMode("ace/mode/r");
 
-  import { WebR } from 'https://webr.r-wasm.org/latest/webr.mjs';
+  import { WebR } from 'https://webr.r-wasm.org/v0.2.0/webr.mjs';
   const webR = new WebR();
   await webR.init();
   await webR.evalRVoid('options(device=webr::canvas)');
