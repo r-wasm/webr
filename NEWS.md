@@ -26,11 +26,15 @@
 
 ## Breaking changes
 
+ * The webR npm package has been renamed from '@r-wasm/webr' to simply 'webr'. An npm depreciation notice will be put in place for the old package name.
+
  * Removed the legacy `console.mjs` build target. The `Console` class is re-exported on the default `WebR` entrypoint, and so the extra build target is not required. This is technically a breaking change, but the legacy entrypoint was never documented and so we believe the change has only minor effect.
 
  * The webR HTML `canvas()` graphics device has been moved from the default grDevices package to the webr support package. In addition, it has been reimplemented using the `OffscreenCanvas` API. Users of the Safari web browser will now require at least version 16.4 (the latest stable release at time of writing) to use the canvas graphics device. Users with older browsers not supporting `OffscreenCanvas` will need to use an alternative plotting method, such as bitmap graphics using the `png()` Cairo device.
 
  * Output messages from the `canvas()` graphics device have been restructured so as to handle more event types in addition to transmitting image bitmap data. For example, an output message is now also emitted when the device creates a new empty plot. WebR apps making use of HTML canvas graphics will need to be updated for the new message structure. See the newly added "Plotting" section in the webR documentation for further details.
+
+ * The version of Emscripten used to build the public webR binaries hosted on r-wasm.org and npm has been set to v3.1.37. R packages built for Wasm should be compiled with this same version of Emscripten to ensure Wasm ABI compatibility.
 
 ## Bug fixes
 
