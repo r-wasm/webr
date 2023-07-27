@@ -20,7 +20,7 @@ Index: R-4.3.0/src/main/Makefile.in
 ===================================================================
 --- R-4.3.0.orig/src/main/Makefile.in
 +++ R-4.3.0/src/main/Makefile.in
-@@ -149,6 +149,48 @@ $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
+@@ -149,6 +149,51 @@ $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
  $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
  	$(MAIN_LINK) -o $@ $(R_bin_OBJECTS) $(R_bin_LDADD)
  
@@ -65,6 +65,9 @@ Index: R-4.3.0/src/main/Makefile.in
 +	@echo "Building virtual filesystem:"
 +	@$(LZFS) -v -d $(VFSDIR) -u vfs $(WASM_LAZY_VFS) -o $(prefix)/pre.js
 +	@$(MAKE) $(R_binary).js
++# Patch Emscripten library to redirect a warning message to console.warn()
++	@sed -i.bak 's/out("LazyFiles/console.warn("LazyFiles/' $(prefix)/dist/$(R_binary).js
++	@rm $(prefix)/dist/$(R_binary).js.bak
 +
  libR.a: $(OBJECTS) $(STATIC_LIBS)
  	-@mkdir libs
