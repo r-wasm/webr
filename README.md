@@ -19,7 +19,7 @@ Complete release packages, including R WebAssembly binaries, are available to do
 R's source code and supporting libraries are written in both C/C++ and Fortran. Source files can be compiled with either a [custom development version of LLVM flang](https://github.com/lionel-/f18-llvm-project/commits/fix-webr) (the default) or with gfortran and Dragonegg (using the `--with-dragonegg` configure option).
 
 If you are compiling webR using the default toolchain, ensure that you first install the following required prerequisites:
- * [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html) (>=3.1.25)
+ * [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html) (>=3.1.35)
  * cmake
  * gperf
  * liblzma
@@ -44,7 +44,7 @@ If you'd prefer to build all of the available system libraries for Wasm, `cd` in
 
 ### Node and Emscripten versioning
 
-WebR requires compiler and runtime support for [WebAssembly.Exception](https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/Exception), used internally for R error handling. This requires a version of Emscripten >= 3.1.25 and Node >= 17.0.0, which may be newer than the versions provided by your system package manager. An easy way to install and manage multiple versions of Node and Emscripten is by using [nvm](https://github.com/nvm-sh/nvm) and [emsdk](https://github.com/emscripten-core/emsdk).
+WebR requires compiler and runtime support for [WebAssembly.Exception](https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/Exception), used internally for R error handling. This requires a version of Emscripten >= 3.1.35 and Node >= 17.0.0, which may be newer than the versions provided by your system package manager. An easy way to install and manage multiple versions of Node and Emscripten is by using [nvm](https://github.com/nvm-sh/nvm) and [emsdk](https://github.com/emscripten-core/emsdk).
 
 The version of Node currently bundled by `emsdk` is 16.0.0. When building webR with this version of Node the process will fail with configure logs containing the error
 
