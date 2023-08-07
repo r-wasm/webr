@@ -296,6 +296,37 @@ void canvasPolyline(int n, double *x, double *y,
     EM_ASM({Module.canvasCtx.restore();});
 }
 
+void canvasPath(double *x, double *y,
+               int npoly, int *nper,
+               Rboolean winding,
+               const pGEcontext gc, pDevDesc RGD) {
+    canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
+
+    int j = 0;
+    EM_ASM({Module.canvasCtx.beginPath();});
+    for (int i = 0; i < npoly; i++) {
+        int n = j + nper[i];
+        if (CALPHA(gc->col) && gc->lty != -1) {
+            EM_ASM({Module.canvasCtx.moveTo($0, $1);}, 2*x[j], 2*y[j]);
+            j++;
+            while(j < n) {
+                EM_ASM({Module.canvasCtx.lineTo($0, $1);}, 2*x[j], 2*y[j]);
+                j++;
+            }
+            EM_ASM({Module.canvasCtx.closePath();});
+        }
+    }
+
+    if (CALPHA(gc->fill)) {
+        canvasColor(fillStyle, gc->fill);
+        EM_ASM({Module.canvasCtx.fill($0 ? "nonzero" : "evenodd");}, winding);
+    }
+    if (CALPHA(gc->col) && gc->lty != -1) {
+        canvasColor(strokeStyle, gc->col);
+        EM_ASM({Module.canvasCtx.stroke();});
+    }
+}
+
 void canvasRect(double x0, double y0, double x1, double y1,
                 const pGEcontext gc, pDevDesc RGD)
 {
@@ -401,12 +432,6 @@ void void_raster(unsigned int *raster, int w, int h,
                  const pGEcontext gc, pDevDesc dd) {
     return;
 }
-void void_path(double *x, double *y,
-               int npoly, int *nper,
-               Rboolean winding,
-               const pGEcontext gc, pDevDesc dd) {
-    return;
-}
 
 SEXP ffi_dev_canvas(SEXP w, SEXP h, SEXP ps, SEXP bg)
 {
@@ -470,7 +495,7 @@ SEXP ffi_dev_canvas(SEXP w, SEXP h, SEXP ps, SEXP bg)
     RGD->strWidthUTF8 = canvasStrWidth;
     RGD->textUTF8 = canvasText;
     RGD->wantSymbolUTF8 = TRUE;
-    RGD->path = void_path;
+    RGD->path = canvasPath;
     RGD->raster = void_raster;
 #if R_GE_version >= 13
     RGD->setPattern      = void_setPattern;
