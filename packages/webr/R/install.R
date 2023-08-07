@@ -13,7 +13,12 @@ install <- function(packages, repos = NULL, lib = NULL, quiet = FALSE) {
   if (is.null(repos)) {
     repos <- getOption("webr_pkg_repos")
   }
-  info <- utils::available.packages(repos = repos, type = "source")
+
+  ver <- as.character(getRversion())
+  ver <- gsub("\\.[^.]+$", "", ver)
+
+  contrib <- sprintf("%s/bin/emscripten/contrib/%s", repos[[1]], ver)
+  info <- utils::available.packages(contriburl = contrib)
   deps <- unlist(tools::package_dependencies(packages, info), use.names = FALSE)
   deps <- unique(deps)
 
@@ -34,12 +39,7 @@ install <- function(packages, repos = NULL, lib = NULL, quiet = FALSE) {
       next
     }
 
-    ver <- as.character(getRversion())
-    ver <- gsub("\\.[^.]+$", "", ver)
-    bin_suffix <- sprintf("bin/emscripten/contrib/%s", ver)
-
     repo <- info[pkg, "Repository"]
-    repo <- sub("src/contrib", bin_suffix, repo, fixed = TRUE)
     repo <- sub("file:", "", repo, fixed = TRUE)
 
     pkg_ver <- info[pkg, "Version"]
