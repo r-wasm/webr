@@ -17,6 +17,7 @@ install <- function(packages, repos = NULL, lib = NULL, quiet = FALSE) {
   ver <- as.character(getRversion())
   ver <- gsub("\\.[^.]+$", "", ver)
 
+  repos <- gsub("/$", "", repos)
   contrib <- sprintf("%s/bin/emscripten/contrib/%s", repos[[1]], ver)
   info <- utils::available.packages(contriburl = contrib)
   deps <- unlist(tools::package_dependencies(packages, info), use.names = FALSE)
