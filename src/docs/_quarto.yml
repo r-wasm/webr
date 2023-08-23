@@ -15,7 +15,7 @@ website:
   favicon: images/webR.png
   page-navigation: true
   sidebar:
-    title: "WebR 0.2.0 Documentation"
+    title: "WebR 0.2.1-dev Documentation"
     logo: images/webR.png
     contents:
       - index.qmd
