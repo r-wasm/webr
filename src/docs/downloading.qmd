@@ -14,6 +14,8 @@ Install the package by running,
 npm i webr
 ```
 
+> Note that `webr@0.2.0` requires `node >=17.0.0`.
+
 Then import the [`WebR`](api/js/classes/WebR.WebR.md) class into your project and initialise a new instance of webR.
 
 ``` javascript
