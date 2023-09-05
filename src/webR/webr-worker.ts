@@ -658,6 +658,7 @@ function init(config: Required<WebROptions>) {
   Module.preRun.push(() => {
     if (IN_NODE) {
       globalThis.FS = Module.FS;
+      (globalThis as any).chan = chan;
     }
     if (_config.createLazyFilesystem) {
       Module.createLazyFilesystem();
