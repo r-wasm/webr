@@ -6,6 +6,7 @@ export interface ConsoleCallbacks {
   stderr?: (line: string) => void;
   prompt?: (line: string) => void;
   canvasImage?: (image: ImageBitmap) => void;
+  canvasNewPage?: () => void;
 }
 
 /**
@@ -33,6 +34,9 @@ export interface ConsoleCallbacks {
  * The ``canvasImage`` callback function is called when webR writes plots to
  * the built-in HTML canvas graphics device.
  *
+ * The ``canvasNewPage`` callback function is called when webR creates a new
+ * plot.
+ *
  * Once constructed, start the Console using the ``run`` method. The `run`
  * method starts an asynchronous infinite loop that waits for output from the
  * webR worker and then calls the relevant callbacks.
@@ -55,6 +59,8 @@ export class Console {
   #prompt: (line: string) => void;
   /** Called when webR writes to the HTML canvas element */
   #canvasImage: (image: ImageBitmap) => void;
+  /** Called when webR creates a new plot */
+  #canvasNewPage: () => void;
 
   /**
    * @param {ConsoleCallbacks} callbacks A list of webR Console callbacks to
@@ -82,6 +88,7 @@ export class Console {
     this.#stderr = callbacks.stderr || this.#defaultStderr;
     this.#prompt = callbacks.prompt || this.#defaultPrompt;
     this.#canvasImage = callbacks.canvasImage || this.#defaultcanvasImage;
+    this.#canvasNewPage = callbacks.canvasNewPage || this.#defaultcanvasNewPage;
     this.webR.evalRVoid('options(device=webr::canvas)');
   }
 
@@ -137,6 +144,16 @@ export class Console {
   };
 
   /**
+   * The default function called when webR creates a new plot
+   */
+  #defaultcanvasNewPage = () => {
+    if (IN_NODE) {
+      throw new Error('Plotting with HTML canvas is not yet supported under Node');
+    }
+    this.canvas!.getContext('2d')!.clearRect(0, 0, this.canvas!.width, this.canvas!.height);
+  };
+
+  /**
    * Start the webR console
    */
   run() {
@@ -165,8 +182,12 @@ export class Console {
         case 'prompt':
           this.#prompt(output.data as string);
           break;
-        case 'canvasImage':
-          this.#canvasImage(output.data.image as ImageBitmap);
+        case 'canvas':
+          if (output.data.event === 'canvasImage') {
+            this.#canvasImage(output.data.image as ImageBitmap);
+          } else if (output.data.event === 'canvasNewPage') {
+            this.#canvasNewPage();
+          }
           break;
         case 'closed':
           return;
