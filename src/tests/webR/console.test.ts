@@ -3,13 +3,17 @@ import { promiseHandles } from '../../webR/utils';
 
 const stdout = jest.fn();
 const stderr = jest.fn();
+const canvasNewPage = jest.fn();
+const canvasImage = jest.fn();
 const prompt = jest.fn();
 
 let waitForPrompt = promiseHandles();
 const con = new Console(
   {
-    stdout: stdout,
-    stderr: stderr,
+    stdout,
+    stderr,
+    canvasNewPage,
+    canvasImage,
     prompt: (line: string) => waitForPrompt.resolve(prompt(line)),
   },
   {
@@ -38,6 +42,44 @@ test('Generate an error message and write to stdout', async () => {
   expect(stderr).toHaveBeenCalledWith('Error: unexpected \';\' in ";"');
 });
 
+test('HTML canvas events call console callbacks', async () => {
+  // Mock the OffscreenCanvas interface for testing under Node
+  await con.webR.evalRVoid(`
+    webr::eval_js("
+      class OffscreenCanvas {
+        constructor() {}
+        getContext() {
+          return {
+            arc: () => {},
+            beginPath: () => {},
+            clearRect: () => {},
+            clip: () => {},
+            rect: () => {},
+            restore: () => {},
+            save: () => {},
+            stroke: () => {},
+          };
+        }
+        transferToImageBitmap() {
+          // No ImageBitmap, create a transferrable ArrayBuffer in its place
+          return new ArrayBuffer(8);
+        }
+      }
+      globalThis.OffscreenCanvas = OffscreenCanvas;
+    ")
+  `);
+
+  waitForPrompt = promiseHandles();
+  con.stdin(`
+    options(device = webr::canvas)
+    plot.new()
+    points(0)
+  `);
+  await waitForPrompt.promise;
+  expect(canvasNewPage).toHaveBeenCalled();
+  expect(canvasImage).toHaveBeenCalled();
+});
+
 describe('Interrupt execution', () => {
   test('Interrupt R code executed using the main R REPL', async () => {
     waitForPrompt = promiseHandles();
@@ -57,6 +99,7 @@ describe('Interrupt execution', () => {
     expect(prompt).toHaveBeenCalledWith('> ');
   });
 });
+
 afterAll(() => {
   return con.webR.close();
 });
