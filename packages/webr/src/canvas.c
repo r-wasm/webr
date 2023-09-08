@@ -406,6 +406,42 @@ void canvasText(double x, double y, const char *str, double rot, double hadj,
     EM_ASM({Module.canvasCtx.restore();});
 }
 
+void canvasRaster(unsigned int *raster, int w, int h,
+                  double x, double y,
+                  double width, double height,
+                  double rot,
+                  Rboolean interpolate,
+                  const pGEcontext gc, pDevDesc dd) {
+    if (height < 0) {
+        y += height;
+        height = -height;
+    }
+
+    EM_ASM({Module.canvasCtx.save();});
+    EM_ASM({Module.canvasCtx.translate($0, $1);}, 2*x, 2*y);
+    if (rot != 0.) {
+        EM_ASM({Module.canvasCtx.translate($0, $1);}, 0, 2*height);
+        EM_ASM({Module.canvasCtx.rotate($0 / 180 * Math.PI);}, -rot);
+        EM_ASM({Module.canvasCtx.translate($0, $1);}, 0, -2*height);
+    }
+
+    if (interpolate) {
+        EM_ASM({Module.canvasCtx.imageSmoothingEnabled = true;});
+    } else {
+        EM_ASM({Module.canvasCtx.imageSmoothingEnabled = false;});
+    }
+
+    EM_ASM({
+        const raster = Module.HEAPU8.subarray($0, $0 + 4 * $1 * $2);
+        const img = new ImageData(new Uint8ClampedArray(raster), $1, $2);
+        const buffer = new OffscreenCanvas($1, $2);
+        buffer.getContext('2d').putImageData(img, 0, 0);
+        Module.canvasCtx.drawImage(buffer, 0, 0, $3, $4);
+    }, raster, w, h, 2*width, 2*height);
+
+    EM_ASM({Module.canvasCtx.restore();});
+}
+
 SEXP void_setPattern(SEXP pattern, pDevDesc RGD) {
     return R_NilValue;
 }
@@ -422,14 +458,6 @@ SEXP void_setMask(SEXP path, SEXP ref, pDevDesc RGD) {
     return R_NilValue;
 }
 void void_releaseMask(SEXP ref, pDevDesc RGD) {
-    return;
-}
-void void_raster(unsigned int *raster, int w, int h,
-                 double x, double y,
-                 double width, double height,
-                 double rot,
-                 Rboolean interpolate,
-                 const pGEcontext gc, pDevDesc dd) {
     return;
 }
 
@@ -496,7 +524,7 @@ SEXP ffi_dev_canvas(SEXP w, SEXP h, SEXP ps, SEXP bg)
     RGD->textUTF8 = canvasText;
     RGD->wantSymbolUTF8 = TRUE;
     RGD->path = canvasPath;
-    RGD->raster = void_raster;
+    RGD->raster = canvasRaster;
 #if R_GE_version >= 13
     RGD->setPattern      = void_setPattern;
     RGD->releasePattern  = void_releasePattern;
