@@ -175,7 +175,8 @@ const defaultOptions = {
  * and start a version of R built for WebAssembly in a worker thread.
  */
 export class WebR {
-  #chan!: ChannelMain;
+  #chan: ChannelMain;
+  #initialised: Promise<unknown>;
   globalShelter!: Shelter;
 
   RObject!: ReturnType<typeof newRClassProxy<typeof RWorker.RObject, RObject>>;
@@ -216,6 +217,35 @@ export class WebR {
 
     this.objs = {} as typeof this.objs;
     this.Shelter = newShelterProxy(this.#chan);
+
+    this.#initialised = this.#chan.initialised.then(async () => {
+      this.globalShelter = await new this.Shelter();
+
+      this.RObject = this.globalShelter.RObject;
+      this.RLogical = this.globalShelter.RLogical;
+      this.RInteger = this.globalShelter.RInteger;
+      this.RDouble = this.globalShelter.RDouble;
+      this.RComplex = this.globalShelter.RComplex;
+      this.RCharacter = this.globalShelter.RCharacter;
+      this.RRaw = this.globalShelter.RRaw;
+      this.RList = this.globalShelter.RList;
+      this.RPairlist = this.globalShelter.RPairlist;
+      this.REnvironment = this.globalShelter.REnvironment;
+      this.RSymbol = this.globalShelter.RSymbol;
+      this.RString = this.globalShelter.RString;
+      this.RCall = this.globalShelter.RCall;
+
+      this.objs = {
+        baseEnv: (await this.RObject.getPersistentObject('baseEnv')) as REnvironment,
+        globalEnv: (await this.RObject.getPersistentObject('globalEnv')) as REnvironment,
+        null: (await this.RObject.getPersistentObject('null')) as RNull,
+        true: (await this.RObject.getPersistentObject('true')) as RLogical,
+        false: (await this.RObject.getPersistentObject('false')) as RLogical,
+        na: (await this.RObject.getPersistentObject('na')) as RLogical,
+      };
+
+      this.#handleSystemMessages();
+    });
   }
 
   /**
@@ -223,35 +253,7 @@ export class WebR {
    * intialised.
    */
   async init() {
-    const init = await this.#chan.initialised;
-
-    this.globalShelter = await new this.Shelter();
-
-    this.RObject = this.globalShelter.RObject;
-    this.RLogical = this.globalShelter.RLogical;
-    this.RInteger = this.globalShelter.RInteger;
-    this.RDouble = this.globalShelter.RDouble;
-    this.RComplex = this.globalShelter.RComplex;
-    this.RCharacter = this.globalShelter.RCharacter;
-    this.RRaw = this.globalShelter.RRaw;
-    this.RList = this.globalShelter.RList;
-    this.RPairlist = this.globalShelter.RPairlist;
-    this.REnvironment = this.globalShelter.REnvironment;
-    this.RSymbol = this.globalShelter.RSymbol;
-    this.RString = this.globalShelter.RString;
-    this.RCall = this.globalShelter.RCall;
-
-    this.objs = {
-      baseEnv: (await this.RObject.getPersistentObject('baseEnv')) as REnvironment,
-      globalEnv: (await this.RObject.getPersistentObject('globalEnv')) as REnvironment,
-      null: (await this.RObject.getPersistentObject('null')) as RNull,
-      true: (await this.RObject.getPersistentObject('true')) as RLogical,
-      false: (await this.RObject.getPersistentObject('false')) as RLogical,
-      na: (await this.RObject.getPersistentObject('na')) as RLogical,
-    };
-
-    this.#handleSystemMessages();
-    return init;
+    return this.#initialised;
   }
 
   async #handleSystemMessages() {
