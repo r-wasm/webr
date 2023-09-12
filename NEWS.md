@@ -1,5 +1,7 @@
 # webR (development version)
 
+# webR 0.2.1
+
 ## New features
 
 * Added a new communication channel based on `postMessage`, to be used when both Cross Origin Isolation and Service Workers are unavailable. Nested R REPLs (e.g. `readline()`, `menu()`, `browser()`, etc.) are unsupported when using this channel.

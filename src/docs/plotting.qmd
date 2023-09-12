@@ -82,7 +82,7 @@ text(4, -4, "זה כתוב בעברית")</div>
   editor.setOptions({ fontSize: "11pt", maxLines: Infinity });
   editor.session.setMode("ace/mode/r");
 
-  import { WebR } from 'https://webr.r-wasm.org/v0.2.0/webr.mjs';
+  import { WebR } from 'https://webr.r-wasm.org/v0.2.1/webr.mjs';
   const webR = new WebR();
   await webR.init();
   await webR.evalRVoid('options(device=function(...){webr::canvas(width=500, height=300)})');
@@ -207,7 +207,7 @@ Click the button below to see the output of this demo,
 <button id="plot-button" class="btn btn-success btn-sm" disabled="true">Run graphics demo</button>
 <div style="text-align: center" id="plot-container"></div>
 <script type="module">
-    import { WebR } from 'https://webr.r-wasm.org/v0.2.0/webr.mjs';
+    import { WebR } from 'https://webr.r-wasm.org/v0.2.1/webr.mjs';
     const webR = new WebR();
     let canvas = null;
     let container = document.getElementById('plot-container');
