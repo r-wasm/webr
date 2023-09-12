@@ -321,6 +321,11 @@ The following HTML document loads webR from CDN and creates a simple interactive
 </html>
 ```
 
+::: callout-note
+See [Serving Pages with WebR](serving.qmd) for further details about web server requirements for web pages that load webR.
+:::
+
+
 After loading, the resulting web page should present an interactive R console similar to the following,
 
 ```{=html}
