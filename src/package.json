@@ -35,7 +35,6 @@
     }
   ],
   "files": [
-    "templates",
     "dist"
   ],
   "main": "dist/webr.mjs",
@@ -45,17 +44,10 @@
       "node": "./dist/webr.cjs",
       "default": "./dist/webr.mjs"
     },
-    "./chan/serviceworker": "./dist/webr-serviceworker.mjs",
-    "./repl": "./dist/repl.mjs"
+    "./chan/serviceworker": "./dist/webr-serviceworker.mjs"
   },
   "typesVersions": {
     "*": {
-      "repl": [
-        "dist/repl/repl"
-      ],
-      "repl/*": [
-        "dist/repl/*"
-      ],
       "*": [
         "dist/webR/*"
       ]
