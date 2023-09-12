@@ -102,6 +102,7 @@ export interface ChannelWorker {
   run(args: string[]): void;
   inputOrDispatch: () => number;
   setDispatchHandler: (dispatch: (msg: Message) => void) => void;
+  onMessageFromMainThread: (msg: Message) => void;
 }
 
 /**

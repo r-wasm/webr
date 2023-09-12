@@ -91,12 +91,16 @@ root.render(<StrictMode><App /></StrictMode>);
 (async () => {
   await webR.init();
 
-  // Set the default graphics device, pager, and missing package handler
+  // Set the default graphics device and pager
   await webR.evalRVoid('webr::pager_install()');
   await webR.evalRVoid('webr::canvas_install()');
-  await webR.evalRVoid('webr::global_prompt_install()', { withHandlers: false });
 
-  terminalInterface.write('\x1b[2K\r'); // Clear the loading message
+  // If supported, show a menu when prompted for missing package installation
+  const showMenu = crossOriginIsolated || navigator.serviceWorker.controller ? 'TRUE' : 'FALSE';
+  await webR.evalRVoid(`webr::global_prompt_install(${showMenu})`, { withHandlers: false });
+
+  // Clear the loading message
+  terminalInterface.write('\x1b[2K\r');
 
   for (;;) {
     const output = await webR.read();

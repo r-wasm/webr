@@ -33,16 +33,20 @@ let initialised = false;
 let chan: ChannelWorker | undefined;
 
 const onWorkerMessage = function (msg: Message) {
-  if (!msg || !msg.type || msg.type !== 'init') {
+  if (!msg || !msg.type) {
     return;
   }
-  if (initialised) {
-    throw new Error("Can't initialise worker multiple times.");
+  if (msg.type === 'init') {
+    if (initialised) {
+      throw new Error("Can't initialise worker multiple times.");
+    }
+    const messageInit = msg as ChannelInitMessage;
+    chan = newChannelWorker(messageInit);
+    init(messageInit.data.config);
+    initialised = true;
+    return;
   }
-  const messageInit = msg as ChannelInitMessage;
-  chan = newChannelWorker(messageInit);
-  init(messageInit.data.config);
-  initialised = true;
+  chan?.onMessageFromMainThread(msg);
 };
 
 if (IN_NODE) {

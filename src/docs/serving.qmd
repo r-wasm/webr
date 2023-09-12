@@ -15,6 +15,8 @@ If successful, the value of the global JavaScript property `crossOriginIsolated`
 
 ::: callout-warning
 Without cross-origin isolation, webR will fall back to the [`ServiceWorker`](communication.qmd#webr-channels) communication channel. With this channel there may be reduced performance or [further setup](#sw-cdn) required.
+
+As an alternative, the [`PostMessage`](#postmessage) communication channel may be manually selected for use.
 :::
 
 ## Example script to serve webR pages locally
@@ -39,6 +41,23 @@ runServer(host = "127.0.0.1", port = 8080,
 ```
 
 Run the script on your own machine, for example by executing `Rscript serve.R` in a terminal. Once running, you can access the contents of the current working directory at the URL http://127.0.0.1:8080.
+
+## Using the `PostMessage` channel {#postmessage}
+
+If it is not possible to set the HTTP headers for cross-origin isolation, e.g. you are using an external service such as GitHub Pages to host your web content, the `PostMessage` communication channel may instead be used.
+
+::: callout-warning
+Interruption of running R code and nested R REPLs (`readline()`, `menu()`, `browser()`, etc.) are unsupported when using the `PostMessage` communication channel.
+:::
+
+Enable the `PostMessage` communication channel by explicitly setting [`WebROptions.channelType`](api/js/interfaces/WebR.WebROptions.md#channeltype) during webR initialisation:
+
+``` js
+import { WebR, ChannelType } from 'https://webr.r-wasm.org/latest/webr.mjs';
+const webR = new WebR({
+  channelType: ChannelType.PostMessage,
+});
+```
 
 ## Using the service worker channel when loading from CDN {#sw-cdn}
 

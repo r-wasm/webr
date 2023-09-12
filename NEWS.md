@@ -1,5 +1,9 @@
 # webR (development version)
 
+## New features
+
+* Added a new communication channel based on `postMessage`, to be used when both Cross Origin Isolation and Service Workers are unavailable. Nested R REPLs (e.g. `readline()`, `menu()`, `browser()`, etc.) are unsupported when using this channel.
+
 ## Bug fixes
 
 * Fix HTML canvas graphics in `Console` class (#256).
