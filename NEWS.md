@@ -1,5 +1,15 @@
 # webR (development version)
 
+## Bug fixes
+
+* Fix HTML canvas graphics in `Console` class (#256).
+
+* Fix drawing rasters in HTML canvas graphics device (#251).
+
+* Remove no-longer valid references to `repl.mjs` in `package.json` (#250).
+
+* Ensure that the one-time setup required for the `WebR` class occurs only once when calling `webR.init()`.
+
 # webR 0.2.0
 
 ## New features
