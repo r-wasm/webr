@@ -47,7 +47,7 @@ export class PostMessageChannelMain extends ChannelMain {
   }
 
   interrupt() {
-    console.error('Interrupting R execution is not available in PostMessage mode');
+    console.error('Interrupting R execution is not available when using the PostMessage channel');
   }
 
   #handleEventsFromWorker(worker: Worker) {
@@ -140,7 +140,9 @@ export class PostMessageChannelWorker {
   }
 
   read(): Message {
-    throw new Error('Unable to synchronously read from channel in PostMessage mode');
+    throw new WebRChannelError(
+      'Unable to synchronously read when using the `PostMessage` channel.'
+    );
   }
 
   inputOrDispatch(): number {
@@ -151,7 +153,10 @@ export class PostMessageChannelWorker {
     } else if (this.#promptDepth > 0) {
       // For a shallow nested REPL, show an error and try to recover
       // Handles R's `readline()`, `browser()` with an immediate exit
-      console.error('Nested REPL prompts are not available in PostMessage mode');
+      this.writeSystem({
+        type: 'console.error',
+        data: 'Nested REPL prompts are not available when using the `PostMessage` channel.',
+      });
     }
     this.#promptDepth++;
     // Unable to block, so just return a NULL
@@ -171,7 +176,7 @@ export class PostMessageChannelWorker {
 
     this.writeSystem({
       type: 'console.warn',
-      data: 'Running in PostMessage mode. Nested R REPLs are not available.',
+      data: 'WebR is using `PostMessage` communication channel, nested R REPLs are not available.',
     });
 
     Module._Rf_initialize_R(argc, argv);
