@@ -29,3 +29,6 @@ node_modules
 .Rproj.user
 .Renviron
 *.Rcheck
+
+/.luarc.json
+/.clangd
