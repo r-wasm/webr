@@ -15,7 +15,7 @@ jobs:
   build:
     name: Build webR
     runs-on: ubuntu-latest
-    container: georgestagg/webr-flang:latest
+    container: ghcr.io/r-wasm/webr-flang:main
     steps:
       - uses: actions/setup-node@v3
         with:
@@ -115,3 +115,30 @@ jobs:
       - name: Upload files to S3 bucket
         run: |
           aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }}/_docs/webr/${{ github.ref_name }}/
+  build_docker:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Log in to the GitHub Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+      - name: Build and publish Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

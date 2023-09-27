@@ -8,7 +8,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     environment: deploy
-    container: georgestagg/webr-flang:latest
+    container: ghcr.io/r-wasm/webr-flang:main
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
