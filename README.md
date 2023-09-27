@@ -1,10 +1,10 @@
 [![Build, test and deploy webR](https://github.com/r-wasm/webr/actions/workflows/deploy.yml/badge.svg)](https://github.com/r-wasm/webr/actions/workflows/deploy.yml) [![codecov](https://codecov.io/gh/r-wasm/webr/branch/main/graph/badge.svg)](https://codecov.io/gh/r-wasm/webr)
 
 # WebR - R in the Browser
-This project aims to compile the statistical language R (https://www.r-project.org/) into WebAssembly for use with a browser, via Emscripten (https://emscripten.org/). The repo includes patches to R's source code so that it can work in the browser environment provided by Emscripten and also includes a web-based REPL through the use of [xterm.js](https://xtermjs.org/).
+This project aims to compile the statistical language R (https://www.r-project.org/) into WebAssembly for use with a browser, via Emscripten (https://emscripten.org/). The repo includes patches to R's source code so that it can work in the browser environment provided by Emscripten and also includes a web-based IDE through the use of [xterm.js](https://xtermjs.org/) and [CodeMirror](https://codemirror.net/).
 
 ## Demo
-A demo of the resulting R REPL can be found at https://webr.r-wasm.org/latest/. Please be patient as the Wasm runtime downloads and executes. R will display a banner message when it is ready to use.
+A demo of the webR IDE can be found at https://webr.r-wasm.org/latest/. Please be patient as the Wasm runtime downloads and executes. R will display a banner message when it is ready to use.
 
 ## Documentation
 Documentation showing how to use webR in your own projects can be found at
@@ -15,10 +15,12 @@ The webR JavaScript package is available for download through [npm](https://www.
 
 Complete release packages, including R WebAssembly binaries, are available to download for self hosting in the [GitHub Releases section](https://github.com/r-wasm/webr/releases).
 
-## Building webR from source
-R's source code and supporting libraries are written in both C/C++ and Fortran. Source files can be compiled with either a [custom development version of LLVM flang](https://github.com/lionel-/f18-llvm-project/commits/fix-webr) (the default) or with gfortran and Dragonegg (using the `--with-dragonegg` configure option).
+Docker images containing a pre-built webR development environment can be found in the [GitHub Packages section](https://github.com/r-wasm/webr/pkgs/container/webr).
 
-If you are compiling webR using the default toolchain, ensure that you first install the following required prerequisites:
+## Building webR from source
+R's source code and supporting libraries are written in both C/C++ and Fortran. Source files can be compiled with either a [custom development version of LLVM flang](https://github.com/lionel-/f18-llvm-project/commits/fix-webr) (the default) or with `gfortran` and Dragonegg (using the `--with-dragonegg` configure option).
+
+If you are compiling webR using the default toolchain, ensure that you first install the following required prerequisites in your build environment:
  * [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html) (>=3.1.35)
  * cmake
  * gperf
@@ -28,19 +30,25 @@ If you are compiling webR using the default toolchain, ensure that you first ins
  * quilt
  * wget
 
-If you are compiling webR using Dragonegg, included in the source repository is a `Dockerfile` which can be used to setup the environment and Dragonegg toolchain.
-
 ### Build instructions
 
 Clone the repo into a new directory, `cd` into the directory, then run `./configure && make`. You can configure `make` variables in a `~/.webr-config.mk` file.
 
-A `dist` directory is created which when finished contains the R Wasm files and an `index.html` file ready to serve the included R REPL app.
+A `dist` directory is created which when finished contains the R Wasm files and an `index.html` file ready to serve the included webR IDE.
 
-### WebAssembly libraries
+#### WebAssembly libraries
 
 WebR relies on additional libraries compiled for Wasm for both Cairo graphics support and for building R packages that depend on certain system libraries. By default, only a minimal set of libraries are built for use with webR.
 
 If you'd prefer to build all of the available system libraries for Wasm, `cd` into the `libs` directory and run `make all` to build the additional libraries, then finally `cd ..` and run `make clean-webr && make` to rebuild webR. R will automatically detect the additional Wasm libraries and integrate Cairo graphics support as part of the build.
+
+### Building with Docker
+Included in the source repository is a `Dockerfile` which can be used to setup everything that's required for the webR build environment, including LLVM flang and all supported WebAssembly system libraries.
+
+Pre-built docker images can be found in the [GitHub Packages section](https://github.com/r-wasm/webr/pkgs/container/webr). To build the docker image and webR from source, `cd` into the webR source directory then run `docker build .`
+
+The resulting docker image contains a version of R configured to be built for WebAssembly, and so the image can also be used to build custom R packages for webR.
+
 
 ### Node and Emscripten versioning
 
@@ -65,3 +73,7 @@ If you are unsure of the correct path to Node the command `which node` should pr
 At the time of writing the version of R used as the base for webR does not build cleanly using the macOS Ventura development SDK. If you are not using the included `Dockerfile` to build webR, the following extra setup must be done before starting the build process,
 
  * Install the GNU version of the patch program: e.g. `brew install gpatch`
+
+### Using Dragonegg (Optional)
+
+If you intend to build webR using Dragonegg to handle Fortran sources, older versions of the `gcc`/`gfortran` toolchain are required than what is provided by modern operating system repositories. The docker file `tools/dragonegg/Dockerfile` can be used to setup the required C/C++/Fortran toolchain and development environment for compiling webR with Dragonegg.

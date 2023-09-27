@@ -1,5 +1,9 @@
 # webR (development version)
 
+## New features
+
+* Updated `Dockerfile` to build webR with LLVM flang and setup environment in preparation for building Wasm R packages. The docker image is now built and published by GitHub Actions as part of webR CI deployment from the `main` branch.
+
 # webR 0.2.1
 
 ## New features
