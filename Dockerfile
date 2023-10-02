@@ -1,6 +1,12 @@
 ARG BASE=ghcr.io/r-wasm/webr-flang:main
-FROM $BASE
+FROM $BASE as webr
 
+# Setup environment for Emscripten
+ENV PATH="/opt/emsdk:/opt/emsdk/upstream/emscripten:${PATH}"
+ENV EMSDK="/opt/emsdk"
+ENV EM_NODE_JS="/usr/bin/node"
+
+FROM webr as scratch
 # Install node 18
 RUN mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | \
@@ -12,11 +18,6 @@ RUN mkdir -p /etc/apt/keyrings && \
     apt-get install nodejs -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-
-# Setup environment for Emscripten
-ENV PATH="/opt/emsdk:/opt/emsdk/upstream/emscripten:${PATH}"
-ENV EMSDK="/opt/emsdk"
-ENV EM_NODE_JS="/usr/bin/node"
 
 # Download webR and configure for LLVM flang
 RUN git clone --depth=1 https://github.com/r-wasm/webr.git /opt/webr
@@ -50,6 +51,6 @@ RUN rm -rf libs/download libs/build src/node_modules R/download
 RUN cd src && make clean
 
 # Squash docker image layers
-FROM $BASE
-COPY --from=0 / /
+FROM webr
+COPY --from=scratch / /
 SHELL ["/bin/bash", "-c"]
