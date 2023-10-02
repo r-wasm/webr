@@ -92,7 +92,8 @@ $(BUILD)/state/R-$(R_VERSION)/r-stage1-configured: $(BUILD)/state/R-$(R_VERSION)
 	    --with-pcre2 \
 	    --disable-nls \
 	    --enable-byte-compiled-packages=no \
-	    --enable-long-double=no
+	    --enable-long-double=no \
+	    --enable-R-shlib
 	touch $@
 
 $(BUILD)/state/R-$(R_VERSION)/r-stage1: $(BUILD)/state/R-$(R_VERSION)/r-stage1-configured
