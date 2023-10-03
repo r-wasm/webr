@@ -239,6 +239,9 @@ Rprofile: $(BUILD)/state/R-$(R_VERSION)/r-stage2
 	mkdir -p "$(R_WASM)/lib/R/etc/"
 	echo "options(expressions=400)" > "$(R_WASM)/lib/R/etc/Rprofile.site"
 	echo "options(bitmapType='cairo')" >> "$(R_WASM)/lib/R/etc/Rprofile.site"
+	echo ".webrshims <- new.env()" >> "$(R_WASM)/lib/R/etc/Rprofile.site"
+	echo ".webrshims[['install.packages']] <- webr::install" >> "$(R_WASM)/lib/R/etc/Rprofile.site"
+	echo "setHook(packageEvent('utils', 'attach'), function(...) {attach(.webrshims, warn.conflicts = FALSE)})" >> "$(R_WASM)/lib/R/etc/Rprofile.site"
 
 .PHONY: install
 install: install-tests Rprofile
