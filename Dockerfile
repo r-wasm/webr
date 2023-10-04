@@ -16,7 +16,17 @@ RUN mkdir -p /etc/apt/keyrings && \
         https://deb.nodesource.com/node_18.x nodistro main" | \
     tee /etc/apt/sources.list.d/nodesource.list && \
     apt-get update && \
-    apt-get install nodejs -y && \
+    apt-get install nodejs -y
+
+# Install standard R so that we can use PPM binaries
+RUN apt-get install -y --no-install-recommends software-properties-common && \
+    add-apt-repository --enable-source --yes "ppa:marutter/rrutter4.0" && \
+    add-apt-repository --enable-source --yes "ppa:c2d4u.team/c2d4u4.0+" && \
+    apt-get purge -y software-properties-common && \
+    apt-get autoremove -y
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        r-base r-base-dev r-recommended && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
