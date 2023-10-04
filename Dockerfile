@@ -4,6 +4,7 @@ FROM $BASE as webr
 # Setup environment for Emscripten
 ENV PATH="/opt/emsdk:/opt/emsdk/upstream/emscripten:${PATH}"
 ENV EMSDK="/opt/emsdk"
+ENV WEBR_ROOT="/opt/webr"
 ENV EM_NODE_JS="/usr/bin/node"
 
 FROM webr as scratch
@@ -53,4 +54,5 @@ RUN cd src && make clean
 # Squash docker image layers
 FROM webr
 COPY --from=scratch / /
+WORKDIR /root
 SHELL ["/bin/bash", "-c"]
