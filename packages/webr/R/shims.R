@@ -16,3 +16,4 @@ shim_install <- function(){
     attach(.e, name = "webr_shims", warn.conflicts = FALSE)
   })
 }
+
