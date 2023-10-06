@@ -366,6 +366,55 @@ After loading, the resulting web page should present an interactive R console si
   );
 </script>
 ```
+
+### Interactive charts with ggplot2 and plotly
+
+With ggplotly() by Plotly, you can convert your ggplot2 figures into interactive ones powered by plotly.js.
+``` html
+<html>
+  <head>
+    <title>Plotly Example</title>
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js" charset="utf-8"></script>
+  </head>
+  <body>
+    <div>
+      <pre><code id="out">Loading webR, please wait...</code></pre>
+    </div>
+    
+    <script type="module">
+      import { WebR } from 'https://webr.r-wasm.org/latest/webr.mjs';
+      const webR = new WebR({ interactive: false });
+      await webR.init();
+      const outElem = document.getElementById('out');
+      outElem.innerText = 'Loading plotly, please wait...';
+      await webR.installPackages(['jsonlite', 'ggplot2', 'plotly'], true);
+      outElem.innerText = 'Generating plot, please wait...';
+      await webR.evalRVoid(`
+library(plotly)
+library(ggplot2)
+
+p <- ggplot(mpg, aes(displ, hwy, colour = class)) + 
+  geom_point()
+webr::eval_js(paste0(
+  "chan.write({",
+  "  type: 'plotly',",
+  "  data: '",
+  plotly_json(p, pretty=FALSE),
+  "',",
+  "})"
+))`);
+    const msgs = await webR.flush();
+    msgs.forEach(msg => {
+      if (msg.type === 'plotly') {
+          outElem.replaceChildren();
+          Plotly.newPlot('out', JSON.parse(msg.data), {});
+      }
+    });
+    </script>
+  </body>
+</html>
+```
+
 ### Integrating webR with other frameworks
 
 See the example repositories below for examples of integrating webR into other JavaScript/TypeScript systems and frameworks.
