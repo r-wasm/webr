@@ -1,5 +1,5 @@
 #' shim base functions
-shim_webr <- function(){
+shim_install <- function(){
   .e <- new.env()
   .e[["install.packages"]] <- webr::install
   setHook(packageEvent("utils", "attach"), function(...) {
