@@ -95,6 +95,10 @@ root.render(<StrictMode><App /></StrictMode>);
   await webR.evalRVoid('webr::pager_install()');
   await webR.evalRVoid('webr::canvas_install()');
 
+  // shim function from base R with implementations for webR
+  // see ?webr::shim_install for details.
+  await webR.evalRVoid('webr::shim_install()');
+
   // If supported, show a menu when prompted for missing package installation
   const showMenu = crossOriginIsolated || navigator.serviceWorker.controller ? 'TRUE' : 'FALSE';
   await webR.evalRVoid(`webr::global_prompt_install(${showMenu})`, { withHandlers: false });
