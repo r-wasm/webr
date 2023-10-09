@@ -35,3 +35,9 @@ webr:::sandbox({
     )
   )
 })
+
+"Emscripten mount and unmount without error"
+webr:::sandbox({
+  webr::mount("/mnt", path = ".", type = "nodefs")
+  webr::unmount("/mnt")
+})
