@@ -139,6 +139,14 @@ function dispatch(msg: Message): void {
             });
             break;
           }
+          case 'unmount': {
+            const msg = reqMsg as FSMessage;
+            write({
+              obj: Module.FS.unmount(msg.data.path),
+              payloadType: 'raw',
+            });
+            break;
+          }
 
           case 'newShelter': {
             const id = generateUUID();

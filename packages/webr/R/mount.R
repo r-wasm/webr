@@ -32,10 +32,16 @@ mount <- function(mountpoint, data_url = NULL, path = '.', type = "workerfs") {
   # Mount specified Emscripten filesystem type onto the given mountpoint
   if (tolower(type) == "workerfs") {
     base_url <- gsub(".data$", "", data_url)
-    .Call(ffi_mount_workerfs, base_url, mountpoint)
+    invisible(.Call(ffi_mount_workerfs, base_url, mountpoint))
   } else if (tolower(type) == "nodefs") {
-    .Call(ffi_mount_nodefs, path, mountpoint)
+    invisible(.Call(ffi_mount_nodefs, path, mountpoint))
   } else {
     stop(paste("Unsupported Emscripten Filesystem type:", type))
   }
+}
+
+#' @rdname mount
+#' @export
+unmount <- function(mountpoint) {
+  invisible(.Call(ffi_unmount, mountpoint))
 }

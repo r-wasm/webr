@@ -2,9 +2,12 @@
 % Please edit documentation in R/mount.R
 \name{mount}
 \alias{mount}
+\alias{unmount}
 \title{Mount an Emscripten filesystem object}
 \usage{
 mount(mountpoint, data_url = NULL, path = ".", type = "workerfs")
+
+unmount(mountpoint)
 }
 \arguments{
 \item{mountpoint}{a character string giving the path to a directory to mount

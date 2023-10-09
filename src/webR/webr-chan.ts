@@ -99,7 +99,7 @@ export interface EvalRMessageRaw extends Message {
 
 /** @internal */
 export interface FSMessage extends Message {
-  type: 'lookupPath' | 'mkdir' | 'rmdir' | 'unlink';
+  type: 'lookupPath' | 'mkdir' | 'rmdir' | 'unlink' | 'unmount';
   data: { path: string };
 }
 

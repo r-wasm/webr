@@ -102,7 +102,7 @@ export type FSMountOptions<T extends FSType = FSType> =
   T extends 'NODEFS' ? { root: string } : {
     blobs?: Array<{name: string, data: Blob}>;
     files?: Array<File | FileList>;
-    packages?: Array<{ metadata: any, data: Blob }>;
+    packages?: Array<{ metadata: any, blob: Blob }>;
   };
 
 /**
@@ -474,6 +474,10 @@ export class WebR {
     },
     unlink: async (path: string): Promise<void> => {
       const msg: FSMessage = { type: 'unlink', data: { path } };
+      await this.#chan.request(msg);
+    },
+    unmount: async (mountpoint: string): Promise<void> => {
+      const msg: FSMessage = { type: 'unmount', data: { path: mountpoint } };
       await this.#chan.request(msg);
     },
   };
