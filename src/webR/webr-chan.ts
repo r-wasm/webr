@@ -6,6 +6,7 @@ import { UUID as ShelterID } from './chan/task-common';
 import { EmPtr } from './emscripten';
 import { WebRPayloadWorker, WebRPayloadPtr } from './payload';
 import { RType, WebRData } from './robj';
+import type { FSType, FSMountOptions } from './webr-main';
 
 export { isUUID as isShelterID, UUID as ShelterID } from './chan/task-common';
 
@@ -100,6 +101,16 @@ export interface EvalRMessageRaw extends Message {
 export interface FSMessage extends Message {
   type: 'lookupPath' | 'mkdir' | 'rmdir' | 'unlink';
   data: { path: string };
+}
+
+/** @internal */
+export interface FSMountMessage extends Message {
+  type: 'mount';
+  data: {
+    type: FSType;
+    options: FSMountOptions;
+    mountpoint: string;
+  };
 }
 
 /** @internal */
