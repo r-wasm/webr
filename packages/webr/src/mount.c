@@ -7,23 +7,18 @@
 #include <emscripten.h>
 #endif
 
-SEXP ffi_mount_workerfs(SEXP base_url, SEXP mountpoint) {
-#ifdef __EMSCRIPTEN__
-  if (!Rf_isString(base_url) || LENGTH(base_url) != 1) {
-    Rf_error("URL must be a character string.");
-  }
-  
-  if (STRING_ELT(base_url, 0) == NA_STRING){
-    Rf_error("URL can't be `NA`.");
+#define CHECK_STRING(arg) \
+  if (!Rf_isString(arg) || LENGTH(arg) != 1) {           \
+    Rf_error("`" #arg "` must be a character string.");  \
+  }                                                      \
+  if (STRING_ELT(arg, 0) == NA_STRING){                  \
+    Rf_error("`" #arg "` can't be `NA`.");               \
   }
 
-  if (!Rf_isString(mountpoint) || LENGTH(mountpoint) != 1) {
-    Rf_error("`mountpoint` must be a character string.");
-  }
-  
-  if (STRING_ELT(mountpoint, 0) == NA_STRING){
-    Rf_error("`mountpoint` can't be `NA`.");
-  }
+SEXP ffi_mount_workerfs(SEXP source, SEXP mountpoint) {
+#ifdef __EMSCRIPTEN__
+  CHECK_STRING(source);
+  CHECK_STRING(mountpoint);
 
   EM_ASM({
     const baseUrl = UTF8ToString($0);
@@ -45,7 +40,7 @@ SEXP ffi_mount_workerfs(SEXP base_url, SEXP mountpoint) {
     Module.FS.mount(Module.FS.filesystems.WORKERFS, {
       packages: [{ metadata, blob }],
     }, mountpoint);
-  }, R_CHAR(STRING_ELT(base_url, 0)), R_CHAR(STRING_ELT(mountpoint, 0)));
+  }, R_CHAR(STRING_ELT(source, 0)), R_CHAR(STRING_ELT(mountpoint, 0)));
 
   return R_NilValue;
 #else
@@ -53,23 +48,10 @@ SEXP ffi_mount_workerfs(SEXP base_url, SEXP mountpoint) {
 #endif
 }
 
-SEXP ffi_mount_nodefs(SEXP path, SEXP mountpoint) {
+SEXP ffi_mount_nodefs(SEXP source, SEXP mountpoint) {
 #ifdef __EMSCRIPTEN__
-  if (!Rf_isString(path) || LENGTH(path) != 1) {
-    Rf_error("`path` must be a character string.");
-  }
-  
-  if (STRING_ELT(path, 0) == NA_STRING){
-    Rf_error("`path` must not be `NA`.");
-  }
-  
-  if (!Rf_isString(mountpoint) || LENGTH(mountpoint) != 1) {
-    Rf_error("`mountpoint` must be a character string.");
-  }
-  
-  if (STRING_ELT(mountpoint, 0) == NA_STRING){
-    Rf_error("`mountpoint` must not be `NA`.");
-  }
+  CHECK_STRING(source);
+  CHECK_STRING(mountpoint);
 
   EM_ASM({
     // Stop if we're not able to use a NODEFS filesystem object
@@ -82,7 +64,7 @@ SEXP ffi_mount_nodefs(SEXP path, SEXP mountpoint) {
     const root = UTF8ToString($0);
     const mountpoint = UTF8ToString($1);
     Module.FS.mount(Module.FS.filesystems.NODEFS, { root }, mountpoint);
-  }, R_CHAR(STRING_ELT(path, 0)), R_CHAR(STRING_ELT(mountpoint, 0)));
+  }, R_CHAR(STRING_ELT(source, 0)), R_CHAR(STRING_ELT(mountpoint, 0)));
 
   return R_NilValue;
 #else
@@ -92,13 +74,7 @@ SEXP ffi_mount_nodefs(SEXP path, SEXP mountpoint) {
 
 SEXP ffi_unmount(SEXP mountpoint) {
 #ifdef __EMSCRIPTEN__
-  if (!Rf_isString(mountpoint) || LENGTH(mountpoint) != 1) {
-    Rf_error("`mountpoint` must be a character string.");
-  }
-
-  if (STRING_ELT(mountpoint, 0) == NA_STRING){
-    Rf_error("`mountpoint` must not be `NA`.");
-  }
+  CHECK_STRING(mountpoint);
 
   EM_ASM({
     try {
