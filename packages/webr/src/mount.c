@@ -14,7 +14,7 @@ SEXP ffi_mount_workerfs(SEXP base_url, SEXP mountpoint) {
   }
   
   if (STRING_ELT(base_url, 0) == NA_STRING){
-    Rf_error("URL must not be `NA`.");
+    Rf_error("URL can't be `NA`.");
   }
 
   if (!Rf_isString(mountpoint) || LENGTH(mountpoint) != 1) {
@@ -22,7 +22,7 @@ SEXP ffi_mount_workerfs(SEXP base_url, SEXP mountpoint) {
   }
   
   if (STRING_ELT(mountpoint, 0) == NA_STRING){
-    Rf_error("`mountpoint` must not be `NA`.");
+    Rf_error("`mountpoint` can't be `NA`.");
   }
 
   EM_ASM({
@@ -30,6 +30,7 @@ SEXP ffi_mount_workerfs(SEXP base_url, SEXP mountpoint) {
     const mountpoint = UTF8ToString($1);
     const dataResp = Module.downloadFileContent(`${baseUrl}.data`);
     const metaResp = Module.downloadFileContent(`${baseUrl}.js.metadata`);
+
     if (dataResp.status < 200 || dataResp.status >= 300 ||
         metaResp.status < 200 || metaResp.status >= 300) {
       const msg = Module.allocateUTF8OnStack(
@@ -38,6 +39,7 @@ SEXP ffi_mount_workerfs(SEXP base_url, SEXP mountpoint) {
       );
       Module._Rf_error(msg);
     }
+
     const blob = new Blob([dataResp.response]);
     const metadata = JSON.parse(new TextDecoder().decode(metaResp.response));
     Module.FS.mount(Module.FS.filesystems.WORKERFS, {
@@ -71,7 +73,7 @@ SEXP ffi_mount_nodefs(SEXP path, SEXP mountpoint) {
 
   EM_ASM({
     // Stop if we're not able to use a NODEFS filesystem object
-    if(typeof IN_NODE === 'boolean' && IN_NODE === false) {
+    if (typeof IN_NODE === 'boolean' && IN_NODE === false) {
       const msg = Module.allocateUTF8OnStack(
         'The `NODEFS` filesystem object can only be used when running in Node.'
       );

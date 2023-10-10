@@ -1,7 +1,7 @@
 #' Mount an Emscripten filesystem object
 #' 
 #' @description
-#' Use the Emscripten filesystem API to mount a filesystem object onto a given
+#' Uses the Emscripten filesystem API to mount a filesystem object onto a given
 #' directory in the virtual filesystem. The mountpoint will be created if it
 #' does not already exist.
 #' 
