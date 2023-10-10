@@ -5,7 +5,7 @@
 \alias{unmount}
 \title{Mount an Emscripten filesystem object}
 \usage{
-mount(mountpoint, data_url = NULL, path = ".", type = "workerfs")
+mount(mountpoint, source, type = "workerfs")
 
 unmount(mountpoint)
 }
@@ -13,27 +13,25 @@ unmount(mountpoint)
 \item{mountpoint}{a character string giving the path to a directory to mount
 onto in the Emscripten virtual filesystem.}
 
-\item{data_url}{a character string giving the URL to a \code{.data} filesystem
-image to be downloaded and mounted.}
-
-\item{path}{a character string giving the path to a host directory to be
+\item{source}{a character string giving the location of the data source to be
 mounted.}
 
 \item{type}{a character string giving the type of Emscripten filesystem to be
 mounted: "workerfs" or "nodefs".}
 }
 \description{
-Use the Emscripten filesystem API to mount a filesystem object onto a given
+Uses the Emscripten filesystem API to mount a filesystem object onto a given
 directory in the virtual filesystem. The mountpoint will be created if it
 does not already exist.
 
-When mounting an Emscripten "workerfs" type filesystem, provide the URL to a
-filesystem image with filename ending \code{.data}, as produced by Emscripten's
-\code{file_packager} tool. The filesystem image and metadata will be downloaded
-and mounted onto the directory \code{mountpoint}.
+When mounting an Emscripten "workerfs" type filesystem the \code{source} should
+be the URL for a filesystem image with filename ending \code{.data}, as produced
+by Emscripten's \code{file_packager} tool. The filesystem image and metadata will
+be downloaded and mounted onto the directory \code{mountpoint}.
 
-When mounting an Emscripten "nodefs" type filesystem, provide a \code{path} to a
-physical directory on the host filesystem. The host directory will be mapped
-into the virtual filesystem and mounted onto the directory \code{mountpoint}. This
-filesystem type can only be used when webR is running under Node.
+When mounting an Emscripten "nodefs" type filesystem, the \code{source} should be
+the path to a physical directory on the host filesystem. The host directory
+will be mapped into the virtual filesystem and mounted onto the directory
+\code{mountpoint}. This filesystem type can only be used when webR is running
+under Node.
 }
