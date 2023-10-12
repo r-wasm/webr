@@ -2,7 +2,6 @@ import { SharedBufferChannelMain, SharedBufferChannelWorker } from './channel-sh
 import { ServiceWorkerChannelMain, ServiceWorkerChannelWorker } from './channel-service';
 import { PostMessageChannelMain, PostMessageChannelWorker } from './channel-postmessage';
 import { WebROptions } from '../webr-main';
-import { isCrossOrigin } from '../utils';
 import { WebRChannelError } from '../error';
 
 // This file refers to objects imported from `./channel-shared` and
@@ -41,16 +40,9 @@ export function newChannelMain(data: Required<WebROptions>) {
     default:
       if (typeof SharedArrayBuffer !== 'undefined') {
         return new SharedBufferChannelMain(data);
+      } else {
+        return new PostMessageChannelMain(data);
       }
-      /*
-       * TODO: If we are not cross-origin isolated but we can still use service
-       * workers, we could setup a service worker to inject the relevant headers
-       * to enable cross-origin isolation.
-       */
-      if ('serviceWorker' in navigator && !isCrossOrigin(data.serviceWorkerUrl)) {
-        return new ServiceWorkerChannelMain(data);
-      }
-      throw new WebRChannelError("Can't initialise main thread communication channel");
   }
 }
 
