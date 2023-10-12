@@ -121,7 +121,6 @@ export class PostMessageChannelWorker {
   #parked = new Map<string, ResolveFn>();
   #dispatch: (msg: Message) => void = () => 0;
   #promptDepth = 0;
-  #interrupt = () => {};
 
   constructor() {
     this.#ep = (IN_NODE ? require('worker_threads').parentPort : globalThis) as Endpoint;
@@ -146,17 +145,12 @@ export class PostMessageChannelWorker {
   }
 
   inputOrDispatch(): number {
-    if (this.#promptDepth > 10) {
-      // For a deeply nested REPL, give up and interrupt R evaluation
-      // Avoids an infinite loop with R's `menu()`
-      this.#interrupt();
-    } else if (this.#promptDepth > 0) {
-      // For a shallow nested REPL, show an error and try to recover
-      // Handles R's `readline()`, `browser()` with an immediate exit
-      this.writeSystem({
-        type: 'console.error',
-        data: 'Nested REPL prompts are not available when using the `PostMessage` channel.',
-      });
+    if (this.#promptDepth > 0) {
+      this.#promptDepth = 0;
+      const msg = Module.allocateUTF8OnStack(
+       "Can't block for input when using the PostMessage communication channel."
+      );
+      Module._Rf_error(msg);
     }
     this.#promptDepth++;
     // Unable to block, so just return a NULL
@@ -200,10 +194,7 @@ export class PostMessageChannelWorker {
     return prom;
   }
 
-  setInterrupt(interrupt: () => void) {
-    this.#interrupt = interrupt;
-  }
-
+  setInterrupt(_: () => void) {}
   handleInterrupt() {}
 
   onMessageFromMainThread(message: Message) {
