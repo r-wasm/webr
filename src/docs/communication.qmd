@@ -10,7 +10,7 @@ WebR initialises by launching a version of R built for WebAssembly in a [JavaScr
 
 ## Communication channels {#webr-channels}
 
-Communication between the main thread and the webR worker thread is managed by message passing through a communication channel. The possible channel types are,
+Communication between the main thread and the webR worker thread is managed by message passing through a communication channel. The possible channel types are:
 
 | Name                          | Requirements                                                                                      | Limitations                                                                         |
 |-------------------|----------------------------|-------------------------|
