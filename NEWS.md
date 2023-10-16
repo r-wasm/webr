@@ -12,6 +12,10 @@
 
 * When starting webR using the `ChannelType.Automatic` channel (the default), the `PostMessage` channel is now used as the fallback when the web page is not Cross-Origin Isolated. The `PostMessage` channel has the widest compatibility, but is unable to use functions that block for input (e.g. `readline()`, `menu()`, `browser()`, etc). If blocking for input is required, the `ServiceWorker` channel is still available, but must be requested explicitly.
 
+* Invoking the `system()` function now raises an R error condition.
+
+* Invoking functions that block for input now raises an R error condition when running under the `PostMessage` communication channel.
+
 # webR 0.2.1
 
 ## New features
