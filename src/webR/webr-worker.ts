@@ -22,6 +22,7 @@ import {
   EvalRMessageRaw,
   FSMessage,
   FSReadFileMessage,
+  FSMountMessage,
   FSWriteFileMessage,
   InvokeWasmFunctionMessage,
   NewRObjectMessage,
@@ -91,6 +92,13 @@ function dispatch(msg: Message): void {
             });
             break;
           }
+          case 'mount': {
+            const msg = reqMsg as FSMountMessage;
+            const fs = Module.FS.filesystems[msg.data.type];
+            Module.FS.mount(fs, msg.data.options, msg.data.mountpoint);
+            write({ obj: null, payloadType: 'raw' });
+            break;
+          }
           case 'readFile': {
             const msg = reqMsg as FSReadFileMessage;
             const reqData = msg.data;
@@ -127,6 +135,14 @@ function dispatch(msg: Message): void {
             const msg = reqMsg as FSMessage;
             write({
               obj: Module.FS.unlink(msg.data.path),
+              payloadType: 'raw',
+            });
+            break;
+          }
+          case 'unmount': {
+            const msg = reqMsg as FSMessage;
+            write({
+              obj: Module.FS.unmount(msg.data.path),
               payloadType: 'raw',
             });
             break;

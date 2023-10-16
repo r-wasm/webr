@@ -12,6 +12,9 @@
 #' If it is possible to do so, execution will continue without
 #' interrupting the current program.
 #'
+#' @param show_menu Show a menu asking the user if they would like to install
+#'   the missing package.
+#'
 #' @export
 global_prompt_install <- function(show_menu = TRUE) {
   globalCallingHandlers(

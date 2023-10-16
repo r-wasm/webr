@@ -1,5 +1,8 @@
 import { WebR } from '../../webR/webr-main';
 import { RInteger, RLogical, RRaw } from '../../webR/robj-main';
+import { mkdtemp, rmdir, unlink, writeFile } from 'fs/promises';
+import * as path from 'node:path';
+import * as os from 'node:os';
 
 const webR = new WebR({
   baseUrl: '../dist/',
@@ -77,6 +80,24 @@ describe('Test webR virtual filesystem', () => {
     await expect(webR.FS.rmdir('/newdir')).resolves.not.toThrow();
     const dirInfo = await webR.FS.lookupPath('/');
     expect(Object.keys(dirInfo.contents)).not.toContain('newdir');
+  });
+
+  test('Mount and unmount a directory on the VFS', async () => {
+    const fileData = new Uint8Array([4, 6, 6, 9, 2, 0, 1, 6, 0, 9]);
+
+    const tmpDir = await mkdtemp(path.join(os.tmpdir(), 'temp-'));
+    await writeFile(path.join(tmpDir, 'testFile.dat'), fileData);
+
+    await expect(webR.FS.mkdir('/mnt')).resolves.not.toThrow();
+    await expect(webR.FS.mount('NODEFS', { root: tmpDir }, '/mnt')).resolves.not.toThrow();
+    const readFile = (await webR.evalR('readBin("/mnt/testFile.dat", "raw", 10)')) as RRaw;
+    expect(Array.from(await readFile.toArray())).toEqual(Array.from(fileData));
+
+    // Cleanup
+    await expect(webR.FS.unmount('/mnt')).resolves.not.toThrow();
+    await expect(webR.FS.rmdir('/mnt')).resolves.not.toThrow();
+    await unlink(path.join(tmpDir, 'testFile.dat'));
+    await rmdir(tmpDir);
   });
 });
 

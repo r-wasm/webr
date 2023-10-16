@@ -4,7 +4,11 @@
 \alias{global_prompt_install}
 \title{Prompt user to install missing packages from a webR binary repo}
 \usage{
-global_prompt_install()
+global_prompt_install(show_menu = TRUE)
+}
+\arguments{
+\item{show_menu}{Show a menu asking the user if they would like to install
+the missing package.}
 }
 \description{
 When enabled, \code{packageNotFoundError} errors cause a menu prompt

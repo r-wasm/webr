@@ -7,6 +7,9 @@ export interface Module extends EmscriptenModule {
    */
   FS: typeof FS & {
     mkdirTree(path: string): void;
+    filesystems: {
+      [key: string]: Emscripten.FileSystemType;
+    }
   };
   ENV: { [key: string]: string };
   GOT: {

@@ -24,6 +24,7 @@ import {
   EvalRMessageRaw,
   EvalROptions,
   FSMessage,
+  FSMountMessage,
   FSReadFileMessage,
   FSWriteFileMessage,
   InvokeWasmFunctionMessage,
@@ -89,6 +90,20 @@ export type FSNode = {
   isFolder: boolean;
   contents: { [key: string]: FSNode };
 };
+
+/** An Emscripten Filesystem type */
+export type FSType = 'NODEFS' | 'WORKERFS';
+
+/**
+ * Configuration settings to be used when mounting Filesystem objects with
+ * Emscripten
+ * */
+export type FSMountOptions<T extends FSType = FSType> =
+  T extends 'NODEFS' ? { root: string } : {
+    blobs?: Array<{name: string, data: Blob}>;
+    files?: Array<File | FileList>;
+    packages?: Array<{ metadata: any, blob: Blob }>;
+  };
 
 /**
  * The configuration settings to be used when starting webR.
@@ -436,6 +451,14 @@ export class WebR {
       const payload = await this.#chan.request(msg);
       return payload.obj as FSNode;
     },
+    mount: async <T extends FSType>(
+      type: T,
+      options: FSMountOptions<T>,
+      mountpoint: string
+    ): Promise<void> => {
+      const msg: FSMountMessage = { type: 'mount', data: { type, options, mountpoint } };
+      await this.#chan.request(msg);
+    },
     readFile: async (path: string, flags?: string): Promise<Uint8Array> => {
       const msg: FSReadFileMessage = { type: 'readFile', data: { path, flags } };
       const payload = await this.#chan.request(msg);
@@ -451,6 +474,10 @@ export class WebR {
     },
     unlink: async (path: string): Promise<void> => {
       const msg: FSMessage = { type: 'unlink', data: { path } };
+      await this.#chan.request(msg);
+    },
+    unmount: async (mountpoint: string): Promise<void> => {
+      const msg: FSMessage = { type: 'unmount', data: { path: mountpoint } };
       await this.#chan.request(msg);
     },
   };

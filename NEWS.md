@@ -6,6 +6,8 @@
 
 * The base R function `install.packages()` is has now been shimmed to use `webr::install()`.
 
+* Expose Emscripten's `FS.mount()` on `webr::mount` in R, and `webR.FS.mount()` in JavaScript. This allows images built using Emscripten's `file_packager` to be mounted on the virtual filesystem and host directory paths to be mounted when running under Node.
+
 # webR 0.2.1
 
 ## New features
