@@ -389,27 +389,17 @@ With ggplotly() by Plotly, you can convert your ggplot2 figures into interactive
       outElem.innerText = 'Loading plotly, please wait...';
       await webR.installPackages(['jsonlite', 'ggplot2', 'plotly'], true);
       outElem.innerText = 'Generating plot, please wait...';
-      await webR.evalRVoid(`
+      const plotlyData = await webR.evalRString(`
 library(plotly)
 library(ggplot2)
 
-p <- ggplot(mpg, aes(displ, hwy, colour = class)) + 
+p <- ggplot(mpg, aes(displ, hwy, colour = class)) +
   geom_point()
-webr::eval_js(paste0(
-  "chan.write({",
-  "  type: 'plotly',",
-  "  data: '",
-  plotly_json(p, pretty=FALSE),
-  "',",
-  "})"
-))`);
-    const msgs = await webR.flush();
-    msgs.forEach(msg => {
-      if (msg.type === 'plotly') {
-          outElem.replaceChildren();
-          Plotly.newPlot('out', JSON.parse(msg.data), {});
-      }
-    });
+
+plotly_json(p, pretty = FALSE)
+`);
+      outElem.replaceChildren();
+      Plotly.newPlot('out', JSON.parse(plotlyData), {});
     </script>
   </body>
 </html>
