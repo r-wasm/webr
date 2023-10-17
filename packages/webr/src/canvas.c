@@ -69,6 +69,78 @@ void canvasSetLineType( canvasDesc *cGD, pGEcontext gc)
         EM_ASM({Module.canvasCtx.lineWidth = $0;}, 2*cGD->lwd);
     }
 
+    /* Line type */
+    if (cGD->lty != gc->lty){
+        cGD->lty = gc->lty;
+
+        // Line texture decoding - see comment in grDevices/src/devWindows.c
+        int new_lty = cGD->lty;
+        int ndash = 0;
+        int dash_list[8];
+        for( int i = 0; i < 8 && (new_lty & 15); i++) {
+            dash_list[ndash++] = 2 * (new_lty & 15);
+            new_lty = new_lty >> 4;
+        }
+
+        switch(ndash) {
+        case 0:
+            EM_ASM({Module.canvasCtx.setLineDash([]);});
+            break;
+        case 1:
+            EM_ASM({
+                Module.canvasCtx.setLineDash([$0]);
+            }, dash_list[0]*cGD->lwd);
+            break;
+        case 2:
+            EM_ASM({
+                Module.canvasCtx.setLineDash([$0, $1]);
+            }, dash_list[0]*cGD->lwd, dash_list[1]*cGD->lwd);
+            break;
+        case 3:
+            EM_ASM({
+                Module.canvasCtx.setLineDash([$0, $1, $2]);
+            }, dash_list[0]*cGD->lwd, dash_list[1]*cGD->lwd,
+               dash_list[2]*cGD->lwd);
+            break;
+        case 4:
+            EM_ASM({
+                Module.canvasCtx.setLineDash([$0, $1, $2, $3]);
+            }, dash_list[0]*cGD->lwd, dash_list[1]*cGD->lwd,
+               dash_list[2]*cGD->lwd, dash_list[3]*cGD->lwd);
+            break;
+        case 5:
+            EM_ASM({
+                Module.canvasCtx.setLineDash([$0, $1, $2, $3, $4]);
+            }, dash_list[0]*cGD->lwd, dash_list[1]*cGD->lwd,
+               dash_list[2]*cGD->lwd, dash_list[3]*cGD->lwd,
+               dash_list[4]*cGD->lwd);
+            break;
+        case 6:
+            EM_ASM({
+                Module.canvasCtx.setLineDash([$0, $1, $2, $3, $4, $5]);
+            }, dash_list[0]*cGD->lwd, dash_list[1]*cGD->lwd,
+               dash_list[2]*cGD->lwd, dash_list[3]*cGD->lwd,
+               dash_list[4]*cGD->lwd, dash_list[5]*cGD->lwd);
+            break;
+        case 7:
+            EM_ASM({
+                Module.canvasCtx.setLineDash([$0, $1, $2, $3, $4, $5, $6]);
+            }, dash_list[0]*cGD->lwd, dash_list[1]*cGD->lwd,
+               dash_list[2]*cGD->lwd, dash_list[3]*cGD->lwd,
+               dash_list[4]*cGD->lwd, dash_list[5]*cGD->lwd,
+               dash_list[6]*cGD->lwd);
+            break;
+        case 8:
+            EM_ASM({
+                Module.canvasCtx.setLineDash([$0, $1, $2, $3, $4, $5, $6, $7]);
+            }, dash_list[0]*cGD->lwd, dash_list[1]*cGD->lwd,
+               dash_list[2]*cGD->lwd, dash_list[3]*cGD->lwd,
+               dash_list[4]*cGD->lwd, dash_list[5]*cGD->lwd,
+               dash_list[6]*cGD->lwd, dash_list[7]*cGD->lwd);
+            break;
+        }
+    }
+
     /* Line end: par lend  */
     if (cGD->lend != gc->lend){
         cGD->lend = gc->lend;
