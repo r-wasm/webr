@@ -367,14 +367,17 @@ After loading, the resulting web page should present an interactive R console si
 </script>
 ```
 
-### Interactive charts with ggplot2 and plotly
+### Interactive charts with `ggplot2` and `plotly`
 
-With ggplotly() by Plotly, you can convert your ggplot2 figures into interactive ones powered by plotly.js.
+Using the [`plotly`](https://plotly.com/r/getting-started/) R package, `ggplot2` output can be converted into interactive figures powered by [plotly.js](https://plotly.com/javascript/).
 ``` html
 <html>
   <head>
     <title>Plotly Example</title>
-    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js" charset="utf-8"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.2/plotly.min.js"
+      charset="utf-8"
+    ></script>
   </head>
   <body>
     <div>
