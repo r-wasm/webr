@@ -8,6 +8,10 @@
 
 * Expose Emscripten's `FS.mount()` on `webr::mount` in R, and `webR.FS.mount()` in JavaScript. This allows images built using Emscripten's `file_packager` to be mounted on the virtual filesystem and host directory paths to be mounted when running under Node.
 
+## Breaking changes
+
+* When starting webR using the `ChannelType.Automatic` channel (the default), the `PostMessage` channel is now used as the fallback when the web page is not Cross-Origin Isolated. The `PostMessage` channel has the widest compatibility, but is unable to use functions that block for input (e.g. `readline()`, `menu()`, `browser()`, etc). If blocking for input is required, the `ServiceWorker` channel is still available, but must be requested explicitly.
+
 # webR 0.2.1
 
 ## New features
