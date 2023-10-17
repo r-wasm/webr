@@ -1,7 +1,7 @@
-Index: R-4.2.2/src/library/base/R/unix/system.unix.R
+Index: R-4.3.0/src/library/base/R/unix/system.unix.R
 ===================================================================
---- R-4.2.2.orig/src/library/base/R/unix/system.unix.R
-+++ R-4.2.2/src/library/base/R/unix/system.unix.R
+--- R-4.3.0.orig/src/library/base/R/unix/system.unix.R
++++ R-4.3.0/src/library/base/R/unix/system.unix.R
 @@ -35,6 +35,11 @@ system <- function(command, intern = FALSE,
      if(!is.logical(wait) || is.na(wait))
          stop("'wait' must be TRUE or FALSE")
@@ -26,21 +26,41 @@ Index: R-4.2.2/src/library/base/R/unix/system.unix.R
      intern <- FALSE
      command <- paste(c(env, shQuote(command), args), collapse = " ")
  
-@@ -105,6 +115,17 @@ system2 <- function(command, args = character(),
-     } else if (nzchar(stdin)) command <- paste(command, "<", shQuote(stdin))
-     if(!wait && !intern) command <- paste(command, "&")
+@@ -107,13 +117,23 @@ system2 <- function(command, args = character(),
      .Internal(system(command, intern, timeout))
-+}
-+
+ }
+ 
 +webr_hook_system <- function(command) {
 +    hook <- getOption("webr.hook_system")
 +    if (is.function(hook)) {
-+       # This hook may be used to e.g. call `testthat::skip()`
-+	hook(command)
++        # This hook may be used to e.g. call `testthat::skip()`
++        hook(command)
 +    } else {
-+       # Try to carry on regardless, as if it had worked but produced no output
-+	c("", "")
++        stop("The `system()` function is unsupported under Emscripten.")
 +    }
- }
- 
++}
++
  ## Some people try to use this with NA inputs (PR#15147)
+ Sys.which <- function(names)
+ {
+     res <- character(length(names)); names(res) <- names
+     ## hopefully configure found [/usr]/bin/which
+     which <- "@WHICH@"
+-    if (!nzchar(which)) {
++    if (!nzchar(which) || grepl("emscripten", R.version$os)) {
+         warning("'which' was not found on this platform")
+         return(res)
+     }
+Index: R-4.3.0/src/library/utils/R/sessionInfo.R
+===================================================================
+--- R-4.3.0.orig/src/library/utils/R/sessionInfo.R
++++ R-4.3.0/src/library/utils/R/sessionInfo.R
+@@ -23,6 +23,8 @@
+     ## Now try to figure out the OS we are running under
+     if (.Platform$OS.type == "windows") {
+         win.version()
++    } else if (grepl("emscripten", R.version$os)) {
++        "emscripten"
+     } else if (nzchar(Sys.which('uname'))) { ## we could try /usr/bin/uname
+         uname <- system("uname -a", intern = TRUE)
+         os <- sub(" .*", "", uname)

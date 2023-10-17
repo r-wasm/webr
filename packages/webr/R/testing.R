@@ -64,6 +64,8 @@ remove_lines_in_file <- function(src_file, lines) {
 #' @param pkg Name of the package to test.
 #' @returns 0 if the test was successful, otherwise 1.
 test_package <- function(pkg) {
+  op <- options(webr.hook_system = function(...) c("", ""))
+  on.exit(options(op), add = TRUE)
   old_wd <- getwd()
   pkgdir <- find.package(pkg)
 

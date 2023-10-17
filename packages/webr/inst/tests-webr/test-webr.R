@@ -1,9 +1,13 @@
 "System calls are intercepted"
 webr:::sandbox({
-  # Default return value
+  # Default error condition
+  err_cond <- tools::assertError(system("cmd"))
   stopifnot(
-    identical(system("cmd"), c("", "")),
-    identical(system2("cmd"), c("", ""))
+    grepl("unsupported under Emscripten", conditionMessage(err_cond[[1]]))
+  )
+  err_cond <- tools::assertError(system2("cmd"))
+  stopifnot(
+    grepl("unsupported under Emscripten", conditionMessage(err_cond[[1]]))
   )
 
   # Hooked
