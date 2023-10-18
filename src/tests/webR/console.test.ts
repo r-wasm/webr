@@ -54,6 +54,7 @@ test('HTML canvas events call console callbacks', async () => {
             beginPath: () => {},
             clearRect: () => {},
             clip: () => {},
+            setLineDash: () => {},
             rect: () => {},
             restore: () => {},
             save: () => {},
@@ -61,7 +62,7 @@ test('HTML canvas events call console callbacks', async () => {
           };
         }
         transferToImageBitmap() {
-          // No ImageBitmap, create a transferrable ArrayBuffer in its place
+          // No ImageBitmap, create a transferable ArrayBuffer in its place
           return new ArrayBuffer(8);
         }
       }
