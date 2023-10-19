@@ -16,6 +16,10 @@
 
 * Invoking functions that block for input now raises an R error condition when running under the `PostMessage` communication channel.
 
+## Bug fixes
+
+* Certain graphical properties, e.g `lty` & `lwd`, now work correctly in the webR `canvas()` graphics device. (#289, #304).
+
 # webR 0.2.1
 
 ## New features
