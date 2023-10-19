@@ -18,7 +18,7 @@
 
 ## Bug fixes
 
-* The line type graphical property, `lty`, now works correctly in the webR `canvas()` graphics device.
+* Certain graphical properties, e.g `lty` & `lwd`, now work correctly in the webR `canvas()` graphics device. (#289, #304).
 
 # webR 0.2.1
 
