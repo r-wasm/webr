@@ -448,15 +448,24 @@ function dispatch(msg: Message): void {
 }
 
 function copyFSNode(obj: FSNode): FSNode {
-  const retObj = {
+  const retObj: FSNode = {
     id: obj.id,
     name: obj.name,
     mode: obj.mode,
     isFolder: obj.isFolder,
+    mounted: null,
     contents: {},
   };
-  if (obj.isFolder) {
-    retObj.contents = Object.entries(obj.contents).map(([, node]) => copyFSNode(node));
+  if (obj.isFolder && obj.contents) {
+    retObj.contents = Object.fromEntries(
+      Object.entries(obj.contents).map(([name, node]) => [name, copyFSNode(node)])
+    );
+  }
+  if (obj.mounted !== null) {
+    retObj.mounted = {
+      mountpoint: obj.mounted.mountpoint,
+      root: copyFSNode(obj.mounted.root),
+    };
   }
   return retObj;
 }

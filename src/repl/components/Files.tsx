@@ -20,15 +20,18 @@ interface ITreeNode {
 /* Convert a VFS node from Emscripten's FS API into a `ITreeNode`, so that it
  * can be displayed by react-accessible-treeview.
  */
-export function createTreefromFSNode(fsNode: FSNode): ITreeNode {
+export function createTreeFromFSNode(fsNode: FSNode): ITreeNode {
   const tree: ITreeNode = {
     id: fsNode.id,
     name: fsNode.name,
     metadata: { type: fsNode.isFolder ? 'folder' : 'file' },
   };
-  if (fsNode.isFolder) {
-    tree.children = Object.entries(fsNode.contents).map(([, node]) =>
-      createTreefromFSNode(node)
+  if (fsNode.isFolder && fsNode.contents) {
+    tree.children = Object.entries(fsNode.contents).map(([name , node]) => {
+      const child = (node.mounted === null) ? node : node.mounted.root;
+      child.name = name;
+      return createTreeFromFSNode(child);
+    }
     ).sort((a, b) => a.name.localeCompare(b.name));
   }
   return tree;
@@ -194,7 +197,7 @@ export function Files({
   React.useEffect(() => {
     filesInterface.refreshFilesystem = async () => {
       const node = await webR.FS.lookupPath('/');
-      const tree = createTreefromFSNode(node);
+      const tree = createTreeFromFSNode(node);
       const data = flattenTree({
         name: 'root',
         children: [tree],

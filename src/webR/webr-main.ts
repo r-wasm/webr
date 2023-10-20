@@ -88,7 +88,11 @@ export type FSNode = {
   name: string;
   mode: number;
   isFolder: boolean;
-  contents: { [key: string]: FSNode };
+  contents?: { [key: string]: FSNode };
+  mounted: null | {
+    mountpoint: string;
+    root: FSNode;
+  }
 };
 
 /** An Emscripten Filesystem type */
