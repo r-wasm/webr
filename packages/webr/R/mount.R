@@ -26,7 +26,7 @@
 #' @export
 mount <- function(mountpoint, source, type = "workerfs") {
   # Create the mountpoint if it does not already exist
-  dir.create(mountpoint, showWarnings = FALSE)
+  dir.create(mountpoint, recursive = TRUE, showWarnings = FALSE)
   
   # Mount specified Emscripten filesystem type onto the given mountpoint
   if (tolower(type) == "workerfs") {

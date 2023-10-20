@@ -37,9 +37,18 @@ SEXP ffi_mount_workerfs(SEXP source, SEXP mountpoint) {
 
     const blob = new Blob([dataResp.response]);
     const metadata = JSON.parse(new TextDecoder().decode(metaResp.response));
-    Module.FS.mount(Module.FS.filesystems.WORKERFS, {
-      packages: [{ metadata, blob }],
-    }, mountpoint);
+    try {
+      Module.FS.mount(Module.FS.filesystems.WORKERFS, {
+        packages: [{ metadata, blob }],
+      }, mountpoint);
+    } catch (e) {
+      let msg = e.message;
+      if (e.name === "ErrnoError" && e.errno === 10) {
+        const dir = Module.UTF8ToString($1);
+        msg = "Unable to mount image, `" + dir + "` is already mounted.";
+      }
+      Module._Rf_error(Module.allocateUTF8OnStack(msg));
+    }
   }, R_CHAR(STRING_ELT(source, 0)), R_CHAR(STRING_ELT(mountpoint, 0)));
 
   return R_NilValue;
@@ -63,7 +72,16 @@ SEXP ffi_mount_nodefs(SEXP source, SEXP mountpoint) {
     }
     const root = UTF8ToString($0);
     const mountpoint = UTF8ToString($1);
-    Module.FS.mount(Module.FS.filesystems.NODEFS, { root }, mountpoint);
+    try {
+      Module.FS.mount(Module.FS.filesystems.NODEFS, { root }, mountpoint);
+    } catch (e) {
+      let msg = e.message;
+      if (e.name === "ErrnoError" && e.errno === 10) {
+        const dir = Module.UTF8ToString($1);
+        msg = "Unable to mount directory, `" + dir + "` is already mounted.";
+      }
+      Module._Rf_error(Module.allocateUTF8OnStack(msg));
+    }
   }, R_CHAR(STRING_ELT(source, 0)), R_CHAR(STRING_ELT(mountpoint, 0)));
 
   return R_NilValue;
