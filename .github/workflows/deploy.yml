@@ -95,6 +95,10 @@ jobs:
       - name: Upload files to S3 bucket
         run: |
           aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }}/_webr/${{ github.ref_name }}/
+          aws s3 cp --exclude "*" --include "*.data" --include "*.so" --recursive \
+            --content-type="application/wasm" --metadata-directive="REPLACE" \
+            s3://${{ secrets.AWS_S3_BUCKET }}/_webr/${{ github.ref_name }}/ \
+            s3://${{ secrets.AWS_S3_BUCKET }}/_webr/${{ github.ref_name }}/
   deploy_docs:
     name: Deploy webR documentation to S3
     needs: build
