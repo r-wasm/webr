@@ -60,7 +60,7 @@ describe('Test webR virtual filesystem', () => {
   test('Delete a file on the VFS', async () => {
     await expect(webR.FS.unlink('/tmp/testFile')).resolves.not.toThrow();
     const dirInfo = await webR.FS.lookupPath('/tmp');
-    expect(Object.keys(dirInfo.contents)).not.toContain('testFile');
+    expect(Object.keys(dirInfo.contents!)).not.toContain('testFile');
   });
 
   test('Create a new directory on the VFS', async () => {
@@ -79,7 +79,7 @@ describe('Test webR virtual filesystem', () => {
   test('Remove a directory on the VFS', async () => {
     await expect(webR.FS.rmdir('/newdir')).resolves.not.toThrow();
     const dirInfo = await webR.FS.lookupPath('/');
-    expect(Object.keys(dirInfo.contents)).not.toContain('newdir');
+    expect(Object.keys(dirInfo.contents!)).not.toContain('newdir');
   });
 
   test('Mount and unmount a directory on the VFS', async () => {
