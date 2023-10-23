@@ -411,7 +411,8 @@ function dispatch(msg: Message): void {
             evalR(`webr::install(
               "${reqMsg.data.name as string}",
               repos = "${_config.repoUrl}",
-              quiet = ${reqMsg.data.quiet ? 'TRUE' : 'FALSE'}
+              quiet = ${reqMsg.data.quiet ? 'TRUE' : 'FALSE'},
+              mount = ${reqMsg.data.mount ? 'TRUE' : 'FALSE'}
             )`);
 
             write({

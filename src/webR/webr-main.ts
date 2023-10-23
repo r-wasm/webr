@@ -360,10 +360,11 @@ export class WebR {
    * Install a list of R packages from the default webR CRAN-like repo.
    * @param {string[]} packages An array of R pacakge names.
    * @param {boolean} quiet If true, do not output downloading messages.
+   * @param {boolean} mount If true, attempt to mount packages using filesystem images.
    */
-  async installPackages(packages: string[], quiet = false) {
+  async installPackages(packages: string[], quiet = false, mount = true) {
     for (const name of packages) {
-      const msg = { type: 'installPackage', data: { name, quiet } };
+      const msg = { type: 'installPackage', data: { name, quiet, mount } };
       await this.#chan.request(msg);
     }
   }
