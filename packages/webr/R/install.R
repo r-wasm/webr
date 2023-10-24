@@ -4,12 +4,14 @@
 #'
 #' @param packages Character vector containing the names of packages to install.
 #' @param repos Character vector containing the URIs of the webR repos to use.
+#' @param info A character matrix as from `available.packages()`. Can be used as
+#'   an alternative to looking up available packages with the `repos` argument.
 #' @param lib The library directory where the packages will be installed.
 #' @param mount Logical. If `TRUE`, download and mount packages using Emscripten
 #'   filesystem images.
 #' @param quiet Logical. If `TRUE`, do not output downloading messages.
-install <- function(packages, repos = NULL, lib = NULL, quiet = FALSE,
-                    mount = TRUE) {
+install <- function(packages, repos = NULL, info = NULL, lib = NULL,
+                    quiet = FALSE, mount = TRUE) {
   if (is.null(lib)) {
     lib <- .libPaths()[[1]]
   }
@@ -22,7 +24,12 @@ install <- function(packages, repos = NULL, lib = NULL, quiet = FALSE,
 
   repos <- gsub("/$", "", repos)
   contrib <- sprintf("%s/bin/emscripten/contrib/%s", repos, ver)
-  info <- utils::available.packages(contriburl = contrib)
+
+  if (is.null(info)) {
+    info <- utils::available.packages(contriburl = contrib)
+  }
+
+  # Avoid `recursive` here so that deps of broken packages are not downloaded
   deps <- unlist(tools::package_dependencies(packages, info), use.names = FALSE)
   deps <- unique(deps)
 
@@ -30,7 +37,7 @@ install <- function(packages, repos = NULL, lib = NULL, quiet = FALSE,
     if (length(find.package(dep, quiet = TRUE))) {
       next
     }
-    install(dep, repos, lib, quiet, mount)
+    install(dep, repos, info, lib, quiet, mount)
   }
 
   for (pkg in packages) {
