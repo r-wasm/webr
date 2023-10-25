@@ -64,6 +64,13 @@ type XHRResponse = {
   response: string | ArrayBuffer;
 };
 
+type WorkerFileSystemType = Emscripten.FileSystemType & {
+  reader: { readAsArrayBuffer: (chunk: any) => ArrayBuffer },
+  FILE_MODE: number
+  createNode: (dir: FS.FSNode, file: string, mode: number, dev: number,
+    contents: ArrayBufferView, mtime?: Date) => FS.FSNode;
+};
+
 let _config: Required<WebROptions>;
 
 function dispatch(msg: Message): void {
@@ -484,7 +491,7 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
       request.setRequestHeader(splitHeader[0], splitHeader[1]);
     });
   } catch {
-    const responseText = 'An error occured setting headers in XMLHttpRequest';
+    const responseText = 'An error occurred setting headers in XMLHttpRequest';
     console.error(responseText);
     return { status: 400, response: responseText };
   }
@@ -503,8 +510,73 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
       return { status: status, response: responseText };
     }
   } catch {
-    return { status: 400, response: 'An error occured in XMLHttpRequest' };
+    return { status: 400, response: 'An error occurred in XMLHttpRequest' };
   }
+}
+
+function mountImageData(data: any, metadata: { files: any[] }, mountpoint: string) {
+  if (IN_NODE) {
+    const buf = data as Buffer;
+    const WORKERFS = Module.FS.filesystems.WORKERFS as WorkerFileSystemType;
+
+    if (!WORKERFS.reader) WORKERFS.reader = {
+      readAsArrayBuffer: (chunk: Buffer) => new Uint8Array(chunk),
+    };
+
+    metadata.files.forEach((f: {filename: string, start: number, end: number}) => {
+      const contents: Buffer & { size?: number } = buf.subarray(f.start, f.end);
+      contents.size = contents.byteLength;
+      contents.slice = (start?: number, end?: number) => {
+        const sub: Buffer & { size?: number } = contents.subarray(start, end);
+        sub.size = sub.byteLength;
+        return sub;
+      };
+      const parts = (mountpoint + f.filename).split('/');
+      const file = parts.pop();
+      if (!file) {
+        throw new Error(`Invalid mount path "${mountpoint}${f.filename}".`);
+      }
+      const dir = parts.join('/');
+      Module.FS.mkdirTree(dir);
+      const dirNode = Module.FS.lookupPath(dir, {}).node;
+      WORKERFS.createNode(dirNode, file, WORKERFS.FILE_MODE, 0, contents);
+    });
+  } else {
+    Module.FS.mount(Module.FS.filesystems.WORKERFS, {
+      packages: [{
+        blob: new Blob([data]),
+        metadata,
+      }],
+    }, mountpoint);
+  }
+}
+
+// Download an Emscripten FS image and mount to the VFS
+function mountImageUrl(url: string, mountpoint: string) {
+  const dataResp = downloadFileContent(url);
+  const metaResp = downloadFileContent(url.replace(new RegExp('.data$'), '.js.metadata'));
+
+  if (dataResp.status < 200 || dataResp.status >= 300
+      || metaResp.status < 200 || metaResp.status >= 300) {
+    throw new Error('Unable to download Emscripten filesystem image.' +
+      'See the JavaScript console for further details.');
+  }
+
+  mountImageData(
+    dataResp.response,
+    JSON.parse(new TextDecoder().decode(metaResp.response as ArrayBuffer)) as { files: any[] },
+    mountpoint
+  );
+}
+
+// Read an Emscripten FS image from disk and mount to the VFS (requires Node)
+function mountImagePath(path: string, mountpoint: string) {
+  const buf = require('fs').readFileSync(path) as Buffer;
+  const metadata = JSON.parse(require('fs').readFileSync(
+    path.replace(new RegExp('.data$'), '.js.metadata'),
+    'utf8'
+  ) as string) as { files: any[] };
+  mountImageData(buf, metadata, mountpoint);
 }
 
 function newRObject(data: WebRData, objType: RType | 'object'): WebRPayloadPtr {
@@ -744,7 +816,7 @@ function init(config: Required<WebROptions>) {
           throw e;
         }
         const msg = Module.allocateUTF8OnStack(
-          `An error occured during JavaScript evaluation:\n  ${(e as { message: string }).message}`
+          `An error occurred during JavaScript evaluation:\n  ${(e as { message: string }).message}`
         );
         Module._Rf_error(msg);
       }
@@ -759,6 +831,8 @@ function init(config: Required<WebROptions>) {
 
   Module.locateFile = (path: string) => _config.baseUrl + path;
   Module.downloadFileContent = downloadFileContent;
+  Module.mountImageUrl = mountImageUrl;
+  Module.mountImagePath = mountImagePath;
 
   Module.print = (text: string) => {
     chan?.write({ type: 'stdout', data: text });
