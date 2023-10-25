@@ -27,6 +27,7 @@ import {
   FSMountMessage,
   FSReadFileMessage,
   FSWriteFileMessage,
+  InstallPackagesOptions,
   InvokeWasmFunctionMessage,
   NewShelterMessage,
   ShelterDestroyMessage,
@@ -357,14 +358,19 @@ export class WebR {
   }
 
   /**
-   * Install a list of R packages from the default webR CRAN-like repo.
-   * @param {string[]} packages An array of R pacakge names.
-   * @param {boolean} quiet If true, do not output downloading messages.
-   * @param {boolean} mount If true, attempt to mount packages using filesystem images.
+   * Install a list of R packages from a webR binary pack repo.
+   * @param {string[]} packages An array of R package names.
+   * @param {InstallPackagesOptions} [options] Options to be used when
+   *   installing webR packages.
    */
-  async installPackages(packages: string[], quiet = false, mount = true) {
+  async installPackages(packages: string[], options?: InstallPackagesOptions) {
+    const op = Object.assign({
+      quiet: false,
+      mount: true
+    }, options);
+
     for (const name of packages) {
-      const msg = { type: 'installPackage', data: { name, quiet, mount } };
+      const msg = { type: 'installPackage', data: { name, options: op } };
       await this.#chan.request(msg);
     }
   }
