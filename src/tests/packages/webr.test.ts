@@ -14,7 +14,7 @@ async function evalTest(pkg: string) {
 beforeAll(async () => {
   await webR.init();
   // Install packages required to run all package examples and tests
-  await webR.installPackages(['Matrix', 'MASS'], true);
+  await webR.installPackages(['Matrix', 'MASS'], { quiet: true, mount: false });
 });
 
 test('The webr R package is installed', async () => {
