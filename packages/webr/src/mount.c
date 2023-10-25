@@ -23,24 +23,8 @@ SEXP ffi_mount_workerfs(SEXP source, SEXP mountpoint) {
   EM_ASM({
     const baseUrl = UTF8ToString($0);
     const mountpoint = UTF8ToString($1);
-    const dataResp = Module.downloadFileContent(`${baseUrl}.data`);
-    const metaResp = Module.downloadFileContent(`${baseUrl}.js.metadata`);
-
-    if (dataResp.status < 200 || dataResp.status >= 300 ||
-        metaResp.status < 200 || metaResp.status >= 300) {
-      const msg = Module.allocateUTF8OnStack(
-        'Unable to download Emscripten filesystem image. ' +
-        'See the JavaScript console for further details.'
-      );
-      Module._Rf_error(msg);
-    }
-
-    const blob = new Blob([dataResp.response]);
-    const metadata = JSON.parse(new TextDecoder().decode(metaResp.response));
     try {
-      Module.FS.mount(Module.FS.filesystems.WORKERFS, {
-        packages: [{ metadata, blob }],
-      }, mountpoint);
+      Module.mountImageUrl(`${baseUrl}.data`, mountpoint);
     } catch (e) {
       let msg = e.message;
       if (e.name === "ErrnoError" && e.errno === 10) {
