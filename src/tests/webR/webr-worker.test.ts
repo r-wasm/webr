@@ -16,11 +16,21 @@ beforeAll(async () => {
 describe('Download and install binary webR packages', () => {
   test('Install packages via evalR', async () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation((...args) => {});
+
+    // Downloading and extracting a .tgz package
     await webR.evalR(
       'webr::install("cli", repos="https://repo.r-wasm.org/", mount = FALSE)'
     );
-    const pkg = (await webR.evalR('"cli" %in% library(cli)')) as RLogical;
+    let pkg = (await webR.evalR('"cli" %in% library(cli)')) as RLogical;
     expect(await pkg.toBoolean()).toEqual(true);
+
+    // Downloading and mounting an Emscripten FS image
+    await webR.evalR(
+      'webr::install("lattice", repos="https://repo.r-wasm.org/", mount = TRUE)'
+    );
+    pkg = (await webR.evalR('"lattice" %in% library(lattice)')) as RLogical;
+    expect(await pkg.toBoolean()).toEqual(true);
+
     warnSpy.mockRestore();
   });
 
