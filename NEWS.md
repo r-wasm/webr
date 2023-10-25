@@ -18,6 +18,8 @@
 
 * Invoking functions that block for input now raises an R error condition when running under the `PostMessage` communication channel.
 
+* Options are now passed to the JavaScript function `webR.installPackages()` in the form of an `options` argument, an object of type `InstallPackagesOptions`.
+
 ## Bug fixes
 
 * Certain graphical properties, e.g `lty` & `lwd`, now work correctly in the webR `canvas()` graphics device. (#289, #304).
