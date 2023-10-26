@@ -358,7 +358,7 @@ export class WebR {
   }
 
   /**
-   * Install a list of R packages from a webR binary pack repo.
+   * Install a list of R packages from a Wasm binary package repo.
    * @param {string[]} packages An array of R package names.
    * @param {InstallPackagesOptions} [options] Options to be used when
    *   installing webR packages.

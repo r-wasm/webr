@@ -54,7 +54,6 @@ install <- function(packages, repos = NULL, info = NULL, lib = NULL,
     repo <- sub("file:", "", repo, fixed = TRUE)
 
     pkg_ver <- info[pkg, "Version"]
-    pkg_ver <- info[pkg, "Version"]
     if (!quiet) message(paste("Downloading webR package:", pkg))
 
     if (mount) {
