@@ -28,6 +28,7 @@ import {
   NewRObjectMessage,
   ShelterMessage,
   ShelterDestroyMessage,
+  InstallPackagesMessage,
 } from './webr-chan';
 
 let initialised = false;
@@ -408,10 +409,12 @@ function dispatch(msg: Message): void {
           }
 
           case 'installPackage': {
+            const msg = reqMsg as InstallPackagesMessage;
             evalR(`webr::install(
-              "${reqMsg.data.name as string}",
-              repos = "${_config.repoUrl}",
-              quiet = ${reqMsg.data.quiet ? 'TRUE' : 'FALSE'}
+              "${msg.data.name}",
+              repos = "${msg.data.options.repos ? msg.data.options.repos : _config.repoUrl}",
+              quiet = ${msg.data.options.quiet ? 'TRUE' : 'FALSE'},
+              mount = ${msg.data.options.mount ? 'TRUE' : 'FALSE'}
             )`);
 
             write({

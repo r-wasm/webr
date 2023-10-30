@@ -35,7 +35,11 @@
 #' @param pointsize	The default point size of plotted text.
 #' @param bg The initial background colour.
 #' @param ... Additional graphics device arguments (ignored).
-canvas <- function(width=504, height=504, pointsize=12, bg="transparent", ...) {
+canvas <- function(width = 504,
+                   height = 504,
+                   pointsize = 12,
+                   bg = "transparent",
+                   ...) {
   .Call(ffi_dev_canvas, width, height, pointsize, bg)
 }
 
@@ -47,5 +51,7 @@ canvas <- function(width=504, height=504, pointsize=12, bg="transparent", ...) {
 #' @param ... Arguments to be passed to the graphics device.
 #' @export
 canvas_install <- function(...) {
-  options(device = function() { webr::canvas(...) })
+  options(device = function() {
+    webr::canvas(...)
+  })
 }

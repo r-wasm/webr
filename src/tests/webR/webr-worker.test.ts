@@ -16,7 +16,9 @@ beforeAll(async () => {
 describe('Download and install binary webR packages', () => {
   test('Install packages via evalR', async () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation((...args) => {});
-    await webR.evalR('webr::install("cli", repos="https://repo.r-wasm.org/")');
+    await webR.evalR(
+      'webr::install("cli", repos="https://repo.r-wasm.org/", mount = FALSE)'
+    );
     const pkg = (await webR.evalR('"cli" %in% library(cli)')) as RLogical;
     expect(await pkg.toBoolean()).toEqual(true);
     warnSpy.mockRestore();
@@ -24,14 +26,16 @@ describe('Download and install binary webR packages', () => {
 
   test('Install packages quietly', async () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation((...args) => {});
-    await webR.evalR('webr::install("Matrix", repos="https://repo.r-wasm.org/", quiet=TRUE)');
+    await webR.evalR(
+      'webr::install("Matrix", repos="https://repo.r-wasm.org/", mount = FALSE, quiet = TRUE)'
+    );
     expect(warnSpy).not.toHaveBeenCalled();
     warnSpy.mockRestore();
   });
 
   test('Install packages via API', async () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation((...args) => {});
-    await webR.installPackages(['MASS']);
+    await webR.installPackages(['MASS'], { mount: false });
     const pkg = (await webR.evalR('"MASS" %in% library(MASS)')) as RLogical;
     expect(await pkg.toBoolean()).toEqual(true);
     warnSpy.mockRestore();

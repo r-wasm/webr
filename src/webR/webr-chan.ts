@@ -22,6 +22,36 @@ export interface CallRObjectMethodMessage extends Message {
 }
 
 /**
+ * The configuration settings used when installing R packages.
+ */
+export interface InstallPackagesOptions {
+  /**
+   * The R package repository from which to download packages.
+   * Default: The configured default webR package repository.
+   */
+  repos?: string;
+  /**
+   * If `true`, do not output downloading messages.
+   * Default: `false`.
+   */
+  quiet?: boolean;
+  /**
+   * If `true`, attempt to mount packages using filesystem images.
+   * Default: `true`.
+   */
+  mount?: boolean;
+}
+
+/** @internal */
+export interface InstallPackagesMessage extends Message {
+  type: 'installPackage';
+  data: {
+    name: string;
+    options: InstallPackagesOptions;
+  };
+}
+
+/**
  * The configuration settings used when evaluating R code.
  */
 export interface EvalROptions {

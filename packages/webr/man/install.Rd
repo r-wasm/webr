@@ -4,7 +4,7 @@
 \alias{install}
 \title{Install one or more packages from a webR binary package repo}
 \usage{
-install(packages, repos = NULL, lib = NULL, quiet = FALSE)
+install(packages, repos = NULL, lib = NULL, quiet = FALSE, mount = TRUE)
 }
 \arguments{
 \item{packages}{Character vector containing the names of packages to install.}
@@ -14,6 +14,9 @@ install(packages, repos = NULL, lib = NULL, quiet = FALSE)
 \item{lib}{The library directory where the packages will be installed.}
 
 \item{quiet}{Logical. If \code{TRUE}, do not output downloading messages.}
+
+\item{mount}{Logical. If \code{TRUE}, download and mount packages using Emscripten
+filesystem images.}
 }
 \description{
 Install one or more packages from a webR binary package repo
