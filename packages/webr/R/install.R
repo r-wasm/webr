@@ -10,8 +10,12 @@
 #' @param mount Logical. If `TRUE`, download and mount packages using Emscripten
 #'   filesystem images.
 #' @param quiet Logical. If `TRUE`, do not output downloading messages.
-install <- function(packages, repos = NULL, info = NULL, lib = NULL,
-                    quiet = FALSE, mount = TRUE) {
+install <- function(packages,
+                    repos = NULL,
+                    info = NULL,
+                    lib = NULL,
+                    quiet = FALSE,
+                    mount = TRUE) {
   if (is.null(lib)) {
     lib <- .libPaths()[[1]]
   }
@@ -58,14 +62,17 @@ install <- function(packages, repos = NULL, info = NULL, lib = NULL,
 
     if (mount) {
       # Try package.data URL, fallback to .tgz download if unavailable
-      tryCatch({
-        install_vfs_image(repo, lib, pkg, pkg_ver)
-      }, error = function(cnd) {
-        if (!grepl("Unable to download", conditionMessage(cnd))) {
-          stop(cnd)
+      tryCatch(
+        {
+          install_vfs_image(repo, lib, pkg, pkg_ver)
+        },
+        error = function(cnd) {
+          if (!grepl("Unable to download", conditionMessage(cnd))) {
+            stop(cnd)
+          }
+          install_tgz(repo, lib, pkg, pkg_ver)
         }
-        install_tgz(repo, lib, pkg, pkg_ver)
-      })
+      )
     } else {
       install_tgz(repo, lib, pkg, pkg_ver)
     }
