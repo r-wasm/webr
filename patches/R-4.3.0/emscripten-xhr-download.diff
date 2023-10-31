@@ -101,7 +101,7 @@ Index: R-4.3.0/src/modules/internet/xhr.c
 ===================================================================
 --- /dev/null
 +++ R-4.3.0/src/modules/internet/xhr.c
-@@ -0,0 +1,363 @@
+@@ -0,0 +1,351 @@
 +/*
 + *  R : A Computer Language for Statistical Data Analysis
 + *  Copyright (C) 2015-2020 The R Core Team
@@ -393,18 +393,6 @@ Index: R-4.3.0/src/modules/internet/xhr.c
 +                strcat(headers_joined, ",");
 +            }
 +        }
-+    }
-+
-+    // include the no-cache header in the concatenated string, if required
-+    if (!cacheOK) {
-+        const char* no_cache = "'Pragma: no-cache'";
-+        headers_joined = realloc(headers_joined,
-+            strlen(headers_joined) + strlen(no_cache) + 1);
-+        headers_joined[strlen(headers_joined)] = '\0';
-+
-+        if(LENGTH(sheaders) > 0)
-+            strcat(headers_joined, ",");
-+        strcat(headers_joined, no_cache);
 +    }
 +
 +    int n_err = 0;
