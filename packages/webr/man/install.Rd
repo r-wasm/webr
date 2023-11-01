@@ -4,12 +4,22 @@
 \alias{install}
 \title{Install one or more packages from a webR binary package repo}
 \usage{
-install(packages, repos = NULL, lib = NULL, quiet = FALSE, mount = TRUE)
+install(
+  packages,
+  repos = NULL,
+  info = NULL,
+  lib = NULL,
+  quiet = FALSE,
+  mount = TRUE
+)
 }
 \arguments{
 \item{packages}{Character vector containing the names of packages to install.}
 
 \item{repos}{Character vector containing the URIs of the webR repos to use.}
+
+\item{info}{A character matrix as from \code{available.packages()}. Can be used as
+an alternative to looking up available packages with the \code{repos} argument.}
 
 \item{lib}{The library directory where the packages will be installed.}
 
