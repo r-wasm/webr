@@ -38,6 +38,9 @@ RUN ./configure && \
     ln -s /opt/flang/host ./host && \
     ln -s /opt/flang/emfc ./host/bin/emfc
 
+# Install r-wasm's webr package for native R
+RUN R CMD INSTALL packages/webr
+
 # Build webR with supporting Wasm libs
 RUN cd libs && make all
 RUN make
