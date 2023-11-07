@@ -18,17 +18,14 @@ RUN mkdir -p /etc/apt/keyrings && \
     apt-get update && \
     apt-get install nodejs -y
 
-# Install standard R so that we can use PPM binaries
-RUN apt-get install -y --no-install-recommends software-properties-common && \
-    add-apt-repository --enable-source --yes "ppa:marutter/rrutter4.0" && \
-    add-apt-repository --enable-source --yes "ppa:c2d4u.team/c2d4u4.0+" && \
-    apt-get purge -y software-properties-common && \
-    apt-get autoremove -y
+RUN curl -L https://rig.r-pkg.org/deb/rig.gpg -o /etc/apt/trusted.gpg.d/rig.gpg && \
+    echo "deb http://rig.r-pkg.org/deb rig main" > /etc/apt/sources.list.d/rig.list && \
+    apt-get update && \
+    apt-get install r-rig -y
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        r-base r-base-dev r-recommended && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Because $HOME gets masked by GHA with the host $HOME
+ENV R_LIBS_USER=/opt/R/current/lib/R/site-library
+RUN rig add 4.3.0
 
 # Download webR and configure for LLVM flang
 RUN git clone --depth=1 https://github.com/r-wasm/webr.git /opt/webr
@@ -45,22 +42,9 @@ RUN R CMD INSTALL packages/webr
 RUN cd libs && make all
 RUN make
 
-# Setup PPM for binary native R packages
-COPY <<EOF /root/.Rprofile
-options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/jammy/latest"))
-options(HTTPUserAgent = sprintf(
-    "R/%s R (%s)",
-    getRversion(),
-    paste(
-        getRversion(),
-        R.version["platform"],
-        R.version["arch"],
-        R.version["os"]
-    )
-))
-EOF
-
 # Cleanup
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN rm -rf /tmp/rig
 RUN rm -rf libs/download libs/build src/node_modules R/download
 RUN cd src && make clean
 
