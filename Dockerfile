@@ -18,9 +18,10 @@ RUN mkdir -p /etc/apt/keyrings && \
     apt-get update && \
     apt-get install nodejs -y
 
-RUN curl -L https://rig.r-pkg.org/deb/rig.gpg -o /etc/apt/trusted.gpg.d/rig.gpg &&\
-    sh -c 'echo "deb http://rig.r-pkg.org/deb rig main" > /etc/apt/sources.list.d/rig.list' &&\
-    apt update && apt install r-rig
+RUN curl -L https://rig.r-pkg.org/deb/rig.gpg -o /etc/apt/trusted.gpg.d/rig.gpg && \
+    echo "deb http://rig.r-pkg.org/deb rig main" > /etc/apt/sources.list.d/rig.list && \
+    apt-get update && \
+    apt-get install r-rig -y
 
 # Because $HOME gets masked by GHA with the host $HOME
 ENV R_LIBS_USER=/opt/R/current/lib/R/site-library
@@ -42,6 +43,8 @@ RUN cd libs && make all
 RUN make
 
 # Cleanup
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN rm -rf /tmp/rig
 RUN rm -rf libs/download libs/build src/node_modules R/download
 RUN cd src && make clean
 
