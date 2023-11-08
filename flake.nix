@@ -74,6 +74,9 @@
             tk
             # jdk
             tzdata
+
+            pkg-config  # For fontconfig
+            sqlite  # For proj
           ];
 
           # This is a workaround for nix emscripten cache directory not being
