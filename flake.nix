@@ -46,33 +46,15 @@
             # https://github.com/NixOS/nixpkgs/blob/85f1ba3e/pkgs/applications/science/math/R/default.nix
             bzip2
             gfortran
-            xorg.libX11
-            xorg.libXmu
-            xorg.libXt
-            libjpeg
-            libpng
-            libtiff
-            ncurses
-            pango
-            pcre2
             perl
-            readline
-            # texLive
             xz
             zlib
-            less
-            texinfo
-            graphviz
             icu
             bison
-            # imake
             which
             blas
             lapack
             curl
-            tcl
-            tk
-            # jdk
             tzdata
 
             pkg-config  # For fontconfig
