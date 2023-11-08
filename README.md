@@ -43,12 +43,18 @@ WebR relies on additional libraries compiled for Wasm for both Cairo graphics su
 If you'd prefer to build all of the available system libraries for Wasm, `cd` into the `libs` directory and run `make all` to build the additional libraries, then finally `cd ..` and run `make clean-webr && make` to rebuild webR. R will automatically detect the additional Wasm libraries and integrate Cairo graphics support as part of the build.
 
 ### Building with Docker
+
 Included in the source repository is a `Dockerfile` which can be used to setup everything that's required for the webR build environment, including LLVM flang and all supported WebAssembly system libraries.
 
 Pre-built docker images can be found in the [GitHub Packages section](https://github.com/r-wasm/webr/pkgs/container/webr). To build the docker image and webR from source, `cd` into the webR source directory then run `docker build .`
 
 The resulting docker image contains a version of R configured to be built for WebAssembly, and so the image can also be used to build custom R packages for webR.
 
+### Building with Nix
+
+If you are using Nix, you can start a development environment by running `nix develop`. Then you can build as usual, with `./configure && make`.
+
+Note that this requires that your Nix installation has support for flakes enabled. The easiest way to do this is to install using the [Nix installer from Determinate Systems](https://zero-to-nix.com/start/install).
 
 ### Node and Emscripten versioning
 
