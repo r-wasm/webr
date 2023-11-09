@@ -59,6 +59,8 @@
 
             pkg-config  # For fontconfig
             sqlite  # For proj
+            glib # For pango
+            unzip # For extracting font data
           ];
 
           # This is a workaround for nix emscripten cache directory not being
