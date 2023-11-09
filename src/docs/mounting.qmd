@@ -1,0 +1,135 @@
+---
+title: "Mounting Filesystem Data"
+format: html
+toc: true
+---
+
+## The virtual filesystem
+
+The [Emscripten filesystem API](https://emscripten.org/docs/api_reference/Filesystem-API.html) provides a Unix-like virtual filesystem for the WebAssembly (Wasm) R process running in webR. This virtual filesystem has the ability to [mount](https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.mount) filesystem images or host directories so that the associated file and directory data is accessible to the Wasm R process.
+
+Mounting images and directories in this way gives the Wasm R process access to arbitrary external data, potentially including datasets, scripts, or R packages [pre-compiled for WebAssembly](building.qmd).
+
+Emscripten's API provides several types of virtual filesystem, but for technical reasons^[Currently, webR blocks in the JavaScript worker thread while it waits for R input to be evaluated. This blocking means that Emscripten filesystems that depend on asynchronous browser APIs, such as [`IDBFS`](https://emscripten.org/docs/api_reference/Filesystem-API.html#filesystem-api-idbfs), do not work.] only the following filesystems are available for use with webR.
+
+| Filesystem | Description | Web Browser | Node.js |
+|------|-----|------|------|
+| `WORKERFS` | Mount filesystem images. | ✅ | ✅ |
+| `NODEFS` | Mount existing host directories. | ❌ | ✅ |
+
+## Emscripten filesystem images
+
+The [`file_packager`](https://emscripten.org/docs/porting/files/packaging_files.html#packaging-using-the-file-packager-tool) tool, provided by Emscripten, takes in a directory structure as input and produces webR compatible filesystem images as output. The [`file_packager`](https://emscripten.org/docs/porting/files/packaging_files.html#packaging-using-the-file-packager-tool) tool may be invoked from R using the [rwasm](https://r-wasm.github.io/rwasm/) R package:
+
+```{r eval=FALSE}
+> rwasm::file_packager("./input", out_dir = ".", out_name = "output")
+```
+
+It can also be invoked directly using its CLI^[See the [`file_packager`](https://emscripten.org/docs/porting/files/packaging_files.html#packaging-using-the-file-packager-tool) Emscripten documentation for details. ], if you prefer:
+
+```bash
+$ file_packager output.data --preload ./input@/ \
+    --separate-metadata --js-output=output.js
+```
+
+In the above examples, the files in the directory `./input` are packaged and an output filesystem image is created^[When using the `file_packager` CLI, a third file named `output.js` will also be created. If you only plan to mount the image using webR, this file may be discarded.] consisting of a data file, `output.data`, and a metadata file, `output.js.metadata`.
+
+To prepare for mounting the filesystem image with webR, ensure that both files have the same basename (in this example, `output`) and deployed to static file hosting^[e.g. GitHub Pages, Netlify, AWS S3, etc.]. The resulting URLs for the two files should differ only by the file extension.
+
+
+## Mount a filesystem image from URL
+
+By default, the [`webr::mount()`](api/r.qmd#mount) function downloads and mounts a filesystem image from a URL source, using the `WORKERFS` filesystem type.
+
+```{r eval=FALSE}
+webr::mount(
+  mountpoint = "/data",
+  source = "https://example.com/output.data"
+)
+```
+
+A URL to the filesystem image `.data` file should be provided as the source argument, and the image will be mounted in the virtual filesystem under the path given by the `mountpoint` argument. If the `mountpoint` directory does not exist, it will be created prior to mounting.
+
+### JavaScript API
+
+WebR's JavaScript API includes the [`WebR.FS.mount()`](api/js/classes/WebR.WebR.md#fs) function, a thin wrapper around Emscripten's own [`FS.mount()`](https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.mount). The JavaScript API provides more flexibility but requires a little more set up, including creating the `mountpoint` directory if it does not already exist.
+
+The filesystem type should be provided as a `string`, with the `options` argument a JavaScript object of type [`FSMountOptions`](api/js/modules/WebR.md#fsmountoptions). The filesystem image data should be provided as a JavaScript `Blob` and the metadata as a JavaScript object deserialised from the underlying JSON content.
+
+::: {.panel-tabset}
+## JavaScript
+
+``` javascript
+// Create mountpoint
+await webR.FS.mkdir('/data')
+
+// Download image data
+const data = await fetch('./output.data');
+const metadata = await fetch('./output.js.metadata');
+
+// Mount image data
+const options = {
+  packages: [{
+    blob: await data.blob(),
+    metadata: await metadata.json(),
+  }],
+}
+await webR.FS.mount("WORKERFS", options, '/data');
+```
+
+## TypeScript
+
+``` typescript
+import { FSMountOptions } from 'webr';
+
+// Create mountpoint
+await webR.FS.mkdir('/data')
+
+// Download image data
+const data = await fetch('./output.data');
+const metadata = await fetch('./output.js.metadata');
+
+// Mount image data
+const options: FSMountOptions = {
+  packages: [{
+    blob: await data.blob(),
+    metadata: await metadata.json(),
+  }],
+}
+await webR.FS.mount("WORKERFS", options, '/data');
+```
+
+:::
+
+See the [Emscripten `FS.mount()` documentation](https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.mount) for further details about the structure of the `options` argument.
+
+## Mount an existing host directory
+
+::: callout-warning
+`NODEFS` is only available when running webR under Node.js.
+:::
+
+The `NODEFS` filesystem type maps directories that exist on the host machine so that they are accessible in the WebAssembly process.
+
+To mount the directory `./extra` on the virtual filesystem at `/data`, use either the JavaScript or R mounting API with the filesystem type set to `NODEFS`.
+
+::: {.panel-tabset}
+## JavaScript
+
+``` javascript
+await webR.FS.mkdir('/data')
+await webR.FS.mount('NODEFS', { root: './extra' }, '/data');
+```
+
+## R
+```{r eval=FALSE}
+webr::mount(
+  mountpoint = "/data",
+  source = "./extra",
+  type = "NODEFS"
+)
+```
+
+
+:::
+
