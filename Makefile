@@ -52,6 +52,7 @@ check-pr:
 clean: clean-wasm
 	cd tools/dragonegg && $(MAKE) clean
 	cd tools/flang && $(MAKE) clean
+	rm -rf .emscripten_cache
 
 .PHONY: clean-wasm
 clean-wasm: clean-webr
