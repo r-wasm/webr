@@ -82,7 +82,16 @@ export function Plot({
           <button disabled={selectedCanvas === null} onClick={saveImage}>
             <FaRegSave className="icon" /> Save Plot
           </button>
-          <button disabled={selectedCanvas === null} onClick={clearPlots}>
+          <button
+            disabled={selectedCanvas === null}
+            onClick={(e) => {
+              if (confirm('Clear all plots?')) {
+                clearPlots();
+              } else {
+                e.stopPropagation();
+              }
+            }}
+          >
             <FaTrashAlt className="icon" /> Clear Plots
           </button>
         </div>
