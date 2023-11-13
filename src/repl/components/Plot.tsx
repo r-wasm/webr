@@ -8,7 +8,7 @@ export function Plot({
 }: {
   plotInterface: PlotInterface;
 }) {
-  const plotContainterRef = React.useRef<HTMLDivElement | null>(null);
+  const plotContainerRef = React.useRef<HTMLDivElement | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const canvasElements = React.useRef<HTMLCanvasElement[]>([]);
   const [selectedCanvas, setSelectedCanvas] = React.useState<number | null>(null);
@@ -25,25 +25,27 @@ export function Plot({
 
     // If a new plot is created in R, add it to the list of canvas elements
     plotInterface.newPlot = () => {
+      const plotNumber = canvasElements.current.length + 1;
       const canvas = document.createElement('canvas');
       canvas.setAttribute('width', '1008');
       canvas.setAttribute('height', '1008');
+      canvas.setAttribute('aria-label', `R Plot ${plotNumber}`)
       canvasRef.current = canvas;
       canvasElements.current.push(canvas);
-      setSelectedCanvas(canvasElements.current.length - 1);
+      setSelectedCanvas(plotNumber - 1);
     };
   }, [plotInterface]);
 
   // Update the plot container to display the currently selected canvas element
   React.useEffect(() => {
-    if (!plotContainterRef.current) {
+    if (!plotContainerRef.current) {
       return;
     }
     if (selectedCanvas === null) {
-      plotContainterRef.current.replaceChildren();
+      plotContainerRef.current.replaceChildren();
     } else {
       const canvas = canvasElements.current[selectedCanvas];
-      plotContainterRef.current.replaceChildren(canvas);
+      plotContainerRef.current.replaceChildren(canvas);
     }
   }, [selectedCanvas]);
 
@@ -65,24 +67,34 @@ export function Plot({
   const prevPlot = () => setSelectedCanvas((selectedCanvas === null) ? null : selectedCanvas - 1);
 
   return (
-    <div className="plot">
+    <div role="region" aria-label="Plotting Pane" className="plot">
       <div className="plot-header">
-        <div className="plot-actions">
-          <button disabled={!selectedCanvas} onClick={prevPlot}>
-            <FaArrowCircleLeft className="icon" />
+        <div role="toolbar" aria-label="Plotting Toolbar" className="plot-actions">
+          <button
+            aria-label="Previous Plot"
+            disabled={!selectedCanvas}
+            onClick={prevPlot}
+          >
+            <FaArrowCircleLeft aria-hidden="true" className="icon" />
           </button>
           <button
+            aria-label="Next Plot"
             disabled={
               selectedCanvas === null || selectedCanvas === canvasElements.current.length - 1
             }
             onClick={nextPlot}
           >
-            <FaArrowCircleRight className="icon" />
-          </button>
-          <button disabled={selectedCanvas === null} onClick={saveImage}>
-            <FaRegSave className="icon" /> Save Plot
+            <FaArrowCircleRight aria-hidden="true" className="icon" />
           </button>
           <button
+            aria-label="Save Plot"
+            disabled={selectedCanvas === null}
+            onClick={saveImage}
+          >
+            <FaRegSave aria-hidden="true" className="icon" /> Save Plot
+          </button>
+          <button
+            aria-label="Clear Plots"
             disabled={selectedCanvas === null}
             onClick={(e) => {
               if (confirm('Clear all plots?')) {
@@ -92,12 +104,12 @@ export function Plot({
               }
             }}
           >
-            <FaTrashAlt className="icon" /> Clear Plots
+            <FaTrashAlt aria-hidden="true" className="icon" /> Clear Plots
           </button>
         </div>
       </div>
       <div className='plot-background'>
-        <div ref={plotContainterRef} className="plot-container"></div>
+        <div ref={plotContainerRef} className="plot-container"></div>
       </div>
     </div>
   );
