@@ -339,10 +339,17 @@ export function Editor({
       </div>
       <div
         aria-label="Editor"
+        aria-describedby="editor-desc"
         className="editor-container"
         ref={editorRef}
       >
       </div>
+      <p style={{ display: "none" }} id="editor-desc">
+        This component is an instance of the <a href="https://codemirror.net/">CodeMirror</a> interactive text editor.
+        The editor has been configured so that the Tab key controls the indentation of code.
+        To move focus away from the editor, press the Escape key, and then press the Tab key directly after it.
+        Escape and then Shift-Tab can also be used to move focus backwards.
+      </p>
       <div
           role="toolbar"
           aria-label="Editor Toolbar"
