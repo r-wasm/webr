@@ -55,6 +55,7 @@ export function Terminal({
     term.loadAddon(fitAddon);
     term.loadAddon(readline);
     term.open(divRef.current);
+    term.element?.setAttribute('aria-label', 'R Terminal');
     fitAddon.fit();
 
     const resizeObserver = new ResizeObserver(() => {
@@ -92,7 +93,12 @@ export function Terminal({
     };
   }, [readline, terminalInterface]);
 
-  return <div ref={divRef} className='term'></div>;
+  return <div
+    role="region"
+    aria-label="Terminal Pane"
+    ref={divRef}
+    className='term'
+  ></div>;
 }
 
 export default Terminal;
