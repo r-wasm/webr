@@ -1,12 +1,32 @@
 {
   "nodes": {
+    "nixpkg-flang-webr": {
+      "inputs": {
+        "nixpkgs": "nixpkgs",
+        "nixpkgs-emscripten": "nixpkgs-emscripten"
+      },
+      "locked": {
+        "lastModified": 1699838609,
+        "narHash": "sha256-2GYbXH7es40TeEaZ3+aNX9SXHSFfQ7gI+ErVR1sryCU=",
+        "owner": "wch",
+        "repo": "flang-webr",
+        "rev": "b5db98feee04aba930e289f1fcb307ad4cc1acaa",
+        "type": "github"
+      },
+      "original": {
+        "owner": "wch",
+        "ref": "main",
+        "repo": "flang-webr",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1699291058,
-        "narHash": "sha256-5ggduoaAMPHUy4riL+OrlAZE14Kh7JWX4oLEs22ZqfU=",
+        "lastModified": 1699596684,
+        "narHash": "sha256-XSXP8zjBZJBVvpNb2WmY0eW8O2ce+sVyj1T0/iBRIvg=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "41de143fda10e33be0f47eab2bfe08a50f234267",
+        "rev": "da4024d0ead5d7820f6bd15147d3fe2a0c0cec73",
         "type": "github"
       },
       "original": {
@@ -32,10 +52,26 @@
         "type": "github"
       }
     },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1699596684,
+        "narHash": "sha256-XSXP8zjBZJBVvpNb2WmY0eW8O2ce+sVyj1T0/iBRIvg=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "da4024d0ead5d7820f6bd15147d3fe2a0c0cec73",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-23.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
-        "nixpkgs": "nixpkgs",
-        "nixpkgs-emscripten": "nixpkgs-emscripten"
+        "nixpkg-flang-webr": "nixpkg-flang-webr",
+        "nixpkgs": "nixpkgs_2"
       }
     }
   },
