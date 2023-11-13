@@ -37,17 +37,34 @@ export function FileTabs({
   closeFile: (e: React.SyntheticEvent, index: number) => void;
 }) {
   return (
-    <div className="editor-files">
+    <div
+      role="tablist"
+      aria-label="Opened Files"
+      className="editor-files"
+    >
       {files.map((f, index) =>
-        <button
+        <div
           key={index}
-          className={activeFileIdx === index ? 'active' : undefined}
-          onClick={() => setActiveFileIdx(index)}
+          className={"editor-file" + (activeFileIdx === index ? ' active' : '')}
+          role="tab"
+          id={`filetab-${index}`}
+          aria-label={f.name}
         >
-          {f.name}
-          <span
-            className="editor-closebutton"
-            aria-label="Close file"
+          <button
+            className="editor-switch"
+            aria-label={`Switch to ${f.name}`}
+            onClick={() => setActiveFileIdx(index)}
+          >
+          </button>
+          <div
+            className="editor-filename"
+            aria-hidden="true"
+          >
+            {f.name}
+          </div>
+          <button
+            className="editor-close"
+            aria-label={`Close ${f.name}`}
             onClick={(e) => {
               if (!f.ref.editorState.readOnly && !confirm('Close ' + f.name + '?')) {
                 e.stopPropagation();
@@ -56,9 +73,9 @@ export function FileTabs({
               closeFile(e, index);
             }}
           >
-            &times;
-          </span>
-        </button>
+            <div aria-hidden="true">&times;</div>
+          </button>
+        </div>
       )}
     </div>
   );
@@ -292,7 +309,11 @@ export function Editor({
         return editorView.domAtPos(0).node;
       }
     });
-    editorView.focus();
+
+    // Update accessibility labelling
+    const container = editorView.contentDOM.parentElement;
+    container?.setAttribute('role', 'tabpanel');
+    container?.setAttribute('aria-labelledby', `filetab-${activeFileIdx}`);
 
     // Before switching to a new file, save the state and scroll position
     return function cleanup() {
@@ -303,22 +324,37 @@ export function Editor({
   const displayStyle = files.length === 0 ? { display: 'none' } : undefined;
 
   return (
-    <div className="editor" style={displayStyle}>
-      <div className="editor-header">
+    <div role="region"
+      aria-label="Editor Pane"
+      className="editor"
+      style={displayStyle}
+    >
+      <div
+        role="toolbar"
+        aria-label="Editor Toolbar"
+        className="editor-header"
+      >
         <FileTabs
           files={files}
           activeFileIdx={activeFileIdx}
           setActiveFileIdx={setActiveFileIdx}
           closeFile={closeFile}
         />
-        <div className="editor-actions">
+        <div
+          aria-label="Additional Actions"
+          className="editor-actions"
+        >
           {!isReadOnly && <button onClick={saveFile}>
-            <FaRegSave className="icon" /> Save
+            <FaRegSave aria-hidden="true" className="icon" /> Save
           </button>}
-          {isRFile && <button onClick={runFile}><FaPlay className="icon" /> Run</button>}
+          {isRFile && <button onClick={runFile}>
+            <FaPlay aria-hidden="true" className="icon" /> Run
+          </button>}
         </div>
       </div>
-      <div className="editor-container" ref={editorRef}></div>
+      <div
+        aria-label="Editor" className="editor-container" ref={editorRef}>
+      </div>
     </div>
   );
 }
