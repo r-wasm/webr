@@ -39,7 +39,7 @@ export function FileTabs({
   return (
     <div
       role="tablist"
-      aria-label="Opened Files"
+      aria-label="Currently Open Files"
       className="editor-files"
     >
       {files.map((f, index) =>
@@ -329,32 +329,32 @@ export function Editor({
       className="editor"
       style={displayStyle}
     >
-      <div
-        role="toolbar"
-        aria-label="Editor Toolbar"
-        className="editor-header"
-      >
+      <div className="editor-header">
         <FileTabs
           files={files}
           activeFileIdx={activeFileIdx}
           setActiveFileIdx={setActiveFileIdx}
           closeFile={closeFile}
         />
-        <div
-          aria-label="Additional Actions"
+      </div>
+      <div
+        aria-label="Editor"
+        className="editor-container"
+        ref={editorRef}
+      >
+      </div>
+      <div
+          role="toolbar"
+          aria-label="Editor Toolbar"
           className="editor-actions"
         >
-          {!isReadOnly && <button onClick={saveFile}>
-            <FaRegSave aria-hidden="true" className="icon" /> Save
-          </button>}
           {isRFile && <button onClick={runFile}>
             <FaPlay aria-hidden="true" className="icon" /> Run
           </button>}
+          {!isReadOnly && <button onClick={saveFile}>
+            <FaRegSave aria-hidden="true" className="icon" /> Save
+          </button>}
         </div>
-      </div>
-      <div
-        aria-label="Editor" className="editor-container" ref={editorRef}>
-      </div>
     </div>
   );
 }

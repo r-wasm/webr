@@ -1,4 +1,5 @@
 .editor {
+  position: relative;
   display: grid;
   grid-template-rows: auto 1fr;
 }
@@ -8,7 +9,13 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--bg-dark);
-  padding: 5px 5px 0 5px;
+  padding: 0 5px;
+}
+
+.editor-actions {
+  position: absolute;
+  top: 5px;
+  right: 0;
 }
 
 .editor-actions > button {
@@ -16,6 +23,7 @@
   border: none;
   color: var(--secondary);
   font-size: 14px;
+  padding: 5px;
 }
 
 .editor-actions > button:hover {
