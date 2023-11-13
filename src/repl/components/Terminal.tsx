@@ -17,19 +17,25 @@ export function Terminal({
   const termRef = React.useRef<XTerminal | null>(null);
   const [readline, setReadline] = React.useState<Readline>();
 
-  const handleCtrlC = React.useCallback((event: KeyboardEvent) => {
+  const handleShortcuts = React.useCallback((event: KeyboardEvent) => {
+    // Allow escaping the terminal with Tab navigation
+    if (event.key === 'Tab') {
+      event.stopPropagation();
+    }
+
+    // Interrupt R code executed by the Editor
     if (event.key === 'c' && event.ctrlKey) {
       webR.interrupt();
     }
   }, []);
 
-  // Handle ctrl-c here so that code executed by the Editor can be interrupted
+  // Add additional keyboard shortcut handlers
   React.useEffect(() => {
-    divRef.current!.addEventListener('keydown', handleCtrlC, true);
+    divRef.current!.addEventListener('keydown', handleShortcuts, true);
     return () => {
-      divRef.current!.removeEventListener('keydown', handleCtrlC);
+      divRef.current!.removeEventListener('keydown', handleShortcuts);
     };
-  }, [handleCtrlC]);
+  }, [handleShortcuts]);
 
   React.useEffect(() => {
     // Don't reinitialise XTerminal after an instance has been created
@@ -56,6 +62,7 @@ export function Terminal({
     term.loadAddon(readline);
     term.open(divRef.current);
     term.element?.setAttribute('aria-label', 'R Terminal');
+    term.element?.setAttribute('tabindex', '-1');
     fitAddon.fit();
 
     const resizeObserver = new ResizeObserver(() => {
