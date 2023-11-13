@@ -45,7 +45,7 @@ export function FileTabs({
       {files.map((f, index) =>
         <div
           key={index}
-          className={"editor-file" + (activeFileIdx === index ? ' active' : '')}
+          className={'editor-file' + (activeFileIdx === index ? ' active' : '')}
           role="tab"
           id={`filetab-${index}`}
           aria-label={f.name}
@@ -344,7 +344,7 @@ export function Editor({
         ref={editorRef}
       >
       </div>
-      <p style={{ display: "none" }} id="editor-desc">
+      <p style={{ display: 'none' }} id="editor-desc">
         This component is an instance of the <a href="https://codemirror.net/">CodeMirror</a> interactive text editor.
         The editor has been configured so that the Tab key controls the indentation of code.
         To move focus away from the editor, press the Escape key, and then press the Tab key directly after it.

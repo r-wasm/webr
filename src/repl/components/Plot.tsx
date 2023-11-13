@@ -29,7 +29,7 @@ export function Plot({
       const canvas = document.createElement('canvas');
       canvas.setAttribute('width', '1008');
       canvas.setAttribute('height', '1008');
-      canvas.setAttribute('aria-label', `R Plot ${plotNumber}`)
+      canvas.setAttribute('aria-label', `R Plot ${plotNumber}`);
       canvasRef.current = canvas;
       canvasElements.current.push(canvas);
       setSelectedCanvas(plotNumber - 1);

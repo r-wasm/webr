@@ -49,7 +49,7 @@ export function Files({
   const [treeData, setTreeData] = React.useState<INode[]>(initialData);
   const [selectedNode, setSelectedNode] = React.useState<INode | null>();
   const [isFileSelected, setIsFileSelected] = React.useState<boolean>(true);
-  const [selectedIds, setSelectedIds] = React.useState<number[]>([1])
+  const [selectedIds, setSelectedIds] = React.useState<number[]>([1]);
   const uploadRef = React.useRef<HTMLInputElement | null>(null);
   const uploadButtonRef = React.useRef<HTMLButtonElement | null>(null);
   const downloadButtonRef = React.useRef<HTMLButtonElement | null>(null);
@@ -221,7 +221,7 @@ export function Files({
       setTreeData(data);
     };
   }, [filesInterface]);
-  
+
   const treeView = <TreeView
     data={treeData}
     defaultExpandedIds={[1]}
