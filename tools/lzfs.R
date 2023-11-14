@@ -16,7 +16,7 @@ Arguments:
   -h, --help      Display this help message.
   -o file         If provided, write output to 'file' rather than stdout.
   -u, --URL       If provided, set a prefix for backing URLs.
-  -v, --verbose   Verbose mode. Ouptut directory names as they are handled.
+  -v, --verbose   Verbose mode. Output directory names as they are handled.
 )")
     quit(status = 1)
 }
@@ -108,26 +108,32 @@ let loadImage = function(dir, file, src, mountpoint) {
   FS.mkdirTree(dir);
   let node = FS.createFile(dir, file, { isDevice: false } , true, true);
 
-  let forceLoadFile = function(obj) {
-    if (obj.isDevice || obj.isFolder || obj.link || obj.contents) {
+  let forceLoadFile = function() {
+    if (node.isDevice || node.isFolder || node.link || node.contents) {
       return true;
     }
 
     if (ENVIRONMENT_IS_NODE) {
-      Module.mountImagePath(Module.locateFile(src), mountpoint)
-    } else {
-      Module.mountImageUrl(Module.locateFile(src), mountpoint)
-    }
+      Module.mountImagePath(Module.locateFile(src), mountpoint);
 
-    let mountNode = Module.FS.lookupPath(`${dir}/${file}`).node;
-    node.contents = mountNode.contents;
-    node.size = mountNode.size;
+      let mountNode = Module.FS.lookupPath(`${dir}/${file}`).node;
+      node.contents = mountNode.contents;
+      node.size = mountNode.size;
+    } else {
+      Module.mountImageUrl(Module.locateFile(src), mountpoint);
+
+      let mountNode = Module.FS.lookupPath(`${dir}/${file}`).node;
+      node.contents = new Uint8Array(
+        (new FileReaderSync()).readAsArrayBuffer(mountNode.contents)
+      );
+      node.size = mountNode.size;
+    }
   }
 
   Object.defineProperties(node, {
     usedBytes: {
       get: function() {
-        forceLoadFile(node);
+        forceLoadFile();
         return node.size;
       }
     }
@@ -137,7 +143,7 @@ let loadImage = function(dir, file, src, mountpoint) {
   Object.keys(node.stream_ops).forEach((key) => {
     let fn = node.stream_ops[key];
     stream_ops[key] = (...args) => {
-      forceLoadFile(node);
+      forceLoadFile();
       return fn(...args);
     };
   });
