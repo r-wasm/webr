@@ -37,17 +37,34 @@ export function FileTabs({
   closeFile: (e: React.SyntheticEvent, index: number) => void;
 }) {
   return (
-    <div className="editor-files">
+    <div
+      role="tablist"
+      aria-label="Currently Open Files"
+      className="editor-files"
+    >
       {files.map((f, index) =>
-        <button
+        <div
           key={index}
-          className={activeFileIdx === index ? 'active' : undefined}
-          onClick={() => setActiveFileIdx(index)}
+          className={'editor-file' + (activeFileIdx === index ? ' active' : '')}
+          role="tab"
+          id={`filetab-${index}`}
+          aria-label={f.name}
         >
-          {f.name}
-          <span
-            className="editor-closebutton"
-            aria-label="Close file"
+          <button
+            className="editor-switch"
+            aria-label={`Switch to ${f.name}`}
+            onClick={() => setActiveFileIdx(index)}
+          >
+          </button>
+          <div
+            className="editor-filename"
+            aria-hidden="true"
+          >
+            {f.name}
+          </div>
+          <button
+            className="editor-close"
+            aria-label={`Close ${f.name}`}
             onClick={(e) => {
               if (!f.ref.editorState.readOnly && !confirm('Close ' + f.name + '?')) {
                 e.stopPropagation();
@@ -56,9 +73,9 @@ export function FileTabs({
               closeFile(e, index);
             }}
           >
-            &times;
-          </span>
-        </button>
+            <div aria-hidden="true">&times;</div>
+          </button>
+        </div>
       )}
     </div>
   );
@@ -292,7 +309,11 @@ export function Editor({
         return editorView.domAtPos(0).node;
       }
     });
-    editorView.focus();
+
+    // Update accessibility labelling
+    const container = editorView.contentDOM.parentElement;
+    container?.setAttribute('role', 'tabpanel');
+    container?.setAttribute('aria-labelledby', `filetab-${activeFileIdx}`);
 
     // Before switching to a new file, save the state and scroll position
     return function cleanup() {
@@ -303,7 +324,11 @@ export function Editor({
   const displayStyle = files.length === 0 ? { display: 'none' } : undefined;
 
   return (
-    <div className="editor" style={displayStyle}>
+    <div role="region"
+      aria-label="Editor Pane"
+      className="editor"
+      style={displayStyle}
+    >
       <div className="editor-header">
         <FileTabs
           files={files}
@@ -311,14 +336,32 @@ export function Editor({
           setActiveFileIdx={setActiveFileIdx}
           closeFile={closeFile}
         />
-        <div className="editor-actions">
-          {!isReadOnly && <button onClick={saveFile}>
-            <FaRegSave className="icon" /> Save
-          </button>}
-          {isRFile && <button onClick={runFile}><FaPlay className="icon" /> Run</button>}
-        </div>
       </div>
-      <div className="editor-container" ref={editorRef}></div>
+      <div
+        aria-label="Editor"
+        aria-describedby="editor-desc"
+        className="editor-container"
+        ref={editorRef}
+      >
+      </div>
+      <p style={{ display: 'none' }} id="editor-desc">
+        This component is an instance of the <a href="https://codemirror.net/">CodeMirror</a> interactive text editor.
+        The editor has been configured so that the Tab key controls the indentation of code.
+        To move focus away from the editor, press the Escape key, and then press the Tab key directly after it.
+        Escape and then Shift-Tab can also be used to move focus backwards.
+      </p>
+      <div
+          role="toolbar"
+          aria-label="Editor Toolbar"
+          className="editor-actions"
+        >
+          {isRFile && <button onClick={runFile}>
+            <FaPlay aria-hidden="true" className="icon" /> Run
+          </button>}
+          {!isReadOnly && <button onClick={saveFile}>
+            <FaRegSave aria-hidden="true" className="icon" /> Save
+          </button>}
+        </div>
     </div>
   );
 }

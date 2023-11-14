@@ -78,8 +78,8 @@ function App() {
         terminalInterface={terminalInterface}
         filesInterface={filesInterface}
       />
-      <Terminal webR={webR} terminalInterface={terminalInterface}/>
       <Files webR={webR} filesInterface={filesInterface}/>
+      <Terminal webR={webR} terminalInterface={terminalInterface}/>
       <Plot plotInterface={plotInterface}/>
     </div>
   );

@@ -24,6 +24,8 @@
 
 * Certain graphical properties, e.g `lty` & `lwd`, now work correctly in the webR `canvas()` graphics device. (#289, #304).
 
+* Various updates for the webR Demo App to improve accessibility. (#267, #269, #270, #271, #272, #273, #274).
+
 # webR 0.2.1
 
 ## New features
