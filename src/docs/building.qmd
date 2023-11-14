@@ -4,10 +4,10 @@ format: html
 toc: true
 ---
 
-Many R packages contain C, C++ or Fortran code that must be compiled^[Prerequisite system libraries must also be compiled for WebAssembly. The webR build process optionally includes building a collection of patched system libraries for Wasm.] for WebAssembly (Wasm) before they can be loaded in webR. While the [webR binary repository](packages.qmd#downloading-packages-from-a-webr-binary-repository) provides pre-compiled Wasm binaries^[Other WebAssembly R package repositories are also available, such as [R-universe](https://r-universe.dev/).], custom R packages must be independently compiled from source.
+Many R packages contain C, C++ or Fortran code that must be compiled^[Prerequisite system libraries must also be compiled for WebAssembly. The webR build process optionally includes building a collection of system libraries for Wasm.] for WebAssembly (Wasm) before they can be loaded in webR. While the [webR binary repository](packages.qmd#downloading-packages-from-a-webr-binary-repository) provides pre-compiled Wasm binaries^[Other R package repositories providing  WebAssembly binaries are also available, such as [R-universe](https://r-universe.dev/).], custom R packages must be independently compiled from source.
 
 ::: callout-note
-It is not possible to directly install packages from source in webR. This is likely to remain the case in future, as such a process would depend on an entire R development toolchain running in the browser. Loading pre-compiled WebAssembly binaries is the only supported way to install packages in webR.
+It is not possible to directly install packages from source in webR. This is likely to remain the case in the future, as such a process would depend on an entire R development toolchain running in the browser. Loading pre-compiled WebAssembly binaries is the only supported way to install packages in webR.
 :::
 
 ## Compiling R packages using GitHub Actions
@@ -16,11 +16,11 @@ GitHub Actions can be used to remotely build R packages for Wasm by making use o
 
 The workflow can also be configured to automatically upload the resulting R package binaries to GitHub Pages, ready to be used with webR's [`install()`](packages.qmd#downloading-packages-from-a-webr-binary-repository) or [`mount()`](packages.qmd#mounting-an-r-library-filesystem-image) functions.
 
-Further details can be found in the [Build R packages using GitHub Actions](https://r-wasm.github.io/rwasm/articles/github-actions.html) section of the [rwasm](https://r-wasm.github.io/rwasm/) package documentation, and demonstration workflows can be found in the `examples` directory of [r‑wasm/actions](https://github.com/r-wasm/actions). 
+Further details can be found in the documentation and `examples` directory of [r‑wasm/actions](https://github.com/r-wasm/actions). 
 
 ## Compiling R packages locally
 
-To locally build R packages for webR we recommend using the [rwasm](https://r-wasm.github.io/rwasm/) package in a native R installation. The package automates the use of R's [`Makevars`](https://cran.r-project.org/doc/manuals/r-devel/R-exts.html#Using-Makevars) mechanism^[While it is possible to manually build R packages using R's `Makevars` mechanism alone, the process can be quite involved and error-prone depending on the specific R package involved.] to cross-compile R packages for Wasm, by setting up the host environment so that the [Emscripten](https://emscripten.org/index.html) compiler toolchain is used for compilation, and applying a selection of configuration overrides for troublesome packages.
+To locally build R packages for webR we recommend using the [rwasm](https://r-wasm.github.io/rwasm/) package in a native R installation. The package automates the use of R's [`Makevars`](https://cran.r-project.org/doc/manuals/r-devel/R-exts.html#Using-Makevars) mechanism^[While it is possible to manually build R packages using R's `Makevars` mechanism alone, the process can be quite involved and error-prone depending on the specific R package involved.] to cross-compile R packages for Wasm, by setting up the host environment so that the [Emscripten](https://emscripten.org/index.html) compiler toolchain is used for compilation and applying a selection of configuration overrides for certain packages.
 
 The [rwasm](https://r-wasm.github.io/rwasm/) package can also be used to deploy the resulting R package binaries as a CRAN-like repository, or as an Emscripten filesystem image containing an R package library. The resulting collection of R packages can then be made available through static file hosting^[e.g. GitHub Pages, Netlify, AWS S3, etc.].
 

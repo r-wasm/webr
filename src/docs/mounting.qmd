@@ -34,7 +34,7 @@ $ file_packager output.data --preload ./input@/ \
 
 In the above examples, the files in the directory `./input` are packaged and an output filesystem image is created^[When using the `file_packager` CLI, a third file named `output.js` will also be created. If you only plan to mount the image using webR, this file may be discarded.] consisting of a data file, `output.data`, and a metadata file, `output.js.metadata`.
 
-To prepare for mounting the filesystem image with webR, ensure that both files have the same basename (in this example, `output`) and deployed to static file hosting^[e.g. GitHub Pages, Netlify, AWS S3, etc.]. The resulting URLs for the two files should differ only by the file extension.
+To prepare for mounting the filesystem image with webR, ensure that both files have the same basename (in this example, `output`) and are deployed to static file hosting^[e.g. GitHub Pages, Netlify, AWS S3, etc.]. The resulting URLs for the two files should differ only by the file extension.
 
 
 ## Mount a filesystem image from URL
@@ -48,7 +48,7 @@ webr::mount(
 )
 ```
 
-A URL to the filesystem image `.data` file should be provided as the source argument, and the image will be mounted in the virtual filesystem under the path given by the `mountpoint` argument. If the `mountpoint` directory does not exist, it will be created prior to mounting.
+A URL for the filesystem image `.data` file should be provided as the source argument, and the image will be mounted in the virtual filesystem under the path given by the `mountpoint` argument. If the `mountpoint` directory does not exist, it will be created prior to mounting.
 
 ### JavaScript API
 
@@ -64,8 +64,8 @@ The filesystem type should be provided as a `string`, with the `options` argumen
 await webR.FS.mkdir('/data')
 
 // Download image data
-const data = await fetch('./output.data');
-const metadata = await fetch('./output.js.metadata');
+const data = await fetch('https://example.com/output.data');
+const metadata = await fetch('https://example.com/output.js.metadata');
 
 // Mount image data
 const options = {
@@ -86,8 +86,8 @@ import { FSMountOptions } from 'webr';
 await webR.FS.mkdir('/data')
 
 // Download image data
-const data = await fetch('./output.data');
-const metadata = await fetch('./output.js.metadata');
+const data = await fetch('https://example.com/output.data');
+const metadata = await fetch('https://example.com/output.js.metadata');
 
 // Mount image data
 const options: FSMountOptions = {
@@ -111,7 +111,7 @@ See the [Emscripten `FS.mount()` documentation](https://emscripten.org/docs/api_
 
 The `NODEFS` filesystem type maps directories that exist on the host machine so that they are accessible in the WebAssembly process.
 
-To mount the directory `./extra` on the virtual filesystem at `/data`, use either the JavaScript or R mounting API with the filesystem type set to `NODEFS`.
+To mount the directory `./extra` on the virtual filesystem at `/data`, use either the JavaScript or R mount API with the filesystem type set to `"NODEFS"`.
 
 ::: {.panel-tabset}
 ## JavaScript

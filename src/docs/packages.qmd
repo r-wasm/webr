@@ -4,9 +4,9 @@ format: html
 toc: true
 ---
 
-WebR supports the loading of R packages that have been pre-compiled targeting WebAssembly and for use with webR.
+WebR supports the loading of R packages that have been pre-compiled targeting WebAssembly.
 
-WebR packages must be installed before use, which in practice means copying binaries into the webR virtual filesystem in some way, either as part of the webR build process or during runtime by downloading packages from a repository.
+WebR packages must be installed before use, which in practice means copying binaries into the webR virtual filesystem in some way, either as part of the webR build process or during runtime by downloading packages from a repository or [mounting filesystem data](packages.qmd#mounting-an-r-library-filesystem-image).
 
 ## Downloading packages from a webR binary repository
 
@@ -16,7 +16,7 @@ A collection of supported packages are publicly hosted via a CDN in a CRAN-like 
 
 The public CDN build of webR has been distributed with a pre-installed [webr support package](api/r.qmd). This R package provides a helper function [`install()`](api/r.qmd#install-one-or-more-packages-from-a-webr-binary-package-repo), which can be used to install further R packages from a compatible webR binary repository.
 
-The repository URL is set using the `repos` argument and the public build of webR defaults the `repo` argument to the repository URL shown above^[Other WebAssembly R package repositories are also available, such as [R-universe](https://r-universe.dev/).].
+The repository URL is set using the `repos` argument and the public build of webR defaults this argument to the repository URL shown above^[Other R package repositories providing  WebAssembly binaries are also available, such as [R-universe](https://r-universe.dev/).].
 
 ### Example: Installing the Matrix package
 
@@ -34,26 +34,24 @@ library("Matrix")
 
 ## Shimming `install.packages()` for webR
 
-The [webr support package](api/r.qmd) includes the function [`shim_install()`](api/r.html#shim_install) which optionally replaces specific base R functions with implementations that work in the webR environment. Once executed, the base R `install.packages()` function can be used to install packages.
+The [webr support package](api/r.qmd) includes the function [`shim_install()`](api/r.html#shim_install) which optionally replaces specific base R functions with implementations that work in the webR environment. Once executed, the base R `install.packages()` function can be used to install webR packages.
 
 ```{r eval=FALSE}
 webr::shim_install()
 install.packages("Matrix")
 ```
 
-The [webR REPL demo](https://webr.r-wasm.org/latest/) performs this base R function replacement as part of startup.
+The [webR REPL demo](https://webr.r-wasm.org/latest/) performs this base R function replacement as part of its startup procedure.
 
 ## Interactively installing packages
 
-As part of startup, the [webR REPL demo](https://webr.r-wasm.org/latest/) website runs the following R code:
+The [webr support package](api/r.qmd) provides an optional global handler that will show an interactive prompt whenever loading a library fails, asking the user if they would like to try downloading the package from the configured default webR binary package repository.
 
 ```{r eval=FALSE}
 webr::global_prompt_install()
 ```
 
-This function, also provided by the pre-installed [webr support package](api/r.qmd), installs a global handler that will show an interactive prompt whenever loading a library fails, asking the user if they would like to try downloading the package from the configured default webR binary package repository.
-
-Once the global handler has been installed in this way, it is possible to install and load packages interactively via a prompt. The process is as follows,
+As part of its startup, the [webR REPL demo](https://webr.r-wasm.org/latest/) enables this handler. Once enabled, it is possible to install and load packages interactively via a prompt. The process is as follows,
 
 ``` r
 library(Matrix)
