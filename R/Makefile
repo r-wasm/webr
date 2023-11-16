@@ -16,7 +16,7 @@ export R_VERSION
 
 R_TARBALL = $(DOWNLOAD)/R-$(R_VERSION).tar.gz
 R_SOURCE = $(BUILD)/R-$(R_VERSION)
-R_URL = https://cran.r-project.org/src/base/R-4/R-$(R_VERSION).tar.gz
+R_URL = https://cran.rstudio.com/src/base/R-4/R-$(R_VERSION).tar.gz
 
 R_HOST = $(HOST)/R-$(R_VERSION)
 R_WASM = $(WASM)/R-$(R_VERSION)

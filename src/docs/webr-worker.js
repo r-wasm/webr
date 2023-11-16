@@ -1,1 +1,1 @@
-importScripts('https://webr.r-wasm.org/v0.2.1/webr-worker.js');
+importScripts('https://webr.r-wasm.org/v0.2.2/webr-worker.js');
