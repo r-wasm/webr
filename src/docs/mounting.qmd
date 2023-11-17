@@ -14,8 +14,8 @@ Emscripten's API provides several types of virtual filesystem, but for technical
 
 | Filesystem | Description | Web Browser | Node.js |
 |------|-----|------|------|
-| `WORKERFS` | Mount filesystem images. | ✅ | ✅ |
-| `NODEFS` | Mount existing host directories. | ❌ | ✅ |
+| `WORKERFS` | Mount filesystem images. | &#x2705; | &#x2705; |
+| `NODEFS` | Mount existing host directories. | &#x274C; | &#x2705; |
 
 ## Emscripten filesystem images
 
