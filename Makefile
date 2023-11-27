@@ -3,19 +3,16 @@ WASM = $(WEBR_ROOT)/wasm
 HOST = $(WEBR_ROOT)/host
 TOOLS = $(WEBR_ROOT)/tools
 
-# This is symlinked at configure-time
-include $(TOOLS)/fortran.mk
+default: webr
 
-EMFC_FILES = $(EMFC) $(FORTRAN_WASM_LIB)
+# This is created at configure-time
+include $(TOOLS)/fortran.mk
 
 # Build webR and install the web app in `./dist`
 .PHONY: webr
-webr: $(EMFC_FILES) libs
+webr: $(EMFC) $(FORTRAN_WASM_LIB) libs
 	cd R && $(MAKE) && $(MAKE) install
 	cd src && $(MAKE)
-
-$(EMFC_FILES):
-	cd $(EMFC_DIR) && $(MAKE) && $(MAKE) install
 
 # Supporting libs for webr
 .PHONY: libs
@@ -49,20 +46,15 @@ check-pr:
 	cd src && $(MAKE) lint && $(MAKE) check && $(MAKE) check-packages
 
 .PHONY: clean
-clean: clean-wasm
-	cd tools/dragonegg && $(MAKE) clean
-	cd tools/flang && $(MAKE) clean
-
-.PHONY: clean-wasm
-clean-wasm: clean-webr
-	rm -rf $(WASM)
-	cd libs && $(MAKE) clean
-
-.PHONY: clean-webr
-clean-webr:
+clean:
 	rm -rf $(HOST) $(WASM)/R-*
 	cd R && $(MAKE) clean
 
+.PHONY: clean-wasm
+clean-wasm: clean
+	rm -rf $(WASM)
+	cd libs && $(MAKE) clean
+
 .PHONY: distclean
-distclean: clean
+distclean: clean-wasm clean-tools
 	rm -rf dist
