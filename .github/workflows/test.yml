@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: 'lts/*'
           registry-url: 'https://registry.npmjs.org'
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Configure webR for flang
         env:
           EMFC: /opt/flang/host/bin/flang-new
@@ -41,7 +41,7 @@ jobs:
   build-nix:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Build Nix package
