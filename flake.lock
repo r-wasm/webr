@@ -1,32 +1,32 @@
 {
   "nodes": {
-    "nixpkg-flang-webr": {
+    "nixpkg-flang-wasm": {
       "inputs": {
         "nixpkgs": "nixpkgs",
         "nixpkgs-emscripten": "nixpkgs-emscripten"
       },
       "locked": {
-        "lastModified": 1699838609,
-        "narHash": "sha256-2GYbXH7es40TeEaZ3+aNX9SXHSFfQ7gI+ErVR1sryCU=",
-        "owner": "wch",
-        "repo": "flang-webr",
-        "rev": "b5db98feee04aba930e289f1fcb307ad4cc1acaa",
+        "lastModified": 1701089852,
+        "narHash": "sha256-icpDRHRC3PY7dB11CsdglgI/68mQA1r1FTlp75AKJOI=",
+        "owner": "r-wasm",
+        "repo": "flang-wasm",
+        "rev": "2d770158f66e1b97c94c49890ad94bc4db2c1d77",
         "type": "github"
       },
       "original": {
-        "owner": "wch",
+        "owner": "r-wasm",
         "ref": "main",
-        "repo": "flang-webr",
+        "repo": "flang-wasm",
         "type": "github"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1699596684,
-        "narHash": "sha256-XSXP8zjBZJBVvpNb2WmY0eW8O2ce+sVyj1T0/iBRIvg=",
+        "lastModified": 1700501263,
+        "narHash": "sha256-M0U063Ba2DKL4lMYI7XW13Rsk5tfUXnIYiAVa39AV/0=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "da4024d0ead5d7820f6bd15147d3fe2a0c0cec73",
+        "rev": "f741f8a839912e272d7e87ccf4b9dbc6012cdaf9",
         "type": "github"
       },
       "original": {
@@ -54,11 +54,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1699596684,
-        "narHash": "sha256-XSXP8zjBZJBVvpNb2WmY0eW8O2ce+sVyj1T0/iBRIvg=",
+        "lastModified": 1700989516,
+        "narHash": "sha256-oKbmPa2wpTHh9XB3+zIx97uMZGNnp97GPliKKG2/plo=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "da4024d0ead5d7820f6bd15147d3fe2a0c0cec73",
+        "rev": "d2e4de209881b38392933fabf303cde3454b0b4c",
         "type": "github"
       },
       "original": {
@@ -70,7 +70,7 @@
     },
     "root": {
       "inputs": {
-        "nixpkg-flang-webr": "nixpkg-flang-webr",
+        "nixpkg-flang-wasm": "nixpkg-flang-wasm",
         "nixpkgs": "nixpkgs_2"
       }
     }

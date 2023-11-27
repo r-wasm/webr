@@ -4,11 +4,11 @@
   # Flake inputs
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-23.05";
-    nixpkg-flang-webr.url = "github:wch/flang-webr/main";
+    nixpkg-flang-wasm.url = "github:r-wasm/flang-wasm/main";
   };
 
   # Flake outputs
-  outputs = { self, nixpkgs, nixpkg-flang-webr }:
+  outputs = { self, nixpkgs, nixpkg-flang-wasm }:
     let
       allSystems =
         [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
@@ -18,12 +18,12 @@
         nixpkgs.lib.genAttrs allSystems (system:
           f rec {
             pkgs = import nixpkgs { inherit system; };
-            pkg-flang-webr = nixpkg-flang-webr.packages.${system}.default;
+            pkg-flang-wasm = nixpkg-flang-wasm.packages.${system}.default;
 
-            # Get emscripten from the flang-webr package
+            # Get emscripten from the flang-wasm package
             pkg-emscripten = builtins.head
               (builtins.filter (x: x.pname == "emscripten")
-                pkg-flang-webr.propagatedNativeBuildInputs);
+                pkg-flang-wasm.propagatedNativeBuildInputs);
 
             # Cached npm dependencies specified by src/package-lock.json. During
             # development, whenever package-lock.json is updated, the hash needs
@@ -31,7 +31,7 @@
             #     cd src; prefetch-npm-deps package-lock.json
             srcNpmDeps = pkgs.fetchNpmDeps {
               src = "${self}/src";
-              hash = "sha256-FvKuT6ComD2KKOpd4ucnoyqZJz3wZfR6nKYOCKTLgYM=";
+              hash = "sha256-1q3keCrX0IKkNSBN5YuXqsgJRtl9kj4pqCAhUhlm1wg=";
             };
 
             inherit system;
@@ -39,13 +39,13 @@
 
     in rec {
       packages = forAllSystems
-        ({ pkgs, pkg-flang-webr, system, pkg-emscripten, srcNpmDeps, ... }: {
+        ({ pkgs, pkg-flang-wasm, system, pkg-emscripten, srcNpmDeps, ... }: {
           default = pkgs.stdenv.mkDerivation {
             name = "webr";
             src = ./.;
 
             nativeBuildInputs = with pkgs; [
-              pkg-flang-webr
+              pkg-flang-wasm
               pkg-emscripten
 
               git
@@ -80,14 +80,6 @@
               unzip # For extracting font data
             ];
 
-            # Copy files from flang-webr package to their correct location in
-            # the build source dir. Make sure those directories are writable
-            # because this build will write to some of the same directories.
-            postUnpack = ''
-              cp -R ${pkg-flang-webr}/webr/* $sourceRoot
-              chmod -R u+w $sourceRoot
-            '';
-
             # Need to call configure _without_ extra arguments that mkDerivation
             # would normally throw in.
             #
@@ -97,7 +89,7 @@
             # will look for it in the home directory, which does not exist in a
             # build.
             configurePhase = ''
-              ./configure
+              EMFC=${pkg-flang-wasm}/host/bin/flang-new ./configure
 
               cd src
               npm config set cache "${srcNpmDeps}" --location project
