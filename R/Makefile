@@ -160,7 +160,7 @@ $(BUILD)/state/R-$(R_VERSION)/r-stage2-configured: $(BUILD)/state/R-$(R_VERSION)
 	  CFLAGS="$(STAGE2_CFLAGS)" \
 	  LDFLAGS="$(STAGE2_LDFLAGS)" \
 	  LIBnn="lib" \
-	  FFLAGS="" \
+	  FFLAGS="-fPIC" \
 	  FPICFLAGS="-fPIC" \
 	  FC="$(EMFC)" \
 	  emconfigure ../configure \
