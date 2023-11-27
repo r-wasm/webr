@@ -1,5 +1,7 @@
 # webR (development version)
 
+# webR 0.2.2
+
 ## New features
 
 * Updated `Dockerfile` to build webR with LLVM flang and setup environment in preparation for building Wasm R packages. The docker image is now built and published by GitHub Actions as part of webR CI deployment from the `main` branch.
@@ -23,6 +25,8 @@
 ## Bug fixes
 
 * Certain graphical properties, e.g `lty` & `lwd`, now work correctly in the webR `canvas()` graphics device. (#289, #304).
+
+* Various updates for the webR Demo App to improve accessibility. (#267, #269, #270, #271, #272, #273, #274).
 
 # webR 0.2.1
 

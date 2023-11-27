@@ -49,6 +49,7 @@ export function Files({
   const [treeData, setTreeData] = React.useState<INode[]>(initialData);
   const [selectedNode, setSelectedNode] = React.useState<INode | null>();
   const [isFileSelected, setIsFileSelected] = React.useState<boolean>(true);
+  const [selectedIds, setSelectedIds] = React.useState<number[]>([1]);
   const uploadRef = React.useRef<HTMLInputElement | null>(null);
   const uploadButtonRef = React.useRef<HTMLButtonElement | null>(null);
   const downloadButtonRef = React.useRef<HTMLButtonElement | null>(null);
@@ -56,12 +57,15 @@ export function Files({
   const nodeRenderer: ITreeViewProps['nodeRenderer'] = ({
     element,
     isExpanded,
-    isBranch,
     getNodeProps,
     level,
   }) => (
-    <div {...getNodeProps()} style={{ paddingLeft: 20 * (level - 1) }}>
-      { isBranch ? <FolderIcon isOpen={ isExpanded } /> : <Fa.FaRegFile className="icon" />}
+    <div {...getNodeProps()} style={{ paddingLeft: 2 + 20 * (level - 1) }}>
+      {
+        element.metadata!.type === 'folder'
+          ? <FolderIcon isOpen={isExpanded} />
+          : <Fa.FaRegFile className="icon" />
+      }
       { element.name }
     </div>
   );
@@ -76,7 +80,13 @@ export function Files({
 
   const onNodeSelect: ITreeViewProps['onNodeSelect'] = ({ element }) => {
     setSelectedNode(element);
-    setIsFileSelected(!element.isBranch);
+    setIsFileSelected(element.metadata!.type === 'file');
+  };
+
+  const onExpand: ITreeViewProps['onExpand'] = ({ element }) => {
+    setSelectedNode(element);
+    setIsFileSelected(element.metadata!.type === 'file');
+    setSelectedIds([Number(element.id)]);
   };
 
   const onUpload: ChangeEventHandler = () => {
@@ -177,7 +187,7 @@ export function Files({
     }
 
     try {
-      if (selectedNode.isBranch) {
+      if (selectedNode.metadata!.type === 'folder') {
         await webR.FS.rmdir(path);
       } else {
         await webR.FS.unlink(path);
@@ -204,7 +214,7 @@ export function Files({
         metadata: {type: 'folder'}}
       );
       data.forEach((node) => {
-        if ( node.metadata!.type === 'folder') {
+        if ( node.metadata!.type === 'folder' && node.children.length > 0) {
           node.isBranch = true;
         }
       });
@@ -212,29 +222,44 @@ export function Files({
     };
   }, [filesInterface]);
 
+  const treeView = <TreeView
+    data={treeData}
+    defaultExpandedIds={[1]}
+    selectedIds={selectedIds}
+    aria-label="Directory Tree"
+    onNodeSelect={onNodeSelect}
+    onExpand={onExpand}
+    nodeRenderer={nodeRenderer}
+    expandOnKeyboardSelect={true}
+  />;
+
   return (
-    <div className='files'>
+    <div role="region" aria-label="Files Pane" className='files'>
       <div className="files-header">
-        <div className="files-actions">
+        <div
+          role="toolbar"
+          aria-label="Files Toolbar"
+          className="files-actions"
+        >
           <button
             ref={uploadButtonRef}
             onClick={() => uploadRef.current!.click()}
             className="upload-file"
             disabled={!selectedNode || isFileSelected}
           >
-              <Fa.FaFileUpload className="icon" /> Upload file
+              <Fa.FaFileUpload aria-hidden="true" className="icon" /> Upload file
           </button>
           <button
             onClick={() => { onNewFile(); }}
             disabled={!selectedNode || isFileSelected}
           >
-            <Fa.FaFileAlt className="icon" /> New file
+            <Fa.FaFileAlt aria-hidden="true" className="icon" /> New file
           </button>
           <button
             onClick={() => { onNewDirectory(); }}
             disabled={!selectedNode || isFileSelected}
           >
-            <Fa.FaFolderPlus className="icon" /> New directory
+            <Fa.FaFolderPlus aria-hidden="true" className="icon" /> New directory
           </button>
           <input onChange={onUpload} ref={uploadRef} type="file"/>
           <button
@@ -243,30 +268,24 @@ export function Files({
             className="download-file"
             disabled={!selectedNode || !isFileSelected}
           >
-            <Fa.FaFileDownload className="icon" /> Download file
+            <Fa.FaFileDownload aria-hidden="true" className="icon" /> Download file
           </button>
           <button
             onClick={onOpen}
             disabled={!selectedNode || !isFileSelected}
           >
-            <Fa.FaFileCode className="icon" /> Open in editor
+            <Fa.FaFileCode aria-hidden="true" className="icon" /> Open in editor
           </button>
           <button
             onClick={() => { onDelete(); }}
             disabled={!selectedNode}
           >
-          <Fa.FaTimesCircle className="icon" /> Delete
+          <Fa.FaTimesCircle aria-hidden="true" className="icon" /> Delete
           </button>
         </div>
       </div>
-      <div className="directory">
-        <TreeView
-          data={treeData}
-          defaultExpandedIds={[1]}
-          aria-label="directory tree"
-          onNodeSelect={onNodeSelect}
-          nodeRenderer={nodeRenderer}
-        />
+      <div aria-label="WebAssembly Filesystem" className="directory">
+        {treeData[0].name ? treeView : undefined}
       </div>
     </div>
   );

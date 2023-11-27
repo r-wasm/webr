@@ -28,6 +28,7 @@ body {
   border-style: solid;
   border-color: var(--bg-secondary);
   border-width: 0px 2px 2px 0px;
+  padding-top: 5px;
 }
 
 .term {
@@ -53,7 +54,7 @@ body {
   border-color: var(--bg-secondary);
   border-width: 0px 0px 2px 2px;
   overflow: auto;
-  padding: 4px 0;
+  padding: 5px 0;
 }
 
 .plot {

@@ -5,7 +5,7 @@ _site: api/js
 
 api/js: $(TS_SOURCES)
 	cd .. && make node_modules
-	npx typedoc --tsconfig ../tsconfig.json
+	npx typedoc --plugin typedoc-plugin-markdown --tsconfig ../tsconfig.json
 
 clean:
 	rm -rf api/js _site

@@ -15,7 +15,7 @@ website:
   favicon: images/webR.png
   page-navigation: true
   sidebar:
-    title: "WebR 0.2.2-dev Documentation"
+    title: "WebR 0.2.3-dev Documentation"
     logo: images/webR.png
     contents:
       - index.qmd
@@ -32,7 +32,11 @@ website:
           - objects.qmd
           - convert-r-to-js.qmd
           - convert-js-to-r.qmd
-      - packages.qmd
+      - section: R Packages and Data
+        contents:
+          - packages.qmd
+          - building.qmd
+          - mounting.qmd
       - section: WebR API
         contents:
           - api/r.qmd
