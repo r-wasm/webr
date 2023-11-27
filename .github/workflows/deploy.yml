@@ -12,28 +12,28 @@ jobs:
   build:
     name: Build webR
     runs-on: ubuntu-latest
-    container: ghcr.io/r-wasm/webr-flang:main
+    container: ghcr.io/r-wasm/flang-wasm:main
     steps:
+      - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: 'lts/*'
           registry-url: 'https://registry.npmjs.org'
-      - uses: actions/checkout@v3
+      - name: Set npm dist-tag to "next" if pre-release version
+        if: contains(github.ref_name, '-dev') || contains(github.ref_name, '-rc')
+        run: echo "DIST_TAG=next" >> $GITHUB_ENV
       - name: Install required system packages
         run: apt-get update && apt-get install -y gh jq sudo
       - uses: r-lib/actions/setup-r@v2
         with:
           use-public-rspm: true
       - uses: quarto-dev/quarto-actions/setup@v2
-      - name: Install required R packages
+      - name: Install required R packages for building documentation
         run: Rscript -e 'install.packages(c("rmarkdown", "rvest"))'
       - name: Configure webR for flang
+        env:
+          EMFC: /opt/flang/host/bin/flang-new
         run: ./configure
-      - name: Copy flang into webR tree
-        run: |
-          cp -r /opt/flang/wasm .
-          cp -r /opt/flang/host .
-          cp /opt/flang/emfc ./host/bin/emfc
       - name: Setup Emscripten PATH
         run: echo "/opt/emsdk:/opt/emsdk/upstream/emscripten" >> $GITHUB_PATH
       - name: Set Emscripten EM_NODE_JS
@@ -44,7 +44,7 @@ jobs:
       - name: Build all optional wasm libs
         env:
           EMSDK: /opt/emsdk
-        run: cd libs && make all
+        run: cd libs && make all -j
       - name: Build webR
         env:
           EMSDK: /opt/emsdk
@@ -53,6 +53,11 @@ jobs:
       - name: Build webR documentation
         run: cd src/docs && make
         shell: bash
+      - name: Publish to npm
+        if: "!contains(github.ref_name, 'main')"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: cd src && make publish
       - name: Report code coverage
         uses: codecov/codecov-action@v3
         with:
