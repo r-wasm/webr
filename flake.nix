@@ -80,6 +80,12 @@
               unzip # For extracting font data
             ];
 
+            # Handle `configure` script's `/usr/bin/env` shebang, which is not
+            # in the sandbox.
+            postPatch = ''
+              patchShebangs ./configure
+            '';
+
             # Need to call configure _without_ extra arguments that mkDerivation
             # would normally throw in.
             #
