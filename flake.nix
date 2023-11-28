@@ -52,6 +52,7 @@
               cacert
 
               cmake
+              clang
               gperf
               lzma
               pcre2
