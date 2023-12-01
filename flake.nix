@@ -3,7 +3,7 @@
 
   # Flake inputs
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
     nixpkg-flang-wasm.url = "github:r-wasm/flang-wasm/main";
   };
 
@@ -20,11 +20,6 @@
             pkgs = import nixpkgs { inherit system; };
             pkg-flang-wasm = nixpkg-flang-wasm.packages.${system}.default;
 
-            # Get emscripten from the flang-wasm package
-            pkg-emscripten = builtins.head
-              (builtins.filter (x: x.pname == "emscripten")
-                pkg-flang-wasm.propagatedNativeBuildInputs);
-
             # Cached npm dependencies specified by src/package-lock.json. During
             # development, whenever package-lock.json is updated, the hash needs
             # to be updated. To find the hash, run:
@@ -39,23 +34,24 @@
 
     in rec {
       packages = forAllSystems
-        ({ pkgs, pkg-flang-wasm, system, pkg-emscripten, srcNpmDeps, ... }: {
+        ({ pkgs, pkg-flang-wasm, system, srcNpmDeps, ... }: {
           default = pkgs.stdenv.mkDerivation {
             name = "webr";
             src = ./.;
 
             nativeBuildInputs = with pkgs; [
               pkg-flang-wasm
-              pkg-emscripten
 
               git
               cacert
 
               cmake
               clang
+              emscripten
               gperf
               lzma
               pcre2
+              python3
               quilt
               wget
               nodejs_18
@@ -104,11 +100,11 @@
               npm config set progress false --location project
               cd ..
 
-              if [ ! -d $(pwd)/.emscripten_cache-${pkg-emscripten.version} ]; then
-                cp -R ${pkg-emscripten}/share/emscripten/cache/ $(pwd)/.emscripten_cache-${pkg-emscripten.version}
-                chmod u+rwX -R $(pwd)/.emscripten_cache-${pkg-emscripten.version}
+              if [ ! -d $(pwd)/.emscripten_cache-${pkgs.emscripten.version} ]; then
+                cp -R ${pkgs.emscripten}/share/emscripten/cache/ $(pwd)/.emscripten_cache-${pkgs.emscripten.version}
+                chmod u+rwX -R $(pwd)/.emscripten_cache-${pkgs.emscripten.version}
               fi
-              export EM_CACHE=$(pwd)/.emscripten_cache-${pkg-emscripten.version}
+              export EM_CACHE=$(pwd)/.emscripten_cache-${pkgs.emscripten.version}
               echo emscripten cache dir: $EM_CACHE
             '';
 
@@ -124,7 +120,7 @@
         });
 
       # Development environment output
-      devShells = forAllSystems ({ pkgs, system, pkg-emscripten, ... }: {
+      devShells = forAllSystems ({ pkgs, system, ... }: {
         default = pkgs.mkShell {
           inputsFrom = [ packages.${system}.default ];
 
@@ -148,11 +144,11 @@
           # widespread use, we'll be able to use
           # https://github.com/NixOS/nix/issues/8034
           shellHook = ''
-            if [ ! -d $(pwd)/.emscripten_cache-${pkg-emscripten.version} ]; then
-              cp -R ${pkg-emscripten}/share/emscripten/cache/ $(pwd)/.emscripten_cache-${pkg-emscripten.version}
-              chmod u+rwX -R $(pwd)/.emscripten_cache-${pkg-emscripten.version}
+            if [ ! -d $(pwd)/.emscripten_cache-${pkgs.emscripten.version} ]; then
+              cp -R ${pkgs.emscripten}/share/emscripten/cache/ $(pwd)/.emscripten_cache-${pkgs.emscripten.version}
+              chmod u+rwX -R $(pwd)/.emscripten_cache-${pkgs.emscripten.version}
             fi
-            export EM_CACHE=$(pwd)/.emscripten_cache-${pkg-emscripten.version}
+            export EM_CACHE=$(pwd)/.emscripten_cache-${pkgs.emscripten.version}
             echo emscripten cache dir: $EM_CACHE
           '';
         };
