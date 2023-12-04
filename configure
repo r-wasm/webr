@@ -7,6 +7,9 @@ while [[ $# -gt 0 ]]; do
             USE_DRAGONEGG="true"
             shift
             ;;
+        --with-flang)
+            shift
+            ;;
         *)
             echo "Unknown argument $1"
             exit 1
@@ -16,9 +19,41 @@ done
 
 rm -f tools/fortran.mk
 
-if [ -z ${USE_DRAGONEGG-} ]
-then
-    ln -s fortran-flang.mk tools/fortran.mk
-else
+function configure_emfc {
+    EMFC_ROOT=`dirname ${EMFC}`
+    if [ -f "${FORTRAN_WASM_LIB-}" ]; then
+        EMFC_FLIB=${FORTRAN_WASM_LIB}
+    elif [ -f "${EMFC_ROOT}/../../wasm/lib/libFortranRuntime.a" ]; then
+        EMFC_FLIB=`realpath ${EMFC_ROOT}/../../wasm/lib/libFortranRuntime.a`
+    else
+        echo "Error: Can't find Fortran runtime library."
+        echo "Set FORTRAN_WASM_LIB to the location of libFortranRuntime.a,"\
+            "or unset EMFC to build LLVM flang from source."
+        exit 1
+    fi
+    echo "Found Fortran runtime library: ${EMFC_FLIB}"
+    cat << EOF > tools/fortran.mk
+EMFC = ${EMFC}
+FORTRAN_WASM_LIB = ${EMFC_FLIB}
+FORTRAN_WASM_LDADD = ${EMFC_FLIB}
+.PHONY: clean-tools
+clean-tools:
+	@
+EOF
+}
+
+if [ -n "${USE_DRAGONEGG-}" ]; then
+    # Build dragonegg from source
     ln -s fortran-dragonegg.mk tools/fortran.mk
+elif [ -n "${EMFC-}" ]; then
+    if [ -f "${EMFC-}" ]; then
+        echo "Found Fortran compiler: ${EMFC}"
+        configure_emfc
+    else
+        echo "Error: Can't find Fortran compiler, check EMFC value."
+        exit 1
+    fi
+else
+    # Build LLVM flang from source
+    ln -s fortran-flang.mk tools/fortran.mk
 fi

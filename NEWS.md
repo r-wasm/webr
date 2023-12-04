@@ -1,5 +1,17 @@
 # webR (development version)
 
+## New features
+
+* Support for building webR and LLVM Flang as Nix packages, using Nix flakes.
+
+* WebR's `./configure` script now detects the presence of a `EMFC` environment variable in the user's environment. If this variable points to an existing `flang-new` binary, and a Fortran runtime library for WebAssembly can also be found, webR will skip building LLVM flang and instead use the version provided by the environment.
+
+## Breaking changes
+
+* Upgraded the base LLVM distribution from LLVM 14 to LLVM 17, rebasing our Fortran for WebAssembly patches on the latest release of LLVM at time of writing (v17.0.6). The LLVM Fortran compiler binary name is now `flang-new` and webR's build scripts have been updated to reflect this. The `emfc` wrapper script is no longer required, but for the moment the Make variable pointing to the `flang-new` compiler is still named `EMFC` for backwards compatibility.
+
+* The LLVM flang build scripts are now sourced using a git submodule, to simplify management of CI builds. The build scripts are available at https://github.com/r-wasm/flang-wasm and the patched LLVM source at https://github.com/r-wasm/llvm-project. This allows for an independent build of the patched LLVM flang for WebAssembly, including as a separate Nix package.
+
 # webR 0.2.2
 
 ## New features

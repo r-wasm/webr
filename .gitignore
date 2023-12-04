@@ -11,6 +11,7 @@
 /tools/flang/*llvm-project
 /R/download
 /R/build
+/result
 /src/examples/serve.R
 /src/coverage
 /src/webR/config.[jt]s
@@ -32,3 +33,4 @@ node_modules
 
 /.luarc.json
 /.clangd
+/.emscripten_cache

@@ -129,6 +129,7 @@ EXPORTED_RUNTIME_METHODS=[$\
   'allocateUTF8OnStack',$\
   'callMain',$\
   'getValue',$\
+  'getWasmTableEntry',$\
   'setValue'$\
 ]
 
@@ -139,7 +140,6 @@ MAIN_LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 MAIN_LDFLAGS += -s STACK_SIZE=1MB
 MAIN_LDFLAGS += -s EXIT_RUNTIME=1
 MAIN_LDFLAGS += -s ERROR_ON_UNDEFINED_SYMBOLS=0
-MAIN_LDFLAGS += -s EXPORTED_FUNCTIONS=['getWasmTableEntry']
 MAIN_LDFLAGS += -s EXPORTED_RUNTIME_METHODS=$(EXPORTED_RUNTIME_METHODS)
 MAIN_LDFLAGS += -s FETCH=1
 MAIN_LDFLAGS += -lworkerfs.js -lnodefs.js
@@ -160,7 +160,7 @@ $(BUILD)/state/R-$(R_VERSION)/r-stage2-configured: $(BUILD)/state/R-$(R_VERSION)
 	  CFLAGS="$(STAGE2_CFLAGS)" \
 	  LDFLAGS="$(STAGE2_LDFLAGS)" \
 	  LIBnn="lib" \
-	  FFLAGS="" \
+	  FFLAGS="-fPIC" \
 	  FPICFLAGS="-fPIC" \
 	  FC="$(EMFC)" \
 	  emconfigure ../configure \

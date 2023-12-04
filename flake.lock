@@ -1,0 +1,63 @@
+{
+  "nodes": {
+    "nixpkg-flang-wasm": {
+      "inputs": {
+        "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1701359149,
+        "narHash": "sha256-ND05xFdeVBma6GJEq2Efy8xvS8AirdC9sSU5hq0L0fI=",
+        "owner": "r-wasm",
+        "repo": "flang-wasm",
+        "rev": "bf59cdaa2ed98c80b29e30d5b71297898039ef35",
+        "type": "github"
+      },
+      "original": {
+        "owner": "r-wasm",
+        "ref": "main",
+        "repo": "flang-wasm",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1701263465,
+        "narHash": "sha256-lNXUIlkfyDyp9Ox21hr+wsEf/IBklLvb6bYcyeXbdRc=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "50aa30a13c4ab5e7ba282da460a3e3d44e9d0eb3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-23.11",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1701263465,
+        "narHash": "sha256-lNXUIlkfyDyp9Ox21hr+wsEf/IBklLvb6bYcyeXbdRc=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "50aa30a13c4ab5e7ba282da460a3e3d44e9d0eb3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-23.11",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "nixpkg-flang-wasm": "nixpkg-flang-wasm",
+        "nixpkgs": "nixpkgs_2"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

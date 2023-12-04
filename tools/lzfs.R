@@ -217,7 +217,17 @@ for (paths in strsplit(image_vec, "@")) {
         dir.create(file.path(dest, dirname(js_file)),
             showWarnings = FALSE, recursive = TRUE)
         emscripten_root <- dirname(Sys.which("emcc")[[1]])
-        file_packager <- file.path(emscripten_root, "tools", "file_packager")
+        if (dir.exists(file.path(emscripten_root, "tools"))) {
+            emscripten_tools <- file.path(emscripten_root, "tools")
+        } else {
+            # With nix, emcc is in bin/, file_packager is in
+            # share/emscripten/tools/
+            emscripten_tools <- file.path(
+                dirname(emscripten_root), "share", "emscripten", "tools"
+            )
+        }
+        file_packager <- file.path(emscripten_tools, "file_packager")
+
         res <- system2(file_packager,
             args = c(file.path(dest, data_file),
                 "--preload", sprintf("'%s@/'", src_path),
