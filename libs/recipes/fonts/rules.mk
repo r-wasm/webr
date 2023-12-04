@@ -9,10 +9,10 @@ fonts: $(WASM)/usr/share/fonts $(FC_WASM_LIB)
 $(WASM)/usr/share/fonts:
 	mkdir -p "$(FONTS)" "$(WASM)/usr/share/fonts" "$(WASM)/etc/fonts/"
 	wget -O $(FONTS)/NotoSans.zip https://fonts.google.com/download?family=Noto%20Sans
-	unzip -p $(FONTS)/NotoSans.zip NotoSans-Regular.ttf > $(FONTS)/NotoSans-Regular.ttf
-	unzip -p $(FONTS)/NotoSans.zip NotoSans-Bold.ttf > $(FONTS)/NotoSans-Bold.ttf
-	unzip -p $(FONTS)/NotoSans.zip NotoSans-Italic.ttf > $(FONTS)/NotoSans-Italic.ttf
-	unzip -p $(FONTS)/NotoSans.zip NotoSans-BoldItalic.ttf > $(FONTS)/NotoSans-BoldItalic.ttf
+	unzip -p $(FONTS)/NotoSans.zip static/NotoSans/NotoSans-Regular.ttf > $(FONTS)/NotoSans-Regular.ttf
+	unzip -p $(FONTS)/NotoSans.zip static/NotoSans/NotoSans-Bold.ttf > $(FONTS)/NotoSans-Bold.ttf
+	unzip -p $(FONTS)/NotoSans.zip static/NotoSans/NotoSans-Italic.ttf > $(FONTS)/NotoSans-Italic.ttf
+	unzip -p $(FONTS)/NotoSans.zip static/NotoSans/NotoSans-BoldItalic.ttf > $(FONTS)/NotoSans-BoldItalic.ttf
 	rm $(FONTS)/NotoSans.zip
 	wget -O $(FONTS)/NotoSerif.zip https://fonts.google.com/download?family=Noto%20Serif
 	unzip -p $(FONTS)/NotoSerif.zip static/NotoSerif/NotoSerif-Regular.ttf > $(FONTS)/NotoSerif-Regular.ttf
