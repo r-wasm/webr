@@ -44,7 +44,7 @@ jobs:
       - name: Build all optional wasm libs
         env:
           EMSDK: /opt/emsdk
-        run: cd libs && make all -j
+        run: cd libs && make all
       - name: Build webR
         env:
           EMSDK: /opt/emsdk
