@@ -1,4 +1,4 @@
-GDAL_VERSION = 3.6.4
+GDAL_VERSION = 3.8.1
 GDAL_TARBALL = $(DOWNLOAD)/gdal-$(GDAL_VERSION).tar.gz
 GDAL_URL = https://github.com/OSGeo/gdal/releases/download/v$(GDAL_VERSION)/gdal-$(GDAL_VERSION).tar.gz
 
