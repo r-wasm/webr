@@ -1,4 +1,4 @@
-ARG BASE=ghcr.io/r-wasm/webr-flang:main
+ARG BASE=ghcr.io/r-wasm/flang-wasm:main
 FROM $BASE as webr
 
 # Setup environment for Emscripten
