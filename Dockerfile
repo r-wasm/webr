@@ -6,6 +6,7 @@ ENV PATH="/opt/emsdk:/opt/emsdk/upstream/emscripten:${PATH}"
 ENV EMSDK="/opt/emsdk"
 ENV WEBR_ROOT="/opt/webr"
 ENV EM_NODE_JS="/usr/bin/node"
+ENV EMFC="/opt/flang/host/bin/flang-new"
 
 FROM webr as scratch
 # Install node 18
@@ -30,10 +31,7 @@ RUN rig add 4.3.0
 # Download webR and configure for LLVM flang
 RUN git clone --depth=1 https://github.com/r-wasm/webr.git /opt/webr
 WORKDIR /opt/webr
-RUN ./configure && \
-    ln -s /opt/flang/wasm ./wasm && \
-    ln -s /opt/flang/host ./host && \
-    ln -s /opt/flang/emfc ./host/bin/emfc
+RUN ./configure
 
 # Install r-wasm's webr package for native R
 RUN R CMD INSTALL packages/webr
