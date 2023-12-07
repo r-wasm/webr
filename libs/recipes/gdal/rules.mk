@@ -39,6 +39,7 @@ $(GDAL_WASM_LIB): $(GDAL_TARBALL) $(PROJ_WASM_LIB) $(GEOS_WASM_LIB)
 	    -DGDAL_ENABLE_DRIVER_HDF5=OFF \
 	    -DGDAL_USE_HDF4=OFF \
 	    -DGDAL_USE_HDF5=OFF \
+	    -DHAVE_WFLAG_DOCUMENTATION_AND_NO_DEPRECATED=OFF \
 	    .. && \
 	  sed -i.bak 's/#define ICONV_CPP_CONST const/#define ICONV_CPP_CONST/' port/cpl_config.h && \
 	  emmake make install && \
