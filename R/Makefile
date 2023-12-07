@@ -38,6 +38,11 @@ WASM_CFLAGS := $(WASM_CFLAGS)
 WASM_CFLAGS += $(WASM_OPT)
 WASM_CFLAGS += -fPIC
 
+WASM_FFLAGS := $(WASM_FFLAGS)
+WASM_FFLAGS += --target=wasm32-unknown-emscripten
+WASM_FFLAGS += -O2
+WASM_FFLAGS += -fPIC
+
 WASM_LDFLAGS := $(WASM_LDFLAGS)
 WASM_LDFLAGS += -fwasm-exceptions
 WASM_LDFLAGS += -s SUPPORT_LONGJMP=wasm
@@ -160,7 +165,7 @@ $(BUILD)/state/R-$(R_VERSION)/r-stage2-configured: $(BUILD)/state/R-$(R_VERSION)
 	  CFLAGS="$(STAGE2_CFLAGS)" \
 	  LDFLAGS="$(STAGE2_LDFLAGS)" \
 	  LIBnn="lib" \
-	  FFLAGS="-fPIC" \
+	  FFLAGS="$(WASM_FFLAGS)" \
 	  FPICFLAGS="-fPIC" \
 	  FC="$(EMFC)" \
 	  emconfigure ../configure \
