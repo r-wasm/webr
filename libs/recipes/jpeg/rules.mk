@@ -1,4 +1,4 @@
-LIBJPEG_VERSION = 9b
+LIBJPEG_VERSION = 9e
 LIBJPEG_TARBALL = $(DOWNLOAD)/libjpeg-$(LIBJPEG_VERSION).tar.gz
 LIBJPEG_URL = http://www.ijg.org/files/jpegsrc.v$(LIBJPEG_VERSION).tar.gz
 
