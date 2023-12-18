@@ -1,0 +1,2 @@
+ZSTD_WASM_LIB = $(WASM)/lib/libzstd.a
+OPTIONAL_WASM_LIBS += $(ZSTD_WASM_LIB)
