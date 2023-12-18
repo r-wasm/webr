@@ -16,6 +16,7 @@ $(LIBSODIUM_WASM_LIB): $(LIBSODIUM_TARBALL)
 	  emconfigure ../configure \
 	    --enable-shared=no \
 	    --enable-static=yes \
+	    --without-pthreads \
 	    --disable-ssp \
 	    --prefix=$(WASM) && \
 	  emmake make install
