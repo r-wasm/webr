@@ -1,0 +1,2 @@
+GLPK_WASM_LIB = $(WASM)/lib/libglpk.a
+OPTIONAL_WASM_LIBS += $(GLPK_WASM_LIB)
