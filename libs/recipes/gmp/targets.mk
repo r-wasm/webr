@@ -1,0 +1,2 @@
+GMP_WASM_LIB = $(WASM)/lib/libgmp.a
+OPTIONAL_WASM_LIBS += $(GMP_WASM_LIB)
