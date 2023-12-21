@@ -1,0 +1,2 @@
+LZ4_WASM_LIB = $(WASM)/lib/liblz4.a
+OPTIONAL_WASM_LIBS += $(LZ4_WASM_LIB)
