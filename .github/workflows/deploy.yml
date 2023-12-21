@@ -152,3 +152,14 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+  build-nix:
+    name: Build Nix flake
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+        with:
+          extra-conf: "sandbox = false"
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Build Nix package
+        run: nix build --print-build-logs
