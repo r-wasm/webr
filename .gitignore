@@ -33,4 +33,4 @@ node_modules
 
 /.luarc.json
 /.clangd
-/.emscripten_cache
+.emscripten_cache-*
