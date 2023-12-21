@@ -254,6 +254,71 @@ Click the button below to see the output of this demo,
 </script>
 ```
 
+## Example: Plotting from the console
+
+The Console class includes callbacks that are used for handling image rendering. This example builds off of the interactive webR REPL Console. In addition to the console, there is a `<canvas>` element which will be plots will be drawn to. The callbacks `canvasImage` and `canvasNewPage` are used to draw plots. 
+
+When a new plot is created, the `canvasNewPage` callback is used clearing the bitmap from the canvas using `.reset()`. Subsequently, the `canvasImage` callback is used to draw the `ImageBitMap` object onto the canvas. 
+
+```{=html}
+<html>
+  <head>
+    <title>WebR Test Console</title>
+    <style>
+      body {
+          display: flex;
+      }
+      #plot-output, #out {
+          flex: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="plot-output">
+      <canvas width="500" height="500" id="plot-canvas"></canvas>
+    </div>
+    <div>
+      <pre><code id="out">Loading webR, please wait...</code></pre>
+      <input spellcheck="false" autocomplete="off" id="input" type="text">
+      <button onclick="globalThis.sendInput()" id="run">Run</button>
+    </div>
+    
+    <script type="module">
+      /* Create a webR console using the Console helper class */
+      import { Console } from 'https://webr.r-wasm.org/latest/webr.mjs';
+
+      var canvas = document.getElementById("plot-canvas")
+      var ctx = canvas.getContext('2d');
+
+      const webRConsole = new Console({
+        stdout: line => document.getElementById('out').append(line + '\n'),
+        stderr: line => document.getElementById('out').append(line + '\n'),
+        prompt: p => document.getElementById('out').append(p),
+        canvasImage: ci => ctx.drawImage(ci, 0, 0),
+        canvasNewPage: () => ctx.reset(),
+      });
+      webRConsole.run();
+
+      // modify the output to be half the size of the canvas
+      await webRConsole.stdin("options(device=webr::canvas(250, 250))");
+      
+      /* Write to the webR console using the ``stdin()`` method */
+      let input = document.getElementById('input');
+      globalThis.sendInput = () => {
+        webRConsole.stdin(input.value);
+        document.getElementById('out').append(input.value + '\n');
+        input.value = "";
+      }
+      
+      /* Send input on Enter key */
+      input.addEventListener(
+        "keydown",
+        (evt) => {if(evt.keyCode === 13) globalThis.sendInput()}
+      );
+    </script>
+  </body>
+</html>
+```
 
 ## Plotting with other graphics devices
 
