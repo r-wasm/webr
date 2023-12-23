@@ -12,7 +12,6 @@ emscripten-xhr-download.diff
 emscripten-disable-bcEval.diff
 emscripten-fix-blas-dlsym-search.diff
 emscripten-avoid-testing-issues.diff
-fix-dtptrs.diff
 fix-signrank-wilcox.diff
 fix-devUp.diff
 flang-avoid-maxloc.diff
