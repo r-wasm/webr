@@ -1,0 +1,2 @@
+NLOPT_WASM_LIB = $(WASM)/lib/libnlopt.a
+OPTIONAL_WASM_LIBS += $(NLOPT_WASM_LIB)
