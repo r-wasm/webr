@@ -258,18 +258,15 @@ Click the button below to see the output of this demo,
 
 The `Console` class includes callbacks that are used for handling image rendering. This example builds off the [interactive webR REPL Console](examples.qmd#creating-an-interactive-webr-repl-console). In addition to the console, there is a `<canvas>` element to which plots will be drawn. The callbacks `canvasImage` and `canvasNewPage` are used to draw plots.
 
-When a new plot is created, the `canvasNewPage` callback is used clearing the bitmap from the canvas using `.reset()`. Subsequently, the `canvasImage` callback is used to draw the `ImageBitMap` object onto the canvas. 
+When a new plot is created, the `canvasNewPage` callback is used clearing the bitmap from the canvas using [`reset()`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/reset). Subsequently, the `canvasImage` callback is used to draw the `ImageBitMap` object onto the canvas.
 
-```{=html}
+``` html
 <html>
   <head>
     <title>WebR Test Console</title>
     <style>
       body {
           display: flex;
-      }
-      #plot-output, #out {
-          flex: 1;
       }
     </style>
   </head>
@@ -299,7 +296,7 @@ When a new plot is created, the `canvasNewPage` callback is used clearing the bi
       });
       webRConsole.run();
 
-      // modify the output to be half the size of the canvas
+      /* Set the default graphics device to be half the canvas element size */
       await webRConsole.stdin("options(device=webr::canvas(250, 250))");
       
       /* Write to the webR console using the ``stdin()`` method */
