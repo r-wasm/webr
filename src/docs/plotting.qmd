@@ -256,7 +256,7 @@ Click the button below to see the output of this demo,
 
 ## Example: Plotting from the console
 
-The Console class includes callbacks that are used for handling image rendering. This example builds off of the interactive webR REPL Console. In addition to the console, there is a `<canvas>` element which will be plots will be drawn to. The callbacks `canvasImage` and `canvasNewPage` are used to draw plots. 
+The `Console` class includes callbacks that are used for handling image rendering. This example builds off the [interactive webR REPL Console](examples.qmd#creating-an-interactive-webr-repl-console). In addition to the console, there is a `<canvas>` element to which plots will be drawn. The callbacks `canvasImage` and `canvasNewPage` are used to draw plots.
 
 When a new plot is created, the `canvasNewPage` callback is used clearing the bitmap from the canvas using `.reset()`. Subsequently, the `canvasImage` callback is used to draw the `ImageBitMap` object onto the canvas. 
 
