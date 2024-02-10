@@ -1,24 +1,23 @@
-#' Evaluate R code for webR
+#' Evaluate the provided R code, call, or expression for webR
 #'
 #' @description
-#' This function evaluates the provided R code with various settings in place
-#' to configure behavior. The function is intended to be used by the webR
-#' `evalR` API, rather than invoked directly by the end user.
+#' This function evaluates the provided R code, call, or expression with various
+#' settings in place to configure behavior. The function is intended to be used
+#' by the webR `evalR` API, rather than invoked directly by the end user.
 #'
-#' @param code The R code to evaluate.
+#' @param expr The R code, call or expression to evaluate.
 #' @param conditions If `TRUE`, capture and return conditions raised during
 #' execution.
 #' @param streams If `TRUE`, capture and return the `stdout` and `stderr`
 #' streams.
-#' @param autoprint If `TRUE`, code automatically prints as if it were
+#' @param autoprint If `TRUE`, automatically print as if the expression was
 #' written at an R console.
-#' @param handlers If `TRUE`, execute the R code using a [tryCatch], with
-#' handlers in place.
+#' @param handlers If `TRUE`, execute using a [tryCatch] with handlers in place.
 #' @param env The environment in which to evaluate.
 #'
 #' @export
 #' @useDynLib webr, .registration = TRUE
-eval_r <- function(code,
+eval_r <- function(expr,
                    conditions = TRUE,
                    streams = FALSE,
                    autoprint = FALSE,
@@ -55,12 +54,15 @@ eval_r <- function(code,
     on_exit(sink(type = "message"))
   }
 
-  # Create a function that executes the code. Wrap the code in `withAutoprint`
-  # if requested, otherwise just `parse` and `eval` the code.
-  if (autoprint) {
-    efun <- function(code) {
+  # Create a function that evaluates the expression. Wrap in `withAutoprint` if
+  # requested, and `parse` and `eval` the code if it is a string.
+  if (is.character(expr)) {
+    expr <- parse(text = expr)
+  }
+  efun <- if (autoprint) {
+    function(expr) {
       out <- withAutoprint(
-        parse(text = code),
+        expr,
         local = env,
         echo = FALSE,
         evaluated = TRUE
@@ -68,8 +70,8 @@ eval_r <- function(code,
       out$value
     }
   } else {
-    efun <- function(code) {
-      eval(parse(text = code), env)
+    function(expr) {
+      eval(expr, env)
     }
   }
 
@@ -79,7 +81,7 @@ eval_r <- function(code,
       # Muffle the conditions so that they are not sent to stderr
       res <- withCallingHandlers(
         tryCatch(
-          efun(code),
+          efun(expr),
           error = function(cnd) {
             out$n <<- out$n + 1L
             out$vec[[out$n]] <<- list(type = "error", data = cnd)
@@ -101,7 +103,7 @@ eval_r <- function(code,
       # We handle the error here rather than let it propagate up so that webR
       # can recover if there is some error during evaluation.
       res <- tryCatch(
-        efun(code),
+        efun(expr),
         error = function(cnd) message(paste("Error:", cnd$message))
       )
     }
@@ -109,7 +111,7 @@ eval_r <- function(code,
     # Do not install any condition handlers. Note that with this behavior
     # webR cannot easily recover from an error, as R will attempt to jump
     # to the top level.
-    res <- efun(code)
+    res <- efun(expr)
   }
 
   # Output vector out$vec expands exponentially, return only the valid subset

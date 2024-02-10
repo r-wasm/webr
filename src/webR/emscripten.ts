@@ -1,4 +1,6 @@
 import type { RPtr, RTypeNumber } from './robj';
+import type { RObject, RList } from './robj-worker';
+import type { EvalROptions } from './webr-chan';
 import type { UnwindProtectException } from './utils-r';
 
 export interface Module extends EmscriptenModule {
@@ -129,6 +131,8 @@ export interface Module extends EmscriptenModule {
     resolveInit: () => void;
     handleEvents: () => void;
     evalJs: (code: RPtr) => number;
+    evalR: (expr: string | RObject, options?: EvalROptions) => RObject;
+    captureR: (expr: string | RObject, options: EvalROptions) => RList;
     setTimeoutWasm: (ptr: EmPtr, data: EmPtr, delay: number) => void;
   };
 }

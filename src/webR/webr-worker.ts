@@ -632,7 +632,7 @@ function callRObjectMethod(
   return { obj: ret, payloadType: 'raw' };
 }
 
-function captureR(code: string, options: EvalROptions = {}): RList {
+function captureR(expr: string | RObject, options: EvalROptions = {}): RList {
   const prot = { n: 0 };
   try {
     const _options: Required<EvalROptions> = Object.assign(
@@ -659,14 +659,15 @@ function captureR(code: string, options: EvalROptions = {}): RList {
     const fPtr = objs.false.ptr;
 
     const fn = parseEvalBare('webr::eval_r', objs.baseEnv);
+    const qu = parseEvalBare('quote', objs.baseEnv);
     protectInc(fn, prot);
 
-    const codeObj = new RCharacter(code);
-    protectInc(codeObj, prot);
-
+    // If expr is a string, wrap it as an R character object
+    const exprObj = new RObject(expr);
+    protectInc(exprObj, prot);
     const call = Module._Rf_lang6(
       fn.ptr,
-      codeObj.ptr,
+      Module._Rf_lang2(qu.ptr, exprObj.ptr),
       _options.captureConditions ? tPtr : fPtr,
       _options.captureStreams ? tPtr : fPtr,
       _options.withAutoprint ? tPtr : fPtr,
@@ -684,7 +685,7 @@ function captureR(code: string, options: EvalROptions = {}): RList {
       );
       if (error) {
         throw new Error(
-          error.pluck('data', 'message')?.toString() || 'An error occured evaluating R code.'
+          error.pluck('data', 'message')?.toString() || 'An error occurred evaluating R code.'
         );
       }
     }
@@ -695,8 +696,8 @@ function captureR(code: string, options: EvalROptions = {}): RList {
   }
 }
 
-function evalR(code: string, options: EvalROptions = {}): RObject {
-  const capture = captureR(code, options);
+function evalR(expr: string | RObject, options: EvalROptions = {}): RObject {
+  const capture = captureR(expr, options);
   Module._Rf_protect(capture.ptr);
 
   try {
@@ -781,6 +782,9 @@ function init(config: Required<WebROptions>) {
 
   Module.webr = {
     UnwindProtectException: UnwindProtectException,
+    evalR: evalR,
+    captureR: captureR,
+
     resolveInit: () => {
       initPersistentObjects();
       chan?.setInterrupt(Module._Rf_onintr);
