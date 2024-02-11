@@ -38,6 +38,7 @@ RUN mkdir -p /etc/apt/keyrings && \
 
 # Install Rust; these lines are based on the official Rust docker image:
 # https://github.com/rust-lang/docker-rust/blob/master/Dockerfile-debian.template
+ENV PATH="/usr/local/cargo/bin:${PATH}"
 ENV RUSTUP_HOME=/usr/local/rustup
 ENV CARGO_HOME=/usr/local/cargo
 RUN set -eux; \
