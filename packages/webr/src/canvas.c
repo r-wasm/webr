@@ -43,10 +43,14 @@
     }, 2*cGD->cx, 2*cGD->cy, 2*cGD->cw, 2*cGD->ch); \
 }
 
+unsigned int canvas_id = 0;
+
 typedef struct _canvasDesc {
     /* device specific stuff */
     int col;
     int fill;
+    unsigned int capture;
+    unsigned int canvas_id;
 
     /* Line characteristics */
     double lwd;
@@ -163,6 +167,11 @@ void canvasSetLineType( canvasDesc *cGD, pGEcontext gc)
 void canvasActivate(const pDevDesc RGD)
 {
     canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
+    EM_ASM({
+        if (Module.webr.canvas[$0]) {
+            Module.canvasCtx = Module.webr.canvas[$0].ctx;
+        }
+    }, cGD->canvas_id);
 }
 
 void canvasCircle(double x, double y, double r,
@@ -206,6 +215,12 @@ void canvasSetClip(double x0, double x1, double y0, double y1, pDevDesc RGD)
 void canvasClose(pDevDesc RGD)
 {
     canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
+
+    // If we are not capturing, clean up the canvas cache
+    if (!cGD->capture) {
+        EM_ASM({ delete Module.webr.canvas[$0]; }, cGD->canvas_id);
+    }
+
     free(cGD);
     RGD->deviceSpecific = NULL;
 }
@@ -272,9 +287,15 @@ void canvasMode(int mode, pDevDesc RGD) {
     if (mode == 0) {
         canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
         EM_ASM({
-            const image = Module.offscreenCanvas.transferToImageBitmap();
-            chan.write({ type: 'canvas', data: { event: 'canvasImage', image } }, [image]);
-        });
+            if (!Module.webr.canvas[$0].capture) {
+                const image = Module.webr.canvas[$0].offscreen.transferToImageBitmap();
+                chan.write({ type: 'canvas', data: {
+                    event: 'canvasImage',
+                    image,
+                    id: $0,
+                } }, [image]);
+            }
+        }, cGD->canvas_id);
     }
     return;
 }
@@ -282,6 +303,19 @@ void canvasMode(int mode, pDevDesc RGD) {
 void canvasNewPage(const pGEcontext gc, pDevDesc RGD)
 {
     canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
+
+    // If we are capturing, create a new Canvas element for each page
+    if (cGD->capture) cGD->canvas_id = canvas_id++;
+    EM_ASM({
+        if (!Module.webr.canvas[$0]) {
+            const offscreen = new OffscreenCanvas($2, $3);
+            Module.webr.canvas[$0] = {};
+            Module.webr.canvas[$0].offscreen = offscreen;
+            Module.webr.canvas[$0].ctx = offscreen.getContext('2d');
+            Module.webr.canvas[$0].capture = $1;
+        }
+        Module.canvasCtx = Module.webr.canvas[$0].ctx;
+    }, cGD->canvas_id, cGD->capture, 2*RGD->right, 2*RGD->bottom);
 
     EM_ASM({
         Module.canvasCtx.clearRect(0, 0, $0, $1);
@@ -296,8 +330,13 @@ void canvasNewPage(const pGEcontext gc, pDevDesc RGD)
     }
 
     EM_ASM({
-        chan.write({ type: 'canvas', data: { event: 'canvasNewPage' } });
-    });
+        if (!Module.webr.canvas[$0].capture) {
+            chan.write({ type: 'canvas', data: {
+                event: 'canvasNewPage',
+                id: $0,
+            } });
+        }
+    }, cGD->canvas_id);
 }
 
 void canvasPolygon(int n, double *x, double *y,
@@ -524,7 +563,7 @@ void void_releaseMask(SEXP ref, pDevDesc RGD) {
     return;
 }
 
-SEXP ffi_dev_canvas(SEXP w, SEXP h, SEXP ps, SEXP bg)
+SEXP ffi_dev_canvas(SEXP w, SEXP h, SEXP ps, SEXP bg, SEXP capture)
 {
     /* R Graphics Device: in GraphicsDevice.h */
     pDevDesc RGD;
@@ -552,6 +591,10 @@ SEXP ffi_dev_canvas(SEXP w, SEXP h, SEXP ps, SEXP bg)
     }
     bgcolor = RGBpar(bg, 0);
 
+    if (!isLogical(capture)) {
+        error("`capture' must be a logical");
+    }
+
     R_CheckDeviceAvailable();
 
     if (!(RGD = (pDevDesc)calloc(1, sizeof(NewDevDesc)))){
@@ -564,6 +607,8 @@ SEXP ffi_dev_canvas(SEXP w, SEXP h, SEXP ps, SEXP bg)
     }
 
     RGD->deviceSpecific = (void *) cGD;
+    cGD->capture = asInteger(capture);
+    cGD->canvas_id = canvas_id++;
 
     /* Callbacks */
     RGD->close = canvasClose;
@@ -624,7 +669,7 @@ SEXP ffi_dev_canvas(SEXP w, SEXP h, SEXP ps, SEXP bg)
     /* Add to the device list */
     RGE = GEcreateDevDesc(RGD);
     cGD->RGE = RGE;
-    GEaddDevice(RGE);
+    GEaddDevice2(RGE, "canvas");
     GEinitDisplayList(RGE);
 
     int no_canvas =  EM_ASM_INT({
@@ -638,15 +683,24 @@ SEXP ffi_dev_canvas(SEXP w, SEXP h, SEXP ps, SEXP bg)
         );
     }
 
-    EM_ASM({
-        Module.offscreenCanvas = new OffscreenCanvas($0, $1);
-        Module.canvasCtx = Module.offscreenCanvas.getContext('2d');
-    }, 2*width, 2*height);
+    return R_NilValue;
+}
 
+SEXP ffi_dev_canvas_purge(void)
+{
+    EM_ASM({
+        Module.webr.canvas = {};
+        Module.canvasCtx = undefined;
+    });
     return R_NilValue;
 }
 #else
 SEXP ffi_dev_canvas(SEXP args)
+{
+  error("This graphics device can only be used when running under webR.");
+}
+
+SEXP ffi_dev_canvas_purge(SEXP args)
 {
   error("This graphics device can only be used when running under webR.");
 }

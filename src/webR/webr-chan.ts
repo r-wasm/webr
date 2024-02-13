@@ -199,9 +199,11 @@ export interface CanvasMessage extends Message {
   type: 'canvas',
   data: {
     event: 'canvasNewPage';
+    id: number;
   } | {
     event: 'canvasImage';
     image: ImageBitmap;
+    id: number,
   };
 }
 

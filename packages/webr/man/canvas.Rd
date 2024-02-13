@@ -19,8 +19,8 @@ canvas(width = 504, height = 504, pointsize = 12, bg = "transparent", ...)
 }
 \description{
 A graphics device that generates HTML canvas API calls and executes them on
-the worker thread using a JavaScript \code{OffscreenCanvas}. Once drawing has
-finished, a JavaScript \code{ImageBitmap} object is transmitted to the main webR
+the worker thread using a JavaScript \code{OffscreenCanvas}. Throughout drawing a
+JavaScript \code{ImageBitmap} object is transmitted to the main webR
 thread for display.
 }
 \details{

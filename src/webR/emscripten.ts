@@ -23,7 +23,6 @@ export interface Module extends EmscriptenModule {
   noAudioDecoding: boolean;
   noWasmDecoding: boolean;
   setPrompt: (prompt: string) => void;
-  canvasExec: (op: string) => void;
   downloadFileContent: (
     URL: string,
     headers: Array<string>
@@ -127,6 +126,13 @@ export interface Module extends EmscriptenModule {
   // TODO: Namespace all webR properties
   webr: {
     UnwindProtectException: typeof UnwindProtectException;
+    canvas: {
+      [key: number]: {
+        ctx: OffscreenCanvasRenderingContext2D;
+        offscreen: OffscreenCanvas;
+        transmit: boolean;
+      };
+    };
     readConsole: () => number;
     resolveInit: () => void;
     handleEvents: () => void;

@@ -1,8 +1,8 @@
 #' Graphics device for drawing to a HTML canvas element
 #'
 #' A graphics device that generates HTML canvas API calls and executes them on
-#' the worker thread using a JavaScript `OffscreenCanvas`. Once drawing has
-#' finished, a JavaScript `ImageBitmap` object is transmitted to the main webR
+#' the worker thread using a JavaScript `OffscreenCanvas`. Throughout drawing a
+#' JavaScript `ImageBitmap` object is transmitted to the main webR
 #' thread for display.
 #'
 #' The resulting webR output messages are of type
@@ -40,7 +40,24 @@ canvas <- function(width = 504,
                    pointsize = 12,
                    bg = "transparent",
                    ...) {
-  .Call(ffi_dev_canvas, width, height, pointsize, bg)
+  .Call(ffi_dev_canvas, width, height, pointsize, bg, FALSE)
+  NULL
+}
+
+#' Capture `OffscreenCanvas` elements created by the canvas graphics device
+#' @noRd
+canvas_capture <- function(width = 504,
+                           height = 504,
+                           pointsize = 12,
+                           bg = "transparent",
+                           ...) {
+  .Call(ffi_dev_canvas, width, height, pointsize, bg, TRUE)
+}
+
+#' Destroy all Canvas elements stored in the canvas cache
+#' @noRd
+canvas_purge <- function() {
+  .Call(ffi_dev_canvas_purge)
 }
 
 #' Use the webR canvas graphics device

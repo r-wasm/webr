@@ -784,6 +784,7 @@ function init(config: Required<WebROptions>) {
     UnwindProtectException: UnwindProtectException,
     evalR: evalR,
     captureR: captureR,
+    canvas: {},
 
     resolveInit: () => {
       initPersistentObjects();
