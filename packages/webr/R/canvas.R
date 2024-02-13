@@ -1,9 +1,9 @@
 #' Graphics device for drawing to a HTML canvas element
 #'
 #' A graphics device that generates HTML canvas API calls and executes them on
-#' the worker thread using a JavaScript `OffscreenCanvas`. Throughout drawing a
-#' JavaScript `ImageBitmap` object is transmitted to the main webR
-#' thread for display.
+#' the worker thread using a JavaScript `OffscreenCanvas`. Throughout plotting,
+#' and if `capture` is `FALSE`, JavaScript `ImageBitmap` objects are transmitted
+#' to the main webR thread for display throughout plotting.
 #'
 #' The resulting webR output messages are of type
 #' \href{./js/interfaces/WebRChan.CanvasMessage.html}{`CanvasMessage`}, with
@@ -21,6 +21,9 @@
 #' \href{./js/interfaces/WebRChan.CanvasMessage.html#data}{`data`} property,
 #' `{ event: 'canvasImage', image: ImageBitmap }`.
 #'
+#' When `capture` is `TRUE`, the resulting `OffscreenCanvas` elements are stored
+#' in the canvas cache. The captured plots are then retrieved by [eval_r].
+#'
 #' A 2x scaling is used to improve the bitmap output visual quality. As such,
 #' the width and height of the HTML canvas element should be twice the width and
 #' height of the graphics device.
@@ -34,33 +37,51 @@
 #' @param height The height of the device.
 #' @param pointsize	The default point size of plotted text.
 #' @param bg The initial background colour.
+#' @param capture If `TRUE`, store `OffscreenCanvas` elements in the cache.
 #' @param ... Additional graphics device arguments (ignored).
+#' @return A function with no arguments. When called returns an integer vector
+#' of canvas cache IDs for `OffscreenCanvas` elements captured by this device.
 canvas <- function(width = 504,
                    height = 504,
                    pointsize = 12,
                    bg = "transparent",
+                   capture = FALSE,
                    ...) {
-  .Call(ffi_dev_canvas, width, height, pointsize, bg, FALSE, NULL)
-  NULL
-}
-
-#' Capture `OffscreenCanvas` elements created by the canvas graphics device
-#' @noRd
-canvas_capture <- function(width = 504,
-                           height = 504,
-                           pointsize = 12,
-                           bg = "transparent",
-                           ...) {
   env <- new.env(parent = emptyenv())
-  .Call(ffi_dev_canvas, width, height, pointsize, bg, TRUE, env)
+  .Call(ffi_dev_canvas, width, height, pointsize, bg, capture, env)
 
-  function() {
-    env
-  }
+  invisible(
+    function() {
+      env$canvas_ids
+    }
+  )
 }
 
-#' Destroy all Canvas elements stored in the canvas cache
-#' @noRd
+#' Interact with the `OffscreenCanvas` cache
+#' 
+#' @description
+#' `canvas_cache()` returns an integer vector containing the current canvas
+#' cache IDs.
+#'
+#' `canvas_destroy()` destroys the cached `OffscreenCanvas` elements with the
+#' given IDs.
+#'
+#' `canvas_pruge()` destroys all `OffscreenCanvas` elements in the cache.
+#'
+#' @export
+canvas_cache <- function() {
+  .Call(ffi_dev_canvas_cache)
+}
+
+#' @param ids Integer vector of canvas cache IDs.
+#' @rdname canvas_cache
+#' @export
+canvas_destroy <- function(ids) {
+  .Call(ffi_dev_canvas_destroy, ids)
+}
+
+#' @rdname canvas_cache
+#' @export
 canvas_purge <- function() {
   .Call(ffi_dev_canvas_purge)
 }

@@ -217,11 +217,12 @@ void canvasClose(pDevDesc RGD)
 {
     canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
 
-    // If capturing, set device as closed. Otherwise, clean up the canvas cache
-    if (cGD->capture) {
-        SEXP closed = Rf_findVarInFrame(cGD->env, Rf_install("is_closed"));
-        LOGICAL(closed)[0] = TRUE;
-    } else {
+    // Set device as closed in info environment
+    SEXP closed = Rf_findVarInFrame(cGD->env, Rf_install("is_closed"));
+    LOGICAL(closed)[0] = TRUE;
+
+    // If not capturing, clean up the canvas cache
+    if (!cGD->capture) {
         EM_ASM({ delete Module.webr.canvas[$0]; }, cGD->canvas_id);
     }
 
@@ -609,8 +610,8 @@ SEXP ffi_dev_canvas(SEXP w, SEXP h, SEXP ps, SEXP bg, SEXP capture, SEXP env)
         error("`capture' must be a logical");
     }
 
-    if (!isEnvironment(env) && !isNull(env)) {
-        error("`env' must be an environment or NULL");
+    if (!isEnvironment(env)) {
+        error("`env' must be an environment");
     }
 
     R_CheckDeviceAvailable();
@@ -631,15 +632,14 @@ SEXP ffi_dev_canvas(SEXP w, SEXP h, SEXP ps, SEXP bg, SEXP capture, SEXP env)
     // Setup the capture info environment
     cGD->env = env;
     R_PreserveObject(cGD->env);
-    if (cGD->capture) {
-        SEXP canvas_ids = PROTECT(Rf_allocVector(INTSXP, 0));
-        SEXP closed = PROTECT(Rf_allocVector(LGLSXP, 1));
-        LOGICAL(closed)[0] = FALSE;
 
-        Rf_defineVar(Rf_install("canvas_ids"), canvas_ids, cGD->env);
-        Rf_defineVar(Rf_install("is_closed"), closed, cGD->env);
-        UNPROTECT(2);
-    }
+    SEXP canvas_ids = PROTECT(Rf_allocVector(INTSXP, 0));
+    SEXP closed = PROTECT(Rf_allocVector(LGLSXP, 1));
+    LOGICAL(closed)[0] = FALSE;
+
+    Rf_defineVar(Rf_install("canvas_ids"), canvas_ids, cGD->env);
+    Rf_defineVar(Rf_install("is_closed"), closed, cGD->env);
+    UNPROTECT(2);
 
     /* Callbacks */
     RGD->close = canvasClose;
@@ -724,13 +724,54 @@ SEXP ffi_dev_canvas_purge(void)
     });
     return R_NilValue;
 }
+
+SEXP ffi_dev_canvas_destroy(SEXP ids)
+{
+    if (!isNumeric(ids)) error("`ids' must be an numerical vector");
+    SEXP int_ids = PROTECT(Rf_coerceVector(ids, INTSXP));
+
+    int n = Rf_length(int_ids);
+    int* px = INTEGER(int_ids);
+    for (int i = 0; i < n; ++i) {
+        EM_ASM({
+            delete Module.webr.canvas[$0];
+        }, px[i]);
+    }
+
+    UNPROTECT(1);
+    return R_NilValue;
+}
+
+SEXP ffi_dev_canvas_cache(void)
+{
+    int n = EM_ASM_INT({ return Object.keys(Module.webr.canvas).length; });
+    SEXP ids = PROTECT(Rf_allocVector(INTSXP, n));
+    for (int i = 0; i < n; ++i) {
+        INTEGER(ids)[i] = EM_ASM_INT({
+            return Object.keys(Module.webr.canvas)[$0];
+        }, i);
+    }
+    UNPROTECT(1);
+    return ids;
+}
+
 #else
 SEXP ffi_dev_canvas(SEXP args)
 {
   error("This graphics device can only be used when running under webR.");
 }
 
-SEXP ffi_dev_canvas_purge(SEXP args)
+SEXP ffi_dev_canvas_purge()
+{
+  error("This graphics device can only be used when running under webR.");
+}
+
+SEXP ffi_dev_canvas_destroy(SEXP args)
+{
+  error("This graphics device can only be used when running under webR.");
+}
+
+SEXP ffi_dev_canvas_cache()
 {
   error("This graphics device can only be used when running under webR.");
 }

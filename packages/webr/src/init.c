@@ -6,6 +6,8 @@ extern SEXP ffi_obj_address(SEXP);
 extern SEXP ffi_new_output_connections(void);
 extern SEXP ffi_dev_canvas(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP ffi_dev_canvas_purge(void);
+extern SEXP ffi_dev_canvas_cache(void);
+extern SEXP ffi_dev_canvas_destroy(SEXP);
 extern SEXP ffi_mount_workerfs(SEXP, SEXP);
 extern SEXP ffi_mount_nodefs(SEXP, SEXP);
 extern SEXP ffi_unmount(SEXP);
@@ -17,6 +19,8 @@ const R_CallMethodDef CallEntries[] = {
   { "ffi_new_output_connections", (DL_FUNC) &ffi_new_output_connections, 0},
   { "ffi_dev_canvas",             (DL_FUNC) &ffi_dev_canvas,             6},
   { "ffi_dev_canvas_purge",       (DL_FUNC) &ffi_dev_canvas_purge,       0},
+  { "ffi_dev_canvas_cache",       (DL_FUNC) &ffi_dev_canvas_cache,       0},
+  { "ffi_dev_canvas_destroy",     (DL_FUNC) &ffi_dev_canvas_destroy,     1},
   { "ffi_mount_workerfs",         (DL_FUNC) &ffi_mount_workerfs,         2},
   { "ffi_mount_nodefs",           (DL_FUNC) &ffi_mount_nodefs,           2},
   { "ffi_unmount",                (DL_FUNC) &ffi_unmount,                1},
