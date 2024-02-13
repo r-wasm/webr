@@ -40,7 +40,7 @@ canvas <- function(width = 504,
                    pointsize = 12,
                    bg = "transparent",
                    ...) {
-  .Call(ffi_dev_canvas, width, height, pointsize, bg, FALSE)
+  .Call(ffi_dev_canvas, width, height, pointsize, bg, FALSE, NULL)
   NULL
 }
 
@@ -51,7 +51,12 @@ canvas_capture <- function(width = 504,
                            pointsize = 12,
                            bg = "transparent",
                            ...) {
-  .Call(ffi_dev_canvas, width, height, pointsize, bg, TRUE)
+  env <- new.env(parent = emptyenv())
+  .Call(ffi_dev_canvas, width, height, pointsize, bg, TRUE, env)
+
+  function() {
+    env
+  }
 }
 
 #' Destroy all Canvas elements stored in the canvas cache

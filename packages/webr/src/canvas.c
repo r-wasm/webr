@@ -51,6 +51,7 @@ typedef struct _canvasDesc {
     int fill;
     unsigned int capture;
     unsigned int canvas_id;
+    SEXP env;
 
     /* Line characteristics */
     double lwd;
@@ -216,11 +217,15 @@ void canvasClose(pDevDesc RGD)
 {
     canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
 
-    // If we are not capturing, clean up the canvas cache
-    if (!cGD->capture) {
+    // If capturing, set device as closed. Otherwise, clean up the canvas cache
+    if (cGD->capture) {
+        SEXP closed = Rf_findVarInFrame(cGD->env, Rf_install("is_closed"));
+        LOGICAL(closed)[0] = TRUE;
+    } else {
         EM_ASM({ delete Module.webr.canvas[$0]; }, cGD->canvas_id);
     }
 
+    R_ReleaseObject(cGD->env);
     free(cGD);
     RGD->deviceSpecific = NULL;
 }
@@ -305,7 +310,16 @@ void canvasNewPage(const pGEcontext gc, pDevDesc RGD)
     canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
 
     // If we are capturing, create a new Canvas element for each page
-    if (cGD->capture) cGD->canvas_id = canvas_id++;
+    if (cGD->capture) {
+        cGD->canvas_id = canvas_id++;
+        SEXP canvas_symbol = Rf_install("canvas_ids");
+        SEXP canvas_ids = Rf_findVar(canvas_symbol, cGD->env);
+        int n = Rf_length(canvas_ids);
+        canvas_ids = Rf_lengthgets(canvas_ids, n + 1);
+        Rf_defineVar(canvas_symbol, canvas_ids, cGD->env);
+        INTEGER(canvas_ids)[n] = cGD->canvas_id;
+    }
+
     EM_ASM({
         if (!Module.webr.canvas[$0]) {
             const offscreen = new OffscreenCanvas($2, $3);
@@ -563,7 +577,7 @@ void void_releaseMask(SEXP ref, pDevDesc RGD) {
     return;
 }
 
-SEXP ffi_dev_canvas(SEXP w, SEXP h, SEXP ps, SEXP bg, SEXP capture)
+SEXP ffi_dev_canvas(SEXP w, SEXP h, SEXP ps, SEXP bg, SEXP capture, SEXP env)
 {
     /* R Graphics Device: in GraphicsDevice.h */
     pDevDesc RGD;
@@ -595,6 +609,10 @@ SEXP ffi_dev_canvas(SEXP w, SEXP h, SEXP ps, SEXP bg, SEXP capture)
         error("`capture' must be a logical");
     }
 
+    if (!isEnvironment(env) && !isNull(env)) {
+        error("`env' must be an environment or NULL");
+    }
+
     R_CheckDeviceAvailable();
 
     if (!(RGD = (pDevDesc)calloc(1, sizeof(NewDevDesc)))){
@@ -609,6 +627,19 @@ SEXP ffi_dev_canvas(SEXP w, SEXP h, SEXP ps, SEXP bg, SEXP capture)
     RGD->deviceSpecific = (void *) cGD;
     cGD->capture = asInteger(capture);
     cGD->canvas_id = canvas_id++;
+
+    // Setup the capture info environment
+    cGD->env = env;
+    R_PreserveObject(cGD->env);
+    if (cGD->capture) {
+        SEXP canvas_ids = PROTECT(Rf_allocVector(INTSXP, 0));
+        SEXP closed = PROTECT(Rf_allocVector(LGLSXP, 1));
+        LOGICAL(closed)[0] = FALSE;
+
+        Rf_defineVar(Rf_install("canvas_ids"), canvas_ids, cGD->env);
+        Rf_defineVar(Rf_install("is_closed"), closed, cGD->env);
+        UNPROTECT(2);
+    }
 
     /* Callbacks */
     RGD->close = canvasClose;
@@ -670,7 +701,6 @@ SEXP ffi_dev_canvas(SEXP w, SEXP h, SEXP ps, SEXP bg, SEXP capture)
     RGE = GEcreateDevDesc(RGD);
     cGD->RGE = RGE;
     GEaddDevice2(RGE, "canvas");
-    GEinitDisplayList(RGE);
 
     int no_canvas =  EM_ASM_INT({
         return typeof OffscreenCanvas === "undefined";
