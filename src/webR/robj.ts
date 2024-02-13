@@ -55,6 +55,7 @@ export type WebRDataRaw =
   | Error
   | ArrayBuffer
   | ArrayBufferView
+  | ImageBitmap
   | Array<WebRDataRaw>
   | Map<WebRDataRaw, WebRDataRaw>
   | Set<WebRDataRaw>

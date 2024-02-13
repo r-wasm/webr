@@ -71,6 +71,10 @@ export interface EvalROptions {
    */
   captureConditions?: boolean;
   /**
+   * Should a new canvas graphics device configured to capture plots be started?
+   */
+  newCanvasDevice?: boolean;
+  /**
    * Should the code automatically print output as if it were written at an R console?
    * Default: `false`.
    */

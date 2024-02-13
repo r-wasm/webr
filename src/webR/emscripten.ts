@@ -138,7 +138,11 @@ export interface Module extends EmscriptenModule {
     handleEvents: () => void;
     evalJs: (code: RPtr) => number;
     evalR: (expr: string | RObject, options?: EvalROptions) => RObject;
-    captureR: (expr: string | RObject, options: EvalROptions) => RList;
+    captureR: (expr: string | RObject, options: EvalROptions) => {
+      result: RObject,
+      output: RList,
+      images: ImageBitmap[],
+    };
     setTimeoutWasm: (ptr: EmPtr, data: EmPtr, delay: number) => void;
   };
 }

@@ -610,6 +610,7 @@ export class Shelter {
   async captureR(code: string, options: EvalROptions = {}): Promise<{
     result: RObject;
     output: unknown[];
+    images: ImageBitmap[];
   }> {
     const opts = replaceInObject(options, isRObject, (obj: RObject) => obj._payload);
     const msg: CaptureRMessage = {
@@ -630,9 +631,11 @@ export class Shelter {
         const data = payload.obj as {
           result: WebRPayloadPtr;
           output: { type: string; data: any }[];
+          images: ImageBitmap[];
         };
         const result = newRProxy(this.#chan, data.result);
         const output = data.output;
+        const images = data.images;
 
         for (let i = 0; i < output.length; ++i) {
           if (output[i].type !== 'stdout' && output[i].type !== 'stderr') {
@@ -640,7 +643,7 @@ export class Shelter {
           }
         }
 
-        return { result, output };
+        return { result, output, images };
       }
     }
   }
