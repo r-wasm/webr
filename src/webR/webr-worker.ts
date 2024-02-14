@@ -682,6 +682,7 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
 
     const exprObj = new RObject(expr);
     protectInc(exprObj, prot);
+
     const call = Module._Rf_lang6(
       fn.ptr,
       Module._Rf_lang2(qu.ptr, exprObj.ptr),

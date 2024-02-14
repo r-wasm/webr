@@ -56,11 +56,11 @@ eval_r <- function(expr,
 
   # Create a function that evaluates the expression. Wrap in `withAutoprint` if
   # requested, and `parse` and `eval` the code if it is a string.
-  if (is.character(expr)) {
-    expr <- parse(text = expr)
-  }
   efun <- if (autoprint) {
     function(expr) {
+      if (is.character(expr)) {
+        expr <- parse(text = expr)
+      }
       out <- withAutoprint(
         expr,
         local = env,
@@ -71,6 +71,9 @@ eval_r <- function(expr,
     }
   } else {
     function(expr) {
+      if (is.character(expr)) {
+        expr <- parse(text = expr)
+      }
       eval(expr, env)
     }
   }
