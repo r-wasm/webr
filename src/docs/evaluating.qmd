@@ -50,7 +50,7 @@ The `evalRRaw()` method and its related convenience methods require that the res
 
 ## Evaluating R code and capturing output with `captureR`
 
-The [`Shelter.captureR()`](api/js/classes/WebR.Shelter.md#capturer) method is lower level and more flexible than `evalR()`. It allows to capture any stream output or conditions raised during evaluation of R code, in addition to returning the result of the computation.
+The [`Shelter.captureR()`](api/js/classes/WebR.Shelter.md#capturer) method is lower level and more flexible than `evalR()`. It allows the user to capture any stream output, plots, and conditions raised during evaluation of R code, in addition to returning the result of the computation.
 
 Unlike `evalR()` which only returns one R object, `captureR()` returns a variable number of objects when R conditions are captured. Since this makes memory management of individual objects unwieldy, `captureR()` requires the [shelter](objects.qmd#shelter) approach to [memory management](objects.qmd#memory-management), where all the sheltered objects are destroyed at once.
 
@@ -59,11 +59,14 @@ The method takes two arguments,
 -   `code` - The R code to evaluate
 -   `options` - Optional: A [`EvalROptions`](api/js/interfaces/WebRChan.EvalROptions.md) object controlling how the code is evaluated.
 
-A promise is returned resolving to a JavaScript object with two properties,
+A promise is returned resolving to a JavaScript object with three properties,
 
 -   `result` - The result of the computation, as an [`RObject`](api/js/modules/RMain.md#robject) proxy.
 -   `output` - Output captured during execution, an array of objects with properties `type` and `data`.
+-   `images` - Plots captured by the canvas device during execution, an array of [`ImageBitmap`](https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap) objects.
 
 Stream output is returned as elements of `output` with a `type` property of `stdout` or `stderr`. The line of output is returned in the form of a JavaScript string in the `data` property.
 
 Any raised conditions are also included as elements of `output` with a `type` property of `message`, `warning`, or `error`. A reference to the condition is returned in the form of an [`RObject`](api/js/modules/RMain.md#robject) proxy in the `data` property.
+
+Plots captured by the [`webr::canvas()`](api/r.html#canvas) graphics device are included as elements of `images`, in the form of [`ImageBitmap`](https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap) objects. The captured images may be displayed on the page using the [`drawImage()`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage) method of a HTML Canvas element's [2D rendering context](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D).

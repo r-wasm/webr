@@ -1,6 +1,7 @@
 TS_SOURCES = $(shell find .. -name '*.ts' -not -path '../node_modules/*')
+QMD_SOURCES = $(shell find . -name '*.qmd')
 
-_site: api/js
+_site: api/js $(QMD_SOURCES)
 	quarto render
 
 api/js: $(TS_SOURCES)

@@ -254,7 +254,46 @@ Click the button below to see the output of this demo,
 </script>
 ```
 
-## Example: Plotting from the console
+## Capturing plots
+
+Plots may be captured by the [`webr::canvas()`](api/r.html#canvas) graphics device when using [`captureR()`](evaluating.qmd#evaluating-r-code-and-capturing-output-with-capturer) to evaluate R code. Captured plots are in the form of JavaScript `ImageBitmap` objects and may be drawn to the page in the same way as [described above](plotting.html#drawing-the-bitmap-image-data).
+
+In the following example, a set of demo plots are captured and then displayed on the page.
+
+``` html
+<html>
+  <head>
+    <title>WebR Test Console</title>
+  </head>
+  <body>
+    <div id="plot-output"></div>
+    <div>
+      <pre><code id="out">Loading webR, please wait...</code></pre>
+    </div>
+
+    <script type="module">
+      import { Console } from 'https://webr.r-wasm.org/latest/webr.mjs';
+      const webR = new WebR();
+      await webR.init();
+
+      const shelter = await new webR.Shelter();
+      const capture = await shelter.captureR("demo(graphics)");
+      capture.images.forEach((img) => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, img.width, img.height);
+        document.getElementById("plot-output").appendChild(canvas);
+      });
+
+      shelter.purge();
+    </script>
+  </body>
+</html>
+```
+
+## Plotting from the console
 
 The `Console` class includes callbacks that are used for handling image rendering. This example builds off the [interactive webR REPL Console](examples.qmd#creating-an-interactive-webr-repl-console). In addition to the console, there is a `<canvas>` element to which plots will be drawn. The callbacks `canvasImage` and `canvasNewPage` are used to draw plots.
 
