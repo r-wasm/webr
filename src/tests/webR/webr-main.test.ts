@@ -603,13 +603,13 @@ describe('Interrupt execution', () => {
   test('Interrupt R code executed using evalR', async () => {
     const loop = webR.evalRVoid('while(TRUE){}');
     setTimeout(() => webR.interrupt(), 100);
-    await expect(loop).rejects.toThrow('A non-local transfer of control occured');
+    await expect(loop).rejects.toThrow('A non-local transfer of control occurred');
   });
 
   test('Interrupt webr::eval_js executed using evalR', async () => {
     const loop = webR.evalRVoid('webr::eval_js("globalThis.Module.webr.readConsole()")');
     setTimeout(() => webR.interrupt(), 100);
-    await expect(loop).rejects.toThrow('A non-local transfer of control occured');
+    await expect(loop).rejects.toThrow('A non-local transfer of control occurred');
   });
 });
 
