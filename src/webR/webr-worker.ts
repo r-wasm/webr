@@ -644,7 +644,7 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
         env: objs.globalEnv,
         captureStreams: true,
         captureConditions: true,
-        newCanvasDevice: true,
+        captureGraphics: true,
         withAutoprint: false,
         throwJsException: true,
         withHandlers: true,
@@ -663,7 +663,7 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
     // Start a capturing canvas graphics device, if required
     const devEnvObj = new REnvironment({});
     protectInc(devEnvObj, prot);
-    if (_options.newCanvasDevice) {
+    if (_options.captureGraphics) {
       parseEvalBare(`{
         old_dev <- dev.cur()
         webr::canvas(capture = TRUE)
@@ -710,7 +710,7 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
     }
 
     let images: ImageBitmap[] = [];
-    if (_options.newCanvasDevice) {
+    if (_options.captureGraphics) {
       // Find new plots after evaluating the given expression
       const plots = parseEvalBare(`{
         new_cache <- webr::canvas_cache()
@@ -744,7 +744,7 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
 function evalR(expr: string | RObject, options: EvalROptions = {}): RObject {
   // Defaults for evalR that should differ from the defaults in captureR
   options = Object.assign({
-    newCanvasDevice: false
+    captureGraphics: false
   }, options);
 
   const prot = { n: 0 };
