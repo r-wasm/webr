@@ -293,8 +293,9 @@ void canvasMode(int mode, pDevDesc RGD) {
     if (mode == 0) {
         canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
         EM_ASM({
-            if (!Module.webr.canvas[$0].capture) {
-                const image = Module.webr.canvas[$0].offscreen.transferToImageBitmap();
+            const canvas = Module.webr.canvas[$0];
+            if (!canvas.capture) {
+                const image = canvas.offscreen.transferToImageBitmap();
                 chan.write({ type: 'canvas', data: {
                     event: 'canvasImage',
                     image,
@@ -708,8 +709,8 @@ SEXP ffi_dev_canvas(SEXP w, SEXP h, SEXP ps, SEXP bg, SEXP capture, SEXP env)
 
     if (no_canvas) {
         Rf_error(
-            "This browser does not have support for OffscreenCanvas rendering. "
-            "Consider instead using a bitmap graphics device, such as png()."
+            "This environment does not have support for OffscreenCanvas. "
+            "Consider using a bitmap graphics device instead, such as png()."
         );
     }
 

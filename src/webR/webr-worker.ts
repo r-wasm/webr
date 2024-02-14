@@ -644,7 +644,7 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
         env: objs.globalEnv,
         captureStreams: true,
         captureConditions: true,
-        captureGraphics: true,
+        captureGraphics: typeof OffscreenCanvas !== "undefined",
         withAutoprint: false,
         throwJsException: true,
         withHandlers: true,
@@ -664,6 +664,13 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
     const devEnvObj = new REnvironment({});
     protectInc(devEnvObj, prot);
     if (_options.captureGraphics) {
+      if (typeof OffscreenCanvas === "undefined") {
+        throw new Error(
+          "This environment does not have support for OffscreenCanvas. " +
+          "Consider disabling plot capture using `captureGraphics: false`."
+        );
+      }
+
       parseEvalBare(`{
         old_dev <- dev.cur()
         webr::canvas(capture = TRUE)
