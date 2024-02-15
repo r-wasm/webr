@@ -599,17 +599,21 @@ export class Shelter {
   /**
    * Evaluate the given R code, capturing output.
    *
-   * Stream outputs and conditions raised during exectution are captured and
+   * Stream outputs and conditions raised during execution are captured and
    * returned as part of the output of this function. Returned R objects are
    * protected by the shelter.
    * @param {string} code The R code to evaluate.
    * @param {EvalROptions} [options] Options for the execution environment.
-   * @returns {Promise<{result: RObject, output: unknown[]}>} An object
-   * containing the result of the computation and and array of captured output.
+   * @returns {Promise<{
+   *   result: RObject,
+   *   output: { type: string; data: any }[],
+   *   images: ImageBitmap[]
+   * }>} An object containing the result of the computation, an array of output,
+   *   and an array of captured plots.
    */
   async captureR(code: string, options: EvalROptions = {}): Promise<{
     result: RObject;
-    output: unknown[];
+    output: { type: string; data: any }[];
     images: ImageBitmap[];
   }> {
     const opts = replaceInObject(options, isRObject, (obj: RObject) => obj._payload);

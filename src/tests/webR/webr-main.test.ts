@@ -111,9 +111,9 @@ describe('Evaluate R code', () => {
 
   test('Error conditions are re-thrown in JS when executing an R function', async () => {
     const fn = await webR.evalR('sin') as RFunction;
-    let throws = fn("abc");
+    let throws = fn('abc');
     await expect(throws).rejects.toThrow('non-numeric argument to mathematical function');
-    throws = fn.exec("abc");
+    throws = fn.exec('abc');
     await expect(throws).rejects.toThrow('non-numeric argument to mathematical function');
   });
 
@@ -166,18 +166,19 @@ describe('Evaluate R code', () => {
       captureConditions: true,
     });
 
-    let outType = await result.output.pluck(1, 'type')!;
-    let outData = await result.output.pluck(1, 'data')!;
+    let outType = await result.output.pluck(1, 'type') as RCharacter;
+    let outData = await result.output.pluck(1, 'data') as RCharacter;
+
     expect(await outType.toString()).toEqual('stdout');
     expect(await outData.toString()).toContain('Hello, stdout!');
 
-    outType = await result.output.pluck(2, 'type')!;
-    outData = await result.output.pluck(2, 'data', 'message')!;
+    outType = await result.output.pluck(2, 'type') as RCharacter;
+    outData = await result.output.pluck(2, 'data', 'message') as RCharacter;
     expect(await outType.toString()).toEqual('message');
     expect(await outData.toString()).toContain('Hello, message!');
 
-    outType = await result.output.pluck(3, 'type')!;
-    outData = await result.output.pluck(3, 'data', 'message')!;
+    outType = await result.output.pluck(3, 'type') as RCharacter;
+    outData = await result.output.pluck(3, 'data', 'message') as RCharacter;
     expect(await outType.toString()).toEqual('warning');
     expect(await outData.toString()).toContain('Hello, warning!');
 
