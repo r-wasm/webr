@@ -37,14 +37,6 @@ eval_r <- function(expr,
     close(out$stderr)
   })
 
-  # Print warnings as they are raised
-  old_opts <- options(warn = 1)
-  on_exit({
-    # Flush any further warnings and restore original warn option
-    warnings()
-    options(old_opts)
-  })
-
   if (streams) {
     # Redirect stdout and stderr streams using sink
     sink(out$stdout)
@@ -53,6 +45,14 @@ eval_r <- function(expr,
     sink(out$stderr, type = "message")
     on_exit(sink(type = "message"))
   }
+
+  # Print warnings as they are raised
+  old_opts <- options(warn = 1)
+  on_exit({
+    # Flush any further warnings and restore original warn option
+    warnings()
+    options(old_opts)
+  })
 
   # Create a function that evaluates the expression. Wrap in `withAutoprint` if
   # requested, and `parse` and `eval` the code if it is a string.
