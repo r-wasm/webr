@@ -521,7 +521,7 @@ export class RCall extends RObject {
     return Module.webr.evalR(this, { env: objs.baseEnv });
   }
 
-  capture(options: EvalROptions) {
+  capture(options: EvalROptions = {}) {
     return Module.webr.captureR(this, options);
   }
 }
@@ -612,7 +612,7 @@ export class RFunction extends RObject {
     }
   }
 
-  capture(options: EvalROptions, ...args: (WebRDataRaw | RObject)[]) {
+  capture(options: EvalROptions = {}, ...args: (WebRDataRaw | RObject)[]) {
     const prot = { n: 0 };
 
     try {

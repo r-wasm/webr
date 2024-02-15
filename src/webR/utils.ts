@@ -84,7 +84,7 @@ export function isCrossOrigin(urlString: string) {
 }
 
 export function isImageBitmap(value: any): value is ImageBitmap {
-  return (typeof ImageBitmap !== "undefined" && value instanceof ImageBitmap);
+  return (typeof ImageBitmap !== 'undefined' && value instanceof ImageBitmap);
 }
 
 export function throwUnreachable(context?: string) {

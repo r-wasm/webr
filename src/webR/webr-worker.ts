@@ -644,7 +644,7 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
         env: objs.globalEnv,
         captureStreams: true,
         captureConditions: true,
-        captureGraphics: typeof OffscreenCanvas !== "undefined",
+        captureGraphics: typeof OffscreenCanvas !== 'undefined',
         withAutoprint: false,
         throwJsException: true,
         withHandlers: true,
@@ -664,10 +664,10 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
     const devEnvObj = new REnvironment({});
     protectInc(devEnvObj, prot);
     if (_options.captureGraphics) {
-      if (typeof OffscreenCanvas === "undefined") {
+      if (typeof OffscreenCanvas === 'undefined') {
         throw new Error(
-          "This environment does not have support for OffscreenCanvas. " +
-          "Consider disabling plot capture using `captureGraphics: false`."
+          'This environment does not have support for OffscreenCanvas. ' +
+          'Consider disabling plot capture using `captureGraphics: false`.'
         );
       }
 
@@ -727,7 +727,7 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
       protectInc(plots, prot);
 
       images = plots.toArray().map((idx) => {
-        return Module.webr.canvas[idx!].offscreen.transferToImageBitmap()
+        return Module.webr.canvas[idx!].offscreen.transferToImageBitmap();
       });
 
       // Close the device and destroy newly created canvas cache entries
