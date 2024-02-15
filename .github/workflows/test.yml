@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/setup-node@v3
         with:
-          node-version: 'lts/*'
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org'
       - uses: actions/checkout@v4
       - name: Configure webR for flang
