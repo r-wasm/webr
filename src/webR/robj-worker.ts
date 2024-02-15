@@ -524,6 +524,24 @@ export class RCall extends RObject {
   capture(options: EvalROptions = {}) {
     return Module.webr.captureR(this, options);
   }
+
+  deparse(): string {
+    const prot = { n: 0 };
+    try {
+      const call = Module._Rf_lang2(
+        new RSymbol('deparse1').ptr,
+        Module._Rf_lang2(new RSymbol('quote').ptr, this.ptr)
+      );
+      protectInc(call, prot);
+
+      const val = RCharacter.wrap(safeEval(call, objs.baseEnv));
+      protectInc(val, prot);
+
+      return val.toString();
+    } finally {
+      unprotect(prot.n);
+    }
+  }
 }
 
 export class RList extends RObject {
