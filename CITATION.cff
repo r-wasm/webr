@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+title: "webR: The statistical language R compiled to WebAssembly via
+  Emscripten"
+message: "If you wish to cite this software, please do so as below."  
+type: software
+authors:
+  - given-names: George William
+    family-names: Stagg
+    email: george.stagg@posit.co
+    affiliation: 'Posit, PBC'
+  - given-names: Henry
+    family-names: Lionel
+    email: lionel@posit.co
+    affiliation: 'Posit, PBC'
+    orcid: 'https://orcid.org/0000-0002-8143-5908'
+  - given-names: Others
+repository-code: 'https://github.com/r-wasm/webr'
+url: 'https://docs.r-wasm.org/webr/latest/'
+license: MIT
+commit: 71acd7ce6e7053780fd5bb006d955ce042d27f0d
+version: 0.2.2
+date-released: '2023-11-16'
