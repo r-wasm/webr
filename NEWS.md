@@ -10,6 +10,8 @@
 
 * Additional optional Wasm system libraries for linking with R packages: libsodium (#333), webp (#334), imagemagick (#336), libarchive; lz4; zstd (#337), gmp; mpfr; glpk (#339), gsl (#340), libgit2 (#342).
 
+* The webR development Docker container now contains a Rust toolchain configured to produce binaries for the `wasm32-unknown-emscripten` target, enabling the building of R packages containing Rust code for webR.
+
 ## Breaking changes
 
 * Upgraded the base LLVM distribution from LLVM 14 to LLVM 17, rebasing our Fortran for WebAssembly patches on the latest release of LLVM at time of writing (v17.0.6). The LLVM Fortran compiler binary name is now `flang-new` and webR's build scripts have been updated to reflect this. The `emfc` wrapper script is no longer required, but for the moment the Make variable pointing to the `flang-new` compiler is still named `EMFC` for backwards compatibility.
