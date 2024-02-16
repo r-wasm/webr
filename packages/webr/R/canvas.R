@@ -3,7 +3,7 @@
 #' A graphics device that generates HTML canvas API calls and executes them on
 #' the worker thread using a JavaScript `OffscreenCanvas`. Throughout plotting,
 #' and if `capture` is `FALSE`, JavaScript `ImageBitmap` objects are transmitted
-#' to the main webR thread for display throughout plotting.
+#' to the main webR thread for display.
 #'
 #' The resulting webR output messages are of type
 #' \href{./js/interfaces/WebRChan.CanvasMessage.html}{`CanvasMessage`}, with
@@ -22,7 +22,7 @@
 #' `{ event: 'canvasImage', image: ImageBitmap }`.
 #'
 #' When `capture` is `TRUE`, the resulting `OffscreenCanvas` elements are stored
-#' in the canvas cache. The captured plots are then retrieved by [eval_r].
+#' in the canvas cache. The captured plots are then retrieved by [eval_r()].
 #'
 #' A 2x scaling is used to improve the bitmap output visual quality. As such,
 #' the width and height of the HTML canvas element should be twice the width and

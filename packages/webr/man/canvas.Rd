@@ -34,7 +34,7 @@ of canvas cache IDs for \code{OffscreenCanvas} elements captured by this device.
 A graphics device that generates HTML canvas API calls and executes them on
 the worker thread using a JavaScript \code{OffscreenCanvas}. Throughout plotting,
 and if \code{capture} is \code{FALSE}, JavaScript \code{ImageBitmap} objects are transmitted
-to the main webR thread for display throughout plotting.
+to the main webR thread for display.
 }
 \details{
 The resulting webR output messages are of type
@@ -54,7 +54,7 @@ emitted with the the bitmap additionally included as part of the
 \verb{\{ event: 'canvasImage', image: ImageBitmap \}}.
 
 When \code{capture} is \code{TRUE}, the resulting \code{OffscreenCanvas} elements are stored
-in the canvas cache. The captured plots are then retrieved by \link{eval_r}.
+in the canvas cache. The captured plots are then retrieved by \code{\link[=eval_r]{eval_r()}}.
 
 A 2x scaling is used to improve the bitmap output visual quality. As such,
 the width and height of the HTML canvas element should be twice the width and

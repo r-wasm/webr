@@ -310,7 +310,7 @@ shelter.purge();
 const shelter = await new webR.Shelter();
 const capture = await shelter.captureR("hist(rnorm(10000))");
 
-// Draw the first (and only) captured image to the page
+// Draw the first (in this case only) captured image to the page
 if (capture.images.length > 0) {
   const img = capture.images[0];
   const canvas = document.getElementById("plot-canvas") as HTMLCanvasElement;
