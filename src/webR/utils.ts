@@ -30,7 +30,7 @@ export function replaceInObject<T>(
   replacer: (obj: any, ...replacerArgs: any[]) => unknown,
   ...replacerArgs: unknown[]
 ): T | T[] {
-  if (obj === null || typeof obj !== 'object') {
+  if (obj === null || typeof obj !== 'object' || isImageBitmap(obj) ) {
     return obj;
   }
   if (test(obj)) {
@@ -81,6 +81,10 @@ export function isCrossOrigin(urlString: string) {
     return false;
   }
   return true;
+}
+
+export function isImageBitmap(value: any): value is ImageBitmap {
+  return (typeof ImageBitmap !== 'undefined' && value instanceof ImageBitmap);
 }
 
 export function throwUnreachable(context?: string) {

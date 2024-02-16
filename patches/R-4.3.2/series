@@ -16,3 +16,4 @@ fix-signrank-wilcox.diff
 fix-devUp.diff
 flang-avoid-maxloc.diff
 fontconfig-typeof.diff
+fix-sink-release.diff

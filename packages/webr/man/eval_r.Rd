@@ -2,10 +2,10 @@
 % Please edit documentation in R/eval.R
 \name{eval_r}
 \alias{eval_r}
-\title{Evaluate R code for webR}
+\title{Evaluate the provided R code, call, or expression for webR}
 \usage{
 eval_r(
-  code,
+  expr,
   conditions = TRUE,
   streams = FALSE,
   autoprint = FALSE,
@@ -14,7 +14,7 @@ eval_r(
 )
 }
 \arguments{
-\item{code}{The R code to evaluate.}
+\item{expr}{The R code, call or expression to evaluate.}
 
 \item{conditions}{If \code{TRUE}, capture and return conditions raised during
 execution.}
@@ -22,16 +22,15 @@ execution.}
 \item{streams}{If \code{TRUE}, capture and return the \code{stdout} and \code{stderr}
 streams.}
 
-\item{autoprint}{If \code{TRUE}, code automatically prints as if it were
+\item{autoprint}{If \code{TRUE}, automatically print as if the expression was
 written at an R console.}
 
-\item{handlers}{If \code{TRUE}, execute the R code using a \link{tryCatch}, with
-handlers in place.}
+\item{handlers}{If \code{TRUE}, execute using a \link{tryCatch} with handlers in place.}
 
 \item{env}{The environment in which to evaluate.}
 }
 \description{
-This function evaluates the provided R code with various settings in place
-to configure behavior. The function is intended to be used by the webR
-\code{evalR} API, rather than invoked directly by the end user.
+This function evaluates the provided R code, call, or expression with various
+settings in place to configure behavior. The function is intended to be used
+by the webR \code{evalR} API, rather than invoked directly by the end user.
 }

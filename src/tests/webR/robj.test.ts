@@ -116,7 +116,7 @@ describe('Working with R lists and vectors', () => {
   test('Throw an error when out of bounds using the pluck method', async () => {
     const vector = await webR.evalR('list(a=1, b=2, c=3)');
     const oob = vector.pluck(10);
-    await expect(oob).rejects.toThrow('non-local transfer of control occured');
+    await expect(oob).rejects.toThrow('non-local transfer of control occurred');
 
     const lastMsg = (await webR.flush()).pop();
     expect(lastMsg!.type).toEqual('stderr');

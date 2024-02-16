@@ -200,18 +200,17 @@ function dispatch(msg: Message): void {
 
             try {
               const capture = captureR(data.code, data.options);
-              protectInc(capture, prot);
+              protectInc(capture.result, prot);
+              protectInc(capture.output, prot);
 
-              const result = capture.get('result');
-              const outputs = capture.get(2) as RList;
-
+              const result = capture.result;
               keep(shelter, result);
 
-              const n = outputs.length;
+              const n = capture.output.length;
               const output: any[] = [];
 
               for (let i = 1; i < n + 1; ++i) {
-                const out = outputs.get(i);
+                const out = capture.output.get(i);
                 const type = (out.pluck(1, 1) as RCharacter).toString();
                 const data = out.get(2);
 
@@ -246,6 +245,7 @@ function dispatch(msg: Message): void {
                 obj: {
                   result: resultPayload,
                   output: output,
+                  images: capture.images,
                 },
               });
             } finally {
@@ -632,7 +632,11 @@ function callRObjectMethod(
   return { obj: ret, payloadType: 'raw' };
 }
 
-function captureR(code: string, options: EvalROptions = {}): RList {
+function captureR(expr: string | RObject, options: EvalROptions = {}): {
+  result: RObject,
+  output: RList,
+  images: ImageBitmap[],
+} {
   const prot = { n: 0 };
   try {
     const _options: Required<EvalROptions> = Object.assign(
@@ -640,6 +644,7 @@ function captureR(code: string, options: EvalROptions = {}): RList {
         env: objs.globalEnv,
         captureStreams: true,
         captureConditions: true,
+        captureGraphics: typeof OffscreenCanvas !== 'undefined',
         withAutoprint: false,
         throwJsException: true,
         withHandlers: true,
@@ -655,18 +660,39 @@ function captureR(code: string, options: EvalROptions = {}): RList {
       throw new Error('Attempted to evaluate R code with invalid environment object');
     }
 
+    // Start a capturing canvas graphics device, if required
+    const devEnvObj = new REnvironment({});
+    protectInc(devEnvObj, prot);
+    if (_options.captureGraphics) {
+      if (typeof OffscreenCanvas === 'undefined') {
+        throw new Error(
+          'This environment does not have support for OffscreenCanvas. ' +
+          'Consider disabling plot capture using `captureGraphics: false`.'
+        );
+      }
+
+      parseEvalBare(`{
+        old_dev <- dev.cur()
+        webr::canvas(capture = TRUE)
+        new_dev <- dev.cur()
+        old_cache <- webr::canvas_cache()
+      }`, devEnvObj);
+    }
+
     const tPtr = objs.true.ptr;
     const fPtr = objs.false.ptr;
 
     const fn = parseEvalBare('webr::eval_r', objs.baseEnv);
+    const qu = parseEvalBare('quote', objs.baseEnv);
     protectInc(fn, prot);
+    protectInc(qu, prot);
 
-    const codeObj = new RCharacter(code);
-    protectInc(codeObj, prot);
+    const exprObj = new RObject(expr);
+    protectInc(exprObj, prot);
 
     const call = Module._Rf_lang6(
       fn.ptr,
-      codeObj.ptr,
+      Module._Rf_lang2(qu.ptr, exprObj.ptr),
       _options.captureConditions ? tPtr : fPtr,
       _options.captureStreams ? tPtr : fPtr,
       _options.withAutoprint ? tPtr : fPtr,
@@ -674,9 +700,11 @@ function captureR(code: string, options: EvalROptions = {}): RList {
     );
     protectInc(call, prot);
 
+    // Evaluate the given expression
     const capture = RList.wrap(safeEval(call, envObj));
     protectInc(capture, prot);
 
+    // If we've captured an error, throw it as a JS Exception
     if (_options.captureConditions && _options.throwJsException) {
       const output = capture.get('output') as RList;
       const error = (output.toArray() as RObject[]).find(
@@ -684,27 +712,59 @@ function captureR(code: string, options: EvalROptions = {}): RList {
       );
       if (error) {
         throw new Error(
-          error.pluck('data', 'message')?.toString() || 'An error occured evaluating R code.'
+          error.pluck('data', 'message')?.toString() || 'An error occurred evaluating R code.'
         );
       }
     }
 
-    return capture;
+    let images: ImageBitmap[] = [];
+    if (_options.captureGraphics) {
+      // Find new plots after evaluating the given expression
+      const plots = parseEvalBare(`{
+        new_cache <- webr::canvas_cache()
+        plots <- setdiff(new_cache, old_cache)
+      }`, devEnvObj) as RInteger;
+      protectInc(plots, prot);
+
+      images = plots.toArray().map((idx) => {
+        return Module.webr.canvas[idx!].offscreen.transferToImageBitmap();
+      });
+
+      // Close the device and destroy newly created canvas cache entries
+      parseEvalBare(`{
+        dev.off(new_dev)
+        dev.set(old_dev)
+        webr::canvas_destroy(plots)
+      }`, devEnvObj);
+    }
+
+    // Build the capture object to be returned to the caller
+    return {
+      result: capture.get('result'),
+      output: capture.get('output') as RList,
+      images,
+    };
   } finally {
     unprotect(prot.n);
   }
 }
 
-function evalR(code: string, options: EvalROptions = {}): RObject {
-  const capture = captureR(code, options);
-  Module._Rf_protect(capture.ptr);
+function evalR(expr: string | RObject, options: EvalROptions = {}): RObject {
+  // Defaults for evalR that should differ from the defaults in captureR
+  options = Object.assign({
+    captureGraphics: false
+  }, options);
+
+  const prot = { n: 0 };
+  const capture = captureR(expr, options);
 
   try {
+    protectInc(capture.output, prot);
+    protectInc(capture.result, prot);
     // Send captured conditions and output to the JS console. By default, captured
     // error conditions are thrown and so do not need to be handled here.
-    const output = capture.get('output') as RList;
-    for (let i = 1; i <= output.length; i++) {
-      const out = output.get(i);
+    for (let i = 1; i <= capture.output.length; i++) {
+      const out = capture.output.get(i);
       const outputType = out.get('type').toString();
       switch (outputType) {
         case 'stdout':
@@ -731,9 +791,9 @@ function evalR(code: string, options: EvalROptions = {}): RObject {
           break;
       }
     }
-    return capture.get('result');
+    return capture.result;
   } finally {
-    Module._Rf_unprotect(1);
+    unprotect(prot.n);
   }
 }
 
@@ -781,6 +841,10 @@ function init(config: Required<WebROptions>) {
 
   Module.webr = {
     UnwindProtectException: UnwindProtectException,
+    evalR: evalR,
+    captureR: captureR,
+    canvas: {},
+
     resolveInit: () => {
       initPersistentObjects();
       chan?.setInterrupt(Module._Rf_onintr);

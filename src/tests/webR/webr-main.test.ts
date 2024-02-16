@@ -10,6 +10,7 @@ import {
   REnvironment,
   RInteger,
   RFunction,
+  RCall,
 } from '../../webR/robj-main';
 
 const webR = new WebR({
@@ -108,6 +109,19 @@ describe('Evaluate R code', () => {
     await expect(throws).rejects.toThrow('This is an error from R!');
   });
 
+  test('Error conditions are re-thrown in JS when executing an R function', async () => {
+    const fn = await webR.evalR('sin') as RFunction;
+    let throws = fn('abc');
+    await expect(throws).rejects.toThrow('non-numeric argument to mathematical function');
+    throws = fn.exec('abc');
+    await expect(throws).rejects.toThrow('non-numeric argument to mathematical function');
+  });
+
+  test('Error conditions are re-thrown in JS when executing an R call', async () => {
+    const fn = await webR.evalR('quote(sin("abc"))') as RCall;
+    await expect(fn.eval()).rejects.toThrow('non-numeric argument to mathematical function');
+  });
+
   test('Capture stdout while capturing R code', async () => {
     const shelter = await new webR.Shelter();
     const composite = await shelter.captureR('c(1, 2, 4, 6, 12, 24, 36, 48)', {
@@ -137,6 +151,84 @@ describe('Evaluate R code', () => {
     expect(cond[0].type).toEqual('warning');
     const condMsg = (await cond[0].data.get('message')) as RCharacter;
     expect(await condMsg.toString()).toContain('This is a warning message');
+    shelter.purge();
+  });
+
+  test('Capture output when executing an R function', async () => {
+    const fn = await webR.evalR(`
+      function(){
+        print("Hello, stdout!")
+        message("Hello, message!")
+        warning("Hello, warning!")
+      }
+    `) as RFunction;
+    const result = await fn.capture({
+      captureConditions: true,
+    });
+
+    let outType = await result.output.pluck(1, 'type') as RCharacter;
+    let outData = await result.output.pluck(1, 'data') as RCharacter;
+
+    expect(await outType.toString()).toEqual('stdout');
+    expect(await outData.toString()).toContain('Hello, stdout!');
+
+    outType = await result.output.pluck(2, 'type') as RCharacter;
+    outData = await result.output.pluck(2, 'data', 'message') as RCharacter;
+    expect(await outType.toString()).toEqual('message');
+    expect(await outData.toString()).toContain('Hello, message!');
+
+    outType = await result.output.pluck(3, 'type') as RCharacter;
+    outData = await result.output.pluck(3, 'data', 'message') as RCharacter;
+    expect(await outType.toString()).toEqual('warning');
+    expect(await outData.toString()).toContain('Hello, warning!');
+
+    webR.globalShelter.purge();
+  });
+
+  test('Capturing graphics throws an Error when OffScreenCanvas is unavailable', async () => {
+    const shelter = await new webR.Shelter();
+    const throws = shelter.captureR('plot(123)', { captureGraphics: true });
+    await expect(throws).rejects.toThrow(
+      'This environment does not have support for OffscreenCanvas.'
+    );
+    shelter.purge();
+  });
+
+  test('Capturing graphics with mocked OffScreenCanvas', async () => {
+    // Mock the OffscreenCanvas interface for testing under Node
+    await webR.evalRVoid(`
+      webr::eval_js("
+        class OffscreenCanvas {
+          constructor() {}
+          getContext() {
+            return {
+              arc: () => {},
+              beginPath: () => {},
+              clearRect: () => {},
+              clip: () => {},
+              setLineDash: () => {},
+              rect: () => {},
+              restore: () => {},
+              save: () => {},
+              stroke: () => {},
+            };
+          }
+          transferToImageBitmap() {
+            // No ImageBitmap, create a transferable ArrayBuffer in its place
+            return new ArrayBuffer(8);
+          }
+        }
+        globalThis.OffscreenCanvas = OffscreenCanvas;
+      ")
+    `);
+
+    const shelter = await new webR.Shelter();
+    const result = await shelter.captureR(`
+      plot.new();
+      points(0)
+    `, { captureGraphics: true });
+
+    expect(result.images.length).toBeGreaterThan(0);
     shelter.purge();
   });
 });
@@ -603,13 +695,13 @@ describe('Interrupt execution', () => {
   test('Interrupt R code executed using evalR', async () => {
     const loop = webR.evalRVoid('while(TRUE){}');
     setTimeout(() => webR.interrupt(), 100);
-    await expect(loop).rejects.toThrow('A non-local transfer of control occured');
+    await expect(loop).rejects.toThrow('A non-local transfer of control occurred');
   });
 
   test('Interrupt webr::eval_js executed using evalR', async () => {
     const loop = webR.evalRVoid('webr::eval_js("globalThis.Module.webr.readConsole()")');
     setTimeout(() => webR.interrupt(), 100);
-    await expect(loop).rejects.toThrow('A non-local transfer of control occured');
+    await expect(loop).rejects.toThrow('A non-local transfer of control occurred');
   });
 });
 

@@ -43,15 +43,19 @@ export type DistProxy<U> = U extends RWorker.RObject ? RProxy<U> : U;
  * converted to a corresponding type using `RProxify` recursively.
  * @typeParam T The type to convert.
  */
-export type RProxify<T> = T extends Array<any>
+export type RProxify<T> = T extends Array<any> // [RObject, RObject, ...]
   ? Promise<DistProxy<T[0]>[]>
-  : T extends (...args: infer U) => any
+  : T extends (...args: infer U) => any // (...args) => <RObject>
   ? (
       ...args: {
         [V in keyof U]: DistProxy<U[V]>;
       }
     ) => RProxify<ReturnType<T>>
-  : Promise<DistProxy<T>>;
+  : T extends { result: RWorker.RObject, output: RWorker.RObject } // Return type of .capture()
+  ? Promise<{
+      [U in keyof T]: DistProxy<T[U]>
+    }>
+  : Promise<DistProxy<T>>; // RObject, any other types
 
 /**
  * Create an {@link RProxy} based on an {@link RWorker.RObject} type parameter.

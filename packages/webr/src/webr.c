@@ -60,7 +60,7 @@ void safe_eval_cleanup(void* cdata, Rboolean jump) {
   if (jump) {
     EM_ASM({
       throw new globalThis.Module.webr.UnwindProtectException(
-        'A non-local transfer of control occured during evaluation',
+        'A non-local transfer of control occurred during evaluation',
         $0
       );
     }, cdata);

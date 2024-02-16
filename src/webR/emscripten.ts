@@ -1,4 +1,6 @@
 import type { RPtr, RTypeNumber } from './robj';
+import type { RObject, RList } from './robj-worker';
+import type { EvalROptions } from './webr-chan';
 import type { UnwindProtectException } from './utils-r';
 
 export interface Module extends EmscriptenModule {
@@ -21,7 +23,6 @@ export interface Module extends EmscriptenModule {
   noAudioDecoding: boolean;
   noWasmDecoding: boolean;
   setPrompt: (prompt: string) => void;
-  canvasExec: (op: string) => void;
   downloadFileContent: (
     URL: string,
     headers: Array<string>
@@ -125,10 +126,23 @@ export interface Module extends EmscriptenModule {
   // TODO: Namespace all webR properties
   webr: {
     UnwindProtectException: typeof UnwindProtectException;
+    canvas: {
+      [key: number]: {
+        ctx: OffscreenCanvasRenderingContext2D;
+        offscreen: OffscreenCanvas;
+        transmit: boolean;
+      };
+    };
     readConsole: () => number;
     resolveInit: () => void;
     handleEvents: () => void;
     evalJs: (code: RPtr) => number;
+    evalR: (expr: string | RObject, options?: EvalROptions) => RObject;
+    captureR: (expr: string | RObject, options: EvalROptions) => {
+      result: RObject,
+      output: RList,
+      images: ImageBitmap[],
+    };
     setTimeoutWasm: (ptr: EmPtr, data: EmPtr, delay: number) => void;
   };
 }

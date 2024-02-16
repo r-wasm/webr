@@ -71,6 +71,10 @@ export interface EvalROptions {
    */
   captureConditions?: boolean;
   /**
+   * Should a new canvas graphics device configured to capture plots be started?
+   */
+  captureGraphics?: boolean;
+  /**
    * Should the code automatically print output as if it were written at an R console?
    * Default: `false`.
    */
@@ -199,9 +203,11 @@ export interface CanvasMessage extends Message {
   type: 'canvas',
   data: {
     event: 'canvasNewPage';
+    id: number;
   } | {
     event: 'canvasImage';
     image: ImageBitmap;
+    id: number,
   };
 }
 

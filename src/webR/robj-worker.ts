@@ -9,7 +9,7 @@ import { isWebRDataJs, WebRDataJs, WebRDataJsAtomic, WebRDataJsNode } from './ro
 import { WebRDataJsNull, WebRDataJsString, WebRDataJsSymbol } from './robj';
 import { envPoke, parseEvalBare, protect, protectInc, unprotect } from './utils-r';
 import { protectWithIndex, reprotect, unprotectIndex, safeEval } from './utils-r';
-import { ShelterID, isShelterID } from './webr-chan';
+import { EvalROptions, ShelterID, isShelterID } from './webr-chan';
 
 export type RHandle = RObject | RPtr;
 
@@ -518,7 +518,11 @@ export class RCall extends RObject {
   }
 
   eval(): RObject {
-    return RObject.wrap(safeEval(this.ptr, objs.baseEnv));
+    return Module.webr.evalR(this, { env: objs.baseEnv });
+  }
+
+  capture(options: EvalROptions = {}) {
+    return Module.webr.captureR(this, options);
   }
 }
 
@@ -603,6 +607,18 @@ export class RFunction extends RObject {
       const call = new RCall([this, ...args]);
       protectInc(call, prot);
       return call.eval();
+    } finally {
+      unprotect(prot.n);
+    }
+  }
+
+  capture(options: EvalROptions = {}, ...args: (WebRDataRaw | RObject)[]) {
+    const prot = { n: 0 };
+
+    try {
+      const call = new RCall([this, ...args]);
+      protectInc(call, prot);
+      return call.capture(options);
     } finally {
       unprotect(prot.n);
     }
