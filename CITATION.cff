@@ -6,10 +6,11 @@ type: software
 authors:
   - given-names: George William
     family-names: Stagg
-    email: george@stagg.phd
+    email: george.stagg@posit.co
     affiliation: 'Posit, PBC'
   - given-names: Henry
     family-names: Lionel
+    email: lionel@posit.co
     affiliation: 'Posit, PBC'
     orcid: 'https://orcid.org/0000-0002-8143-5908'
   - given-names: Others
