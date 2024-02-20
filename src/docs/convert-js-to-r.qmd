@@ -51,16 +51,17 @@ The [`WebR` proxy classes](api/js/classes/WebR.WebR.md#properties) take a single
 
 The resulting R object type is chosen based on the contents of the JavaScript argument provided. When there is ambiguity, the following conversion rules are used,
 
-| Constructor Argument                                                       | R Type                                                                                                     |
-|---------------------------------|---------------------------------------|
-| `null`                                                                     | Logical `NA`                                                                                               |
-| `boolean`                                                                  | Logical atomic vector                                                                                      |
-| `number`                                                                   | Double atomic vector                                                                                       |
-| `{ re: 1, im: 2 }`                                                         | Complex atomic vector                                                                                      |
-| `string`                                                                   | Character atomic vector                                                                                    |
-| JavaScript array                                                           | An atomic vector with type based on the above rules and following the coercion rules of R's `c()` function |
-| [Object of type `WebRDataJs`](convert-r-to-js.qmd#serialising-r-objects) | An R object type given by the `type` property in the provided object                                       |
-| Other JavaScript object                                                    | Reserved for future use                                                                                    |
+| Constructor Argument                                                     | R Type                                                                      |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| `null`                                                                   | Logical `NA`                                                                |
+| `boolean`                                                                | Logical atomic vector                                                       |
+| `number`                                                                 | Double atomic vector                                                        |
+| `{ re: 1, im: 2 }`                                                       | Complex atomic vector                                                       |
+| `string`                                                                 | Character atomic vector                                                     |
+| `TypedArray`, `ArrayBuffer`, `ArrayBufferView`                           | Raw atomic vector                                                           |
+| `Array`                                                                  | An atomic vector of type following the coercion rules of R's `c()` function |
+| [Object of type `WebRDataJs`](convert-r-to-js.qmd#serialising-r-objects) | Given by the `type` property in the provided object                         |
+| Other JavaScript object                                                  | Reserved for future use                                                     |
 
 In the case of R lists provided as an [`WebRDataJs`](api/js/modules/RObject.md#webrdatajs), the above rules are applied recursively to also construct the objects provided within the list.
 
