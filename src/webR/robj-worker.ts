@@ -532,10 +532,14 @@ export class RCall extends RObject {
 }
 
 export class RList extends RObject {
+  isDataFrame: boolean;
   constructor(val: WebRData) {
     if (val instanceof RObjectBase) {
       assertRType(val, 'list');
       super(val);
+
+      const classes = RPairlist.wrap(Module._ATTRIB(val.ptr)).get('class') as RNull | RCharacter;
+      this.isDataFrame = !classes.isNull() && classes.toArray().includes('data.frame');
       return this;
     }
 
@@ -556,6 +560,8 @@ export class RList extends RObject {
     } finally {
       unprotect(prot.n);
     }
+
+    this.isDataFrame = false;
   }
 
   get length(): number {
@@ -569,7 +575,7 @@ export class RList extends RObject {
   toObject({
     allowDuplicateKey = true,
     allowEmptyKey = false,
-    depth = 1,
+    depth = -1,
   } = {}): NamedObject<WebRData> {
     const entries = this.entries({ depth });
     const keys = entries.map(([k, v]) => k);
@@ -584,8 +590,27 @@ export class RList extends RObject {
     );
   }
 
-  entries(options: { depth: number } = { depth: 1 }): NamedEntries<WebRData> {
+  toD3(): NamedObject<WebRData>[] {
+    if (!this.isDataFrame) {
+      throw new Error(
+        "Can't convert R list object to D3 format. Object must be of class 'data.frame'."
+      );
+    }
+    const entries = this.entries() as Array<[string, atomicType[]]>;
+    return entries.reduce((a, entry) => {
+      entry[1].forEach((v, j) => a[j] = Object.assign(a[j] || {}, { [entry[0]!] : v }));
+      return a;
+    }, []);
+  }
+
+  entries(options: { depth: number } = { depth: -1 }): NamedEntries<WebRData> {
     const obj = this.toJs(options);
+
+    // If this is a data frame, assume we have atomic vector columns and can
+    // convert directly to array values by default.
+    if (this.isDataFrame && options.depth < 0) {
+      obj.values = (obj.values as RVectorAtomic<atomicType>[]).map((v) => v.toArray());
+    }
     return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
   }
 
