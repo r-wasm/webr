@@ -56,7 +56,7 @@ test('Get RObject type as a string', async () => {
 describe('Working with R lists and vectors', () => {
   test('Get R object attributes', async () => {
     const vector = await webR.evalR('c(a=1, b=2, c=3)');
-    const value = (await vector.attrs()) as RList;
+    const value = (await vector.attrs()) as RPairlist;
     const attrs = await value.toObject({ depth: 0 });
     expect(attrs.names).toEqual(expect.objectContaining({ names: null, values: ['a', 'b', 'c'] }));
   });
@@ -176,6 +176,24 @@ describe('Working with R lists and vectors', () => {
     expect(resJs.values[0]).toEqual(expect.objectContaining({ names: null, values: ['a'] }));
     expect(resJs.values[1]).toEqual(expect.objectContaining({ names: null, values: ['b'] }));
     expect(resJs.values[2]).toEqual(expect.objectContaining({ names: null, values: ['c'] }));
+  });
+
+  test('Convert an R data.frame to JS', async () => {
+    const result = await webR.evalR(`
+      data.frame(x = c(1,2,3), y = c(4,5,6), z = c(7,8,9))
+    `) as RList;
+    const obj = await result.toObject();
+    expect(obj).toEqual(expect.objectContaining({ x: [1, 2, 3], y: [4, 5, 6], z: [7, 8, 9] }));
+  });
+
+  test('Convert an R data.frame to D3 format', async () => {
+    const result = await webR.evalR(`
+      data.frame(x = c(1,2,3), y = c(4,5,6), z = c(7,8,9))
+    `) as RList;
+    const d3Obj = await result.toD3();
+    expect(d3Obj[0]).toEqual(expect.objectContaining({ x: 1, y: 4, z: 7 }));
+    expect(d3Obj[1]).toEqual(expect.objectContaining({ x: 2, y: 5, z: 8 }));
+    expect(d3Obj[2]).toEqual(expect.objectContaining({ x: 3, y: 6, z: 9 }));
   });
 
   test('Fully undefined names attribute', async () => {
