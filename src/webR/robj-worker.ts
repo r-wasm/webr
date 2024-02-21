@@ -133,9 +133,26 @@ function newObjectFromData(obj: WebRData): RObject {
 
 // JS arrays are interpreted using R's c() function, so as to match
 // R's built in coercion rules
-function newObjectFromArray(arr: WebRData[]) {
+function newObjectFromArray(arr: WebRData[]): RObject {
   const prot = { n: 0 };
 
+  // Is this a D3 formatted data frame?
+  const hasObjects = arr.every((v) => typeof v === 'object' && !isRObject(v));
+  if (hasObjects) {
+    const _arr = arr as {[key: string]: WebRData}[];
+    const isConsistent = _arr.every((a) => {
+      return Object.keys(a).filter((k) => !Object.keys(_arr[0]).includes(k)).length === 0 &&
+        Object.keys(_arr[0]).filter((k) => !Object.keys(a).includes(k)).length === 0;
+    });
+    const isAtomic = _arr.every((a) => Object.values(a).every((v) => {
+      return isAtomicType(v) || isRVectorAtomic(v)
+    }));
+    if (isConsistent && isAtomic) {
+      return RList.fromD3(_arr);
+    }
+  }
+
+  // Not D3 formatted, use R's built in object coercion with c()
   try {
     const call = new RCall([new RSymbol('c'), ...arr]);
     protectInc(call, prot);
@@ -632,13 +649,15 @@ export class RList extends RObject {
       if (hasNames && hasArrays) {
         const _values = values as WebRData[][];
         const isConsistentLength = _values.every((a) => a.length === _values[0].length);
-        const isAtomic = _values.every((a) => isAtomicType(a[0]));
+        const isAtomic = _values.every((a) => {
+          return isAtomicType(a[0]) || isRVectorAtomic(a[0]);
+        });
 
         if (isConsistentLength && isAtomic) {
           const listObj = new RList({
             type: 'list',
             names: names,
-            values: _values.map((a) => newObjectFromArray(a))
+            values: _values.map((a) => newObjectFromData(a))
           });
           protectInc(listObj, prot);
 
@@ -654,6 +673,12 @@ export class RList extends RObject {
 
     // Not eligible as a data.frame, just create a standard list
     return new RList({ type: 'list', names, values });
+  }
+
+  static fromD3(arr: {[key: string]: WebRData}[]) {
+    return this.fromObject(
+      Object.fromEntries(Object.keys(arr[0]).map((k)=> [k, arr.map((v) => v[k])]))
+    );
   }
 
   entries(options: { depth: number } = { depth: -1 }): NamedEntries<WebRData> {
@@ -1259,21 +1284,35 @@ export function isRObject(value: any): value is RObject {
 }
 
 /**
- * Test for an atomicType.
+ * Test for an RWorker.RVectorAtomic instance.
+ *
+ * @private
+ * @param {any} value The object to test.
+ * @return {boolean} True if the object is an instance of an RVectorAtomic.
+ */
+export function isRVectorAtomic(value: any): value is RVectorAtomic<atomicType> {
+  const atomicRTypes = ['logical', 'integer', 'double', 'complex', 'character'];
+
+  return (
+    (isRObject(value) && atomicRTypes.includes(value.type()))
+    || (isRObject(value) && value.isNa())
+  );
+}
+
+/**
+ * Test for an atomicType, including missing `null` values.
  *
  * @private
  * @param {any} value The object to test.
  * @return {boolean} True if the object is of type atomicType.
  */
-export function isAtomicType(value: any): value is atomicType {
-  const atomicRTypes = ['logical', 'integer', 'double', 'complex', 'character'];
+export function isAtomicType(value: any): value is atomicType | null {
   return (
-    typeof value === 'number'
+    value === null
+    || typeof value === 'number'
     || typeof value === 'boolean'
     || typeof value === 'string'
     || isComplex(value)
-    || (isRObject(value) && atomicRTypes.includes(value.type()))
-    || (isRObject(value) && value.isNa())
   );
 }
 
