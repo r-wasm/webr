@@ -125,44 +125,10 @@ function newObjectFromData(obj: WebRData): RObject {
     return newObjectFromArray(obj);
   }
   if (typeof obj === 'object') {
-    return newListFromObject(obj);
+    return RList.fromObject(obj);
   }
 
   throw new Error('Robj construction for this JS object is not yet supported');
-}
-
-// JS objects are interpreted as R list objects. If we have a JS object with
-// consistent columns of atomic type, make the returned R object a data.frame
-function newListFromObject(obj: WebRData) {
-  const {names, values} = toWebRData(obj);
-  const prot = { n: 0 };
-
-  try {
-    const listObj = new RList({ type: 'list', names, values });
-    protectInc(listObj, prot);
-
-    // Should we make this a data.frame?
-    const hasNames = !!names && names.length > 0 && names.every((v) => v);
-    const hasArrays = values.length > 0 && values.every((v) => {
-      return Array.isArray(v) || ArrayBuffer.isView(v) || v instanceof ArrayBuffer;
-    });
-
-    if (hasNames && hasArrays) {
-      const _values = values as WebRData[][];
-      const isConsistentLength = _values.every((a) => a.length === _values[0].length);
-      const isConsistentType = _values.every((a) => a.every((v) => typeof v === typeof a[0]));
-      const isAtomic = _values.every((a) => isAtomicType(a[0]));
-      if (isConsistentLength && isConsistentType && isAtomic) {
-        const asDataFrame = new RCall([new RSymbol('as.data.frame'), listObj]);
-        protectInc(asDataFrame, prot);
-        return asDataFrame.eval();
-      }
-    }
-
-    return listObj;
-  } finally {
-    unprotect(prot.n);
-  }
 }
 
 // JS arrays are interpreted using R's c() function, so as to match
@@ -228,6 +194,16 @@ export class RObject extends RObjectBase {
 
   isNull(): this is RNull {
     return Module._TYPEOF(this.ptr) === RTypeMap.null;
+  }
+
+  isNa(): boolean {
+    try {
+      const result = parseEvalBare('is.na(x)', { x: this }) as RLogical;
+      protect(result)
+      return result.toBoolean();
+    } finally {
+      unprotect(1);
+    }
   }
 
   isUnbound(): boolean {
@@ -638,6 +614,46 @@ export class RList extends RObject {
       entry[1].forEach((v, j) => a[j] = Object.assign(a[j] || {}, { [entry[0]!] : v }));
       return a;
     }, []);
+  }
+
+  // JS objects are interpreted as R list objects. If we have a JS object with
+  // consistent columns of atomic type, make the returned R object a data.frame
+  static fromObject(obj: WebRData) {
+    const {names, values} = toWebRData(obj);
+    const prot = { n: 0 };
+
+    // Should we make this a data.frame?
+    try {
+      const hasNames = !!names && names.length > 0 && names.every((v) => v);
+      const hasArrays = values.length > 0 && values.every((v) => {
+        return Array.isArray(v) || ArrayBuffer.isView(v) || v instanceof ArrayBuffer;
+      });
+
+      if (hasNames && hasArrays) {
+        const _values = values as WebRData[][];
+        const isConsistentLength = _values.every((a) => a.length === _values[0].length);
+        const isAtomic = _values.every((a) => isAtomicType(a[0]));
+
+        if (isConsistentLength && isAtomic) {
+          const listObj = new RList({
+            type: 'list',
+            names: names,
+            values: _values.map((a) => newObjectFromArray(a))
+          });
+          protectInc(listObj, prot);
+
+          const asDataFrame = new RCall([new RSymbol('as.data.frame'), listObj]);
+          protectInc(asDataFrame, prot);
+
+          return asDataFrame.eval();
+        }
+      }
+    } finally {
+      unprotect(prot.n);
+    }
+
+    // Not eligible as a data.frame, just create a standard list
+    return new RList({ type: 'list', names, values });
   }
 
   entries(options: { depth: number } = { depth: -1 }): NamedEntries<WebRData> {
@@ -1257,6 +1273,7 @@ export function isAtomicType(value: any): value is atomicType {
     || typeof value === 'string'
     || isComplex(value)
     || (isRObject(value) && atomicRTypes.includes(value.type()))
+    || (isRObject(value) && value.isNa())
   );
 }
 
