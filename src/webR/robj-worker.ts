@@ -137,7 +137,7 @@ function newObjectFromArray(arr: WebRData[]): RObject {
   const prot = { n: 0 };
 
   // Is this a D3 formatted data frame?
-  const hasObjects = arr.every((v) => typeof v === 'object' && !isRObject(v));
+  const hasObjects = arr.every((v) => v && typeof v === 'object' && !isRObject(v) && !isComplex(v));
   if (hasObjects) {
     const _arr = arr as {[key: string]: WebRData}[];
     const isConsistent = _arr.every((a) => {
@@ -145,7 +145,7 @@ function newObjectFromArray(arr: WebRData[]): RObject {
         Object.keys(_arr[0]).filter((k) => !Object.keys(a).includes(k)).length === 0;
     });
     const isAtomic = _arr.every((a) => Object.values(a).every((v) => {
-      return isAtomicType(v) || isRVectorAtomic(v)
+      return isAtomicType(v) || isRVectorAtomic(v);
     }));
     if (isConsistent && isAtomic) {
       return RList.fromD3(_arr);
@@ -216,7 +216,7 @@ export class RObject extends RObjectBase {
   isNa(): boolean {
     try {
       const result = parseEvalBare('is.na(x)', { x: this }) as RLogical;
-      protect(result)
+      protect(result);
       return result.toBoolean();
     } finally {
       unprotect(1);
@@ -672,7 +672,7 @@ export class RList extends RObject {
     }
 
     // Not eligible as a data.frame, just create a standard list
-    return new RList({ type: 'list', names, values });
+    return new RList(obj);
   }
 
   static fromD3(arr: {[key: string]: WebRData}[]) {
