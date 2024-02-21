@@ -117,15 +117,52 @@ function newObjectFromData(obj: WebRData): RObject {
     return new RComplex(obj);
   }
 
-  // JS Array-like objects
+  // Conversion of composite JS objects
   if (ArrayBuffer.isView(obj) || obj instanceof ArrayBuffer) {
     return new RRaw(obj);
   }
   if (Array.isArray(obj)) {
     return newObjectFromArray(obj);
   }
+  if (typeof obj === 'object') {
+    return newListFromObject(obj);
+  }
 
   throw new Error('Robj construction for this JS object is not yet supported');
+}
+
+// JS objects are interpreted as R list objects. If we have a JS object with
+// consistent columns of atomic type, make the returned R object a data.frame
+function newListFromObject(obj: WebRData) {
+  const {names, values} = toWebRData(obj);
+  const prot = { n: 0 };
+
+  try {
+    const listObj = new RList({ type: 'list', names, values });
+    protectInc(listObj, prot);
+
+    // Should we make this a data.frame?
+    const hasNames = !!names && names.length > 0 && names.every((v) => v);
+    const hasArrays = values.length > 0 && values.every((v) => {
+      return Array.isArray(v) || ArrayBuffer.isView(v) || v instanceof ArrayBuffer;
+    });
+
+    if (hasNames && hasArrays) {
+      const _values = values as WebRData[][];
+      const isConsistentLength = _values.every((a) => a.length === _values[0].length);
+      const isConsistentType = _values.every((a) => a.every((v) => typeof v === typeof a[0]));
+      const isAtomic = _values.every((a) => isAtomicType(a[0]));
+      if (isConsistentLength && isConsistentType && isAtomic) {
+        const asDataFrame = new RCall([new RSymbol('as.data.frame'), listObj]);
+        protectInc(asDataFrame, prot);
+        return asDataFrame.eval();
+      }
+    }
+
+    return listObj;
+  } finally {
+    unprotect(prot.n);
+  }
 }
 
 // JS arrays are interpreted using R's c() function, so as to match
@@ -1203,6 +1240,24 @@ export function getRWorkerClass(type: RTypeNumber): typeof RObject {
  */
 export function isRObject(value: any): value is RObject {
   return value instanceof RObject;
+}
+
+/**
+ * Test for an atomicType.
+ *
+ * @private
+ * @param {any} value The object to test.
+ * @return {boolean} True if the object is of type atomicType.
+ */
+export function isAtomicType(value: any): value is atomicType {
+  const atomicRTypes = ['logical', 'integer', 'double', 'complex', 'character'];
+  return (
+    typeof value === 'number'
+    || typeof value === 'boolean'
+    || typeof value === 'string'
+    || isComplex(value)
+    || (isRObject(value) && atomicRTypes.includes(value.type()))
+  );
 }
 
 /**
