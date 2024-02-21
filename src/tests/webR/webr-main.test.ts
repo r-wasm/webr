@@ -604,6 +604,159 @@ describe('Create R objects from JS objects using proxy constructors', () => {
   });
 });
 
+describe('Create R lists from JS objects', () => {
+  test('Create an R list from basic JS object', async () => {
+    const jsObj = { a: [1, 2], b: [3, 4, 5], c: ['x', 'y', 'z']};
+    const rObj = await new webR.RObject(jsObj) as RList;
+    expect(await rObj.type()).toEqual('list');
+    expect(await rObj.names()).toEqual(['a', 'b', 'c']);
+    const a = await rObj.get('a') as RDouble;
+    const b = await rObj.get('b') as RDouble;
+    const c = await rObj.get('c') as RCharacter;
+    expect(await a.toArray()).toEqual(jsObj.a);
+    expect(await b.toArray()).toEqual(jsObj.b);
+    expect(await c.toArray()).toEqual(jsObj.c);
+  });
+
+  test('Create an R list from JS object with coercion and missing values', async () => {
+    const jsObj = { a: [0, true], b: [null, 4, '5'], c: [null] };
+    const rObj = await new webR.RObject(jsObj) as RList;
+    expect(await rObj.type()).toEqual('list');
+    expect(await rObj.names()).toEqual(['a', 'b', 'c']);
+    const a = await rObj.get('a') as RDouble;
+    const b = await rObj.get('b') as RCharacter;
+    const c = await rObj.get('c') as RLogical;
+
+    expect(await a.type()).toEqual('double');
+    expect(await b.type()).toEqual('character');
+    expect(await c.type()).toEqual('logical');
+
+    expect(await a.toArray()).toEqual([0, 1]);
+    expect(await b.toArray()).toEqual([null, '4', '5']);
+    expect(await c.toArray()).toEqual([null]);
+  });
+
+  test('Create an R list from JS object with R TypedArray', async () => {
+    const jsObj = { a: [1, 2], b: new Uint8Array([3, 4, 5]), c: new Uint8Array([6, 7, 8]).buffer};
+    const rObj = await new webR.RObject(jsObj) as RList;
+    expect(await rObj.type()).toEqual('list');
+    expect(await rObj.names()).toEqual(['a', 'b', 'c']);
+    const a = await rObj.get('a') as RDouble;
+    const b = await rObj.get('b') as RDouble;
+    const c = await rObj.get('c') as RDouble;
+    expect(await a.toArray()).toEqual(jsObj.a);
+    expect(await b.toArray()).toEqual([3, 4, 5]);
+    expect(await c.toArray()).toEqual([6, 7, 8]);
+  });
+
+  test('Create an R list from JS object with R object references', async () => {
+    const jsObj = { a: webR.objs.true, b: [1, webR.objs.na, 3], c: webR.objs.globalEnv};
+    const rObj = await new webR.RObject(jsObj) as RList;
+    expect(await rObj.type()).toEqual('list');
+    expect(await rObj.names()).toEqual(['a', 'b', 'c']);
+    const a = await rObj.get('a') as RLogical;
+    const b = await rObj.get('b') as RDouble;
+    const c = await rObj.get('c') as REnvironment;
+
+    expect(await a.type()).toEqual('logical');
+    expect(await b.type()).toEqual('double');
+    expect(await c.type()).toEqual('environment');
+
+    expect(await a.toBoolean()).toEqual(true);
+    expect(await b.toArray()).toEqual([1, null, 3]);
+  });
+});
+
+describe('Create R data.frame from JS objects', () => {
+  test('Create an R data.frame from basic JS object', async () => {
+    const jsObj = { a: [1, 2, 3], b: [3, 4, 5], c: ['x', 'y', 'z'] };
+    const rObj = await new webR.RObject(jsObj) as RList;
+    expect(await rObj.type()).toEqual('list');
+    expect(await rObj.names()).toEqual(['a', 'b', 'c']);
+    const attrs = await rObj.attrs() as RPairlist;
+    const classes = await attrs.get('class') as RCharacter;
+    expect(await classes.toArray()).toContain('data.frame');
+
+    const a = await rObj.get('a') as RDouble;
+    const b = await rObj.get('b') as RDouble;
+    const c = await rObj.get('c') as RCharacter;
+    expect(await a.toArray()).toEqual(jsObj.a);
+    expect(await b.toArray()).toEqual(jsObj.b);
+    expect(await c.toArray()).toEqual(jsObj.c);
+  });
+
+  test('Create an R data.frame from JS object with coercion and missing values', async () => {
+    const jsObj = { a: [0, 1, true], b: [null, 4, '5'], c: [null, null, null] };
+    const rObj = await new webR.RObject(jsObj) as RList;
+    expect(await rObj.type()).toEqual('list');
+    expect(await rObj.names()).toEqual(['a', 'b', 'c']);
+    const attrs = await rObj.attrs() as RPairlist;
+    const classes = await attrs.get('class') as RCharacter;
+    expect(await classes.toArray()).toContain('data.frame');
+
+    const a = await rObj.get('a') as RDouble;
+    const b = await rObj.get('b') as RCharacter;
+    const c = await rObj.get('c') as RLogical;
+
+    expect(await a.type()).toEqual('double');
+    expect(await b.type()).toEqual('character');
+    expect(await c.type()).toEqual('logical');
+
+    expect(await a.toArray()).toEqual([0, 1, 1]);
+    expect(await b.toArray()).toEqual([null, '4', '5']);
+    expect(await c.toArray()).toEqual([null, null, null]);
+  });
+
+  test('Create an R data.frame from JS object with R object references', async () => {
+    const x = await new webR.RObject('x');
+    const jsObj = { a: [false, webR.objs.true, null], b: [1, webR.objs.na, 3], c: [x, 'y', 'z'] };
+    const rObj = await new webR.RObject(jsObj) as RList;
+    expect(await rObj.type()).toEqual('list');
+    expect(await rObj.names()).toEqual(['a', 'b', 'c']);
+    const attrs = await rObj.attrs() as RPairlist;
+    const classes = await attrs.get('class') as RCharacter;
+    expect(await classes.toArray()).toContain('data.frame');
+
+    const a = await rObj.get('a') as RLogical;
+    const b = await rObj.get('b') as RDouble;
+    const c = await rObj.get('c') as RCharacter;
+
+    expect(await a.type()).toEqual('logical');
+    expect(await b.type()).toEqual('double');
+    expect(await c.type()).toEqual('character');
+
+    expect(await a.toArray()).toEqual([false, true, null]);
+    expect(await b.toArray()).toEqual([1, null, 3]);
+    expect(await c.toArray()).toEqual(['x', 'y', 'z']);
+  });
+
+  test('Create an R data.frame from D3 JS object', async () => {
+    const d3Obj = [
+      {a: true, b: 3, c: 'u'},
+      {a: webR.objs.false, b: 4, c: 'v'},
+      {a: null, b: 5, c: 'w'},
+    ];
+    const rObj = await new webR.RObject(d3Obj) as RList;
+    expect(await rObj.type()).toEqual('list');
+    expect(await rObj.names()).toEqual(['a', 'b', 'c']);
+    const attrs = await rObj.attrs() as RPairlist;
+    const classes = await attrs.get('class') as RCharacter;
+    expect(await classes.toArray()).toContain('data.frame');
+
+    const a = await rObj.get('a') as RLogical;
+    const b = await rObj.get('b') as RDouble;
+    const c = await rObj.get('c') as RCharacter;
+
+    expect(await a.type()).toEqual('logical');
+    expect(await b.type()).toEqual('double');
+    expect(await c.type()).toEqual('character');
+
+    expect(await a.toArray()).toEqual([true, false, null]);
+    expect(await b.toArray()).toEqual([3, 4, 5]);
+    expect(await c.toArray()).toEqual(['u', 'v', 'w']);
+  });
+});
+
 describe('Serialise nested R lists, pairlists and vectors unambiguously', () => {
   test('Round trip convert to full depth and ensure result is identical', async () => {
     const rObj = (await webR.evalR(
