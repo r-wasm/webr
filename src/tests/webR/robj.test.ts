@@ -433,7 +433,7 @@ describe('Working with R environments', () => {
     expect(envJs.values[0]).toEqual(expect.objectContaining({ names: null, values: [null] }));
     expect(envJs.values[1]).toEqual(expect.objectContaining({ names: null, values: [true] }));
     expect(envJs.values[2]).toEqual(expect.objectContaining({ names: null, values: [false] }));
-    const envObj = await env.toObject();
+    const envObj = await env.toObject({ depth: 0 });
     expect(envObj['.c']).toEqual(expect.objectContaining({ names: null, values: [null] }));
     expect(envObj['a']).toEqual(expect.objectContaining({ names: null, values: [true] }));
     expect(envObj['b']).toEqual(expect.objectContaining({ names: null, values: [false] }));

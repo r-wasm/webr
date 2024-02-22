@@ -91,7 +91,7 @@ export type WebRDataAtomic<T> =
   | WebRDataScalar<T>
   | WebRDataJsAtomic<T>
   | NamedObject<T | null>
-  | (T extends number ? ArrayBuffer | ArrayBufferView | (number | null)[] : (T | null)[]);
+  | ([T] extends [number] ? ArrayBuffer | ArrayBufferView | (number | null)[] : (T | null)[]);
 
 /**
  * `WebRDataJs` objects form a tree structure, used when serialising R objects

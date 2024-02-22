@@ -131,8 +131,6 @@ function newObjectFromData(obj: WebRData): RObject {
   throw new Error('Robj construction for this JS object is not yet supported');
 }
 
-// JS arrays are interpreted using R's c() function, so as to match
-// R's built in coercion rules
 function newObjectFromArray(arr: WebRData[]): RObject {
   const prot = { n: 0 };
 
@@ -152,7 +150,19 @@ function newObjectFromArray(arr: WebRData[]): RObject {
     }
   }
 
-  // Not D3 formatted, use R's built in object coercion with c()
+  // Not D3 formatted - Can we shortcut and convert directly?
+  if (arr.every((v) => typeof v === 'boolean' || v === null)) {
+    return new RLogical(arr as (boolean | null)[]);
+  }
+  if (arr.every((v) => typeof v === 'number' || v === null)) {
+    return new RDouble(arr as (number | null)[]);
+  }
+  if (arr.every((v) => typeof v === 'string' || v === null)) {
+    return new RCharacter(arr as (string | null)[]);
+  }
+
+  // Not D3 & mixed types: use R's built in object coercion with c() so as to
+  // match R's built in coercion rules
   try {
     const call = new RCall([new RSymbol('c'), ...arr]);
     protectInc(call, prot);
