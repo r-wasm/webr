@@ -132,7 +132,15 @@ await obj.toObject({ allowEmptyKey: true, allowDuplicateKey: true});
       },
     }
 
-When the above options are set to `false`, an error is thrown in the case of duplicated or empty R component names.
+The following options are available,
+
+| Property | Description                             |
+|----------|-----------------------------------------|
+| `depth`  | How deep should nested R objects be serialised? A value of 0 indicates infinite depth. |
+| `allowEmptyKey`  | Allow an empty or null key when converting the object. |
+| `allowDuplicateKey`  | Allow duplicate keys when converting the object. |
+
+When `allowEmptyKey` or `allowDuplicateKey` are `false`, an error is thrown in the case of empty or duplicated R component names.
 
 ### Converting to JavaScript `Array`
 
