@@ -448,7 +448,7 @@ export class RPairlist extends RObject {
   toObject({
     allowDuplicateKey = true,
     allowEmptyKey = false,
-    depth = 1,
+    depth = -1,
   } = {}): NamedObject<WebRData> {
     const entries = this.entries({ depth });
     const keys = entries.map(([k, v]) => k);
@@ -830,11 +830,12 @@ export class REnvironment extends RObject {
     return this.getDollar(prop);
   }
 
-  toObject({ depth = 0 } = {}): NamedObject<WebRData> {
+  toObject({ depth = -1 } = {}): NamedObject<WebRData> {
     const symbols = this.names();
     return Object.fromEntries(
       [...Array(symbols.length).keys()].map((i) => {
-        return [symbols[i], this.getDollar(symbols[i]).toJs({ depth })];
+        const value = this.getDollar(symbols[i]);
+        return [symbols[i], depth < 0 ? value : value.toJs({ depth })];
       })
     );
   }
