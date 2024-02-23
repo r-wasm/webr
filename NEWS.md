@@ -32,6 +32,8 @@
 
 * Fixed spelling errors in some JavaScript errors thrown by webR.
 
+* The `symbols.rds` make target should now work when building R packages using `rwasm` (r-wasm/rwasm#13).
+
 # webR 0.2.2
 
 ## New features
