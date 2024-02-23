@@ -205,7 +205,7 @@ MAKE_WASM_BUILD += R_ENABLE_JIT="false"
 MAKE_WASM_BUILD += WEBR_HOST_METHODS="$(R_HOST)/lib/R/library/methods"
 MAKE_WASM_BUILD += FORTRAN_WASM_LDADD="$(FORTRAN_WASM_LDADD)"
 
-MAKE_WASM_INSTALL := $(MAKE_WASM)
+MAKE_WASM_INSTALL := R_HOST="$(R_HOST)" $(MAKE_WASM)
 
 # Build lazy virtual filesystem, backed by XHR when loaded in browsers
 WASM_LAZY_VFS := $(WASM_LAZY_VFS)
