@@ -2,22 +2,13 @@
 % Please edit documentation in R/handlers.R
 \name{global_prompt_install}
 \alias{global_prompt_install}
-\title{Prompt user to install missing packages from a webR binary repo}
+\title{Install a global handler to automatically download missing packages}
 \usage{
-global_prompt_install(show_menu = TRUE)
-}
-\arguments{
-\item{show_menu}{Show a menu asking the user if they would like to install
-the missing package.}
+global_prompt_install()
 }
 \description{
-When enabled, \code{packageNotFoundError} errors cause a menu prompt
-to be shown to the user asking if they would like to attempt to
-download the missing package.
-
-If the user replies in the negative, the package error is thrown as
-it would normally. If the user replies in the affirmative, the package
-is downloaded using \code{\link[=install]{install()}}.
+When enabled, \code{packageNotFoundError} errors invoke a global handler to
+download missing R packages from the default webR binary repo.
 
 If it is possible to do so, execution will continue without
 interrupting the current program.
