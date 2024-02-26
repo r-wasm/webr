@@ -32,6 +32,8 @@
 
 * Fixed spelling errors in some JavaScript errors thrown by webR.
 
+* Useful POSIX scripts from libraries compiled for Wasm are now copied to `$(HOST)/bin` so that `$(WASM)/bin` does not need to be put on the path when building Wasm R packages (#327).
+
 # webR 0.2.2
 
 ## New features
