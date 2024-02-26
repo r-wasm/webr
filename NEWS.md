@@ -32,6 +32,8 @@
 
 * Fixed spelling errors in some JavaScript errors thrown by webR.
 
+* Include `cex` parameters when calculating font size in canvas graphics device (#348).
+
 # webR 0.2.2
 
 ## New features
