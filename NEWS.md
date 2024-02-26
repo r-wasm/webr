@@ -60,6 +60,8 @@
 
 * Various updates for the webR Demo App to improve accessibility. (#267, #269, #270, #271, #272, #273, #274).
 
+* Rasters with negative width or height are now drawn mirrored or flipped when using the canvas graphics device (#350).
+
 # webR 0.2.1
 
 ## New features
