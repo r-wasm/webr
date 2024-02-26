@@ -62,6 +62,9 @@ $(EM_PKG_CONFIG_PATH)/%.pc: recipes/**/%.pc
 $(HOST)/bin/%: $(WASM)/bin/%
 	@cp "$<" "$@"
 
+$(DEFAULT_WASM_BINS_INST): $(DEFAULT_WASM_LIBS)
+$(OPTIONAL_WASM_BINS_INST): $(OPTIONAL_WASM_LIBS)
+
 .PHONY: clean-bins
 clean-bins:
 	rm -rf $(DEFAULT_WASM_BINS_INST) $(OPTIONAL_WASM_BINS_INST)
