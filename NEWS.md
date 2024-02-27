@@ -26,7 +26,9 @@
 
 ## Bug Fixes
 
-* Fix showing content of lazy loaded files in webR demo app editor component #320
+* Fix showing content of lazy loaded files in webR demo app editor component (#320).
+
+* Contents of the code editor in the webR REPL application is now sourced as a temporary file, allowing for input longer than the default R console input buffer length (#326).
 
 * R error conditions raised during evaluation of an `RCall` or `RFunction` object are now re-thrown as JavaScript exceptions.
 
