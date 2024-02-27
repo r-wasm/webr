@@ -22,5 +22,5 @@ cache IDs.
 \code{canvas_destroy()} destroys the cached \code{OffscreenCanvas} elements with the
 given IDs.
 
-\code{canvas_pruge()} destroys all \code{OffscreenCanvas} elements in the cache.
+\code{canvas_purge()} destroys all \code{OffscreenCanvas} elements in the cache.
 }
