@@ -1,12 +1,10 @@
 ---
-title: "Convert R Objects to JavaScript"
+title: "Converting to JavaScript"
 format: html
 toc: true
 ---
 
 Once webR has been loaded into a web page, objects can be converted into JavaScript from the R environment. For example, it is possible perform some computation within R and then convert the resulting R object into a JavaScript object for use.
-
-## Converting R objects to JavaScript objects
 
 ::: callout-warning
 At the moment, not all R objects can be converted to JavaScript objects. Attempting to convert an unsupported R object will throw a JavaScript exception.
@@ -14,7 +12,9 @@ At the moment, not all R objects can be converted to JavaScript objects. Attempt
 
 Explicitly converting an [`RObject`](api/js/classes/RWorker.RObject.md) to JavaScript can be done by invoking the [`RObject.toJs()`](api/js/classes/RWorker.RObject.md#tojs) method, which returns a JavaScript representation of the associated R object. In most cases, JavaScript conversion has been implemented by serialising the R object to an [`WebRDataJs`](api/js/modules/RObject.md#webrdatajs).
 
-### Serialising R objects
+[Subclasses of `RObject`](api/js/modules/RWorker.md#classes) provide additional methods to convert objects into a JavaScript representation.
+
+## Serialising R objects
 
 Invoking [`RObject.toJs()`](api/js/classes/RWorker.RObject.md#tojs) on an R object serialises the object to a JavaScript object of type [`WebRDataJs`](api/js/modules/RObject.md#webrdatajs). This type is designed to form a tree structure, supporting an unambiguous JavaScript representation for potentially nested R objects.
 
@@ -34,7 +34,7 @@ An R `NULL` object is serialised to a JavaScript object of type [`WebRDataJsNull
 The structure of serialised R objects may be updated in future versions of webR, expanding to include more R object attributes. As such, compatibility of serialised R objects between versions of webR is not guaranteed.
 :::
 
-#### Serialisation options {#serialisation-options}
+### Serialisation options {#serialisation-options}
 
 An `options` argument of type [`ToJsOptions`](api/js/interfaces/RWorker.ToJsOptions.md) can be provided to the [RObject.toJs()](api/js/classes/RWorker.RObject.md#tojs) method for fine-grained control over how objects are serialised.
 
@@ -57,9 +57,113 @@ await primes.toJs()
       values: [2, 3, 5, 7, 11, 13]
     }
 
-### Other R object conversion methods
+## Converting to JavaScript `Object`
 
-[Subclasses of `RObject`](api/js/modules/RWorker.md#classes) provide additional methods to convert objects into a JavaScript representation. For example, the [`toTypedArray()`](api/js/classes/RWorker.RDouble.md#totypedarray) method can be invoked on atomic vectors, such as an [`RDouble`](api/js/classes/RWorker.RDouble.md), to access a copy of the raw buffer as it exists in WebAssembly memory.
+R environments, lists, and atomic vectors provide a [`toObject()`](api/js/classes/RWorker.RDouble.md#toobject) method that converts the R object into a JavaScript object. The result of this conversion differs from the serialisation described above in that the resulting JavaScript object properties will be directly named by the components of the R object.
+
+``` javascript
+webR.objs.globalEnv.bind('foo', [1, 10, 28, 44, 26, 52]);
+webR.objs.globalEnv.bind('bar', [1, 2, 3, 401, 113, 22]);
+await webR.objs.globalEnv.toObject();
+```
+
+    { bar: Proxy(Object), foo: Proxy(Object) }
+
+By default, `toObject()` will not recurse into objects and will return R object references as JavaScript values. As an override, the `depth` option may be set to recurse into the object using the `.toJs()` serialisation method.
+
+``` javascript
+webR.objs.globalEnv.bind('foo', [1, 10, 28, 44, 26, 52]);
+webR.objs.globalEnv.bind('bar', [1, 2, 3, 401, 113, 22]);
+await webR.objs.globalEnv.toObject({ depth: 0 });
+```
+
+    {
+      bar: {
+        type: "double",
+        names: null,
+        values: [1, 2, 3, 401, 113, 22],
+      },
+      foo: {
+        type: "double",
+        names: null,
+        values: [1, 10, 28, 44, 26, 52]
+      },
+    }
+
+#### Object conversion options
+
+The `options` argument may be used to control how R objects with empty or duplicated names are converted. In the case of duplicated R component names, first wins.
+
+::: {.panel-tabset}
+## JavaScript
+
+``` javascript
+const obj = await webR.evalR(`
+  list(foo = c(1, 2, 3), foo = c(4, 5, 6), c("x", "y", "z"))
+`);
+
+await obj.toObject({ allowEmptyKey: true, allowDuplicateKey: true});
+```
+
+## TypeScript
+
+``` typescript
+import type { RList } from 'webr';
+
+const obj = await webR.evalR(`
+  list(foo = c(1, 2, 3), foo = c(4, 5, 6), c("x", "y", "z"))
+`) as RList;
+
+await obj.toObject({ allowEmptyKey: true, allowDuplicateKey: true});
+```
+
+:::
+
+    {
+      "": {
+        type: "double",
+        names: null,
+        values: ['x', 'y', 'z'],
+      },
+      foo: {
+        type: "double",
+        names: null,
+        values: [1, 2, 3]
+      },
+    }
+
+The following options are available,
+
+| Property | Description                             |
+|----------|-----------------------------------------|
+| `depth`  | How deep should nested R objects be serialised? A value of 0 indicates infinite depth. |
+| `allowEmptyKey`  | Allow an empty or null key when converting the object. |
+| `allowDuplicateKey`  | Allow duplicate keys when converting the object. |
+
+When `allowEmptyKey` or `allowDuplicateKey` are `false`, an error is thrown in the case of empty or duplicated R component names.
+
+### Converting to JavaScript `Array`
+
+R lists and atomic vectors may be converted into a JavaScript `Array` value using the method [`toArray()`](api/js/classes/RWorker.RDouble.md#toarray).
+
+``` javascript
+const recurrence = await webR.evalR('c(1.1, 2.2, 3.3, 5.5, 8.8)');
+await recurrence.toArray();
+```
+
+    [1.1, 2.2, 3.3, 5.5, 8.8]
+
+::: callout-note
+When converting atomic vectors to JavaScript values, missing values of `NA` are represented as values of `null` in the resulting JavaScript representation. This conversion process may have a performance cost for very large vectors.
+:::
+
+#### Accessing raw WebAssembly memory
+
+For atomic vectors, the [`toTypedArray()`](api/js/classes/RWorker.RDouble.md#totypedarray) method may be invoked to access a copy of the object data as it exists in WebAssembly memory.
+
+::: callout-warning
+The underlying raw memory buffer as managed by R will be returned as-is, including raw pointers for R character strings and sentinel values for missing values.
+:::
 
 ::: {.panel-tabset}
 ## JavaScript
@@ -82,11 +186,105 @@ await primes.toTypedArray();
 
     Float64Array(6) [2, 3, 5, 7, 11, 13, buffer: ArrayBuffer(48), ... ]
 
-::: callout-note
-When converting atomic vectors to JavaScript values, missing values of `NA` are represented as values of `null` in the resulting JavaScript representation. This conversion process may have a performance cost for very large vectors.
+### Converting to primitive values
 
-When using `toTypedArray()`, however, a copy of the raw memory buffer is returned. In this case the raw sentinel values will be preserved in the case of missing values.
+Scalar R values^[A scalar value in R is an atomic vector of length 1.] may be converted into JavaScript values using various subclass methods.
+
+::: {.panel-tabset}
+## JavaScript
+
+``` javascript
+const double = await webR.evalR('20');
+await double.toNumber();
+await webR.objs.true.toBoolean();
+```
+
+## TypeScript
+
+``` typescript
+import type { RDouble } from 'webr';
+
+const double = await webR.evalR('20') as RDouble;
+await double.toNumber();
+await webR.objs.true.toBoolean();
+```
+
 :::
+
+    20
+    true
+
+
+Each type of atomic scalar is converted into a particular JavaScript type, and so the method names are specialised.
+
+| R object type     | Method          | JavaScript type        |
+|-------------------|-----------------|------------------------|
+| `RLogical`        | `.toBoolean()`  | Boolean                |
+| `RInteger`        | `.toNumber()`   | Number                 |
+| `RDouble`         | `.toNumber()`   | Double                 |
+| `RComplex`        | `.toComplex()`  | `{ re: ..., im: ... }` |
+| `RCharacter`      | `.toString()`   | String                 |
+| `RRaw`            | `.toNumber()`   | Number                 |
+
+### Converting from an R `data.frame`
+
+R `data.frame` objects are list objects with an additional class attribute. As such, they may be converted into JavaScript objects using the [`toObject()`](api/js/classes/RWorker.RDouble.md#toobject) method. When the R list object is a `data.frame`, webR will automatically convert the inner atomic columns into `Array` format.
+
+::: {.panel-tabset}
+## JavaScript
+
+``` javascript
+const mtcars = await webR.evalR('mtcars');
+await mtcars.toObject();
+```
+
+## TypeScript
+
+``` typescript
+import type { RList } from 'webr';
+
+const mtcars = await webR.evalR('mtcars') as RList;
+await mtcars.toObject();
+```
+
+:::
+
+    {
+      am: [1, 1, 1, ..., 1],
+      carb: [4, 4, 1, ..., 2],
+      cyl: [6, 6, 4, ..., 4]
+      ...,
+      wt: (32) [2.62, 2.875, 2.32, ..., 2.78],
+    }
+
+R `data.frame` objects may also be converted into a [D3](https://d3js.org)-style data array format using the [`toD3()`](api/js/classes/RWorker.RDouble.md#tod3) method. This method is only available for R objects of class `data.frame`.
+
+::: {.panel-tabset}
+## JavaScript
+
+``` javascript
+const mtcars = await webR.evalR('mtcars');
+await mtcars.toD3();
+```
+
+## TypeScript
+
+``` typescript
+import type { RList } from 'webr';
+
+const mtcars = await webR.evalR('mtcars') as RList;
+await mtcars.toD3();
+```
+
+:::
+
+    [
+      { mpg: 21, cyl: 6, disp: 160, ... },
+      { mpg: 21, cyl: 6, disp: 160, ... },
+      { mpg: 22.8, cyl: 4, disp: 108, ...},
+      ...
+      { mpg: 21.4, cyl: 4, disp: 121, ...},
+    ]
 
 ## Cached R objects
 

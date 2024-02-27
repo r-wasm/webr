@@ -1,5 +1,5 @@
 ---
-title: "Create R Objects from JavaScript"
+title: "Creating New R Objects"
 format: html
 toc: true
 ---
@@ -59,11 +59,20 @@ The resulting R object type is chosen based on the contents of the JavaScript ar
 | `{ re: 1, im: 2 }`                                                       | Complex atomic vector                                                       |
 | `string`                                                                 | Character atomic vector                                                     |
 | `TypedArray`, `ArrayBuffer`, `ArrayBufferView`                           | Raw atomic vector                                                           |
-| `Array`                                                                  | An atomic vector of type following the coercion rules of R's `c()` function |
-| [Object of type `WebRDataJs`](convert-r-to-js.qmd#serialising-r-objects) | Given by the `type` property in the provided object                         |
+| `Array`                                                                  | A vector or list of type following the coercion rules of R's `c()` function |
+| `RObject`                                                                | Given by the type of the referenced R object                                |
+| `{a: [...], b: [...], ...}`                                              | R list object, possibly in the form of a `data.frame`                       |
+| `[{a: 0, b: 'x'}, {a: 1, b: 'y'}, ...]`                                  | R list object in the form of a `data.frame`                                 |
+| [`WebRDataJs`](convert-r-to-js.qmd#serialising-r-objects)                | Given by the `type` property in the provided object                         |
 | Other JavaScript object                                                  | Reserved for future use                                                     |
 
-In the case of R lists provided as an [`WebRDataJs`](api/js/modules/RObject.md#webrdatajs), the above rules are applied recursively to also construct the objects provided within the list.
+#### Further details
+
+For JavaScript objects with a collection of properties, the above rules will be applied recursively to construct an R list with named components corresponding to each property.
+
+If each property of the JavaScript object is an `Array`, all of equal length, all containing values compatible with R atomic vectors (or `null`, indicating a missing value), the resulting R object will be automatically^[This coercion may be avoided by constructing an `RList` object directly.] coerced into an R [`data.frame`](https://stat.ethz.ch/R-manual/R-devel/library/base/html/data.frame.html).
+
+When `RObject` references are used for constructing new R objects, no underlying copy is made. The resulting R object reference will point to the same memory location.
 
 ### Creating an R object with specific type
 
