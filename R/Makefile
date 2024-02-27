@@ -219,7 +219,7 @@ WASM_LAZY_VFS += -i "$(R_WASM)/lib/R/share@/usr/lib/R/share"
 WASM_LAZY_VFS += -i "$(R_WASM)/lib/R/tests@/usr/lib/R/tests"
 
 # Include extra R package data not included in the base virtual filesystem
-PKG_DEFS := base compiler datasets grDevices graphics grid methods splines stats stats4 tools utils
+PKG_DEFS := base compiler datasets grDevices graphics grid methods splines stats stats4 tools utils webr
 PKG_DIRS := afm demo enc doc fonts help html misc tests
 WASM_LAZY_VFS += $(foreach pkg,$(PKG_DEFS),$(foreach dir,$(PKG_DIRS),\
   -i "$(R_WASM)/lib/R/library/$(pkg)/$(dir)@/usr/lib/R/library/$(pkg)/$(dir)"))
