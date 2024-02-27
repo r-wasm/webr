@@ -26,6 +26,8 @@
 
 * `shim_install()` now shims base R `library()` and `require()` commands so that webR packages are downloaded automatically with an optional menu. This extends the functionality of the global package-not-found handler so that the same feature can be used when using `evalR()` (#324). The new shims also ensure that `library()` and `require()` do not need to be called again once the package is downloaded and available.
 
+* It is no longer assumed that an interactive R session will be able to show a `menu()` when offering to download a missing R package. Instead this now defaults to not showing a menu, with `options(webr.show_menu = TRUE)` enabling the menu feature globally.
+
 ## Bug Fixes
 
 * Fix showing content of lazy loaded files in webR demo app editor component #320
