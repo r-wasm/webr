@@ -78,6 +78,8 @@ export type WebRData =
   | WebRDataRaw
   | WebRDataJs
   | WebRData[]
+  | ArrayBuffer
+  | ArrayBufferView
   | { [key: string]: WebRData };
 
 /**
@@ -87,13 +89,13 @@ export type WebRData =
  */
 export type WebRDataAtomic<T> =
   | WebRDataScalar<T>
-  | (T | null)[]
   | WebRDataJsAtomic<T>
-  | NamedObject<T | null>;
+  | NamedObject<T | null>
+  | (T extends number ? ArrayBuffer | ArrayBufferView | (number | null)[] : (T | null)[]);
 
 /**
  * `WebRDataJs` objects form a tree structure, used when serialising R objects
- * into a JavaScript respresentation.
+ * into a JavaScript representation.
  *
  * Nested R objects are serialised using the {@link WebRDataJsNode} type,
  * forming branches in the resulting tree structure, with leaves formed by the

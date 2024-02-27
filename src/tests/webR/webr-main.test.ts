@@ -1,16 +1,17 @@
 import { WebR } from '../../webR/webr-main';
 import { Message } from '../../webR/chan/message';
 import {
-  RDouble,
-  RLogical,
+  RCall,
   RCharacter,
   RComplex,
-  RList,
-  RPairlist,
+  RDouble,
   REnvironment,
-  RInteger,
   RFunction,
-  RCall,
+  RInteger,
+  RList,
+  RLogical,
+  RPairlist,
+  RRaw,
 } from '../../webR/robj-main';
 
 const webR = new WebR({
@@ -375,6 +376,27 @@ describe('Create R vectors from JS arrays using RObject constructor', () => {
       })
     );
   });
+
+  test('Create a raw atomic vector', async () => {
+    const jsObj = new Uint8Array([0, 2, 4, 8, 16, 30, 52, 84, 128, 186]);
+    let rObj = (await new webR.RObject(jsObj)) as RRaw;
+    expect(await rObj.type()).toEqual('raw');
+    expect(await rObj.toJs()).toEqual(
+      expect.objectContaining({
+        values: Array.from(jsObj),
+        names: null,
+      })
+    );
+
+    rObj = (await new webR.RObject(jsObj.buffer)) as RRaw;
+    expect(await rObj.type()).toEqual('raw');
+    expect(await rObj.toJs()).toEqual(
+      expect.objectContaining({
+        values: Array.from(jsObj),
+        names: null,
+      })
+    );
+  });
 });
 
 describe('Create R objects from JS objects using proxy constructors', () => {
@@ -452,6 +474,18 @@ describe('Create R objects from JS objects using proxy constructors', () => {
       expect.objectContaining({
         values: Object.values(jsObj),
         names: Object.keys(jsObj),
+      })
+    );
+  });
+
+  test('Create a raw atomic vector using an ArrayBuffer', async () => {
+    const jsObj = new Uint8Array([1, 2, 6, 140, 16456, 8390720]);
+    const rObj = await new webR.RRaw(jsObj.buffer);
+    expect(await rObj.type()).toEqual('raw');
+    expect(await rObj.toJs()).toEqual(
+      expect.objectContaining({
+        values: Array.from(jsObj),
+        names: null,
       })
     );
   });

@@ -116,6 +116,11 @@ function newObjectFromData(obj: WebRData): RObject {
   if (isComplex(obj)) {
     return new RComplex(obj);
   }
+
+  // JS Array-like objects
+  if (ArrayBuffer.isView(obj) || obj instanceof ArrayBuffer) {
+    return new RRaw(obj);
+  }
   if (Array.isArray(obj)) {
     return newObjectFromArray(obj);
   }
@@ -1076,6 +1081,9 @@ export class RCharacter extends RVectorAtomic<string> {
 
 export class RRaw extends RVectorAtomic<number> {
   constructor(val: WebRDataAtomic<number>) {
+    if (val instanceof ArrayBuffer) {
+      val = new Uint8Array(val);
+    }
     super(val, 'raw', RRaw.#newSetter);
   }
 

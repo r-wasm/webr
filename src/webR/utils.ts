@@ -33,6 +33,9 @@ export function replaceInObject<T>(
   if (obj === null || typeof obj !== 'object' || isImageBitmap(obj) ) {
     return obj;
   }
+  if (obj instanceof ArrayBuffer) {
+    return new Uint8Array(obj) as T;
+  }
   if (test(obj)) {
     return replacer(obj, ...replacerArgs) as T;
   }
