@@ -268,7 +268,7 @@ void canvasMetricInfo(int c, const pGEcontext gc, double* ascent,
         const ffamily = (f) => fsans.includes(f) ? "sans-serif" : f;
         const font = `${fface[$2]} ${$0}px ${ffamily(UTF8ToString($1))}`;
         Module.canvasCtx.font = font;
-    }, 2*gc->ps, gc->fontfamily, gc->fontface);
+    }, 2 * gc->cex * gc->ps, gc->fontfamily, gc->fontface);
 
     *ascent = EM_ASM_DOUBLE({
         return Module.canvasCtx.measureText(
@@ -486,7 +486,7 @@ static double canvasStrWidth(const char *str, const pGEcontext gc, pDevDesc RGD)
         const font = `${fface[$2]} ${$0}px ${ffamily(UTF8ToString($1))}`;
         Module.canvasCtx.font = font;
         return Module.canvasCtx.measureText(UTF8ToString($3)).width;
-    }, 2*gc->ps, gc->fontfamily, gc->fontface, str) / 2.0;
+    }, 2 * gc->cex * gc->ps, gc->fontfamily, gc->fontface, str) / 2.0;
 }
 
 void canvasText(double x, double y, const char *str, double rot, double hadj,
