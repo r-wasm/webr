@@ -530,9 +530,17 @@ void canvasRaster(unsigned int *raster, int w, int h,
                   double rot,
                   Rboolean interpolate,
                   const pGEcontext gc, pDevDesc dd) {
+    int scale_x = 1, scale_y = -1;
+
+    y += height;
     if (height < 0) {
-        y += height;
         height = -height;
+        scale_y = 1;
+    }
+
+    if (width < 0) {
+        width = -width;
+        scale_x = -1;
     }
 
     EM_ASM({Module.canvasCtx.save();});
@@ -554,8 +562,11 @@ void canvasRaster(unsigned int *raster, int w, int h,
         const img = new ImageData(new Uint8ClampedArray(raster), $1, $2);
         const buffer = new OffscreenCanvas($1, $2);
         buffer.getContext('2d').putImageData(img, 0, 0);
+        Module.canvasCtx.save();
+        Module.canvasCtx.scale($5, $6);
         Module.canvasCtx.drawImage(buffer, 0, 0, $3, $4);
-    }, raster, w, h, 2*width, 2*height);
+        Module.canvasCtx.restore();
+    }, raster, w, h, 2*width, 2*height, scale_x, scale_y);
 
     EM_ASM({Module.canvasCtx.restore();});
 }

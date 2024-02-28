@@ -44,6 +44,8 @@
 
 * Fixed spelling errors in some JavaScript errors thrown by webR.
 
+* Rasters with negative width or height are now drawn mirrored or flipped when using the canvas graphics device (#350).
+
 * Include `cex` parameters when calculating font size in canvas graphics device (#348).
 
 # webR 0.2.2
