@@ -44,6 +44,8 @@
 
 * Fixed spelling errors in some JavaScript errors thrown by webR.
 
+* The `symbols.rds` make target should now work when building R packages using `rwasm` (r-wasm/rwasm#13).
+
 * Rasters with negative width or height are now drawn mirrored or flipped when using the canvas graphics device (#350).
 
 * Include `cex` parameters when calculating font size in canvas graphics device (#348).
