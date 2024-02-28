@@ -25,7 +25,7 @@ export class ServiceWorkerChannelMain extends ChannelMain {
   initialised: Promise<unknown>;
 
   resolve: (_?: unknown) => void;
-  close = () => {};
+  close = () => { return; };
 
   #syncMessageCache = new Map<string, Message>();
   #registration?: ServiceWorkerRegistration;
@@ -39,20 +39,21 @@ export class ServiceWorkerChannelMain extends ChannelMain {
         worker.terminate();
         this.putClosedMessage();
       };
-      this.#registerServiceWorker(`${config.serviceWorkerUrl}webr-serviceworker.js`).then(
-        (clientId) => {
-          const msg = {
-            type: 'init',
-            data: {
-              config,
-              channelType: ChannelType.ServiceWorker,
-              clientId,
-              location: window.location.href,
-            },
-          } as Message;
-          worker.postMessage(msg);
-        }
-      );
+      void this.#registerServiceWorker(`${config.serviceWorkerUrl}webr-serviceworker.js`)
+        .then(
+          (clientId) => {
+            const msg = {
+              type: 'init',
+              data: {
+                config,
+                channelType: ChannelType.ServiceWorker,
+                clientId,
+                location: window.location.href,
+              },
+            } as Message;
+            worker.postMessage(msg);
+          }
+        );
     };
 
     if (isCrossOrigin(config.serviceWorkerUrl)) {
@@ -83,7 +84,7 @@ export class ServiceWorkerChannelMain extends ChannelMain {
     this.#registration = await navigator.serviceWorker.register(url);
     await navigator.serviceWorker.ready;
     window.addEventListener('beforeunload', () => {
-      this.#registration?.unregister();
+      void this.#registration?.unregister();
     });
 
     // Ensure we can communicate with service worker and we have a client ID
@@ -102,7 +103,7 @@ export class ServiceWorkerChannelMain extends ChannelMain {
 
     // Setup listener for service worker messages
     navigator.serviceWorker.addEventListener('message', (event: MessageEvent<Request>) => {
-      this.#onMessageFromServiceWorker(event);
+      void this.#onMessageFromServiceWorker(event);
     });
     return clientId;
   }
@@ -154,7 +155,7 @@ export class ServiceWorkerChannelMain extends ChannelMain {
     }
   }
 
-  #onMessageFromWorker = async (worker: Worker, message: Message) => {
+  #onMessageFromWorker = (worker: Worker, message: Message) => {
     if (!message || !message.type) {
       return;
     }
@@ -185,7 +186,7 @@ export class ServiceWorkerChannelMain extends ChannelMain {
       case 'request':
         throw new WebRChannelError(
           "Can't send messages of type 'request' from a worker." +
-            'Use service worker fetch request instead.'
+          'Use service worker fetch request instead.'
         );
     }
   };
@@ -201,8 +202,8 @@ export class ServiceWorkerChannelWorker implements ChannelWorker {
   #location: string;
   #lastInterruptReq = Date.now();
   #dispatch: (msg: Message) => void = () => 0;
-  #interrupt = () => {};
-  onMessageFromMainThread: (msg: Message) => void = () => {};
+  #interrupt = () => { return; };
+  onMessageFromMainThread: (msg: Message) => void = () => { return; };
 
   constructor(data: { clientId?: string; location?: string }) {
     if (!data.clientId || !data.location) {
@@ -239,7 +240,7 @@ export class ServiceWorkerChannelWorker implements ChannelWorker {
     this.write({ type: 'sync-request', data: request });
 
     let retryCount = 0;
-    for (;;) {
+    for (; ;) {
       try {
         const url = new URL('__wasm__/webr-fetch-request/', this.#location);
         const xhr = new XMLHttpRequest();
@@ -268,7 +269,7 @@ export class ServiceWorkerChannelWorker implements ChannelWorker {
   }
 
   inputOrDispatch(): number {
-    for (;;) {
+    for (; ;) {
       const msg = this.read();
       if (msg.type === 'stdin') {
         return Module.allocateUTF8(msg.data as string);

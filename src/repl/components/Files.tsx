@@ -27,7 +27,7 @@ export function createTreeFromFSNode(fsNode: FSNode): ITreeNode {
     metadata: { type: fsNode.isFolder ? 'folder' : 'file' },
   };
   if (fsNode.isFolder && fsNode.contents) {
-    tree.children = Object.entries(fsNode.contents).map(([name , node]) => {
+    tree.children = Object.entries(fsNode.contents).map(([name, node]) => {
       const child = (node.mounted === null) ? node : node.mounted.root;
       child.name = name;
       return createTreeFromFSNode(child);
@@ -66,7 +66,7 @@ export function Files({
           ? <FolderIcon isOpen={isExpanded} />
           : <Fa.FaRegFile className="icon" />
       }
-      { element.name }
+      {element.name}
     </div>
   );
 
@@ -112,7 +112,7 @@ export function Files({
       return;
     }
     const path = getNodePath(selectedNode);
-    webR.FS.readFile(path).then((data) => {
+    void webR.FS.readFile(path).then((data) => {
       const filename = selectedNode.name;
       const blob = new Blob([data], { type: 'application/octet-stream' });
       const url = URL.createObjectURL(blob);
@@ -124,12 +124,12 @@ export function Files({
     });
   };
 
-  const onOpen = () => {
+  const onOpen = async () => {
     if (!selectedNode) {
       return;
     }
     const path = getNodePath(selectedNode);
-    filesInterface.openFileInEditor(selectedNode.name, path, false);
+    await filesInterface.openFileInEditor(selectedNode.name, path, false);
   };
 
   const onNewDirectory = async () => {
@@ -211,10 +211,11 @@ export function Files({
       const data = flattenTree({
         name: 'root',
         children: [tree],
-        metadata: {type: 'folder'}}
+        metadata: { type: 'folder' }
+      }
       );
       data.forEach((node) => {
-        if ( node.metadata!.type === 'folder' && node.children.length > 0) {
+        if (node.metadata!.type === 'folder' && node.children.length > 0) {
           node.isBranch = true;
         }
       });
@@ -247,21 +248,21 @@ export function Files({
             className="upload-file"
             disabled={!selectedNode || isFileSelected}
           >
-              <Fa.FaFileUpload aria-hidden="true" className="icon" /> Upload file
+            <Fa.FaFileUpload aria-hidden="true" className="icon" /> Upload file
           </button>
           <button
-            onClick={() => { onNewFile(); }}
+            onClick={() => { void onNewFile(); }}
             disabled={!selectedNode || isFileSelected}
           >
             <Fa.FaFileAlt aria-hidden="true" className="icon" /> New file
           </button>
           <button
-            onClick={() => { onNewDirectory(); }}
+            onClick={() => { void onNewDirectory(); }}
             disabled={!selectedNode || isFileSelected}
           >
             <Fa.FaFolderPlus aria-hidden="true" className="icon" /> New directory
           </button>
-          <input onChange={onUpload} ref={uploadRef} type="file"/>
+          <input onChange={onUpload} ref={uploadRef} type="file" />
           <button
             ref={downloadButtonRef}
             onClick={onDownload}
@@ -271,16 +272,16 @@ export function Files({
             <Fa.FaFileDownload aria-hidden="true" className="icon" /> Download file
           </button>
           <button
-            onClick={onOpen}
+            onClick={() => { void onOpen(); }}
             disabled={!selectedNode || !isFileSelected}
           >
             <Fa.FaFileCode aria-hidden="true" className="icon" /> Open in editor
           </button>
           <button
-            onClick={() => { onDelete(); }}
+            onClick={() => { void onDelete(); }}
             disabled={!selectedNode}
           >
-          <Fa.FaTimesCircle aria-hidden="true" className="icon" /> Delete
+            <Fa.FaTimesCircle aria-hidden="true" className="icon" /> Delete
           </button>
         </div>
       </div>

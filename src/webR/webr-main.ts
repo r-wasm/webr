@@ -102,10 +102,10 @@ export type FSType = 'NODEFS' | 'WORKERFS';
 /**
  * Configuration settings to be used when mounting Filesystem objects with
  * Emscripten
- * */
+ */
 export type FSMountOptions<T extends FSType = FSType> =
   T extends 'NODEFS' ? { root: string } : {
-    blobs?: Array<{name: string, data: Blob}>;
+    blobs?: Array<{ name: string, data: Blob }>;
     files?: Array<File | FileList>;
     packages?: Array<{ metadata: any, blob: Blob }>;
   };
@@ -265,20 +265,20 @@ export class WebR {
         na: (await this.RObject.getPersistentObject('na')) as RLogical,
       };
 
-      this.#handleSystemMessages();
+      void this.#handleSystemMessages();
     });
   }
 
   /**
    * @returns {Promise<void>} A promise that resolves once webR has been
-   * intialised.
+   * initialised.
    */
   async init() {
     return this.#initialised;
   }
 
   async #handleSystemMessages() {
-    for (;;) {
+    for (; ;) {
       const msg = await this.#chan.readSystem();
       switch (msg.type) {
         case 'setTimeoutWasm':
@@ -288,7 +288,7 @@ export class WebR {
           */
           setTimeout(
             (ptr: EmPtr, args: number[]) => {
-              this.invokeWasmFunction(ptr, ...args);
+              void this.invokeWasmFunction(ptr, ...args);
             },
             msg.data.delay as number,
             msg.data.ptr,
@@ -386,7 +386,7 @@ export class WebR {
   /**
    * Evaluate the given R code.
    *
-   * Stream outputs and any conditions raised during exectution are written to
+   * Stream outputs and any conditions raised during execution are written to
    * the JavaScript console.
    * @param {string} code The R code to evaluate.
    * @param {EvalROptions} [options] Options for the execution environment.
@@ -574,7 +574,7 @@ export class Shelter {
   /**
    * Evaluate the given R code.
    *
-   * Stream outputs and any conditions raised during exectution are written to
+   * Stream outputs and any conditions raised during execution are written to
    * the JavaScript console. The returned R object is protected by the shelter.
    * @param {string} code The R code to evaluate.
    * @param {EvalROptions} [options] Options for the execution environment.
@@ -661,6 +661,6 @@ function newShelterProxy(chan: ChannelMain) {
       return out;
     },
   }) as unknown as {
-    new (): Promise<Shelter>;
+    new(): Promise<Shelter>;
   };
 }

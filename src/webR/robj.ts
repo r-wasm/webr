@@ -142,7 +142,8 @@ export type WebRDataJsAtomic<T> = {
  * @returns {boolean} True if the object is an instance of a {@link WebRDataJs}.
  */
 export function isWebRDataJs(value: any): value is WebRDataJs {
-  return value && typeof value === 'object' && Object.keys(RTypeMap).includes(value.type as string);
+  return !!value && typeof value === 'object'
+    && Object.keys(RTypeMap).includes(value.type as string);
 }
 
 /**
@@ -156,5 +157,5 @@ export type WebRDataScalar<T> = T | RMain.RObject | RWorker.RObjectBase;
  * @returns {boolean} True if the object is of type {@link Complex}.
  */
 export function isComplex(value: any): value is Complex {
-  return value && typeof value === 'object' && 're' in value && 'im' in value;
+  return !!value && typeof value === 'object' && 're' in value && 'im' in value;
 }

@@ -15,7 +15,7 @@ const requests: {
 
 export function handleInstall() {
   console.log('webR service worker installed');
-  self.skipWaiting();
+  void self.skipWaiting();
 }
 
 export function handleActivate(event: ExtendableEvent) {
@@ -46,12 +46,12 @@ export function handleFetch(event: FetchEvent) {
     return false;
   }
   const requestBody = event.request.arrayBuffer();
-  const requestReponse = requestBody.then(async (body) => {
+  const requestResponse = requestBody.then(async (body) => {
     const data = decode(body) as { clientId: string; uuid: string };
     return await sendRequest(data.clientId, data.uuid);
   });
-  event.waitUntil(requestReponse);
-  event.respondWith(requestReponse);
+  event.waitUntil(requestResponse);
+  event.respondWith(requestResponse);
   return true;
 }
 
@@ -59,7 +59,7 @@ export function handleMessage(event: ExtendableMessageEvent) {
   // console.log('service worker got a message', event.data);
   switch (event.data.type) {
     case 'register-client-main': {
-      self.clients.claim();
+      void self.clients.claim();
       const source = event.source as WindowClient;
       self.clients.get(source.id).then((client) => {
         if (!client) {
@@ -69,6 +69,9 @@ export function handleMessage(event: ExtendableMessageEvent) {
           type: 'registration-successful',
           clientId: source.id,
         });
+      }, (reason) => {
+        console.log(reason);
+        throw new WebRChannelError("Can't respond to client in service worker message handler");
       });
       break;
     }

@@ -20,7 +20,7 @@ export class SharedBufferChannelMain extends ChannelMain {
 
   initialised: Promise<unknown>;
   resolve: (_?: unknown) => void;
-  close = () => {};
+  close = () => { return; };
 
   constructor(config: Required<WebROptions>) {
     super();
@@ -60,7 +60,7 @@ export class SharedBufferChannelMain extends ChannelMain {
   #handleEventsFromWorker(worker: Worker) {
     if (IN_NODE) {
       (worker as unknown as NodeWorker).on('message', (message: Message) => {
-        this.#onMessageFromWorker(worker, message);
+        void this.#onMessageFromWorker(worker, message);
       });
     } else {
       worker.onmessage = (ev: MessageEvent) =>
@@ -124,8 +124,8 @@ export class SharedBufferChannelWorker implements ChannelWorker {
   #ep: Endpoint;
   #dispatch: (msg: Message) => void = () => 0;
   #interruptBuffer = new Int32Array(new SharedArrayBuffer(4));
-  #interrupt = () => {};
-  onMessageFromMainThread: (msg: Message) => void = () => {};
+  #interrupt = () => { return; };
+  onMessageFromMainThread: (msg: Message) => void = () => { return; };
 
   constructor() {
     this.#ep = (IN_NODE ? require('worker_threads').parentPort : globalThis) as Endpoint;
@@ -152,7 +152,7 @@ export class SharedBufferChannelWorker implements ChannelWorker {
   }
 
   inputOrDispatch(): number {
-    for (;;) {
+    for (; ;) {
       const msg = this.read();
       if (msg.type === 'stdin') {
         return Module.allocateUTF8(msg.data as string);

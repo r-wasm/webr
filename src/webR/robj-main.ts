@@ -38,7 +38,7 @@ export type RFunction = RProxy<RWorker.RFunction> & ((...args: unknown[]) => Pro
  */
 export function isRObject(value: any): value is RObject {
   return (
-    value &&
+    !!value &&
     (typeof value === 'object' || typeof value === 'function') &&
     'payloadType' in value &&
     isWebRPayloadPtr(value._payload)

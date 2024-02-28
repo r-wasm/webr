@@ -43,7 +43,7 @@ body {
   padding: 0px 5px;
 }
 
-.editor[style*='display: none'] ~ .term {
+.editor[style*='display: none']~.term {
   grid-row-start: 1;
 }
 

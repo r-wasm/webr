@@ -141,7 +141,7 @@ class _Syncifier {
 
   waitOnSignalBuffer() {
     const timeout = 50;
-    for (;;) {
+    for (; ;) {
       const status = Atomics.wait(this.signalBuffer, 0, 0, timeout);
       switch (status) {
         case 'ok':
@@ -190,7 +190,7 @@ class _Syncifier {
   }
 
   syncifyTask(task: SyncTask) {
-    for (;;) {
+    for (; ;) {
       this.waitOnSignalBuffer();
       // console.log("syncifyTask:: woke");
       if (this.pollTasks(task)) {

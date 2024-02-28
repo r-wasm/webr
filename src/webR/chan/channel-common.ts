@@ -55,6 +55,6 @@ export function newChannelWorker(msg: ChannelInitMessage) {
     case ChannelType.PostMessage:
       return new PostMessageChannelWorker();
     default:
-      throw new WebRChannelError('Unknown worker channel type recieved');
+      throw new WebRChannelError('Unknown worker channel type received');
   }
 }

@@ -19,7 +19,7 @@ function build(input: string, output: string, platform: esbuild.Platform, minify
   return esbuild.context({
     assetNames: 'assets/[name]-[hash]',
     bundle: true,
-    entryPoints: [ input ],
+    entryPoints: [input],
     external: ['worker_threads', 'path', 'fs'],
     loader: {
       '.jpg': 'file',
@@ -62,24 +62,20 @@ const allOutputs = outputs.browser.concat(pkg ? outputs.npm : []);
 
 allOutputs.forEach((build) => {
   build
-    .then((context) => {
-      context.rebuild();
-      return context;
-    })
-    .then((context) => {
-      if (serve) context.watch();
+    .then(async (context) => {
+      await context.rebuild();
+      if (serve) await context.watch();
     })
     .catch((reason) => {
       console.error(reason);
-      throw new Error('A problem occured building webR distribution with esbuild');
+      throw new Error('A problem occurred building webR distribution with esbuild');
     });
-  }
-);
+});
 
 if (serve) {
   outputs.browser[0]
-    .then((context) => {
-      context.serve({ servedir: '../dist', port: 8001 }).then(() => {
+    .then(async (context) => {
+      await context.serve({ servedir: '../dist', port: 8001 }).then(() => {
         http
           .createServer((req, res) => {
             const { url, method, headers } = req;
@@ -105,12 +101,17 @@ if (serve) {
     })
     .catch((reason) => {
       console.error(reason);
-      throw new Error('A problem occured service webR distribution with esbuild');
+      throw new Error('A problem occurred serving webR distribution with esbuild');
     });
 } else {
   allOutputs.forEach(build => {
-    build.then((context) => {
-      context.dispose();
-    });
+    build
+      .then(async (context) => {
+        await context.dispose();
+      })
+      .catch((reason) => {
+        console.error(reason);
+        throw new Error('A problem occurred running esbuild');
+      });
   });
 }

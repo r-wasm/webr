@@ -14,6 +14,9 @@ import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
 import { protect, protectInc, unprotect, parseEvalBare, UnwindProtectException, safeEval } from './utils-r';
 import { generateUUID } from './chan/task-common';
 
+import type { readFileSync } from 'fs';
+import type { parentPort } from 'worker_threads';
+
 import {
   CallRObjectMethodMessage,
   CaptureRMessage,
@@ -52,7 +55,10 @@ const onWorkerMessage = function (msg: Message) {
 };
 
 if (IN_NODE) {
-  require('worker_threads').parentPort.on('message', onWorkerMessage);
+  const workerThreads = require('worker_threads') as {
+    parentPort: typeof parentPort;
+  };
+  workerThreads.parentPort!.on('message', onWorkerMessage);
   (globalThis as any).XMLHttpRequest = require('xmlhttprequest-ssl')
     .XMLHttpRequest as XMLHttpRequest;
 } else {
@@ -407,7 +413,7 @@ function dispatch(msg: Message): void {
 
           case 'invokeWasmFunction': {
             const msg = reqMsg as InvokeWasmFunctionMessage;
-            const res = Module.getWasmTableEntry(msg.data.ptr)(...msg.data.args) as number;
+            const res = Module.getWasmTableEntry(msg.data.ptr)(...msg.data.args);
             write({
               payloadType: 'raw',
               obj: res,
@@ -523,7 +529,7 @@ function mountImageData(data: any, metadata: { files: any[] }, mountpoint: strin
       readAsArrayBuffer: (chunk: Buffer) => new Uint8Array(chunk),
     };
 
-    metadata.files.forEach((f: {filename: string, start: number, end: number}) => {
+    metadata.files.forEach((f: { filename: string, start: number, end: number }) => {
       const contents: Buffer & { size?: number } = buf.subarray(f.start, f.end);
       contents.size = contents.byteLength;
       contents.slice = (start?: number, end?: number) => {
@@ -557,7 +563,7 @@ function mountImageUrl(url: string, mountpoint: string) {
   const metaResp = downloadFileContent(url.replace(new RegExp('.data$'), '.js.metadata'));
 
   if (dataResp.status < 200 || dataResp.status >= 300
-      || metaResp.status < 200 || metaResp.status >= 300) {
+    || metaResp.status < 200 || metaResp.status >= 300) {
     throw new Error('Unable to download Emscripten filesystem image.' +
       'See the JavaScript console for further details.');
   }
@@ -571,11 +577,14 @@ function mountImageUrl(url: string, mountpoint: string) {
 
 // Read an Emscripten FS image from disk and mount to the VFS (requires Node)
 function mountImagePath(path: string, mountpoint: string) {
-  const buf = require('fs').readFileSync(path) as Buffer;
-  const metadata = JSON.parse(require('fs').readFileSync(
+  const fs = require('fs') as {
+    readFileSync: typeof readFileSync;
+  };
+  const buf = fs.readFileSync(path);
+  const metadata = JSON.parse(fs.readFileSync(
     path.replace(new RegExp('.data$'), '.js.metadata'),
     'utf8'
-  ) as string) as { files: any[] };
+  )) as { files: unknown[] };
   mountImageData(buf, metadata, mountpoint);
 }
 
@@ -610,7 +619,7 @@ function callRObjectMethod(
     throw Error('Requested property cannot be invoked');
   }
 
-  const res = (fn as Function).apply(
+  const res = (fn as (...args: unknown[]) => unknown).apply(
     obj,
     args.map((arg) => {
       if (arg.payloadType === 'ptr') {
@@ -711,7 +720,7 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
         (out) => out.get('type').toString() === 'error'
       );
       if (error) {
-        const call = error.pluck('data','call') as RCall;
+        const call = error.pluck('data', 'call') as RCall;
         const source = call && call.type() === 'call' ? call.deparse() : 'Unknown source';
         const message = error.pluck('data', 'message')?.toString() || 'An error occurred evaluating R code.';
         throw new Error(`Error in ${source}: ${message}`);
@@ -865,7 +874,7 @@ function init(config: Required<WebROptions>) {
       chan?.handleInterrupt();
     },
 
-    evalJs: (code: RPtr): number => {
+    evalJs: (code: RPtr): unknown => {
       try {
         return (0, eval)(Module.UTF8ToString(code));
       } catch (e) {
@@ -915,6 +924,6 @@ function init(config: Required<WebROptions>) {
   // At the next tick, launch the REPL. This never returns.
   setTimeout(() => {
     const scriptSrc = `${_config.baseUrl}R.bin.js`;
-    loadScript(scriptSrc);
+    void loadScript(scriptSrc);
   });
 }

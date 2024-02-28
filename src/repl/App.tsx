@@ -48,13 +48,13 @@ const filesInterface: FilesInterface = {
 };
 
 const plotInterface: PlotInterface = {
-  newPlot: () => {},
-  drawImage: (img: ImageBitmap) => {
+  newPlot: () => { return; },
+  drawImage: () => {
     throw new Error('Unable to plot, plotting not initialised.');
   },
 };
 
-async function handleCanvasMessage(msg: CanvasMessage) {
+function handleCanvasMessage(msg: CanvasMessage) {
   if (msg.data.event === 'canvasImage') {
     plotInterface.drawImage(msg.data.image);
   } else if (msg.data.event === 'canvasNewPage') {
@@ -62,12 +62,12 @@ async function handleCanvasMessage(msg: CanvasMessage) {
   }
 }
 
-async function handlePagerMessage(msg: PagerMessage){
-    const { path, title, deleteFile } = msg.data;
-    await filesInterface.openFileInEditor(title, path, true);
-    if (deleteFile) {
-      webR.FS.unlink(path);
-    }
+async function handlePagerMessage(msg: PagerMessage) {
+  const { path, title, deleteFile } = msg.data;
+  await filesInterface.openFileInEditor(title, path, true);
+  if (deleteFile) {
+    await webR.FS.unlink(path);
+  }
 }
 
 function App() {
@@ -78,9 +78,9 @@ function App() {
         terminalInterface={terminalInterface}
         filesInterface={filesInterface}
       />
-      <Files webR={webR} filesInterface={filesInterface}/>
-      <Terminal webR={webR} terminalInterface={terminalInterface}/>
-      <Plot plotInterface={plotInterface}/>
+      <Files webR={webR} filesInterface={filesInterface} />
+      <Terminal webR={webR} terminalInterface={terminalInterface} />
+      <Plot plotInterface={plotInterface} />
     </div>
   );
 }
@@ -88,7 +88,7 @@ function App() {
 const root = ReactDOM.createRoot(document.getElementById('root')!);
 root.render(<StrictMode><App /></StrictMode>);
 
-(async () => {
+void (async () => {
   await webR.init();
 
   // Set the default graphics device and pager
@@ -107,7 +107,7 @@ root.render(<StrictMode><App /></StrictMode>);
   // Clear the loading message
   terminalInterface.write('\x1b[2K\r');
 
-  for (;;) {
+  for (; ;) {
     const output = await webR.read();
     switch (output.type) {
       case 'stdout':
@@ -117,13 +117,16 @@ root.render(<StrictMode><App /></StrictMode>);
         terminalInterface.println(`\x1b[1;31m${output.data as string}\x1b[m`);
         break;
       case 'prompt':
-        filesInterface.refreshFilesystem();
+        void filesInterface.refreshFilesystem();
         terminalInterface.read(output.data as string).then((command) => {
           webR.writeConsole(command);
+        }, (reason) => {
+          console.error(reason);
+          throw new Error(`An error occurred reading from the R console terminal.`);
         });
         break;
       case 'canvas':
-        await handleCanvasMessage(output as CanvasMessage);
+        handleCanvasMessage(output as CanvasMessage);
         break;
       case 'pager':
         await handlePagerMessage(output as PagerMessage);

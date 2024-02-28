@@ -137,7 +137,7 @@ function newObjectFromArray(arr: WebRData[]): RObject {
   // Is this a D3 formatted data frame?
   const hasObjects = arr.every((v) => v && typeof v === 'object' && !isRObject(v) && !isComplex(v));
   if (hasObjects) {
-    const _arr = arr as {[key: string]: WebRData}[];
+    const _arr = arr as { [key: string]: WebRData }[];
     const isConsistent = _arr.every((a) => {
       return Object.keys(a).filter((k) => !Object.keys(_arr[0]).includes(k)).length === 0 &&
         Object.keys(_arr[0]).filter((k) => !Object.keys(a).includes(k)).length === 0;
@@ -271,6 +271,7 @@ export class RObject extends RObjectBase {
     return names && names.includes(name);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   toJs(options: ToJsOptions = { depth: 0 }, depth = 1): WebRDataJs {
     throw new Error('This R object cannot be converted to JS');
   }
@@ -461,7 +462,7 @@ export class RPairlist extends RObject {
     depth = -1,
   } = {}): NamedObject<WebRData> {
     const entries = this.entries({ depth });
-    const keys = entries.map(([k, v]) => k);
+    const keys = entries.map(([k,]) => k);
     if (!allowDuplicateKey && new Set(keys).size !== keys.length) {
       throw new Error('Duplicate key when converting pairlist without allowDuplicateKey enabled');
     }
@@ -470,7 +471,7 @@ export class RPairlist extends RObject {
     }
     return Object.fromEntries(
       entries.filter((u, idx) => entries.findIndex((v) => v[0] === u[0]) === idx)
-    );
+    ) as NamedObject<WebRData>;
   }
 
   entries(options: ToJsOptions = { depth: 1 }): NamedEntries<WebRData> {
@@ -636,7 +637,7 @@ export class RList extends RObject {
     depth = -1,
   } = {}): NamedObject<WebRData> {
     const entries = this.entries({ depth });
-    const keys = entries.map(([k, v]) => k);
+    const keys = entries.map(([k,]) => k);
     if (!allowDuplicateKey && new Set(keys).size !== keys.length) {
       throw new Error('Duplicate key when converting list without allowDuplicateKey enabled');
     }
@@ -645,7 +646,7 @@ export class RList extends RObject {
     }
     return Object.fromEntries(
       entries.filter((u, idx) => entries.findIndex((v) => v[0] === u[0]) === idx)
-    );
+    ) as NamedObject<WebRData>;
   }
 
   toD3(): NamedObject<WebRData>[] {
@@ -656,7 +657,7 @@ export class RList extends RObject {
     }
     const entries = this.entries() as Array<[string, atomicType[]]>;
     return entries.reduce((a, entry) => {
-      entry[1].forEach((v, j) => a[j] = Object.assign(a[j] || {}, { [entry[0]!] : v }));
+      entry[1].forEach((v, j) => a[j] = Object.assign(a[j] || {}, { [entry[0]!]: v }));
       return a;
     }, []);
   }
@@ -664,7 +665,7 @@ export class RList extends RObject {
   // JS objects are interpreted as R list objects. If we have a JS object with
   // consistent columns of atomic type, make the returned R object a data.frame
   static fromObject(obj: WebRData) {
-    const {names, values} = toWebRData(obj);
+    const { names, values } = toWebRData(obj);
     const prot = { n: 0 };
 
     // Should we make this a data.frame?
@@ -703,9 +704,9 @@ export class RList extends RObject {
     return new RList(obj);
   }
 
-  static fromD3(arr: {[key: string]: WebRData}[]) {
+  static fromD3(arr: { [key: string]: WebRData }[]) {
     return this.fromObject(
-      Object.fromEntries(Object.keys(arr[0]).map((k)=> [k, arr.map((v) => v[k])]))
+      Object.fromEntries(Object.keys(arr[0]).map((k) => [k, arr.map((v) => v[k])]))
     );
   }
 
@@ -939,7 +940,7 @@ abstract class RVectorAtomic<T extends atomicType> extends RObject {
     return super.subset(prop) as this;
   }
 
-  getDollar(prop: string): RObject {
+  getDollar(): RObject {
     throw new Error('$ operator is invalid for atomic vectors');
   }
 
@@ -969,7 +970,7 @@ abstract class RVectorAtomic<T extends atomicType> extends RObject {
 
   toObject({ allowDuplicateKey = true, allowEmptyKey = false } = {}): NamedObject<T | null> {
     const entries = this.entries();
-    const keys = entries.map(([k, v]) => k);
+    const keys = entries.map(([k,]) => k);
     if (!allowDuplicateKey && new Set(keys).size !== keys.length) {
       throw new Error(
         'Duplicate key when converting atomic vector without allowDuplicateKey enabled'
@@ -982,7 +983,7 @@ abstract class RVectorAtomic<T extends atomicType> extends RObject {
     }
     return Object.fromEntries(
       entries.filter((u, idx) => entries.findIndex((v) => v[0] === u[0]) === idx)
-    );
+    ) as NamedObject<T | null>;
   }
 
   entries(): NamedEntries<T | null> {
@@ -1368,7 +1369,7 @@ export let objs: {
  * Populate the persistent R object store.
  * @internal
  */
-export function initPersistentObjects(){
+export function initPersistentObjects() {
   objs = {
     baseEnv: REnvironment.wrap(Module.getValue(Module._R_BaseEnv, '*')),
     bracket2Symbol: RSymbol.wrap(Module.getValue(Module._R_Bracket2Symbol, '*')),

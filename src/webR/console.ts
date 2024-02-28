@@ -87,9 +87,9 @@ export class Console {
     this.#stdout = callbacks.stdout || this.#defaultStdout;
     this.#stderr = callbacks.stderr || this.#defaultStderr;
     this.#prompt = callbacks.prompt || this.#defaultPrompt;
-    this.#canvasImage = callbacks.canvasImage || this.#defaultcanvasImage;
-    this.#canvasNewPage = callbacks.canvasNewPage || this.#defaultcanvasNewPage;
-    this.webR.evalRVoid('options(device=webr::canvas)');
+    this.#canvasImage = callbacks.canvasImage || this.#defaultCanvasImage;
+    this.#canvasNewPage = callbacks.canvasNewPage || this.#defaultCanvasNewPage;
+    void this.webR.evalRVoid('options(device=webr::canvas)');
   }
 
   /**
@@ -136,7 +136,7 @@ export class Console {
    * The default function called when webR writes to HTML canvas
    * @param {ImageBitmap} image An ImageBitmap containing the image data.
    */
-  #defaultcanvasImage = (image: ImageBitmap) => {
+  #defaultCanvasImage = (image: ImageBitmap) => {
     if (IN_NODE) {
       throw new Error('Plotting with HTML canvas is not yet supported under Node');
     }
@@ -146,7 +146,7 @@ export class Console {
   /**
    * The default function called when webR creates a new plot
    */
-  #defaultcanvasNewPage = () => {
+  #defaultCanvasNewPage = () => {
     if (IN_NODE) {
       throw new Error('Plotting with HTML canvas is not yet supported under Node');
     }
@@ -157,20 +157,20 @@ export class Console {
    * Start the webR console
    */
   run() {
-    this.#run();
+    void this.#run();
   }
 
   /*
    * Start the asynchronous infinite loop
    *
    * This loop waits for output from webR and dispatches callbacks based on the
-   * message recieved.
+   * message received.
    *
    * The promise returned by this asynchronous function resolves only once the
    * webR communication channel has closed.
    */
   async #run() {
-    for (;;) {
+    for (; ;) {
       const output = await this.webR.read();
       switch (output.type) {
         case 'stdout':

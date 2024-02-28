@@ -90,7 +90,8 @@ describe('Evaluate R code', () => {
   });
 
   test('Send output to console.log while evaluating R code', async () => {
-    const logSpy = jest.spyOn(console, 'log').mockImplementation((...args) => {});
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
     await webR.evalR('print(c(30, 42, 66, 70, 78, 102))');
     await webR.evalR('print(c("foo", "bar", "baz"))');
     expect(logSpy).toHaveBeenCalledWith('[1]  30  42  66  70  78 102');
@@ -99,7 +100,8 @@ describe('Evaluate R code', () => {
   });
 
   test('Send conditions to console.warn while evaluating R code', async () => {
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation((...args) => {});
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => { });
     await webR.evalR('warning("This is a warning!")');
     expect(warnSpy).toHaveBeenCalledWith('Warning message: \nThis is a warning!');
     warnSpy.mockRestore();
@@ -130,7 +132,7 @@ describe('Evaluate R code', () => {
       captureStreams: true,
     });
     expect(composite.output).toEqual([{ type: 'stdout', data: '[1]  1  2  4  6 12 24 36 48' }]);
-    shelter.purge();
+    void shelter.purge();
   });
 
   test('Capture stderr while capturing R code', async () => {
@@ -140,7 +142,7 @@ describe('Evaluate R code', () => {
       captureConditions: false,
     });
     expect(res.output).toEqual([{ type: 'stderr', data: 'Hello, stderr!' }]);
-    shelter.purge();
+    void shelter.purge();
   });
 
   test('Capture conditions while capturing R code', async () => {
@@ -152,7 +154,7 @@ describe('Evaluate R code', () => {
     expect(cond[0].type).toEqual('warning');
     const condMsg = (await cond[0].data.get('message')) as RCharacter;
     expect(await condMsg.toString()).toContain('This is a warning message');
-    shelter.purge();
+    void shelter.purge();
   });
 
   test('Capture output when executing an R function', async () => {
@@ -183,7 +185,7 @@ describe('Evaluate R code', () => {
     expect(await outType.toString()).toEqual('warning');
     expect(await outData.toString()).toContain('Hello, warning!');
 
-    webR.globalShelter.purge();
+    void webR.globalShelter.purge();
   });
 
   test('Capturing graphics throws an Error when OffScreenCanvas is unavailable', async () => {
@@ -192,7 +194,7 @@ describe('Evaluate R code', () => {
     await expect(throws).rejects.toThrow(
       'This environment does not have support for OffscreenCanvas.'
     );
-    shelter.purge();
+    void shelter.purge();
   });
 
   test('Capturing graphics with mocked OffScreenCanvas', async () => {
@@ -230,7 +232,7 @@ describe('Evaluate R code', () => {
     `, { captureGraphics: true });
 
     expect(result.images.length).toBeGreaterThan(0);
-    shelter.purge();
+    void shelter.purge();
   });
 });
 
@@ -606,7 +608,7 @@ describe('Create R objects from JS objects using proxy constructors', () => {
 
 describe('Create R lists from JS objects', () => {
   test('Create an R list from basic JS object', async () => {
-    const jsObj = { a: [1, 2], b: [3, 4, 5], c: ['x', 'y', 'z']};
+    const jsObj = { a: [1, 2], b: [3, 4, 5], c: ['x', 'y', 'z'] };
     const rObj = await new webR.RObject(jsObj) as RList;
     expect(await rObj.type()).toEqual('list');
     expect(await rObj.names()).toEqual(['a', 'b', 'c']);
@@ -637,7 +639,7 @@ describe('Create R lists from JS objects', () => {
   });
 
   test('Create an R list from JS object with R TypedArray', async () => {
-    const jsObj = { a: [1, 2], b: new Uint8Array([3, 4, 5]), c: new Uint8Array([6, 7, 8]).buffer};
+    const jsObj = { a: [1, 2], b: new Uint8Array([3, 4, 5]), c: new Uint8Array([6, 7, 8]).buffer };
     const rObj = await new webR.RObject(jsObj) as RList;
     expect(await rObj.type()).toEqual('list');
     expect(await rObj.names()).toEqual(['a', 'b', 'c']);
@@ -650,7 +652,7 @@ describe('Create R lists from JS objects', () => {
   });
 
   test('Create an R list from JS object with R object references', async () => {
-    const jsObj = { a: webR.objs.true, b: [1, webR.objs.na, 3], c: webR.objs.globalEnv};
+    const jsObj = { a: webR.objs.true, b: [1, webR.objs.na, 3], c: webR.objs.globalEnv };
     const rObj = await new webR.RObject(jsObj) as RList;
     expect(await rObj.type()).toEqual('list');
     expect(await rObj.names()).toEqual(['a', 'b', 'c']);
@@ -732,9 +734,9 @@ describe('Create R data.frame from JS objects', () => {
 
   test('Create an R data.frame from D3 JS object', async () => {
     const d3Obj = [
-      {a: true, b: 3, c: 'u'},
-      {a: webR.objs.false, b: 4, c: 'v'},
-      {a: null, b: 5, c: 'w'},
+      { a: true, b: 3, c: 'u' },
+      { a: webR.objs.false, b: 4, c: 'v' },
+      { a: null, b: 5, c: 'w' },
     ];
     const rObj = await new webR.RObject(d3Obj) as RList;
     expect(await rObj.type()).toEqual('list');
@@ -810,7 +812,7 @@ describe('Access R objects via the main thread object cache', () => {
 
     const check = (await webR.evalR('abc + 456')) as RDouble;
     expect(await check.toNumber()).toEqual(579);
-    webR.evalR('rm(abc)');
+    await webR.evalR('rm(abc)');
   });
 
   test('R base environment', async () => {
@@ -925,8 +927,8 @@ test('Close webR communication channel', async () => {
 
   // Promise resolves when the webR communication channel closes
   const closedPromise = new Promise((resolve) => {
-    (async () => {
-      for (;;) {
+    void (async () => {
+      for (; ;) {
         const output = await tempR.read();
         if (output.type === 'closed') {
           break;

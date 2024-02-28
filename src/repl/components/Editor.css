@@ -18,7 +18,7 @@
   right: 0;
 }
 
-.editor-actions > button {
+.editor-actions>button {
   background-color: transparent;
   border: none;
   color: var(--secondary);
@@ -26,7 +26,7 @@
   padding: 5px;
 }
 
-.editor-actions > button:hover {
+.editor-actions>button:hover {
   color: var(--primary);
 }
 
@@ -47,7 +47,7 @@
   border-top-right-radius: 5px;
 }
 
-.editor-file > .editor-filename {
+.editor-file>.editor-filename {
   font-size: 14px;
   height: 26px;
   line-height: 26px;
@@ -70,13 +70,13 @@
   background-color: var(--bg-primary);
 }
 
-.editor-file > button {
+.editor-file>button {
   background: transparent;
   border: none;
   padding: 0;
 }
 
-.editor-file > button.editor-switch {
+.editor-file>button.editor-switch {
   position: absolute;
   left: 0;
   top: 0;
@@ -84,13 +84,13 @@
   height: 100%;
 }
 
-.editor-file > button.editor-close {
+.editor-file>button.editor-close {
   color: var(--secondary);
   font-weight: bold;
   z-index: 1;
 }
 
-.editor-file > button.editor-close:hover {
+.editor-file>button.editor-close:hover {
   color: var(--primary);
 }
 

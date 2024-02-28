@@ -31,7 +31,7 @@ beforeAll(async () => {
 
 // We don't destroy objects during unit tests but when webR starts
 // the count should be zero
-test('Initial shelter size', async () => {
+test('Initial shelter size', () => {
   expect(initShelterSize).toEqual(0);
 });
 
@@ -415,9 +415,9 @@ describe('Working with R environments', () => {
 
   test('Set an item in an R environment', async () => {
     const env = (await webR.evalR('new.env()')) as REnvironment;
-    env.bind('a', 1);
-    env.bind('b', 2);
-    env.bind('.c', 3);
+    await env.bind('a', 1);
+    await env.bind('b', 2);
+    await env.bind('.c', 3);
     let value = (await env.getDollar('a')) as RDouble;
     expect(await value.toNumber()).toEqual(1);
     value = (await env.get('b')) as RDouble;
@@ -562,7 +562,7 @@ describe('Garbage collection', () => {
     const mem = await webR.evalR('rnorm(10000,1,1)');
     const during = await ((await gc.exec(false, false, true)) as RDouble).toTypedArray();
 
-    webR.destroy(mem);
+    await webR.destroy(mem);
     const after = await ((await gc.exec(false, false, true)) as RDouble).toTypedArray();
 
     expect(during[0]).toBeGreaterThan(before[0]);

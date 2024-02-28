@@ -32,7 +32,7 @@
   background-color: var(--bg-primary);
 }
 
-.plot-actions > button {
+.plot-actions>button {
   background-color: transparent;
   border: none;
   color: var(--secondary);
@@ -40,9 +40,10 @@
   font-size: 14px;
 }
 
-.plot-actions > button:hover {
+.plot-actions>button:hover {
   color: var(--primary);
 }
-.plot-actions > button:disabled {
+
+.plot-actions>button:disabled {
   color: var(--disabled);
 }

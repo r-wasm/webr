@@ -13,7 +13,7 @@
   display: none;
 }
 
-.files-actions > button {
+.files-actions>button {
   background-color: transparent;
   border: none;
   color: var(--secondary);
@@ -21,10 +21,11 @@
   font-size: 14px;
 }
 
-.files-actions > button:hover {
+.files-actions>button:hover {
   color: var(--primary);
 }
-.files-actions > button:disabled {
+
+.files-actions>button:disabled {
   color: var(--disabled);
 }
 
@@ -61,8 +62,7 @@
 
 .directory .tree-node:hover,
 .directory .tree-node:focus,
-.directory .tree-branch-wrapper:focus > .tree-node
-{
+.directory .tree-branch-wrapper:focus>.tree-node {
   border-left: 2px solid var(--secondary);
 }
 

@@ -8,7 +8,7 @@ import { AsyncQueue } from './queue';
 import { Message, newRequest, Response } from './message';
 import { WebRPayload, WebRPayloadWorker, webRPayloadAsError } from '../payload';
 
-// The channel structure is asymetric:
+// The channel structure is asymmetric:
 //
 // - The main thread maintains the input and output queues. All
 //   messages sent from main are stored in the input queue. The input
@@ -106,7 +106,7 @@ export interface ChannelWorker {
 }
 
 /**
- * Handler functions dealing with setup and commmunication over a Service Worker.
+ * Handler functions dealing with setup and communication over a Service Worker.
  */
 export interface ServiceWorkerHandlers {
   handleActivate: (this: ServiceWorkerGlobalScope, ev: ExtendableEvent) => any;

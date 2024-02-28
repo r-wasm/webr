@@ -94,7 +94,9 @@ export function Editor({
   const [editorView, setEditorView] = React.useState<EditorView>();
   const [files, setFiles] = React.useState<EditorFile[]>([]);
   const [activeFileIdx, setActiveFileIdx] = React.useState(0);
-  const runSelectedCode = React.useRef((): void => {});
+  const runSelectedCode = React.useRef((): void => {
+    throw new Error('Unable to run code, webR not initialised.');
+  });
 
   const activeFile = files[activeFileIdx];
   const isRFile = activeFile && activeFile.name.endsWith('.R');
@@ -112,7 +114,7 @@ export function Editor({
   React.useEffect(() => {
     let shelter: Shelter | null = null;
 
-    webR.init().then(async () => {
+    void webR.init().then(async () => {
       shelter = await new webR.Shelter();
       await webR.evalRVoid('rc.settings(func=TRUE, fuzzy=TRUE)');
       completionMethods.current = {
@@ -126,7 +128,7 @@ export function Editor({
     });
 
     return function cleanup() {
-      if (shelter) shelter.purge();
+      if (shelter) void shelter.purge();
     };
   }, []);
 
@@ -135,7 +137,7 @@ export function Editor({
       return null;
     }
     const line = context.state.doc.lineAt(context.state.selection.main.head).text;
-    const {from, to, text} = context.matchBefore(/[a-zA-Z0-9_.:]*/) ?? {from: 0, to: 0, text: ''};
+    const { from, to, text } = context.matchBefore(/[a-zA-Z0-9_.:]*/) ?? { from: 0, to: 0, text: '' };
     if (from === to && !context.explicit) {
       return null;
     }
@@ -146,7 +148,7 @@ export function Editor({
     await completionMethods.current.completeToken();
     const compl = await completionMethods.current.retrieveCompletions() as WebRDataJsAtomic<string>;
     const options = compl.values.map((val) => {
-      if (!val){
+      if (!val) {
         throw new Error('Missing values in completion result.');
       }
       return { label: val };
@@ -164,15 +166,15 @@ export function Editor({
         indentWithTab,
         {
           key: 'Mod-Enter',
-          run: (_: EditorView) => {
+          run: () => {
             if (!runSelectedCode.current) return false;
             runSelectedCode.current();
             return true;
           },
         },
       ]
-    )),
-    autocompletion({override: [completion]})
+      )),
+    autocompletion({ override: [completion] })
   ];
 
   const closeFile = (e: React.SyntheticEvent, index: number) => {
@@ -196,8 +198,11 @@ export function Editor({
       }
 
       const codeArray = new TextEncoder().encode(code);
-      webR.FS.writeFile('/tmp/.webRtmp-source', codeArray).then(()=>{
+      webR.FS.writeFile('/tmp/.webRtmp-source', codeArray).then(() => {
         webR.writeConsole("source('/tmp/.webRtmp-source', echo = TRUE, max.deparse.length = Inf)");
+      }, (reason) => {
+        console.error(reason);
+        throw new Error(`Can't run selected R code. See the JavaScript console for details.`);
       });
     };
   }, [editorView]);
@@ -220,8 +225,11 @@ export function Editor({
     terminalInterface.write('\x1b[2K\r');
 
     const codeArray = new TextEncoder().encode(code);
-    webR.FS.writeFile('/tmp/.webRtmp-source', codeArray).then(()=>{
+    webR.FS.writeFile('/tmp/.webRtmp-source', codeArray).then(() => {
       webR.writeConsole("source('/tmp/.webRtmp-source', echo = TRUE, max.deparse.length = Inf)");
+    }, (reason) => {
+      console.error(reason);
+      throw new Error(`Can't run selected R code. See the JavaScript console for details.`);
     });
   }, [syncActiveFileState, editorView]);
 
@@ -229,13 +237,17 @@ export function Editor({
     if (!editorView) {
       return;
     }
-    (async () => {
-      syncActiveFileState();
-      const code = editorView.state.doc.toString();
-      const data = new TextEncoder().encode(code);
-      await webR.FS.writeFile(activeFile.path, data);
-      filesInterface.refreshFilesystem();
-    })();
+
+    syncActiveFileState();
+    const code = editorView.state.doc.toString();
+    const data = new TextEncoder().encode(code);
+
+    webR.FS.writeFile(activeFile.path, data).then(() => {
+      void filesInterface.refreshFilesystem();
+    }, (reason) => {
+      console.error(reason);
+      throw new Error(`Can't save editor contents. See the JavaScript console for details.`);
+    });
   }, [syncActiveFileState, editorView]);
 
   React.useEffect(() => {
@@ -283,7 +295,7 @@ export function Editor({
 
         // Get file content, dealing with backspace characters until none remain
         let content = new TextDecoder().decode(data);
-        while(content.match(/.[\b]/)){
+        while (content.match(/.[\b]/)) {
           content = content.replace(/.[\b]/g, '');
         }
 
@@ -299,7 +311,7 @@ export function Editor({
           }
         });
         setFiles(updatedFiles);
-        setActiveFileIdx(index-1);
+        setActiveFileIdx(index - 1);
       });
     };
   }, [files, filesInterface]);
@@ -359,17 +371,17 @@ export function Editor({
         Escape and then Shift-Tab can also be used to move focus backwards.
       </p>
       <div
-          role="toolbar"
-          aria-label="Editor Toolbar"
-          className="editor-actions"
-        >
-          {isRFile && <button onClick={runFile}>
-            <FaPlay aria-hidden="true" className="icon" /> Run
-          </button>}
-          {!isReadOnly && <button onClick={saveFile}>
-            <FaRegSave aria-hidden="true" className="icon" /> Save
-          </button>}
-        </div>
+        role="toolbar"
+        aria-label="Editor Toolbar"
+        className="editor-actions"
+      >
+        {isRFile && <button onClick={runFile}>
+          <FaPlay aria-hidden="true" className="icon" /> Run
+        </button>}
+        {!isReadOnly && <button onClick={saveFile}>
+          <FaRegSave aria-hidden="true" className="icon" /> Save
+        </button>}
+      </div>
     </div>
   );
 }

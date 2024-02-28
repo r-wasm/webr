@@ -55,7 +55,7 @@ test('R list objects can be iterated over with `for await`', async () => {
 test('Attempting to iterate over unsupported R objects throws an error', async () => {
   const shouldThrow = async () => {
     const notalist = await webR.evalR('as.symbol("notalist")');
-    const result: any[] = [];
+    const result: unknown[] = [];
     for await (const elem of notalist) {
       result.push(await elem.toJs());
     }
@@ -77,6 +77,7 @@ test('R atomic vector objects can be iterated over with `for await`', async () =
 test('Other R objects cannot use the apply hook', async () => {
   const notFn = await webR.evalR('123');
   // @ts-expect-error Deliberate type error to test Error thrown
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   expect(() => notFn(8)).toThrow('is not a function');
 });
 
