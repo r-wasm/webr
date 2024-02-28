@@ -45,13 +45,16 @@ The [webR REPL demo](https://webr.r-wasm.org/latest/) performs this base R funct
 
 ## Interactively installing packages
 
-The [webr support package](api/r.qmd) provides an optional global handler that will show an interactive prompt whenever loading a library fails, asking the user if they would like to try downloading the package from the configured default webR binary package repository.
+The `install()` and `require()` base R functions can be shimmed by the function [`shim_install()`](api/r.html#shim_install) so that when a package is missing it is downloaded from the default webR binary package repository.
+
+An interactive prompt may be shown, asking the user if they would like to download the package. To enable the interactive menu, the `webr.show_menu` global option should be set to `TRUE`. Otherwise, the user will not be prompted and the package will be downloaded automatically.
 
 ```{r eval=FALSE}
-webr::global_prompt_install()
+webr::shim_install()
+options(webr.show_menu = `TRUE`)
 ```
 
-As part of its startup, the [webR REPL demo](https://webr.r-wasm.org/latest/) enables this handler. Once enabled, it is possible to install and load packages interactively via a prompt. The process is as follows,
+Once the menu has been enabled, it is possible to install and load packages interactively via a prompt. The process looks as follows,
 
 ``` r
 library(Matrix)
@@ -65,7 +68,32 @@ library(Matrix)
     Downloading webR package: lattice
     Downloading webR package: Matrix
 
-Once the package has been downloaded in this way, the next call to `library()` will load the package as usual.
+After the package has been downloaded and installed, the original `library()` or `require()` function will be invoked to continue loading the package as usual.
+
+### Handling missing packages using a global handler function
+
+An optional global handler is also provided that can be used to automatically download packages if loading fails. The handler can be installed with [`global_prompt_install()`](api/r.html#global_prompt_install) and allows packages to be automatically downloaded without explicitly loading them with `library()` or `require()`. When using the global handler, prompting the user with an interactive menu is also controlled by the `webr.show_menu` global option.
+
+```{r eval=FALSE}
+options(webr.show_menu = FALSE)
+webr::global_prompt_install()
+cli::cli_alert_success("The cli package is working!")
+```
+
+    Downloading webR package: cli
+    ✔ The cli package is working!
+
+::: callout-note
+When the global handler is installed from JavaScript the R code must be evaluated without any other calling handlers on the stack. This can be arranged by setting the `withHandlers` option to `false`^[When evaluating R code in this way R error conditions cannot easily be captured. An alternative is to use [`shim_install()`](api/r.html#shim_install) and explicitly load R packages using `library()` or `require()`.].
+
+``` javascript
+await webR.evalR(`
+  webr::global_prompt_install()
+  cli::cli_alert_success('The cli package works!')
+`, { withHandlers: false });
+```
+
+:::
 
 ## Installing packages from JavaScript
 

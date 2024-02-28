@@ -32,6 +32,10 @@
 
 * The LLVM flang build scripts are now sourced using a git submodule, to simplify management of CI builds. The build scripts are available at https://github.com/r-wasm/flang-wasm and the patched LLVM source at https://github.com/r-wasm/llvm-project. This allows for an independent build of the patched LLVM flang for WebAssembly, including as a separate Nix package.
 
+* `shim_install()` now shims base R `library()` and `require()` commands so that webR packages are downloaded automatically with an optional menu. This extends the functionality of the global package-not-found handler so that the same feature can be used when using `evalR()` (#324). The new shims also ensure that `library()` and `require()` do not need to be called again once the package is downloaded and available.
+
+* It is no longer assumed that an interactive R session will be able to show a `menu()` when offering to download a missing R package. Instead this now defaults to not showing a menu, with `options(webr.show_menu = TRUE)` enabling the menu feature globally.
+
 * The `RObject.toObject()` methods have been refined for R lists and `data.frame` objects. The `.toObject()` method no longer uses recursion by default when converting R lists and environments, due to the possibility of unconvertible nested R objects. However, for symbols, atomic vectors, and R `data.frame` objects `.toObject()` will convert the object to JavaScript in entirety. For a type-stable conversion, serialise the object with the `.toJs()` method instead.
 
 ## Bug Fixes

@@ -58,7 +58,7 @@ canvas <- function(width = 504,
 }
 
 #' Interact with the `OffscreenCanvas` cache
-#' 
+#'
 #' @description
 #' `canvas_cache()` returns an integer vector containing the current canvas
 #' cache IDs.
@@ -66,7 +66,7 @@ canvas <- function(width = 504,
 #' `canvas_destroy()` destroys the cached `OffscreenCanvas` elements with the
 #' given IDs.
 #'
-#' `canvas_pruge()` destroys all `OffscreenCanvas` elements in the cache.
+#' `canvas_purge()` destroys all `OffscreenCanvas` elements in the cache.
 #'
 #' @export
 canvas_cache <- function() {

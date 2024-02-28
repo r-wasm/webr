@@ -14,5 +14,7 @@ that work in the webR environment.
 The shimmed functions are:
 \itemize{
 \item install.packages() - replaced by webr::install().
+\item library() - replaced by webr::library_shim().
+\item require() - replaced by webr::require_shim().
 }
 }

@@ -100,8 +100,9 @@ root.render(<StrictMode><App /></StrictMode>);
   await webR.evalRVoid('webr::shim_install()');
 
   // If supported, show a menu when prompted for missing package installation
-  const showMenu = crossOriginIsolated || navigator.serviceWorker.controller ? 'TRUE' : 'FALSE';
-  await webR.evalRVoid(`webr::global_prompt_install(${showMenu})`, { withHandlers: false });
+  const showMenu = crossOriginIsolated || navigator.serviceWorker.controller;
+  await webR.evalRVoid('options(webr.show_menu = show_menu)', { env: { show_menu: !!showMenu } });
+  await webR.evalRVoid('webr::global_prompt_install()', { withHandlers: false });
 
   // Clear the loading message
   terminalInterface.write('\x1b[2K\r');
