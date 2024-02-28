@@ -1,2 +1,3 @@
 GEOS_WASM_LIB = $(WASM)/lib/libgeos.a
 OPTIONAL_WASM_LIBS += $(GEOS_WASM_LIB)
+OPTIONAL_WASM_BINS += geos-config
