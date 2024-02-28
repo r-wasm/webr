@@ -20,7 +20,7 @@ Index: R-4.3.0/src/main/Makefile.in
 ===================================================================
 --- R-4.3.0.orig/src/main/Makefile.in
 +++ R-4.3.0/src/main/Makefile.in
-@@ -149,6 +149,51 @@ $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
+@@ -149,6 +149,56 @@ $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
  $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
  	$(MAIN_LINK) -o $@ $(R_bin_OBJECTS) $(R_bin_LDADD)
  
@@ -68,6 +68,11 @@ Index: R-4.3.0/src/main/Makefile.in
 +# Patch Emscripten library to redirect a warning message to console.warn()
 +	@sed -i.bak 's/out("LazyFiles/console.warn("LazyFiles/' $(prefix)/dist/$(R_binary).js
 +	@rm $(prefix)/dist/$(R_binary).js.bak
++# Redirect $(WASM)/lib R binaries to $(HOST)/lib R binaries
++	@mv $(prefix)/lib/R/bin/R $(prefix)/lib/R/bin/R.orig
++	@mv $(prefix)/lib/R/bin/Rscript $(prefix)/lib/R/bin/Rscript.orig
++	@ln -s $(R_HOST)/lib/R/bin/R $(prefix)/lib/R/bin/R
++	@ln -s $(R_HOST)/lib/R/bin/Rscript $(prefix)/lib/R/bin/Rscript
 +
  libR.a: $(OBJECTS) $(STATIC_LIBS)
  	-@mkdir libs

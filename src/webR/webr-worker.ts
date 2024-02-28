@@ -7,7 +7,7 @@ import { EmPtr, Module } from './emscripten';
 import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadRaw, WebRPayloadPtr, WebRPayloadWorker, isWebRPayloadPtr } from './payload';
-import { RObject, isRObject, REnvironment, RList, getRWorkerClass } from './robj-worker';
+import { RObject, isRObject, REnvironment, RList, RCall, getRWorkerClass } from './robj-worker';
 import { RCharacter, RString, keep, destroy, purge, shelters } from './robj-worker';
 import { RLogical, RInteger, RDouble, initPersistentObjects, objs } from './robj-worker';
 import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
@@ -711,9 +711,10 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
         (out) => out.get('type').toString() === 'error'
       );
       if (error) {
-        throw new Error(
-          error.pluck('data', 'message')?.toString() || 'An error occurred evaluating R code.'
-        );
+        const call = error.pluck('data','call') as RCall;
+        const source = call && call.type() === 'call' ? call.deparse() : 'Unknown source';
+        const message = error.pluck('data', 'message')?.toString() || 'An error occurred evaluating R code.';
+        throw new Error(`Error in ${source}: ${message}`);
       }
     }
 

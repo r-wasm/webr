@@ -194,7 +194,11 @@ export function Editor({
         code = utils.getCurrentLineText(editorView);
         utils.moveCursorToNextLine(editorView);
       }
-      webR.writeConsole(code);
+
+      const codeArray = new TextEncoder().encode(code);
+      webR.FS.writeFile('/tmp/.webRtmp-source', codeArray).then(()=>{
+        webR.writeConsole("source('/tmp/.webRtmp-source', echo = TRUE)");
+      });
     };
   }, [editorView]);
 
@@ -214,7 +218,11 @@ export function Editor({
     syncActiveFileState();
     const code = editorView.state.doc.toString();
     terminalInterface.write('\x1b[2K\r');
-    webR.writeConsole(code);
+
+    const codeArray = new TextEncoder().encode(code);
+    webR.FS.writeFile('/tmp/.webRtmp-source', codeArray).then(()=>{
+      webR.writeConsole("source('/tmp/.webRtmp-source', echo = TRUE)");
+    });
   }, [syncActiveFileState, editorView]);
 
   const saveFile: React.MouseEventHandler<HTMLButtonElement> = React.useCallback(() => {
