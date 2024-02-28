@@ -1,2 +1,3 @@
 PCRE_WASM_LIB = $(WASM)/lib/libpcre2-8.a
 DEFAULT_WASM_LIBS += $(PCRE_WASM_LIB)
+DEFAULT_WASM_BINS += pcre2-config

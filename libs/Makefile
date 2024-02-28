@@ -45,19 +45,33 @@ export EM_PKG_CONFIG_PATH = $(WASM)/lib/pkgconfig
 include recipes/**/targets.mk
 include recipes/**/rules.mk
 
+DEFAULT_WASM_BINS_INST = $(patsubst %, $(HOST)/bin/%, $(DEFAULT_WASM_BINS))
+OPTIONAL_WASM_BINS_INST = $(patsubst %, $(HOST)/bin/%, $(OPTIONAL_WASM_BINS))
+
 .PHONY: default
-default: $(DEFAULT_WASM_LIBS)
+default: $(DEFAULT_WASM_LIBS) $(DEFAULT_WASM_BINS_INST)
 .DEFAULT_GOAL := default
 
 .PHONY: all
-all: default $(OPTIONAL_WASM_LIBS) fonts
+all: default $(OPTIONAL_WASM_LIBS) $(OPTIONAL_WASM_BINS_INST) fonts
 
 $(EM_PKG_CONFIG_PATH)/%.pc: recipes/**/%.pc
 	mkdir -p $(EM_PKG_CONFIG_PATH)
 	cp "$<" "$@"
 
+$(HOST)/bin/%: $(WASM)/bin/%
+	@cp "$<" "$@"
+
+$(DEFAULT_WASM_BINS_INST): $(DEFAULT_WASM_LIBS)
+$(OPTIONAL_WASM_BINS_INST): $(OPTIONAL_WASM_LIBS)
+
+.PHONY: clean-bins
+clean-bins:
+	rm -rf $(DEFAULT_WASM_BINS_INST) $(OPTIONAL_WASM_BINS_INST)
+
 .PHONY: clean
 clean:
+	$(MAKE) clean-bins
 	rm -rf $(DOWNLOAD) $(BUILD)
 	rm -f $(DEFAULT_WASM_LIBS)
 	rm -f $(OPTIONAL_WASM_LIBS)
