@@ -16,6 +16,8 @@
 
 * The `RCall` and `RFunction` classes now have a `capture(options, ...args)` method that captures output during evaluation.
 
+* Errors re-thrown by `evalR` now include information about the source R call, helping to identify the original location of the error.
+
 * JavaScript objects of type `TypedArray`, `ArrayBuffer`, and `ArrayBufferView` (e.g. `Uint8Array`) may now be used with the `RRaw` R object constructor. The generic `RObject` constructor now converts objects of this type to R raw atomic vectors by default.
 
 * Constructing new R objects using `await new RObject(...)` now supports input objects of the form: `{a: [...], b: [...]}` or D3-style data arrays of the form: `[{a: ..., b: ...}, {a: ..., b: ...}, {a: ..., b: ...}, ... ]`. Where possible, lists are constructed of class `data.frame`. Direct construction with `RList()` does not create a `data.frame`.
