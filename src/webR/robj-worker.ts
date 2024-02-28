@@ -116,18 +116,53 @@ function newObjectFromData(obj: WebRData): RObject {
   if (isComplex(obj)) {
     return new RComplex(obj);
   }
+
+  // Conversion of composite JS objects
+  if (ArrayBuffer.isView(obj) || obj instanceof ArrayBuffer) {
+    return new RRaw(obj);
+  }
   if (Array.isArray(obj)) {
     return newObjectFromArray(obj);
+  }
+  if (typeof obj === 'object') {
+    return RList.fromObject(obj);
   }
 
   throw new Error('Robj construction for this JS object is not yet supported');
 }
 
-// JS arrays are interpreted using R's c() function, so as to match
-// R's built in coercion rules
-function newObjectFromArray(arr: WebRData[]) {
+function newObjectFromArray(arr: WebRData[]): RObject {
   const prot = { n: 0 };
 
+  // Is this a D3 formatted data frame?
+  const hasObjects = arr.every((v) => v && typeof v === 'object' && !isRObject(v) && !isComplex(v));
+  if (hasObjects) {
+    const _arr = arr as {[key: string]: WebRData}[];
+    const isConsistent = _arr.every((a) => {
+      return Object.keys(a).filter((k) => !Object.keys(_arr[0]).includes(k)).length === 0 &&
+        Object.keys(_arr[0]).filter((k) => !Object.keys(a).includes(k)).length === 0;
+    });
+    const isAtomic = _arr.every((a) => Object.values(a).every((v) => {
+      return isAtomicType(v) || isRVectorAtomic(v);
+    }));
+    if (isConsistent && isAtomic) {
+      return RList.fromD3(_arr);
+    }
+  }
+
+  // Not D3 formatted - Can we shortcut and convert directly?
+  if (arr.every((v) => typeof v === 'boolean' || v === null)) {
+    return new RLogical(arr as (boolean | null)[]);
+  }
+  if (arr.every((v) => typeof v === 'number' || v === null)) {
+    return new RDouble(arr as (number | null)[]);
+  }
+  if (arr.every((v) => typeof v === 'string' || v === null)) {
+    return new RCharacter(arr as (string | null)[]);
+  }
+
+  // Not D3 & mixed types: use R's built in object coercion with c() so as to
+  // match R's built in coercion rules
   try {
     const call = new RCall([new RSymbol('c'), ...arr]);
     protectInc(call, prot);
@@ -186,6 +221,16 @@ export class RObject extends RObjectBase {
 
   isNull(): this is RNull {
     return Module._TYPEOF(this.ptr) === RTypeMap.null;
+  }
+
+  isNa(): boolean {
+    try {
+      const result = parseEvalBare('is.na(x)', { x: this }) as RLogical;
+      protect(result);
+      return result.toBoolean();
+    } finally {
+      unprotect(1);
+    }
   }
 
   isUnbound(): boolean {
@@ -413,7 +458,7 @@ export class RPairlist extends RObject {
   toObject({
     allowDuplicateKey = true,
     allowEmptyKey = false,
-    depth = 1,
+    depth = -1,
   } = {}): NamedObject<WebRData> {
     const entries = this.entries({ depth });
     const keys = entries.map(([k, v]) => k);
@@ -545,10 +590,14 @@ export class RCall extends RObject {
 }
 
 export class RList extends RObject {
+  isDataFrame: boolean;
   constructor(val: WebRData) {
     if (val instanceof RObjectBase) {
       assertRType(val, 'list');
       super(val);
+
+      const classes = RPairlist.wrap(Module._ATTRIB(val.ptr)).get('class') as RNull | RCharacter;
+      this.isDataFrame = !classes.isNull() && classes.toArray().includes('data.frame');
       return this;
     }
 
@@ -569,6 +618,8 @@ export class RList extends RObject {
     } finally {
       unprotect(prot.n);
     }
+
+    this.isDataFrame = false;
   }
 
   get length(): number {
@@ -582,7 +633,7 @@ export class RList extends RObject {
   toObject({
     allowDuplicateKey = true,
     allowEmptyKey = false,
-    depth = 1,
+    depth = -1,
   } = {}): NamedObject<WebRData> {
     const entries = this.entries({ depth });
     const keys = entries.map(([k, v]) => k);
@@ -597,8 +648,75 @@ export class RList extends RObject {
     );
   }
 
-  entries(options: { depth: number } = { depth: 1 }): NamedEntries<WebRData> {
+  toD3(): NamedObject<WebRData>[] {
+    if (!this.isDataFrame) {
+      throw new Error(
+        "Can't convert R list object to D3 format. Object must be of class 'data.frame'."
+      );
+    }
+    const entries = this.entries() as Array<[string, atomicType[]]>;
+    return entries.reduce((a, entry) => {
+      entry[1].forEach((v, j) => a[j] = Object.assign(a[j] || {}, { [entry[0]!] : v }));
+      return a;
+    }, []);
+  }
+
+  // JS objects are interpreted as R list objects. If we have a JS object with
+  // consistent columns of atomic type, make the returned R object a data.frame
+  static fromObject(obj: WebRData) {
+    const {names, values} = toWebRData(obj);
+    const prot = { n: 0 };
+
+    // Should we make this a data.frame?
+    try {
+      const hasNames = !!names && names.length > 0 && names.every((v) => v);
+      const hasArrays = values.length > 0 && values.every((v) => {
+        return Array.isArray(v) || ArrayBuffer.isView(v) || v instanceof ArrayBuffer;
+      });
+
+      if (hasNames && hasArrays) {
+        const _values = values as WebRData[][];
+        const isConsistentLength = _values.every((a) => a.length === _values[0].length);
+        const isAtomic = _values.every((a) => {
+          return isAtomicType(a[0]) || isRVectorAtomic(a[0]);
+        });
+
+        if (isConsistentLength && isAtomic) {
+          const listObj = new RList({
+            type: 'list',
+            names: names,
+            values: _values.map((a) => newObjectFromData(a))
+          });
+          protectInc(listObj, prot);
+
+          const asDataFrame = new RCall([new RSymbol('as.data.frame'), listObj]);
+          protectInc(asDataFrame, prot);
+
+          return asDataFrame.eval();
+        }
+      }
+    } finally {
+      unprotect(prot.n);
+    }
+
+    // Not eligible as a data.frame, just create a standard list
+    return new RList(obj);
+  }
+
+  static fromD3(arr: {[key: string]: WebRData}[]) {
+    return this.fromObject(
+      Object.fromEntries(Object.keys(arr[0]).map((k)=> [k, arr.map((v) => v[k])]))
+    );
+  }
+
+  entries(options: { depth: number } = { depth: -1 }): NamedEntries<WebRData> {
     const obj = this.toJs(options);
+
+    // If this is a data frame, assume we have atomic vector columns and can
+    // convert directly to array values by default.
+    if (this.isDataFrame && options.depth < 0) {
+      obj.values = (obj.values as RVectorAtomic<atomicType>[]).map((v) => v.toArray());
+    }
     return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
   }
 
@@ -740,11 +858,12 @@ export class REnvironment extends RObject {
     return this.getDollar(prop);
   }
 
-  toObject({ depth = 0 } = {}): NamedObject<WebRData> {
+  toObject({ depth = -1 } = {}): NamedObject<WebRData> {
     const symbols = this.names();
     return Object.fromEntries(
       [...Array(symbols.length).keys()].map((i) => {
-        return [symbols[i], this.getDollar(symbols[i]).toJs({ depth })];
+        const value = this.getDollar(symbols[i]);
+        return [symbols[i], depth < 0 ? value : value.toJs({ depth })];
       })
     );
   }
@@ -1094,6 +1213,9 @@ export class RCharacter extends RVectorAtomic<string> {
 
 export class RRaw extends RVectorAtomic<number> {
   constructor(val: WebRDataAtomic<number>) {
+    if (val instanceof ArrayBuffer) {
+      val = new Uint8Array(val);
+    }
     super(val, 'raw', RRaw.#newSetter);
   }
 
@@ -1188,6 +1310,39 @@ export function getRWorkerClass(type: RTypeNumber): typeof RObject {
  */
 export function isRObject(value: any): value is RObject {
   return value instanceof RObject;
+}
+
+/**
+ * Test for an RWorker.RVectorAtomic instance.
+ *
+ * @private
+ * @param {any} value The object to test.
+ * @return {boolean} True if the object is an instance of an RVectorAtomic.
+ */
+export function isRVectorAtomic(value: any): value is RVectorAtomic<atomicType> {
+  const atomicRTypes = ['logical', 'integer', 'double', 'complex', 'character'];
+
+  return (
+    (isRObject(value) && atomicRTypes.includes(value.type()))
+    || (isRObject(value) && value.isNa())
+  );
+}
+
+/**
+ * Test for an atomicType, including missing `null` values.
+ *
+ * @private
+ * @param {any} value The object to test.
+ * @return {boolean} True if the object is of type atomicType.
+ */
+export function isAtomicType(value: any): value is atomicType | null {
+  return (
+    value === null
+    || typeof value === 'number'
+    || typeof value === 'boolean'
+    || typeof value === 'string'
+    || isComplex(value)
+  );
 }
 
 /**
