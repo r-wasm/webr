@@ -60,6 +60,7 @@ $(EM_PKG_CONFIG_PATH)/%.pc: recipes/**/%.pc
 	cp "$<" "$@"
 
 $(HOST)/bin/%: $(WASM)/bin/%
+	@mkdir -p $(HOST)/bin
 	@cp "$<" "$@"
 
 $(DEFAULT_WASM_BINS_INST): $(DEFAULT_WASM_LIBS)
