@@ -2,7 +2,7 @@
 
 ## New features
 
-* Updated to R version 4.3.2.
+* Updated to R version 4.3.3.
 
 * Support for building webR and LLVM Flang as Nix packages, using Nix flakes.
 
