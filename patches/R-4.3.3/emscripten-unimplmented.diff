@@ -1,13 +1,13 @@
-Index: R-4.1.3/src/unix/sys-unix.c
+Index: R-4.3.3/src/unix/sys-unix.c
 ===================================================================
---- R-4.1.3.orig/src/unix/sys-unix.c
-+++ R-4.1.3/src/unix/sys-unix.c
-@@ -60,6 +60,19 @@
+--- R-4.3.3.orig/src/unix/sys-unix.c
++++ R-4.3.3/src/unix/sys-unix.c
+@@ -60,7 +60,20 @@
  
  #include <errno.h>
  
 +#ifdef __EMSCRIPTEN__
-+/*
+ /*
 + * The sigsuspend function is currently unsupported in emscripten.
 + * Instead we immediately return -1 and set errno, as if the
 + * suspended process had immediately been delivered a signal.
@@ -19,6 +19,7 @@ Index: R-4.1.3/src/unix/sys-unix.c
 +}
 +#endif
 +
- /*
++/*
   *  4) INITIALIZATION AND TERMINATION ACTIONS
   */
+ 

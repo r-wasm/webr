@@ -1,7 +1,7 @@
-Index: R-4.3.0/src/unix/sys-std.c
+Index: R-4.3.3/src/unix/sys-std.c
 ===================================================================
---- R-4.3.0.orig/src/unix/sys-std.c
-+++ R-4.3.0/src/unix/sys-std.c
+--- R-4.3.3.orig/src/unix/sys-std.c
++++ R-4.3.3/src/unix/sys-std.c
 @@ -61,6 +61,7 @@
  
  #ifdef __EMSCRIPTEN__
@@ -67,10 +67,10 @@ Index: R-4.3.0/src/unix/sys-std.c
  		}
  	    }
  	}
-Index: R-4.3.0/src/main/main.c
+Index: R-4.3.3/src/main/main.c
 ===================================================================
---- R-4.3.0.orig/src/main/main.c
-+++ R-4.3.0/src/main/main.c
+--- R-4.3.3.orig/src/main/main.c
++++ R-4.3.3/src/main/main.c
 @@ -321,7 +321,7 @@ static unsigned char DLLbuf[CONSOLE_BUFFER_SIZE+1], *D
  }
  

@@ -1,7 +1,7 @@
-Index: R-4.2.2/src/extra/xdr/rpc/xdr.h
+Index: R-4.3.3/src/extra/xdr/rpc/xdr.h
 ===================================================================
---- R-4.2.2.orig/src/extra/xdr/rpc/xdr.h
-+++ R-4.2.2/src/extra/xdr/rpc/xdr.h
+--- R-4.3.3.orig/src/extra/xdr/rpc/xdr.h
++++ R-4.3.3/src/extra/xdr/rpc/xdr.h
 @@ -49,6 +49,8 @@
  #ifndef __XDR_HEADER__
  #define __XDR_HEADER__
@@ -11,7 +11,7 @@ Index: R-4.2.2/src/extra/xdr/rpc/xdr.h
  /*
   * XDR provides a conventional way for converting between C data
   * types and an external bit-string representation.  Library supplied
-@@ -114,16 +116,16 @@ typedef	bool_t (*xdrproc_t)();
+@@ -114,16 +116,16 @@ typedef struct {
   * an operations vector for the paticular implementation (e.g. see xdr_mem.c),
   * and two private fields for the use of the particular impelementation.
   */
@@ -49,7 +49,7 @@ Index: R-4.2.2/src/extra/xdr/rpc/xdr.h
  
  /*
   * Support struct for discriminated unions.
-@@ -236,27 +238,27 @@ extern bool_t	xdr_void();
+@@ -236,27 +238,27 @@ extern bool_t	xdr_int();
   * These are the "generic" xdr routines.
   */
  extern bool_t	xdr_void();
@@ -93,7 +93,7 @@ Index: R-4.2.2/src/extra/xdr/rpc/xdr.h
  
  /*
   * Common opaque bytes objects used by many rpc protocols;
-@@ -268,14 +270,14 @@ typedef struct netobj netobj;
+@@ -268,14 +270,14 @@ extern bool_t   xdr_netobj();
  	char	*n_bytes;
  };
  typedef struct netobj netobj;
@@ -111,11 +111,11 @@ Index: R-4.2.2/src/extra/xdr/rpc/xdr.h
  extern void   xdrrec_create();		/* XDR pseudo records for tcp */
  extern bool_t xdrrec_endofrecord();	/* make end of xdr record */
  extern bool_t xdrrec_skiprecord();	/* move to beginning of next record */
-Index: R-4.2.2/src/extra/xdr/xdr.c
+Index: R-4.3.3/src/extra/xdr/xdr.c
 ===================================================================
---- R-4.2.2.orig/src/extra/xdr/xdr.c
-+++ R-4.2.2/src/extra/xdr/xdr.c
-@@ -84,9 +84,7 @@ void
+--- R-4.3.3.orig/src/extra/xdr/xdr.c
++++ R-4.3.3/src/extra/xdr/xdr.c
+@@ -84,9 +84,7 @@ xdr_free(proc, objp)
   * Not a filter, but a convenient utility nonetheless
   */
  void
@@ -126,7 +126,7 @@ Index: R-4.2.2/src/extra/xdr/xdr.c
  {
  	XDR x;
  
-@@ -100,9 +98,7 @@ bool_t
+@@ -100,9 +98,7 @@ xdr_void(/* xdrs, addr */)
   * XDR nothing
   */
  bool_t
@@ -137,7 +137,7 @@ Index: R-4.2.2/src/extra/xdr/xdr.c
  {
  
  	return (TRUE);
-@@ -113,9 +109,7 @@ bool_t
+@@ -113,9 +109,7 @@ xdr_int(xdrs, ip)
   * XDR integers: always 32-bit in R
   */
  bool_t
@@ -148,7 +148,7 @@ Index: R-4.2.2/src/extra/xdr/xdr.c
  {
  //    return (xdr_long(xdrs, (int32_t *)ip));
  
-@@ -132,9 +126,7 @@ bool_t
+@@ -132,9 +126,7 @@ xdr_u_int(xdrs, up)
   * XDR unsigned integers: always 32-bit in R
   */
  bool_t
@@ -159,7 +159,7 @@ Index: R-4.2.2/src/extra/xdr/xdr.c
  {
  //    return (xdr_u_long(xdrs, (uint32_t *)up));
  
-@@ -154,9 +146,7 @@ bool_t
+@@ -154,9 +146,7 @@ xdr_long(xdrs, lp)
   * same as xdr_u_long - open coded to save a proc call!
   */
  bool_t
@@ -170,7 +170,7 @@ Index: R-4.2.2/src/extra/xdr/xdr.c
  {
  
  	if (xdrs->x_op == XDR_ENCODE)
-@@ -176,9 +166,7 @@ bool_t
+@@ -176,9 +166,7 @@ xdr_u_long(xdrs, ulp)
   * same as xdr_long - open coded to save a proc call!
   */
  bool_t
@@ -181,7 +181,7 @@ Index: R-4.2.2/src/extra/xdr/xdr.c
  {
  
  	if (xdrs->x_op == XDR_DECODE)
-@@ -194,9 +182,7 @@ bool_t
+@@ -194,9 +182,7 @@ xdr_short(xdrs, sp)
   * XDR short integers
   */
  bool_t
@@ -192,7 +192,7 @@ Index: R-4.2.2/src/extra/xdr/xdr.c
  {
  	int32_t l;
  
-@@ -223,9 +209,7 @@ bool_t
+@@ -223,9 +209,7 @@ xdr_u_short(xdrs, usp)
   * XDR unsigned short integers
   */
  bool_t
@@ -203,7 +203,7 @@ Index: R-4.2.2/src/extra/xdr/xdr.c
  {
  	uint32_t l;
  
-@@ -252,9 +236,7 @@ bool_t
+@@ -252,9 +236,7 @@ xdr_char(xdrs, cp)
   * XDR a char
   */
  bool_t
@@ -214,7 +214,7 @@ Index: R-4.2.2/src/extra/xdr/xdr.c
  {
  	int i;
  
-@@ -270,9 +252,7 @@ bool_t
+@@ -270,9 +252,7 @@ xdr_u_char(xdrs, cp)
   * XDR an unsigned char
   */
  bool_t
@@ -225,7 +225,7 @@ Index: R-4.2.2/src/extra/xdr/xdr.c
  {
  	u_int u;
  
-@@ -288,9 +268,7 @@ bool_t
+@@ -288,9 +268,7 @@ xdr_bool(xdrs, bp)
   * XDR booleans
   */
  bool_t
@@ -236,7 +236,7 @@ Index: R-4.2.2/src/extra/xdr/xdr.c
  {
  	int32_t lb;
  
-@@ -317,9 +295,7 @@ bool_t
+@@ -317,9 +295,7 @@ xdr_enum(xdrs, ep)
   * XDR enumerations
   */
  bool_t
@@ -247,7 +247,7 @@ Index: R-4.2.2/src/extra/xdr/xdr.c
  {
  #ifndef lint
  	enum sizecheck { SIZEVAL };	/* used to find the size of an enum */
-@@ -347,10 +323,7 @@ bool_t
+@@ -347,10 +323,7 @@ xdr_opaque(xdrs, cp, cnt)
   * cp points to the opaque object and cnt gives the byte length.
   */
  bool_t
@@ -268,7 +268,7 @@ Index: R-4.2.2/src/extra/xdr/xdr.c
  	}
  
  	if (xdrs->x_op == XDR_ENCODE) {
-@@ -399,11 +372,7 @@ bool_t
+@@ -399,11 +372,7 @@ xdr_bytes(xdrs, cpp, sizep, maxsize)
   * If *cpp is NULL maxsize bytes are allocated
   */
  bool_t
@@ -281,7 +281,7 @@ Index: R-4.2.2/src/extra/xdr/xdr.c
  {
  	register char *sp = *cpp;  /* sp is the actual string pointer */
  	register u_int nodesize;
-@@ -455,9 +424,7 @@ bool_t
+@@ -455,9 +424,7 @@ xdr_netobj(xdrs, np)
   * Implemented here due to commonality of the object.
   */
  bool_t
@@ -292,7 +292,7 @@ Index: R-4.2.2/src/extra/xdr/xdr.c
  {
  
  	return (xdr_bytes(xdrs, &np->n_bytes, &np->n_len, MAX_NETOBJ_SZ));
-@@ -475,12 +442,7 @@ bool_t
+@@ -475,12 +442,7 @@ xdr_union(xdrs, dscmp, unp, choices, dfault)
   * If there is no specific or default routine an error is returned.
   */
  bool_t
@@ -306,7 +306,7 @@ Index: R-4.2.2/src/extra/xdr/xdr.c
  {
  	register enum_t dscm;
  
-@@ -524,10 +486,7 @@ bool_t
+@@ -524,10 +486,7 @@ xdr_string(xdrs, cpp, maxsize)
   * of the string as specified by a protocol.
   */
  bool_t
@@ -318,7 +318,7 @@ Index: R-4.2.2/src/extra/xdr/xdr.c
  {
  	register char *sp = *cpp;  /* sp is the actual string pointer */
  	u_int size;
-@@ -592,9 +551,7 @@ bool_t
+@@ -592,9 +551,7 @@ xdr_wrapstring(xdrs, cpp)
   * routines like clnt_call
   */
  bool_t
@@ -329,11 +329,11 @@ Index: R-4.2.2/src/extra/xdr/xdr.c
  {
  	if (xdr_string(xdrs, cpp, LASTUNSIGNED)) {
  		return (TRUE);
-Index: R-4.2.2/src/extra/xdr/xdr_mem.c
+Index: R-4.3.3/src/extra/xdr/xdr_mem.c
 ===================================================================
---- R-4.2.2.orig/src/extra/xdr/xdr_mem.c
-+++ R-4.2.2/src/extra/xdr/xdr_mem.c
-@@ -97,13 +97,13 @@ static char sccsid[] = "@(#)xdr_mem.c 1.19 87/08/11 Co
+--- R-4.3.3.orig/src/extra/xdr/xdr_mem.c
++++ R-4.3.3/src/extra/xdr/xdr_mem.c
+@@ -97,13 +97,13 @@ static bool_t	xdrmem_getlong();
  /* The use of 'long' here would be problematic if it were ever to be
     used on a 64-bit system */
  
@@ -354,7 +354,7 @@ Index: R-4.2.2/src/extra/xdr/xdr_mem.c
  static void	xdrmem_destroy();
  
  static struct	xdr_ops xdrmem_ops = {
-@@ -122,11 +122,7 @@ void
+@@ -122,11 +122,7 @@ xdrmem_create(xdrs, addr, size, op)
   * memory buffer.  
   */
  void
@@ -367,7 +367,7 @@ Index: R-4.2.2/src/extra/xdr/xdr_mem.c
  {
  
  	xdrs->x_op = op;
-@@ -136,8 +132,7 @@ static void
+@@ -136,8 +132,7 @@ xdrmem_destroy(/*xdrs*/)
  }
  
  static void
@@ -377,7 +377,7 @@ Index: R-4.2.2/src/extra/xdr/xdr_mem.c
  {
  }
  
-@@ -164,10 +159,7 @@ static bool_t
+@@ -164,10 +159,7 @@ xdrmem_getbytes(xdrs, addr, len)
  }
  
  static bool_t
@@ -389,7 +389,7 @@ Index: R-4.2.2/src/extra/xdr/xdr_mem.c
  {
  
  	if ((xdrs->x_handy -= len) < 0)
-@@ -178,10 +170,7 @@ static bool_t
+@@ -178,10 +170,7 @@ xdrmem_putbytes(xdrs, addr, len)
  }
  
  static bool_t
@@ -401,7 +401,7 @@ Index: R-4.2.2/src/extra/xdr/xdr_mem.c
  {
  
  	if ((xdrs->x_handy -= len) < 0)
-@@ -192,17 +181,14 @@ static u_int
+@@ -192,17 +181,14 @@ xdrmem_getpos(xdrs)
  }
  
  static u_int
@@ -421,7 +421,7 @@ Index: R-4.2.2/src/extra/xdr/xdr_mem.c
  {
  	register caddr_t newaddr = xdrs->x_base + pos;
  	register caddr_t lastaddr = xdrs->x_private + xdrs->x_handy;
-@@ -215,9 +201,7 @@ static long *
+@@ -215,9 +201,7 @@ xdrmem_inline(xdrs, len)
  }
  
  static long *
@@ -432,11 +432,11 @@ Index: R-4.2.2/src/extra/xdr/xdr_mem.c
  {
  	long *buf = 0;
  
-Index: R-4.2.2/src/extra/xdr/xdr_stdio.c
+Index: R-4.3.3/src/extra/xdr/xdr_stdio.c
 ===================================================================
---- R-4.2.2.orig/src/extra/xdr/xdr_stdio.c
-+++ R-4.2.2/src/extra/xdr/xdr_stdio.c
-@@ -90,14 +90,14 @@ static char sccsid[] = "@(#)xdr_stdio.c 1.16 87/08/11 
+--- R-4.3.3.orig/src/extra/xdr/xdr_stdio.c
++++ R-4.3.3/src/extra/xdr/xdr_stdio.c
+@@ -90,14 +90,14 @@ static bool_t	xdrstdio_getlong();
  #include <stdio.h>
  #include <rpc/xdr.h>
  
@@ -459,7 +459,7 @@ Index: R-4.2.2/src/extra/xdr/xdr_stdio.c
  
  /*
   * Ops vector for stdio type XDR
-@@ -119,10 +119,7 @@ void
+@@ -119,10 +119,7 @@ xdrstdio_create(xdrs, file, op)
   * Operation flag is set to op.
   */
  void
@@ -471,7 +471,7 @@ Index: R-4.2.2/src/extra/xdr/xdr_stdio.c
  {
  
  	xdrs->x_op = op;
-@@ -137,8 +134,7 @@ static void
+@@ -137,8 +134,7 @@ xdrstdio_destroy(xdrs)
   * Cleans up the xdr stream handle xdrs previously set up by xdrstdio_create.
   */
  static void
@@ -481,7 +481,7 @@ Index: R-4.2.2/src/extra/xdr/xdr_stdio.c
  {
  	if (xdrs->x_op == XDR_ENCODE) fflush((FILE *)xdrs->x_private);
  	/* xx should we close the file ?? */
-@@ -164,10 +160,7 @@ static bool_t
+@@ -164,10 +160,7 @@ xdrstdio_getbytes(xdrs, addr, len)
  }
  
  static bool_t
@@ -493,7 +493,7 @@ Index: R-4.2.2/src/extra/xdr/xdr_stdio.c
  {
  
  	if ((len != 0) && (fread(addr, (int)len, 1, (FILE *)xdrs->x_private) != 1))
-@@ -176,10 +169,7 @@ static bool_t
+@@ -176,10 +169,7 @@ xdrstdio_putbytes(xdrs, addr, len)
  }
  
  static bool_t
@@ -505,7 +505,7 @@ Index: R-4.2.2/src/extra/xdr/xdr_stdio.c
  {
  
  	if ((len != 0) && (fwrite(addr, (int)len, 1, (FILE *)xdrs->x_private) != 1))
-@@ -188,17 +178,14 @@ static u_int
+@@ -188,17 +178,14 @@ xdrstdio_getpos(xdrs)
  }
  
  static u_int
@@ -525,7 +525,7 @@ Index: R-4.2.2/src/extra/xdr/xdr_stdio.c
  { 
  
  	return ((fseek((FILE *)xdrs->x_private, (long)pos, 0) < 0) ?
-@@ -206,9 +193,7 @@ static long *
+@@ -206,9 +193,7 @@ xdrstdio_inline(xdrs, len)
  }
  
  static long *
@@ -536,4 +536,3 @@ Index: R-4.2.2/src/extra/xdr/xdr_stdio.c
  {
  
  	/*
-

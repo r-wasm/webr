@@ -1,7 +1,7 @@
-Index: R-4.3.2/src/main/connections.c
+Index: R-4.3.3/src/main/connections.c
 ===================================================================
---- R-4.3.2.orig/src/main/connections.c
-+++ R-4.3.2/src/main/connections.c
+--- R-4.3.3.orig/src/main/connections.c
++++ R-4.3.3/src/main/connections.c
 @@ -5262,7 +5262,7 @@ attribute_hidden SEXP do_sink(SEXP call, SEXP op, SEXP
  	    error(_("sink stack is full"));
  	switch_or_tee_stdout(icon, closeOnExit, tee);

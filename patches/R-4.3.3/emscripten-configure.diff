@@ -1,8 +1,8 @@
-Index: R-4.3.0/configure
+Index: R-4.3.3/configure
 ===================================================================
---- R-4.3.0.orig/configure
-+++ R-4.3.0/configure
-@@ -15050,7 +15050,7 @@ _LT_EOF
+--- R-4.3.3.orig/configure
++++ R-4.3.3/configure
+@@ -14878,7 +14878,7 @@ _LT_EOF
        archive_expsym_cmds='sed "s|^|_|" $export_symbols >$output_objdir/$soname.expsym~$CC -shared $pic_flag $libobjs $deplibs $compiler_flags $wl-h,$soname $wl--retain-symbols-file,$output_objdir/$soname.expsym $wl--image-base,`expr ${RANDOM-$$} % 4096 / 2 \* 262144 + 1342177280` -o $lib'
        ;;
  
@@ -11,7 +11,7 @@ Index: R-4.3.0/configure
        tmp_diet=no
        if test linux-dietlibc = "$host_os"; then
  	case $cc_basename in
-@@ -15817,7 +15817,7 @@ printf "%s\n" "$lt_cv_irix_exported_symbol" >&6; }
+@@ -15645,7 +15645,7 @@ printf "%s\n" "$lt_cv_irix_exported_symbol" >&6; }
        link_all_deplibs=yes
        ;;
  
@@ -20,7 +20,7 @@ Index: R-4.3.0/configure
        case $cc_basename in
        tcc*)
  	# Fabrice Bellard et al's Tiny C Compiler
-@@ -16874,7 +16874,7 @@ linux*android*)
+@@ -16702,7 +16702,7 @@ linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu*)
    ;;
  
  # This must be glibc/ELF.
@@ -29,7 +29,7 @@ Index: R-4.3.0/configure
    version_type=linux # correct to gnu/linux during the next big refactor
    need_lib_prefix=no
    need_version=no
-@@ -18966,7 +18966,7 @@ fi
+@@ -18794,7 +18794,7 @@ fi
          inherit_rpath_CXX=yes
          ;;
  
@@ -38,7 +38,7 @@ Index: R-4.3.0/configure
          case $cc_basename in
            KCC*)
  	    # Kuck and Associates, Inc. (KAI) C++ Compiler
-@@ -20851,7 +20851,7 @@ linux*android*)
+@@ -20679,7 +20679,7 @@ linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu*)
    ;;
  
  # This must be glibc/ELF.
@@ -47,7 +47,7 @@ Index: R-4.3.0/configure
    version_type=linux # correct to gnu/linux during the next big refactor
    need_lib_prefix=no
    need_version=no
-@@ -23972,7 +23972,7 @@ linux*android*)
+@@ -23800,7 +23800,7 @@ linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu*)
    ;;
  
  # This must be glibc/ELF.
@@ -56,7 +56,7 @@ Index: R-4.3.0/configure
    version_type=linux # correct to gnu/linux during the next big refactor
    need_lib_prefix=no
    need_version=no
-@@ -42825,7 +42825,7 @@ case "${host_os}" in
+@@ -42681,7 +42681,7 @@ case "${host_os}" in
  ##    flags to all (C, C++ and Fortran) compiler flags.
  
  case "${host_os}" in
@@ -65,7 +65,7 @@ Index: R-4.3.0/configure
      ;;
    *)
      r_save_CFLAGS=${CFLAGS}
-@@ -51602,6 +51602,11 @@ fi
+@@ -51491,6 +51491,11 @@ fi
  
  ## libcurl
  
@@ -77,7 +77,7 @@ Index: R-4.3.0/configure
  # Extract the first word of "curl-config", so it can be a program name with args.
  set dummy curl-config; ac_word=$2
  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-@@ -51788,7 +51793,9 @@ fi
+@@ -51677,7 +51682,9 @@ fi
  else
    as_fn_error $? "libcurl >= 7.28.0 library and headers are required with support for https" "$LINENO" 5
  fi
