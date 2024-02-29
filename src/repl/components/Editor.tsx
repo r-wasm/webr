@@ -197,7 +197,7 @@ export function Editor({
 
       const codeArray = new TextEncoder().encode(code);
       webR.FS.writeFile('/tmp/.webRtmp-source', codeArray).then(()=>{
-        webR.writeConsole("source('/tmp/.webRtmp-source', echo = TRUE)");
+        webR.writeConsole("source('/tmp/.webRtmp-source', echo = TRUE, max.deparse.length = Inf)");
       });
     };
   }, [editorView]);
@@ -221,7 +221,7 @@ export function Editor({
 
     const codeArray = new TextEncoder().encode(code);
     webR.FS.writeFile('/tmp/.webRtmp-source', codeArray).then(()=>{
-      webR.writeConsole("source('/tmp/.webRtmp-source', echo = TRUE)");
+      webR.writeConsole("source('/tmp/.webRtmp-source', echo = TRUE, max.deparse.length = Inf)");
     });
   }, [syncActiveFileState, editorView]);
 
