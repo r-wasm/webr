@@ -1,8 +1,8 @@
-Index: R-4.3.0/src/main/platform.c
+Index: R-4.3.3/src/main/platform.c
 ===================================================================
---- R-4.3.0.orig/src/main/platform.c
-+++ R-4.3.0/src/main/platform.c
-@@ -3618,10 +3618,15 @@ do_eSoftVersion(SEXP call, SEXP op, SEXP args, SEXP rh
+--- R-4.3.3.orig/src/main/platform.c
++++ R-4.3.3/src/main/platform.c
+@@ -3636,11 +3636,16 @@ do_eSoftVersion(SEXP call, SEXP op, SEXP args, SEXP rh
         and heuristics, and depends on implementation details
         of dynamic linkers.
      */
@@ -14,7 +14,8 @@ Index: R-4.3.0/src/main/platform.c
      char *dgemm_name = "dgemm_";
  #else
      char *dgemm_name = "dgemm";
-+#endif
  #endif
++#endif
  
      Rboolean ok = TRUE;
+ 

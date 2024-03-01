@@ -1,7 +1,7 @@
-Index: R-4.3.0/Makefile.in
+Index: R-4.3.3/Makefile.in
 ===================================================================
---- R-4.3.0.orig/Makefile.in
-+++ R-4.3.0/Makefile.in
+--- R-4.3.3.orig/Makefile.in
++++ R-4.3.3/Makefile.in
 @@ -91,6 +91,13 @@ javaconf: R
  javaconf: R
  	@$(MAKE) stamp-java
@@ -16,14 +16,15 @@ Index: R-4.3.0/Makefile.in
  
  install install-strip: installdirs svnonly
  	@for d in $(SUBDIRS); do \
-Index: R-4.3.0/src/main/Makefile.in
+Index: R-4.3.3/src/main/Makefile.in
 ===================================================================
---- R-4.3.0.orig/src/main/Makefile.in
-+++ R-4.3.0/src/main/Makefile.in
-@@ -149,6 +149,56 @@ $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
+--- R-4.3.3.orig/src/main/Makefile.in
++++ R-4.3.3/src/main/Makefile.in
+@@ -148,7 +148,57 @@ $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
+ 
  $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
  	$(MAIN_LINK) -o $@ $(R_bin_OBJECTS) $(R_bin_LDADD)
- 
++
 +MAIN_WEBR_LDADD  = --use-preload-plugins
 +MAIN_WEBR_LDADD += --preload-file "$(prefix)/tmp/lib@/usr/lib"
 +MAIN_WEBR_LDADD += --extern-pre-js $(prefix)/pre.js
@@ -57,7 +58,7 @@ Index: R-4.3.0/src/main/Makefile.in
 +	$(MAIN_LINK) $(MAIN_WEBR_LDADD) \
 +	-o $(prefix)/dist/$(R_binary).js \
 +	$(R_bin_OBJECTS) -lRlapack $(FORTRAN_WASM_LDADD) $(R_bin_LDADD)
-+
+ 
 +install-wasm: $(R_bin_DEPENDENCIES)
 +	@$(MKINSTALLDIRS) "$(prefix)/dist"
 +	@cp "$(Rexeclibdir)/libRblas.so" "$(prefix)/dist/libRblas.so"

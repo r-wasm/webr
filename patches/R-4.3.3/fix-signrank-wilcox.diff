@@ -1,8 +1,8 @@
-Index: R-4.2.2/src/library/stats/src/distn.c
+Index: R-4.3.3/src/library/stats/src/distn.c
 ===================================================================
---- R-4.2.2.orig/src/library/stats/src/distn.c
-+++ R-4.2.2/src/library/stats/src/distn.c
-@@ -460,13 +460,13 @@ extern void wilcox_free(void);
+--- R-4.3.3.orig/src/library/stats/src/distn.c
++++ R-4.3.3/src/library/stats/src/distn.c
+@@ -460,13 +460,13 @@ SEXP stats_signrank_free(void)
  extern void wilcox_free(void);
  */
  
@@ -18,11 +18,11 @@ Index: R-4.2.2/src/library/stats/src/distn.c
  {
      wilcox_free();
      return R_NilValue;
-Index: R-4.2.2/src/library/stats/src/statsR.h
+Index: R-4.3.3/src/library/stats/src/statsR.h
 ===================================================================
---- R-4.2.2.orig/src/library/stats/src/statsR.h
-+++ R-4.2.2/src/library/stats/src/statsR.h
-@@ -205,5 +205,5 @@ SEXP Smirnov_sim(SEXP sr, SEXP sc, SEXP sB, SEXP twosi
+--- R-4.3.3.orig/src/library/stats/src/statsR.h
++++ R-4.3.3/src/library/stats/src/statsR.h
+@@ -205,5 +205,5 @@ SEXP stats_signrank_free(void);
  
  SEXP Smirnov_sim(SEXP sr, SEXP sc, SEXP sB, SEXP twosided);
  

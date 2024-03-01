@@ -1,19 +1,19 @@
-Index: R-4.3.0/src/library/grDevices/src/grDevices.h
+Index: R-4.3.3/src/library/grDevices/src/grDevices.h
 ===================================================================
---- R-4.3.0.orig/src/library/grDevices/src/grDevices.h
-+++ R-4.3.0/src/library/grDevices/src/grDevices.h
-@@ -123,5 +123,5 @@ SEXP useGroup(SEXP args);
+--- R-4.3.3.orig/src/library/grDevices/src/grDevices.h
++++ R-4.3.3/src/library/grDevices/src/grDevices.h
+@@ -120,5 +120,5 @@ SEXP devUp(void);
  SEXP setMask(SEXP args);
  SEXP defineGroup(SEXP args);
  SEXP useGroup(SEXP args);
 -SEXP devUp(void);
 +SEXP devUp(SEXP args);
  SEXP stroke(SEXP args);
-Index: R-4.3.0/src/library/grDevices/src/group.c
+Index: R-4.3.3/src/library/grDevices/src/group.c
 ===================================================================
---- R-4.3.0.orig/src/library/grDevices/src/group.c
-+++ R-4.3.0/src/library/grDevices/src/group.c
-@@ -65,7 +65,7 @@ SEXP useGroup(SEXP args) 
+--- R-4.3.3.orig/src/library/grDevices/src/group.c
++++ R-4.3.3/src/library/grDevices/src/group.c
+@@ -65,7 +65,7 @@ SEXP devUp(void) {
      return R_NilValue;
  }
  

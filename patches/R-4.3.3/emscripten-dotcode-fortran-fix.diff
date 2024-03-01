@@ -1,8 +1,8 @@
-Index: R-4.3.0/src/main/dotcode.c
+Index: R-4.3.3/src/main/dotcode.c
 ===================================================================
---- R-4.3.0.orig/src/main/dotcode.c
-+++ R-4.3.0/src/main/dotcode.c
-@@ -1772,6 +1772,343 @@ R_FindNativeSymbolFromDLL(char *name, DllReference *dl
+--- R-4.3.3.orig/src/main/dotcode.c
++++ R-4.3.3/src/main/dotcode.c
+@@ -1772,6 +1772,343 @@ attribute_hidden SEXP do_dotCode(SEXP call, SEXP op, S
  #define FILL 0xee
  #define NG 64
  
