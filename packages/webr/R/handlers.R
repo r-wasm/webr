@@ -14,8 +14,7 @@ global_prompt_install <- function() {
       if (!interactive()) {
         return()
       }
-      show_menu <- getOption("webr.show_menu")
-      show_menu <- ifelse(is.null(show_menu), FALSE, show_menu)
+      show_menu <- getOption("webr.show_menu", default = FALSE)
       if (prompt_download(cnd$package, show_menu)) {
         tryInvokeRestart("retry_loadNamespace")
         invokeRestart("abort")
