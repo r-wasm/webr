@@ -25,6 +25,7 @@ const encoder = new TextEncoder();
  */
 export async function syncResponse(endpoint: Endpoint, data: SyncRequestData, response: any) {
   try {
+    // eslint-disable-next-line prefer-const
     let { taskId, sizeBuffer, dataBuffer, signalBuffer } = data;
     // console.warn(msg);
 

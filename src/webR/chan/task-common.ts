@@ -10,12 +10,12 @@ export interface Endpoint extends EventSource {
 }
 
 export interface EventSource {
-  addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: {}): void;
+  addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: object): void;
 
   removeEventListener(
     type: string,
     listener: EventListenerOrEventListenerObject,
-    options?: {}
+    options?: object,
   ): void;
 }
 

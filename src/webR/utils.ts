@@ -6,9 +6,13 @@ export type RejectFn = (_reason?: any) => void;
 
 export function promiseHandles() {
   const out = {
-    resolve: (_value?: unknown) => {},
-    reject: (_reason?: any) => {},
-    promise: null as unknown as Promise<unknown>,
+    resolve: () => { return; },
+    reject: () => { return; },
+    promise: Promise.resolve(),
+  } as {
+    resolve: ResolveFn,
+    reject: RejectFn,
+    promise: Promise<unknown>,
   };
 
   const promise = new Promise((resolve, reject) => {
@@ -30,7 +34,7 @@ export function replaceInObject<T>(
   replacer: (obj: any, ...replacerArgs: any[]) => unknown,
   ...replacerArgs: unknown[]
 ): T | T[] {
-  if (obj === null || typeof obj !== 'object' || isImageBitmap(obj) ) {
+  if (obj === null || typeof obj !== 'object' || isImageBitmap(obj)) {
     return obj;
   }
   if (obj instanceof ArrayBuffer) {
@@ -45,7 +49,7 @@ export function replaceInObject<T>(
     ) as T[];
   }
   return Object.fromEntries(
-    Object.entries(obj).map(([k, v], i) => [k, replaceInObject(v, test, replacer, ...replacerArgs)])
+    Object.entries(obj).map(([k, v]) => [k, replaceInObject(v, test, replacer, ...replacerArgs)])
   ) as T;
 }
 

@@ -13,8 +13,8 @@ export function Plot({
   const canvasElements = React.useRef<HTMLCanvasElement[]>([]);
   const [selectedCanvas, setSelectedCanvas] = React.useState<number | null>(null);
 
-   // Register the current canvas with the plotting interface so that when the
-   // webR canvas device draws it writes to the currently active canvas element
+  // Register the current canvas with the plotting interface so that when the
+  // webR canvas device draws it writes to the currently active canvas element
   React.useEffect(() => {
     plotInterface.drawImage = (img: ImageBitmap) => {
       if (!canvasRef.current) {

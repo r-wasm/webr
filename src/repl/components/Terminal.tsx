@@ -66,11 +66,10 @@ export function Terminal({
     fitAddon.fit();
 
     const resizeObserver = new ResizeObserver(() => {
-      (async () => {
-        await webR.init();
+      void webR.init().then(() => {
         const dims = fitAddon.proposeDimensions();
-        await webR.evalRVoid(`options(width=${dims ? dims.cols : 80})`);
-      })();
+        return webR.evalRVoid(`options(width=${dims ? dims.cols : 80})`);
+      });
       fitAddon.fit();
     });
     resizeObserver.observe(divRef.current);
@@ -83,7 +82,7 @@ export function Terminal({
    * component's xterm instance.
    */
   React.useEffect(() => {
-    if (!readline){
+    if (!readline) {
       return;
     }
 

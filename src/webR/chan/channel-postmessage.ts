@@ -18,7 +18,7 @@ export class PostMessageChannelMain extends ChannelMain {
 
   initialised: Promise<unknown>;
   resolve: (_?: unknown) => void;
-  close = () => {};
+  close: () => void = () => { return; };
   #worker?: Worker;
 
   constructor(config: Required<WebROptions>) {
@@ -53,7 +53,7 @@ export class PostMessageChannelMain extends ChannelMain {
   #handleEventsFromWorker(worker: Worker) {
     if (IN_NODE) {
       (worker as unknown as NodeWorker).on('message', (message: Message) => {
-        this.#onMessageFromWorker(worker, message);
+        void this.#onMessageFromWorker(worker, message);
       });
     } else {
       worker.onmessage = (ev: MessageEvent) =>
@@ -148,7 +148,7 @@ export class PostMessageChannelWorker {
     if (this.#promptDepth > 0) {
       this.#promptDepth = 0;
       const msg = Module.allocateUTF8OnStack(
-       "Can't block for input when using the PostMessage communication channel."
+        "Can't block for input when using the PostMessage communication channel."
       );
       Module._Rf_error(msg);
     }
@@ -177,7 +177,7 @@ export class PostMessageChannelWorker {
     Module._setup_Rmainloop();
     Module._R_ReplDLLinit();
     Module._R_ReplDLLdo1();
-    this.#asyncREPL();
+    void this.#asyncREPL();
   }
 
   setDispatchHandler(dispatch: (msg: Message) => void) {
@@ -194,8 +194,8 @@ export class PostMessageChannelWorker {
     return prom;
   }
 
-  setInterrupt(_: () => void) {}
-  handleInterrupt() {}
+  setInterrupt() { return; }
+  handleInterrupt() { return; }
 
   onMessageFromMainThread(message: Message) {
     const msg = message as Response;
@@ -216,14 +216,14 @@ export class PostMessageChannelWorker {
    * fallback REPL to yield to the event loop with await.
    *
    * The drawback of this approach is that nested REPLs do not work, such as
-   * realine, browser or menu. Attempting to use a nested REPL prints an error
+   * readline, browser or menu. Attempting to use a nested REPL prints an error
    * to the JS console.
    *
    * R/Wasm errors during execution are caught and the REPL is restarted at the
    * top level. Any other JS errors are re-thrown.
    */
   #asyncREPL = async () => {
-    for (;;) {
+    for (; ;) {
       try {
         this.#promptDepth = 0;
         const msg = (await this.request({ type: 'read' })) as Message;

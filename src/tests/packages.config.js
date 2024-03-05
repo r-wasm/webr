@@ -1,5 +1,5 @@
 module.exports = {
-  transform: {'^.+\\.ts?$': 'ts-jest'},
+  transform: { '^.+\\.ts?$': 'ts-jest' },
   testEnvironment: 'node',
   testRegex: '/tests/packages/.*\\.(test|spec)?\\.(ts|tsx)$',
   testTimeout: 360000,

@@ -51,7 +51,7 @@ export function webRPayloadAsError(payload: WebRPayloadErr): Error {
  * @returns {boolean} True if the object is an instance of an WebRPayload.
  */
 export function isWebRPayload(value: any): value is WebRPayload {
-  return value && typeof value === 'object' && 'payloadType' in value && 'obj' in value;
+  return !!value && typeof value === 'object' && 'payloadType' in value && 'obj' in value;
 }
 
 /**

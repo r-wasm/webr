@@ -15,7 +15,7 @@ export interface Module extends EmscriptenModule {
   };
   ENV: { [key: string]: string };
   GOT: {
-    [key: string]: {required: boolean; value: number};
+    [key: string]: { required: boolean; value: number };
   }
   createLazyFilesystem: () => void;
   monitorRunDependencies: (n: number) => void;
@@ -39,7 +39,7 @@ export interface Module extends EmscriptenModule {
   setValue: typeof setValue;
   UTF8ToString: typeof UTF8ToString;
   callMain: (args: string[]) => void;
-  getWasmTableEntry: (entry: number) => Function;
+  getWasmTableEntry: (entry: number) => (...args: any[]) => RPtr;
   // R symbols from Rinternals.h
   _ATTRIB: (ptr: RPtr) => RPtr;
   _CAR: (ptr: RPtr) => RPtr;
@@ -136,7 +136,7 @@ export interface Module extends EmscriptenModule {
     readConsole: () => number;
     resolveInit: () => void;
     handleEvents: () => void;
-    evalJs: (code: RPtr) => number;
+    evalJs: (code: RPtr) => unknown;
     evalR: (expr: string | RObject, options?: EvalROptions) => RObject;
     captureR: (expr: string | RObject, options: EvalROptions) => {
       result: RObject,
