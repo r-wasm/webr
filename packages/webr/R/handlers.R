@@ -38,7 +38,7 @@ prompt_download <- function(package, show_menu) {
 
   if (download == 1) {
     webr::install(package)
-    return(invisible(TRUE))
+    return(invisible(length(find.package(package, quiet = TRUE)) > 0))
   }
 
   return(invisible(FALSE))

@@ -28,8 +28,10 @@
 library_shim <- function(pkg, ..., show_menu = getOption("webr.show_menu")) {
   show_menu <- ifelse(is.null(show_menu), FALSE, show_menu)
   package <- as.character(substitute(pkg))
-  if (!base::require(package, character.only = TRUE, quietly = TRUE)) {
-    prompt_download(package, show_menu)
+  if (length(find.package(package, quiet = TRUE)) == 0) {
+    if (!prompt_download(package, show_menu)) {
+      return(invisible(NULL))
+    }
   }
   base::library(package, character.only = TRUE, ...)
 }
@@ -39,8 +41,10 @@ library_shim <- function(pkg, ..., show_menu = getOption("webr.show_menu")) {
 require_shim <- function(pkg, ..., show_menu = getOption("webr.show_menu")) {
   show_menu <- ifelse(is.null(show_menu), FALSE, show_menu)
   package <- as.character(substitute(pkg))
-  if (!base::require(package, character.only = TRUE, quietly = TRUE)) {
-    prompt_download(package, show_menu)
+  if (length(find.package(package, quiet = TRUE)) == 0) {
+    if (!prompt_download(package, show_menu)) {
+      return(invisible(NULL))
+    }
   }
   base::require(package, character.only = TRUE, ...)
 }
