@@ -5,11 +5,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1701689381,
-        "narHash": "sha256-3JhKee+DvzRiku+kwms4pn11tkopNM+VxDxToVjLc2s=",
+        "lastModified": 1710080804,
+        "narHash": "sha256-NbxqZZRiSMjEsiS16LON0HbJKPPo5NYxz5x7PRndrBs=",
         "owner": "r-wasm",
         "repo": "flang-wasm",
-        "rev": "9ea2771758984d6b4d3fe74f782a134198714a69",
+        "rev": "0cb5c59465e0133aadbe0b66beeb270d597caea7",
         "type": "github"
       },
       "original": {
@@ -37,11 +37,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1701263465,
-        "narHash": "sha256-lNXUIlkfyDyp9Ox21hr+wsEf/IBklLvb6bYcyeXbdRc=",
+        "lastModified": 1710021367,
+        "narHash": "sha256-FuMVdWqXMT38u1lcySYyv93A7B8wU0EGzUr4t4jQu8g=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "50aa30a13c4ab5e7ba282da460a3e3d44e9d0eb3",
+        "rev": "b94a96839afcc56de3551aa7472b8d9a3e77e05d",
         "type": "github"
       },
       "original": {
