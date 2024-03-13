@@ -1,0 +1,13 @@
+Index: R-4.3.3/src/scripts/R.sh.in
+===================================================================
+--- R-4.3.3.orig/src/scripts/R.sh.in
++++ R-4.3.3/src/scripts/R.sh.in
+@@ -28,7 +28,7 @@ if test -n "${R_HOME}" && \
+ 
+ if test -n "${R_HOME}" && \
+    test "${R_HOME}" != "${R_HOME_DIR}"; then
+-  echo "WARNING: ignoring environment value of R_HOME"
++  echo "WARNING: ignoring environment value of R_HOME" >&2
+ fi
+ R_HOME="${R_HOME_DIR}"
+ export R_HOME
