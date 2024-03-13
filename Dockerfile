@@ -15,13 +15,13 @@ ENV EMFC="/opt/flang/host/bin/flang-new"
 FROM webr as deb_build
 RUN mkdir /opt/fake_rust/ && \
     apt-get update && \
-	apt-get install -y equivs lsb-release &&\
-	equivs-control fake_rust && \
-	sed -i 's/Package:.*/Package: rustc/' fake_rust && \
-	sed -i 's/# Version:.*/Version: 99.0/' fake_rust && \
-	equivs-build fake_rust && \
-	sed -i 's/Package:.*/Package: cargo/' fake_rust && \
-	equivs-build fake_rust && \
+    apt-get install -y equivs lsb-release &&\
+    equivs-control fake_rust && \
+    sed -i 's/Package:.*/Package: rustc/' fake_rust && \
+    sed -i 's/# Version:.*/Version: 99.0/' fake_rust && \
+    equivs-build fake_rust && \
+    sed -i 's/Package:.*/Package: cargo/' fake_rust && \
+    equivs-build fake_rust && \
     mv rustc_99.0_all.deb cargo_99.0_all.deb /opt/fake_rust/
 
 # Step 2: Do the necessary setups
@@ -31,7 +31,7 @@ RUN mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | \
     gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] \
-        https://deb.nodesource.com/node_18.x nodistro main" | \
+    https://deb.nodesource.com/node_18.x nodistro main" | \
     tee /etc/apt/sources.list.d/nodesource.list && \
     apt-get update && \
     apt-get install nodejs -y
@@ -46,12 +46,12 @@ RUN set -eux; \
     echo "0b2f6c8f85a3d02fde2efc0ced4657869d73fccfce59defb4e8d29233116e6db *rustup-init" | sha256sum -c -; \
     chmod +x rustup-init; \
     ./rustup-init -y \
-        --no-modify-path \
-        --profile minimal \
-        --default-toolchain nightly \
-        --default-host x86_64-unknown-linux-gnu \
-        --target wasm32-unknown-emscripten \
-        --component rust-src; \
+    --no-modify-path \
+    --profile minimal \
+    --default-toolchain nightly \
+    --default-host x86_64-unknown-linux-gnu \
+    --target wasm32-unknown-emscripten \
+    --component rust-src; \
     rm rustup-init; \
     chmod -R a+w $RUSTUP_HOME $CARGO_HOME; \
     rustup --version; \
@@ -75,8 +75,10 @@ ENV R_LIBS_USER=/opt/R/current/lib/R/site-library
 RUN rig add 4.3.2
 
 # Download webR and configure for LLVM flang
-RUN git clone --depth=1 https://github.com/r-wasm/webr.git /opt/webr
+RUN git clone https://github.com/r-wasm/webr.git /opt/webr
 WORKDIR /opt/webr
+ARG WEBRCI_SHA=HEAD
+RUN git checkout ${WEBRCI_SHA}
 RUN ./configure
 
 # Install r-wasm's webr package for native R
