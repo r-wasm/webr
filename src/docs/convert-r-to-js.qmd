@@ -254,7 +254,7 @@ await mtcars.toObject();
       carb: [4, 4, 1, ..., 2],
       cyl: [6, 6, 4, ..., 4]
       ...,
-      wt: (32) [2.62, 2.875, 2.32, ..., 2.78],
+      wt: [2.62, 2.875, 2.32, ..., 2.78],
     }
 
 R `data.frame` objects may also be converted into a [D3](https://d3js.org)-style data array format using the [`toD3()`](api/js/classes/RWorker.RDouble.md#tod3) method. This method is only available for R objects of class `data.frame`.
