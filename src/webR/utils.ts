@@ -34,7 +34,7 @@ export function replaceInObject<T>(
   replacer: (obj: any, ...replacerArgs: any[]) => unknown,
   ...replacerArgs: unknown[]
 ): T | T[] {
-  if (obj === null || typeof obj !== 'object' || isImageBitmap(obj)) {
+  if (obj === null || obj === undefined || isImageBitmap(obj)) {
     return obj;
   }
   if (obj instanceof ArrayBuffer) {
@@ -48,9 +48,12 @@ export function replaceInObject<T>(
       replaceInObject(v, test, replacer, ...replacerArgs)
     ) as T[];
   }
-  return Object.fromEntries(
-    Object.entries(obj).map(([k, v]) => [k, replaceInObject(v, test, replacer, ...replacerArgs)])
-  ) as T;
+  if (typeof obj === 'object') {
+    return Object.fromEntries(
+      Object.entries(obj).map(([k, v]) => [k, replaceInObject(v, test, replacer, ...replacerArgs)])
+    ) as T;
+  }
+  return obj;
 }
 
 /* Workaround for loading a cross-origin script.
