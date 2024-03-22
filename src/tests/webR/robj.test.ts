@@ -468,6 +468,13 @@ describe('Invoking RFunction objects', () => {
     expect(await result.toNumber()).toBe(24);
   });
 
+  test('Execute an R function with RFunction argument', async () => {
+    const factorial = (await webR.evalR('factorial')) as RFunction;
+    const five = await webR.evalR('5');
+    const result = await webR.evalRNumber('foo(bar)', { env: { foo: factorial, bar: five } });
+    expect(await result).toBe(120);
+  });
+
   test('Pass JS booleans as R logical arguments', async () => {
     const c = (await webR.evalR('c')) as RFunction;
     const logical = (await c.exec(true, [true, false])) as RLogical;
