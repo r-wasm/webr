@@ -1,5 +1,9 @@
 # webR (development version)
 
+# webR 0.3.1
+
+Hotfix release to manage incompatible WebAssembly binary R packages due to ABI changes in Emscripten.
+
 # webR 0.3.0
 
 ## New features

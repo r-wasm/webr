@@ -388,7 +388,7 @@ After loading, the resulting web page should present an interactive R console si
   </div>
 </div>
 <script type="module">
-  import { Console } from 'https://webr.r-wasm.org/v0.3.0/webr.mjs';
+  import { Console } from 'https://webr.r-wasm.org/v0.3.1/webr.mjs';
   const webRConsole = new Console({
     stdout: line => document.getElementById('out').append(line + '\n'),
     stderr: line => document.getElementById('out').append(line + '\n'),
