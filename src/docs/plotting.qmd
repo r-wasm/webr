@@ -293,6 +293,19 @@ In the following example, a set of demo plots are captured and then displayed on
 </html>
 ```
 
+Arguments for the capturing `webr::canvas()` graphics device that's used during evaluation, such as setting a custom width or height, can be included as part of the optional [`EvalROptions`](api/js/interfaces/WebRChan.EvalROptions.md) argument to `captureR()`:
+
+``` javascript
+const shelter = await new webR.Shelter();
+const capture = await shelter.captureR("hist(rnorm(1000))", {
+  captureGraphics: {
+    width: 504,
+    height: 252,
+    bg: "cornsilk",
+  }
+});
+```
+
 ## Plotting from the console
 
 The `Console` class includes callbacks that are used for handling image rendering. This example builds off the [interactive webR REPL Console](examples.qmd#creating-an-interactive-webr-repl-console). In addition to the console, there is a `<canvas>` element to which plots will be drawn. The callbacks `canvasImage` and `canvasNewPage` are used to draw plots.
