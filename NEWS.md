@@ -1,5 +1,15 @@
 # webR (development version)
 
+## New features
+
+* The `captureGraphics` option in `EvalROptions` now allows the caller to set the arguments to be passed to the capturing `webr::canvas()` device.
+
+## Breaking changes
+
+## Bug Fixes
+
+* When capturing graphics with `captureR()`, clean-up now occurs even when the evaluated R code throws an error. This avoids leaking graphics devices on the device stack.
+
 # webR 0.3.1
 
 Hotfix release to manage incompatible WebAssembly binary R packages due to ABI changes in Emscripten.
