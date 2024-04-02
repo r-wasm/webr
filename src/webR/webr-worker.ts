@@ -646,23 +646,26 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
   output: RList,
   images: ImageBitmap[],
 } {
-  const prot = { n: 0 };
-  try {
-    const _options: Required<EvalROptions> = Object.assign(
-      {
-        env: objs.globalEnv,
-        captureStreams: true,
-        captureConditions: true,
-        captureGraphics: typeof OffscreenCanvas !== 'undefined',
-        withAutoprint: false,
-        throwJsException: true,
-        withHandlers: true,
-      },
-      replaceInObject(options, isWebRPayloadPtr, (t: WebRPayloadPtr) =>
-        RObject.wrap(t.obj.ptr)
-      )
-    );
+  const _options: Required<EvalROptions> = Object.assign(
+    {
+      env: objs.globalEnv,
+      captureStreams: true,
+      captureConditions: true,
+      captureGraphics: typeof OffscreenCanvas !== 'undefined',
+      withAutoprint: false,
+      throwJsException: true,
+      withHandlers: true,
+    },
+    replaceInObject(options, isWebRPayloadPtr, (t: WebRPayloadPtr) =>
+      RObject.wrap(t.obj.ptr)
+    )
+  );
 
+  const prot = { n: 0 };
+  const devEnvObj = new REnvironment({});
+  protectInc(devEnvObj, prot);
+
+  try {
     const envObj = new REnvironment(_options.env);
     protectInc(envObj, prot);
     if (envObj.type() !== 'environment') {
@@ -670,8 +673,6 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
     }
 
     // Start a capturing canvas graphics device, if required
-    const devEnvObj = new REnvironment({});
-    protectInc(devEnvObj, prot);
     if (_options.captureGraphics) {
       if (typeof OffscreenCanvas === 'undefined') {
         throw new Error(
@@ -680,11 +681,17 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
         );
       }
 
+      // User supplied canvas arguments, if any. Default: `capture = TRUE`
+      devEnvObj.bind('canvas_options', Object.assign({
+        capture: true
+      }, _options.captureGraphics));
+
       parseEvalBare(`{
         old_dev <- dev.cur()
-        webr::canvas(capture = TRUE)
+        do.call(webr::canvas, canvas_options)
         new_dev <- dev.cur()
         old_cache <- webr::canvas_cache()
+        plots <- numeric()
       }`, devEnvObj);
     }
 
@@ -739,13 +746,6 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
       images = plots.toArray().map((idx) => {
         return Module.webr.canvas[idx!].offscreen.transferToImageBitmap();
       });
-
-      // Close the device and destroy newly created canvas cache entries
-      parseEvalBare(`{
-        dev.off(new_dev)
-        dev.set(old_dev)
-        webr::canvas_destroy(plots)
-      }`, devEnvObj);
     }
 
     // Build the capture object to be returned to the caller
@@ -755,6 +755,15 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
       images,
     };
   } finally {
+    // Close the device and destroy newly created canvas cache entries
+    const newDev = devEnvObj.get('new_dev');
+    if (_options.captureGraphics && newDev.type() !== "null") {
+      parseEvalBare(`{
+        dev.off(new_dev)
+        dev.set(old_dev)
+        webr::canvas_destroy(plots)
+      }`, devEnvObj);
+    }
     unprotect(prot.n);
   }
 }
