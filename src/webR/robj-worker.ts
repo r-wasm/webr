@@ -4,7 +4,7 @@
  */
 import { Module } from './emscripten';
 import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw, WebRDataScalar } from './robj';
-import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber, RClass } from './robj';
+import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber, RCtor } from './robj';
 import { isWebRDataJs, WebRDataJs, WebRDataJsAtomic, WebRDataJsNode } from './robj';
 import { WebRDataJsNull, WebRDataJsString, WebRDataJsSymbol } from './robj';
 import { envPoke, parseEvalBare, protect, protectInc, unprotect } from './utils-r';
@@ -124,8 +124,9 @@ function newObjectFromData(obj: WebRData): RObject {
   if (Array.isArray(obj)) {
     return newObjectFromArray(obj);
   }
+  // Any other JS object shape is reserved for creating an R `data.frame`
   if (typeof obj === 'object') {
-    return RList.fromObject(obj);
+    return RDataFrame.fromObject(obj);
   }
 
   throw new Error('Robj construction for this JS object is not yet supported');
@@ -146,7 +147,7 @@ function newObjectFromArray(arr: WebRData[]): RObject {
       return isAtomicType(v) || isRVectorAtomic(v);
     }));
     if (isConsistent && isAtomic) {
-      return RList.fromD3(_arr);
+      return RDataFrame.fromD3(_arr);
     }
   }
 
@@ -662,13 +663,49 @@ export class RList extends RObject {
     }, []);
   }
 
-  // JS objects are interpreted as R list objects. If we have a JS object with
-  // consistent columns of atomic type, make the returned R object a data.frame
+  entries(options: { depth: number } = { depth: -1 }): NamedEntries<WebRData> {
+    const obj = this.toJs(options);
+
+    // If this is a data frame, assume we have atomic vector columns and can
+    // convert directly to array values by default.
+    if (this.isDataFrame() && options.depth < 0) {
+      obj.values = (obj.values as RVectorAtomic<atomicType>[]).map((v) => v.toArray());
+    }
+    return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
+  }
+
+  toJs(options: { depth: number } = { depth: 0 }, depth = 1): WebRDataJsNode {
+    return {
+      type: 'list',
+      names: this.names(),
+      values: [...Array(this.length).keys()].map((i) => {
+        if (options.depth && depth >= options.depth) {
+          return this.get(i + 1);
+        } else {
+          return this.get(i + 1).toJs(options, depth + 1);
+        }
+      }),
+    };
+  }
+}
+
+export class RDataFrame extends RList {
+  constructor(val: WebRData) {
+    if (val instanceof RObjectBase) {
+      super(val);
+      if (!this.isDataFrame()) {
+        throw new Error("Can't construct `RDataFrame`. Supplied R object is not a `data.frame`.");
+      }
+      return this;
+    }
+    return RDataFrame.fromObject(val);
+  }
+
   static fromObject(obj: WebRData) {
     const { names, values } = toWebRData(obj);
     const prot = { n: 0 };
 
-    // Should we make this a data.frame?
+    // Do we have consistent columns of atomic type? If so, make a `data.frame`.
     try {
       const hasNames = !!names && names.length > 0 && names.every((v) => v);
       const hasArrays = values.length > 0 && values.every((v) => {
@@ -693,46 +730,21 @@ export class RList extends RObject {
           const asDataFrame = new RCall([new RSymbol('as.data.frame'), listObj]);
           protectInc(asDataFrame, prot);
 
-          return asDataFrame.eval();
+          return new RDataFrame(asDataFrame.eval());
         }
       }
     } finally {
       unprotect(prot.n);
     }
 
-    // Not eligible as a data.frame, just create a standard list
-    return new RList(obj);
+    // Not eligible as a `data.frame`, throw an error.
+    throw new Error("Can't construct `data.frame`. Source object is not eligible.");
   }
 
   static fromD3(arr: { [key: string]: WebRData }[]) {
     return this.fromObject(
       Object.fromEntries(Object.keys(arr[0]).map((k) => [k, arr.map((v) => v[k])]))
     );
-  }
-
-  entries(options: { depth: number } = { depth: -1 }): NamedEntries<WebRData> {
-    const obj = this.toJs(options);
-
-    // If this is a data frame, assume we have atomic vector columns and can
-    // convert directly to array values by default.
-    if (this.isDataFrame() && options.depth < 0) {
-      obj.values = (obj.values as RVectorAtomic<atomicType>[]).map((v) => v.toArray());
-    }
-    return obj.values.map((v, i) => [obj.names ? obj.names[i] : null, v]);
-  }
-
-  toJs(options: { depth: number } = { depth: 0 }, depth = 1): WebRDataJsNode {
-    return {
-      type: 'list',
-      names: this.names(),
-      values: [...Array(this.length).keys()].map((i) => {
-        if (options.depth && depth >= options.depth) {
-          return this.get(i + 1);
-        } else {
-          return this.get(i + 1).toJs(options, depth + 1);
-        }
-      }),
-    };
   }
 }
 
@@ -1273,7 +1285,7 @@ function toWebRData(jsObj: WebRData): WebRData {
   return { names: null, values: [jsObj] };
 }
 
-export function getRWorkerClass(type: RType | RClass): typeof RObject {
+export function getRWorkerClass(type: RType | RCtor): typeof RObject {
   const typeClasses: { [key: string]: typeof RObject } = {
     object: RObject,
     null: RNull,
@@ -1293,6 +1305,7 @@ export function getRWorkerClass(type: RType | RClass): typeof RObject {
     list: RList,
     raw: RRaw,
     function: RFunction,
+    dataframe: RDataFrame,
   };
   if (type in typeClasses) {
     return typeClasses[type];

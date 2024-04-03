@@ -6,7 +6,7 @@
 import { ChannelMain } from './chan/channel';
 import { replaceInObject } from './utils';
 import { isWebRPayloadPtr, WebRPayloadPtr, WebRPayload } from './payload';
-import { RType, RClass, WebRData, WebRDataRaw } from './robj';
+import { RType, RCtor, WebRData, WebRDataRaw } from './robj';
 import { isRObject, RObject, isRFunction } from './robj-main';
 import * as RWorker from './robj-worker';
 import { ShelterID, CallRObjectMethodMessage, NewRObjectMessage } from './webr-chan';
@@ -184,7 +184,7 @@ export function targetMethod(chan: ChannelMain, prop: string, payload?: WebRPayl
  */
 async function newRObject(
   chan: ChannelMain,
-  objType: RType | RClass,
+  objType: RType | RCtor,
   shelter: ShelterID,
   value: WebRData
 ) {
@@ -253,7 +253,7 @@ export function newRProxy(chan: ChannelMain, payload: WebRPayloadPtr): RProxy<RW
 export function newRClassProxy<T, R>(
   chan: ChannelMain,
   shelter: ShelterID,
-  objType: RType | RClass
+  objType: RType | RCtor
 ) {
   return new Proxy(RWorker.RObject, {
     construct: (_, args: [WebRData]) => newRObject(chan, objType, shelter, ...args),

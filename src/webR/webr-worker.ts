@@ -10,7 +10,7 @@ import { WebRPayloadRaw, WebRPayloadPtr, WebRPayloadWorker, isWebRPayloadPtr } f
 import { RObject, isRObject, REnvironment, RList, RCall, getRWorkerClass } from './robj-worker';
 import { RCharacter, RString, keep, destroy, purge, shelters } from './robj-worker';
 import { RLogical, RInteger, RDouble, initPersistentObjects, objs } from './robj-worker';
-import { RPtr, RType, RClass, WebRData, WebRDataRaw } from './robj';
+import { RPtr, RType, RCtor, WebRData, WebRDataRaw } from './robj';
 import { protect, protectInc, unprotect, parseEvalBare, UnwindProtectException, safeEval } from './utils-r';
 import { generateUUID } from './chan/task-common';
 
@@ -588,7 +588,7 @@ function mountImagePath(path: string, mountpoint: string) {
   mountImageData(buf, metadata, mountpoint);
 }
 
-function newRObject(data: WebRData, objType: RType | RClass): WebRPayloadPtr {
+function newRObject(data: WebRData, objType: RType | RCtor): WebRPayloadPtr {
   const RClass = getRWorkerClass(objType);
   const obj = new RClass(
     replaceInObject(data, isWebRPayloadPtr, (t: WebRPayloadPtr) =>
@@ -682,9 +682,9 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
       }
 
       // User supplied canvas arguments, if any. Default: `capture = TRUE`
-      devEnvObj.bind('canvas_options', Object.assign({
+      devEnvObj.bind('canvas_options', new RList(Object.assign({
         capture: true
-      }, _options.captureGraphics));
+      }, _options.captureGraphics)));
 
       parseEvalBare(`{
         old_dev <- dev.cur()

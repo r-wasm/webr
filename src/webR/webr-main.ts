@@ -11,8 +11,8 @@ import { EmPtr } from './emscripten';
 import { WebRPayloadPtr } from './payload';
 import { newRProxy, newRClassProxy } from './proxy';
 import { isRObject, RCharacter, RComplex, RDouble } from './robj-main';
-import { REnvironment, RSymbol, RInteger } from './robj-main';
-import { RList, RLogical, RNull, RObject, RPairlist, RRaw, RString, RCall } from './robj-main';
+import { REnvironment, RSymbol, RInteger, RList, RDataFrame } from './robj-main';
+import { RLogical, RNull, RObject, RPairlist, RRaw, RString, RCall } from './robj-main';
 import { replaceInObject } from './utils';
 import * as RWorker from './robj-worker';
 import { WebRError, WebRPayloadError } from './error';
@@ -208,6 +208,7 @@ export class WebR {
   RComplex!: ReturnType<typeof newRClassProxy<typeof RWorker.RComplex, RComplex>>;
   RRaw!: ReturnType<typeof newRClassProxy<typeof RWorker.RRaw, RRaw>>;
   RList!: ReturnType<typeof newRClassProxy<typeof RWorker.RList, RList>>;
+  RDataFrame!: ReturnType<typeof newRClassProxy<typeof RWorker.RDataFrame, RDataFrame>>;
   RPairlist!: ReturnType<typeof newRClassProxy<typeof RWorker.RPairlist, RPairlist>>;
   REnvironment!: ReturnType<typeof newRClassProxy<typeof RWorker.REnvironment, REnvironment>>;
   RSymbol!: ReturnType<typeof newRClassProxy<typeof RWorker.RSymbol, RSymbol>>;
@@ -250,6 +251,7 @@ export class WebR {
       this.RCharacter = this.globalShelter.RCharacter;
       this.RRaw = this.globalShelter.RRaw;
       this.RList = this.globalShelter.RList;
+      this.RDataFrame = this.globalShelter.RDataFrame;
       this.RPairlist = this.globalShelter.RPairlist;
       this.REnvironment = this.globalShelter.REnvironment;
       this.RSymbol = this.globalShelter.RSymbol;
@@ -508,6 +510,7 @@ export class Shelter {
   RComplex!: ReturnType<typeof newRClassProxy<typeof RWorker.RComplex, RComplex>>;
   RRaw!: ReturnType<typeof newRClassProxy<typeof RWorker.RRaw, RRaw>>;
   RList!: ReturnType<typeof newRClassProxy<typeof RWorker.RList, RList>>;
+  RDataFrame!: ReturnType<typeof newRClassProxy<typeof RWorker.RDataFrame, RDataFrame>>;
   RPairlist!: ReturnType<typeof newRClassProxy<typeof RWorker.RPairlist, RPairlist>>;
   REnvironment!: ReturnType<typeof newRClassProxy<typeof RWorker.REnvironment, REnvironment>>;
   RSymbol!: ReturnType<typeof newRClassProxy<typeof RWorker.RSymbol, RSymbol>>;
@@ -537,6 +540,7 @@ export class Shelter {
     this.RCharacter = newRClassProxy<typeof RWorker.RCharacter, RCharacter>(this.#chan, this.#id, 'character');
     this.RRaw = newRClassProxy<typeof RWorker.RRaw, RRaw>(this.#chan, this.#id, 'raw');
     this.RList = newRClassProxy<typeof RWorker.RList, RList>(this.#chan, this.#id, 'list');
+    this.RDataFrame = newRClassProxy<typeof RWorker.RDataFrame, RDataFrame>(this.#chan, this.#id, 'dataframe');
     this.RPairlist = newRClassProxy<typeof RWorker.RPairlist, RPairlist>(this.#chan, this.#id, 'pairlist');
     this.REnvironment = newRClassProxy<typeof RWorker.REnvironment, REnvironment>(this.#chan, this.#id, 'environment');
     this.RSymbol = newRClassProxy<typeof RWorker.RSymbol, RSymbol>(this.#chan, this.#id, 'symbol');

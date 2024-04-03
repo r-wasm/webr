@@ -38,7 +38,9 @@ export const RTypeMap = {
 } as const;
 export type RType = keyof typeof RTypeMap;
 export type RTypeNumber = typeof RTypeMap[RType];
-export type RClass = 'object';
+
+/** @internal */
+export type RCtor = 'object' | 'dataframe';
 
 export type Complex = {
   re: number;
