@@ -609,7 +609,7 @@ describe('Create R objects from JS objects using proxy constructors', () => {
 describe('Create R lists from JS objects', () => {
   test('Create an R list from basic JS object', async () => {
     const jsObj = { a: [1, 2], b: [3, 4, 5], c: ['x', 'y', 'z'] };
-    const rObj = await new webR.RObject(jsObj) as RList;
+    const rObj = await new webR.RList(jsObj);
     expect(await rObj.type()).toEqual('list');
     expect(await rObj.names()).toEqual(['a', 'b', 'c']);
     const a = await rObj.get('a') as RDouble;
@@ -622,7 +622,7 @@ describe('Create R lists from JS objects', () => {
 
   test('Create an R list from JS object with coercion and missing values', async () => {
     const jsObj = { a: [0, true], b: [null, 4, '5'], c: [null] };
-    const rObj = await new webR.RObject(jsObj) as RList;
+    const rObj = await new webR.RList(jsObj);
     expect(await rObj.type()).toEqual('list');
     expect(await rObj.names()).toEqual(['a', 'b', 'c']);
     const a = await rObj.get('a') as RDouble;
@@ -640,7 +640,7 @@ describe('Create R lists from JS objects', () => {
 
   test('Create an R list from JS object with R TypedArray', async () => {
     const jsObj = { a: [1, 2], b: new Uint8Array([3, 4, 5]), c: new Uint8Array([6, 7, 8]).buffer };
-    const rObj = await new webR.RObject(jsObj) as RList;
+    const rObj = await new webR.RList(jsObj);
     expect(await rObj.type()).toEqual('list');
     expect(await rObj.names()).toEqual(['a', 'b', 'c']);
     const a = await rObj.get('a') as RDouble;
@@ -653,7 +653,7 @@ describe('Create R lists from JS objects', () => {
 
   test('Create an R list from JS object with R object references', async () => {
     const jsObj = { a: webR.objs.true, b: [1, webR.objs.na, 3], c: webR.objs.globalEnv };
-    const rObj = await new webR.RObject(jsObj) as RList;
+    const rObj = await new webR.RList(jsObj);
     expect(await rObj.type()).toEqual('list');
     expect(await rObj.names()).toEqual(['a', 'b', 'c']);
     const a = await rObj.get('a') as RLogical;
@@ -672,7 +672,7 @@ describe('Create R lists from JS objects', () => {
 describe('Create R data.frame from JS objects', () => {
   test('Create an R data.frame from basic JS object', async () => {
     const jsObj = { a: [1, 2, 3], b: [3, 4, 5], c: ['x', 'y', 'z'] };
-    const rObj = await new webR.RObject(jsObj) as RList;
+    const rObj = await new webR.RObject(jsObj);
     expect(await rObj.type()).toEqual('list');
     expect(await rObj.names()).toEqual(['a', 'b', 'c']);
     const attrs = await rObj.attrs() as RPairlist;
@@ -685,6 +685,43 @@ describe('Create R data.frame from JS objects', () => {
     expect(await a.toArray()).toEqual(jsObj.a);
     expect(await b.toArray()).toEqual(jsObj.b);
     expect(await c.toArray()).toEqual(jsObj.c);
+  });
+
+  test('Create an R data.frame using explicit constructor', async () => {
+    const jsObj = { a: [1, 2, 3], b: [3, 4, 5], c: ['x', 'y', 'z'] };
+    const rObj = await new webR.RDataFrame(jsObj);
+    const attrs = await rObj.attrs() as RPairlist;
+    const classes = await attrs.get('class') as RCharacter;
+    expect(await classes.toArray()).toContain('data.frame');
+  });
+
+  test('Create an R data.frame by wrapping an R list object', async () => {
+    const rList = await webR.evalR('data.frame(a = c(1,2,3), b = c(4,5,6))') as RList;
+    const rDataFrame = await new webR.RDataFrame(rList);
+    const attrs = await rDataFrame.attrs() as RPairlist;
+    const classes = await attrs.get('class') as RCharacter;
+    expect(await classes.toArray()).toContain('data.frame');
+
+    const a = await rDataFrame.get('a') as RDouble;
+    const b = await rDataFrame.get('b') as RDouble;
+    expect(await a.toArray()).toEqual([1, 2, 3]);
+    expect(await b.toArray()).toEqual([4, 5, 6]);
+  });
+
+  test('Reject constructing R data.frame from ineligible JS object', async () => {
+    const jsObj = { a: [1, 2, 3], b: [3, 4, 5], c: ['x', 'y'] };
+    const rObj = new webR.RObject(jsObj);
+    await expect(rObj).rejects.toThrow("Can't construct `data.frame`.");
+  });
+
+  test('Reject constructing R data.frame from ineligible D3 JS object', async () => {
+    const d3Obj = [
+      { a: true, b: 3, c: 'u' },
+      { a: webR.objs.false, b: 4 },
+      { z: 123 },
+    ];
+    const rObj = new webR.RObject(d3Obj);
+    await expect(rObj).rejects.toThrow("Can't construct `data.frame`.");
   });
 
   test('Create an R data.frame from JS object with coercion and missing values', async () => {
