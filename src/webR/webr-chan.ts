@@ -72,8 +72,17 @@ export interface EvalROptions {
   captureConditions?: boolean;
   /**
    * Should a new canvas graphics device configured to capture plots be started?
+   * Either a boolean value, or an object with properties corresponding to
+   * `webr::canvas()` graphics device arguments.
+   * Default: `true`.
    */
-  captureGraphics?: boolean;
+  captureGraphics?: boolean | {
+    width: number;
+    height: number;
+    pointsize?: number;
+    bg?: string;
+    capture?: true;
+  };
   /**
    * Should the code automatically print output as if it were written at an R console?
    * Default: `false`.
