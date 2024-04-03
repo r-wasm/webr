@@ -4,7 +4,7 @@
  */
 import { Module } from './emscripten';
 import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw, WebRDataScalar } from './robj';
-import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber } from './robj';
+import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber, RClass } from './robj';
 import { isWebRDataJs, WebRDataJs, WebRDataJsAtomic, WebRDataJsNode } from './robj';
 import { WebRDataJsNull, WebRDataJsString, WebRDataJsSymbol } from './robj';
 import { envPoke, parseEvalBare, protect, protectInc, unprotect } from './utils-r';
@@ -92,7 +92,7 @@ export type Nullable<T> = T | RNull;
 function newObjectFromData(obj: WebRData): RObject {
   // Conversion of WebRDataJs type JS objects
   if (isWebRDataJs(obj)) {
-    return new (getRWorkerClass(RTypeMap[obj.type]))(obj);
+    return new (getRWorkerClass(obj.type))(obj);
   }
 
   // Conversion of explicit R NULL value
@@ -197,8 +197,9 @@ export class RObject extends RObjectBase {
   }
 
   static wrap<T extends typeof RObject>(this: T, ptr: RPtr): InstanceType<T> {
-    const type = Module._TYPEOF(ptr);
-    return new (getRWorkerClass(type as RTypeNumber))(new RObjectBase(ptr)) as InstanceType<T>;
+    const typeNumber = Module._TYPEOF(ptr) as RTypeNumber;
+    const type = Object.keys(RTypeMap)[Object.values(RTypeMap).indexOf(typeNumber)];
+    return new (getRWorkerClass(type as RType))(new RObjectBase(ptr)) as InstanceType<T>;
   }
 
   get [Symbol.toStringTag](): string {
@@ -1272,25 +1273,26 @@ function toWebRData(jsObj: WebRData): WebRData {
   return { names: null, values: [jsObj] };
 }
 
-export function getRWorkerClass(type: RTypeNumber): typeof RObject {
-  const typeClasses: { [key: number]: typeof RObject } = {
-    [RTypeMap.null]: RNull,
-    [RTypeMap.symbol]: RSymbol,
-    [RTypeMap.pairlist]: RPairlist,
-    [RTypeMap.closure]: RFunction,
-    [RTypeMap.environment]: REnvironment,
-    [RTypeMap.call]: RCall,
-    [RTypeMap.special]: RFunction,
-    [RTypeMap.builtin]: RFunction,
-    [RTypeMap.string]: RString,
-    [RTypeMap.logical]: RLogical,
-    [RTypeMap.integer]: RInteger,
-    [RTypeMap.double]: RDouble,
-    [RTypeMap.complex]: RComplex,
-    [RTypeMap.character]: RCharacter,
-    [RTypeMap.list]: RList,
-    [RTypeMap.raw]: RRaw,
-    [RTypeMap.function]: RFunction,
+export function getRWorkerClass(type: RType | RClass): typeof RObject {
+  const typeClasses: { [key: string]: typeof RObject } = {
+    object: RObject,
+    null: RNull,
+    symbol: RSymbol,
+    pairlist: RPairlist,
+    closure: RFunction,
+    environment: REnvironment,
+    call: RCall,
+    special: RFunction,
+    builtin: RFunction,
+    string: RString,
+    logical: RLogical,
+    integer: RInteger,
+    double: RDouble,
+    complex: RComplex,
+    character: RCharacter,
+    list: RList,
+    raw: RRaw,
+    function: RFunction,
   };
   if (type in typeClasses) {
     return typeClasses[type];

@@ -10,7 +10,7 @@ import { WebRPayloadRaw, WebRPayloadPtr, WebRPayloadWorker, isWebRPayloadPtr } f
 import { RObject, isRObject, REnvironment, RList, RCall, getRWorkerClass } from './robj-worker';
 import { RCharacter, RString, keep, destroy, purge, shelters } from './robj-worker';
 import { RLogical, RInteger, RDouble, initPersistentObjects, objs } from './robj-worker';
-import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
+import { RPtr, RType, RClass, WebRData, WebRDataRaw } from './robj';
 import { protect, protectInc, unprotect, parseEvalBare, UnwindProtectException, safeEval } from './utils-r';
 import { generateUUID } from './chan/task-common';
 
@@ -588,8 +588,8 @@ function mountImagePath(path: string, mountpoint: string) {
   mountImageData(buf, metadata, mountpoint);
 }
 
-function newRObject(data: WebRData, objType: RType | 'object'): WebRPayloadPtr {
-  const RClass = objType === 'object' ? RObject : getRWorkerClass(RTypeMap[objType]);
+function newRObject(data: WebRData, objType: RType | RClass): WebRPayloadPtr {
+  const RClass = getRWorkerClass(objType);
   const obj = new RClass(
     replaceInObject(data, isWebRPayloadPtr, (t: WebRPayloadPtr) =>
       RObject.wrap(t.obj.ptr)
