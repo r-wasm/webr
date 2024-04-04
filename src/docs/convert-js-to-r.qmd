@@ -8,7 +8,7 @@ Once webR has been loaded into a web page, new R objects can be created from the
 
 ## Creating new R objects
 
-New R objects can be created from the main JavaScript thread by using the `new` operator with proxy classes on an initialised instance of the [`WebR`](api/js/classes/WebR.WebR.md) class.
+New R objects can be created from the main JavaScript thread by using the `new` operator with proxy classes on an initialised instance of the [`WebR`](api/js/classes/WebR.WebR.md) class. The `RObject` proxy class can be used as a general constructor for creating new R objects from a given JavaScript argument.
 
 When an R object is instantiated in this way, webR communicates with the worker thread to orchestrate object creation in WebAssembly memory. As such, new R objects can only be created once communication with the worker thread has been established and the promise returned by [`WebR.init()`](api/js/classes/WebR.WebR.md#init) has resolved.
 
@@ -47,38 +47,36 @@ Sometimes webR constructs new R objects implicitly behind the scenes. For instan
 
 ### Constructing R objects from JavaScript objects
 
-The [`WebR` proxy classes](api/js/classes/WebR.WebR.md#properties) take a single JavaScript argument in their constructor functions which will be used for the content of the new R object. JavaScript objects that are able to be converted for use as R objects have type [`WebRData`](api/js/modules/RObject.md#webrdata).
+When using the generic `RObject` constructor the resulting R object type is chosen based on the contents of the JavaScript argument provided. Where there is ambiguity, the following conversion rules are used,
 
-The resulting R object type is chosen based on the contents of the JavaScript argument provided. When there is ambiguity, the following conversion rules are used,
-
-| Constructor Argument                                                     | R Type                                                                      |
-| ------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
-| `null`                                                                   | Logical `NA`                                                                |
-| `boolean`                                                                | Logical atomic vector                                                       |
-| `number`                                                                 | Double atomic vector                                                        |
-| `{ re: 1, im: 2 }`                                                       | Complex atomic vector                                                       |
-| `string`                                                                 | Character atomic vector                                                     |
-| `TypedArray`, `ArrayBuffer`, `ArrayBufferView`                           | Raw atomic vector                                                           |
-| `Array`                                                                  | A vector or list of type following the coercion rules of R's `c()` function |
-| `RObject`                                                                | Given by the type of the referenced R object                                |
-| `{a: [...], b: [...], ...}`                                              | R list object, possibly in the form of a `data.frame`                       |
-| `[{a: 0, b: 'x'}, {a: 1, b: 'y'}, ...]`                                  | R list object in the form of a `data.frame`                                 |
-| [`WebRDataJs`](convert-r-to-js.qmd#serialising-r-objects)                | Given by the `type` property in the provided object                         |
-| Other JavaScript object                                                  | Reserved for future use                                                     |
+| Constructor Argument                                      | R Type                                                      |
+|-----------------------------------------------------------|-------------------------------------------------------------|
+| `null`                                                    | Logical `NA`                                                |
+| `boolean`                                                 | Logical atomic vector                                       |
+| `number`                                                  | Double atomic vector                                        |
+| `{ re: 1, im: 2 }`                                        | Complex atomic vector                                       |
+| `string`                                                  | Character atomic vector                                     |
+| `TypedArray`, `ArrayBuffer`, `ArrayBufferView`            | Raw atomic vector                                           |
+| `Array`                                                   | A vector following the coercion rules of R's `c()` function |
+| `{a: [0, 1], b: ['x', 'y']}`                              | Data frame                                                  |
+| `[{a: 0, b: 'x'}, {a: 1, b: 'y'}]`                        | Data frame                                                  |
+| `RObject`                                                 | Given by the type of the referenced R object                |
+| [`WebRDataJs`](convert-r-to-js.qmd#serialising-r-objects) | Given by the `type` property in the provided object         |
+| Other JavaScript type                                     | Reserved for future use                                     |
 
 #### Further details
 
-For JavaScript objects with a collection of properties, the above rules will be applied recursively to construct an R list with named components corresponding to each property.
+JavaScript objects (in "long" form) and JavaScript object arrays (in "wide" or "D3" form), as shown in the table above, are reserved for constructing R data frames. The object properties should correspond to data with columns of equal length and consistent data type, and values should be compatible with R atomic vectors (or `null`, indicating a missing value).
 
-If each property of the JavaScript object is an `Array`, all of equal length, all containing values compatible with R atomic vectors (or `null`, indicating a missing value), the resulting R object will be automatically^[This coercion may be avoided by constructing an `RList` object directly.] coerced into an R [`data.frame`](https://stat.ethz.ch/R-manual/R-devel/library/base/html/data.frame.html).
+The creation of a `data.frame` can be avoided by explicitly constructing an `RList` object, as shown in the next section.
 
 When `RObject` references are used for constructing new R objects, no underlying copy is made. The resulting R object reference will point to the same memory location.
 
 ### Creating an R object with specific type
 
-As an alternative to constructing an [`WebRDataJs`](api/js/modules/RObject.md#webrdatajs) with an explicit `type` property, several class proxies of different type are available on the [`WebR`](api/js/classes/WebR.WebR.md) instance. For example, the [`WebR.RList`](api/js/classes/WebR.WebR.md#rlist) class proxy can be used to specifically construct an R list object, rather than an atomic vector, using a JavaScript array of values.
+Class constructors for various types of R object are also available on the [`WebR`](api/js/classes/WebR.WebR.md) instance. For example, the [`WebR.RList`](api/js/classes/WebR.WebR.md#rlist) constructor can be used to specifically create an R list object from a given JavaScript argument, rather than the atomic vector or `data.frame` that would be created when using the generic `RObject` constructor.
 
-To see how this can be useful, consider the difference in structure between the following two R object construction examples, using the same JavaScript object as the constructor argument,
+To see how this can be useful, consider the difference in structure between the following two examples, using the same JavaScript object as the constructor argument,
 
 ``` javascript
 let foo = await new webR.RObject([123, 'abc']);
@@ -100,6 +98,8 @@ await foo.toJs();
         { type: 'character', names: null, values: ['abc'] }
       ]
     }
+
+It is recommended that specific R object constructors are used, rather than relying on the conversion rules of the generic `RObject` constructor, when webR is used non-interactively or in production.
 
 ### Creating objects using `RObject` references
 

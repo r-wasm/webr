@@ -10,7 +10,7 @@ import { WebRPayloadRaw, WebRPayloadPtr, WebRPayloadWorker, isWebRPayloadPtr } f
 import { RObject, isRObject, REnvironment, RList, RCall, getRWorkerClass } from './robj-worker';
 import { RCharacter, RString, keep, destroy, purge, shelters } from './robj-worker';
 import { RLogical, RInteger, RDouble, initPersistentObjects, objs } from './robj-worker';
-import { RPtr, RType, RTypeMap, WebRData, WebRDataRaw } from './robj';
+import { RPtr, RType, RCtor, WebRData, WebRDataRaw } from './robj';
 import { protect, protectInc, unprotect, parseEvalBare, UnwindProtectException, safeEval } from './utils-r';
 import { generateUUID } from './chan/task-common';
 
@@ -389,7 +389,7 @@ function dispatch(msg: Message): void {
           case 'newRObject': {
             const msg = reqMsg as NewRObjectMessage;
 
-            const payload = newRObject(msg.data.obj, msg.data.objType);
+            const payload = newRObject(msg.data.args, msg.data.objType);
             keep(msg.data.shelter, payload.obj.ptr);
 
             write(payload);
@@ -588,13 +588,12 @@ function mountImagePath(path: string, mountpoint: string) {
   mountImageData(buf, metadata, mountpoint);
 }
 
-function newRObject(data: WebRData, objType: RType | 'object'): WebRPayloadPtr {
-  const RClass = objType === 'object' ? RObject : getRWorkerClass(RTypeMap[objType]);
-  const obj = new RClass(
-    replaceInObject(data, isWebRPayloadPtr, (t: WebRPayloadPtr) =>
-      RObject.wrap(t.obj.ptr)
-    ) as WebRData
+function newRObject(args: WebRData[], objType: RType | RCtor): WebRPayloadPtr {
+  const RClass = getRWorkerClass(objType);
+  const _args = replaceInObject<WebRData[]>(args, isWebRPayloadPtr, (t: WebRPayloadPtr) =>
+    RObject.wrap(t.obj.ptr)
   );
+  const obj = new RClass(..._args);
   return {
     obj: {
       type: obj.type(),
@@ -682,9 +681,9 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
       }
 
       // User supplied canvas arguments, if any. Default: `capture = TRUE`
-      devEnvObj.bind('canvas_options', Object.assign({
+      devEnvObj.bind('canvas_options', new RList(Object.assign({
         capture: true
-      }, _options.captureGraphics));
+      }, _options.captureGraphics)));
 
       parseEvalBare(`{
         old_dev <- dev.cur()

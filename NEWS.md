@@ -4,7 +4,13 @@
 
 * The `captureGraphics` option in `EvalROptions` now allows the caller to set the arguments to be passed to the capturing `webr::canvas()` device.
 
+* A subclass `RDataFrame` is now available for explicit construction of an R object with class `data.frame`. `RDataFrame` extends the `RList` class, and construction must be with data that can be coerced into an R `data.frame`, otherwise an error is thrown.
+
+* The `RList` constructor now takes an optional second argument to define names when constructing a list. The argument should be an array of strings, or `null` for an unnamed list (the default).
+
 ## Breaking changes
+
+* When using the generic `RObject` constructor, JavaScript objects and object arrays are now reserved for constructing an R `data.frame`. To create a standard R list, use the `RList` constructor directly.
 
 ## Bug Fixes
 

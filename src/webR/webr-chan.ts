@@ -5,7 +5,7 @@ import { Message } from './chan/message';
 import { UUID as ShelterID } from './chan/task-common';
 import { EmPtr } from './emscripten';
 import { WebRPayloadWorker, WebRPayloadPtr } from './payload';
-import { RType, WebRData } from './robj';
+import { RType, RCtor, WebRData } from './robj';
 import type { FSType, FSMountOptions } from './webr-main';
 
 export { isUUID as isShelterID, UUID as ShelterID } from './chan/task-common';
@@ -185,8 +185,8 @@ export interface InvokeWasmFunctionMessage extends Message {
 export interface NewRObjectMessage extends Message {
   type: 'newRObject';
   data: {
-    obj: WebRData;
-    objType: RType | 'object';
+    args: WebRData[];
+    objType: RType | RCtor;
     shelter: ShelterID;
   };
 }
