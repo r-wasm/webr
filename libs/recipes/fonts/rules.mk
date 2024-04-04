@@ -8,22 +8,18 @@ fonts: $(WASM)/usr/share/fonts $(FC_WASM_LIB)
 
 $(WASM)/usr/share/fonts:
 	mkdir -p "$(FONTS)" "$(WASM)/usr/share/fonts" "$(WASM)/etc/fonts/"
-	wget -O $(FONTS)/NotoSans.zip https://fonts.google.com/download?family=Noto%20Sans
-	unzip -p $(FONTS)/NotoSans.zip static/NotoSans/NotoSans-Regular.ttf > $(FONTS)/NotoSans-Regular.ttf
-	unzip -p $(FONTS)/NotoSans.zip static/NotoSans/NotoSans-Bold.ttf > $(FONTS)/NotoSans-Bold.ttf
-	unzip -p $(FONTS)/NotoSans.zip static/NotoSans/NotoSans-Italic.ttf > $(FONTS)/NotoSans-Italic.ttf
-	unzip -p $(FONTS)/NotoSans.zip static/NotoSans/NotoSans-BoldItalic.ttf > $(FONTS)/NotoSans-BoldItalic.ttf
-	rm $(FONTS)/NotoSans.zip
-	wget -O $(FONTS)/NotoSerif.zip https://fonts.google.com/download?family=Noto%20Serif
-	unzip -p $(FONTS)/NotoSerif.zip static/NotoSerif/NotoSerif-Regular.ttf > $(FONTS)/NotoSerif-Regular.ttf
-	unzip -p $(FONTS)/NotoSerif.zip static/NotoSerif/NotoSerif-Bold.ttf > $(FONTS)/NotoSerif-Bold.ttf
-	unzip -p $(FONTS)/NotoSerif.zip static/NotoSerif/NotoSerif-Italic.ttf > $(FONTS)/NotoSerif-Italic.ttf
-	unzip -p $(FONTS)/NotoSerif.zip static/NotoSerif/NotoSerif-BoldItalic.ttf > $(FONTS)/NotoSerif-BoldItalic.ttf
-	rm $(FONTS)/NotoSerif.zip
-	wget -q -O $(FONTS)/NotoSansMono.zip https://fonts.google.com/download?family=Noto%20Sans%20Mono
-	unzip -p $(FONTS)/NotoSansMono.zip static/NotoSansMono/NotoSansMono-Regular.ttf > $(FONTS)/NotoSansMono-Regular.ttf
-	unzip -p $(FONTS)/NotoSansMono.zip static/NotoSansMono/NotoSansMono-Bold.ttf > $(FONTS)/NotoSansMono-Bold.ttf
-	rm $(FONTS)/NotoSansMono.zip
+	wget -O $(FONTS)/NotoSans-Regular.ttf https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSans/unhinted/ttf/NotoSans-Regular.ttf
+	wget -O $(FONTS)/NotoSans-Bold.ttf https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSans/unhinted/ttf/NotoSans-Bold.ttf
+	wget -O $(FONTS)/NotoSans-Italic.ttf https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSans/unhinted/ttf/NotoSans-Italic.ttf
+	wget -O $(FONTS)/NotoSans-BoldItalic.ttf https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSans/unhinted/ttf/NotoSans-BoldItalic.ttf
+
+	wget -O $(FONTS)/NotoSerif-Regular.ttf https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSerif/unhinted/ttf/NotoSerif-Regular.ttf
+	wget -O $(FONTS)/NotoSerif-Bold.ttf https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSerif/unhinted/ttf/NotoSerif-Bold.ttf
+	wget -O $(FONTS)/NotoSerif-Italic.ttf https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSerif/unhinted/ttf/NotoSerif-Italic.ttf
+	wget -O $(FONTS)/NotoSerif-BoldItalic.ttf https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSerif/unhinted/ttf/NotoSerif-BoldItalic.ttf
+
+	wget -O $(FONTS)/NotoSansMono-Regular.ttf https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSansMono/unhinted/ttf/NotoSansMono-Regular.ttf
+	wget -O $(FONTS)/NotoSansMono-Bold.ttf https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSansMono/unhinted/ttf/NotoSansMono-Bold.ttf
 	cp -r "$(FONTS)/." "$(WASM)/usr/share/fonts"
 
 .PHONY: clean-fonts
