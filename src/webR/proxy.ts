@@ -243,7 +243,7 @@ export function newRProxy(chan: ChannelMain, payload: WebRPayloadPtr): RProxy<RW
  * Proxy an {@link RWorker.RObject} class.s
  * @param {ChannelMain} chan The current main thread communication channel.
  * @param {ShelterID} shelter The shelter ID to protect returned objects with.
- * @param {(RType | RClass)} objType The R object type or class, `'object'` for
+ * @param {(RType | RCtor)} objType The R object type or class, `'object'` for
  * the generic {@link RWorker.RObject} class.
  * @returns {ProxyConstructor} A proxy to the R object subclass corresponding to
  * the given value of the `objType` argument.
