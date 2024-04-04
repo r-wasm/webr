@@ -186,13 +186,13 @@ async function newRObject(
   chan: ChannelMain,
   objType: RType | RCtor,
   shelter: ShelterID,
-  value: WebRData
+  ...args: WebRData[]
 ) {
   const msg: NewRObjectMessage = {
     type: 'newRObject',
     data: {
       objType,
-      obj: replaceInObject(value, isRObject, (obj: RObject) => obj._payload),
+      args: replaceInObject<WebRData[]>(args, isRObject, (obj: RObject) => obj._payload),
       shelter: shelter,
     },
   };
@@ -256,7 +256,7 @@ export function newRClassProxy<T, R>(
   objType: RType | RCtor
 ) {
   return new Proxy(RWorker.RObject, {
-    construct: (_, args: [WebRData]) => newRObject(chan, objType, shelter, ...args),
+    construct: (_, args: WebRData[]) => newRObject(chan, objType, shelter, ...args),
     get: (_, prop: string | number | symbol) => {
       return targetMethod(chan, prop.toString());
     },

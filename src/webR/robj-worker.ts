@@ -593,25 +593,39 @@ export class RCall extends RObject {
 }
 
 export class RList extends RObject {
-  constructor(val: WebRData) {
+  constructor(val: WebRData, names: (string | null)[] | null = null) {
     if (val instanceof RObjectBase) {
       assertRType(val, 'list');
       super(val);
+      if (names) {
+        if (names.length !== this.length) {
+          throw new Error(
+            "Can't construct named `RList`. Supplied `names` must be the same length as the list."
+          );
+        }
+        this.setNames(names);
+      }
       return this;
     }
 
     const prot = { n: 0 };
 
     try {
-      const { names, values } = toWebRData(val);
-      const ptr = Module._Rf_allocVector(RTypeMap.list, values.length);
+      const data = toWebRData(val);
+      const ptr = Module._Rf_allocVector(RTypeMap.list, data.values.length);
       protectInc(ptr, prot);
 
-      values.forEach((v, i) => {
+      data.values.forEach((v, i) => {
         Module._SET_VECTOR_ELT(ptr, i, new RObject(v).ptr);
       });
 
-      RObject.wrap(ptr).setNames(names);
+      const _names = names ? names : data.names;
+      if (_names && _names.length !== data.values.length) {
+        throw new Error(
+          "Can't construct named `RList`. Supplied `names` must be the same length as the list."
+        );
+      }
+      RObject.wrap(ptr).setNames(_names);
 
       super(new RObjectBase(ptr));
     } finally {

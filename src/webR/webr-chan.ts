@@ -185,7 +185,7 @@ export interface InvokeWasmFunctionMessage extends Message {
 export interface NewRObjectMessage extends Message {
   type: 'newRObject';
   data: {
-    obj: WebRData;
+    args: WebRData[];
     objType: RType | RCtor;
     shelter: ShelterID;
   };

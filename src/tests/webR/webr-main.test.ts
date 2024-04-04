@@ -620,6 +620,44 @@ describe('Create R lists from JS objects', () => {
     expect(await c.toArray()).toEqual(jsObj.c);
   });
 
+  test('Create an unnamed R list from JS array', async () => {
+    const jsArray = [[1, 2, 3], ['x', 'y', 'z']];
+    const rObj = await new webR.RList(jsArray);
+    expect(await rObj.type()).toEqual('list');
+    expect(await rObj.names()).toEqual(null);
+    const foo = await rObj.get(1) as RDouble;
+    const bar = await rObj.get(2) as RCharacter;
+    expect(await foo.toArray()).toEqual(jsArray[0]);
+    expect(await bar.toArray()).toEqual(jsArray[1]);
+  });
+
+  test('Create a named R list from values and names arrays', async () => {
+    const jsArray = [[1, 2, 3], ['x', 'y', 'z']];
+    const names = ["a", "b"];
+    const rObj = await new webR.RList(jsArray, names);
+    expect(await rObj.type()).toEqual('list');
+    expect(await rObj.names()).toEqual(names);
+    const foo = await rObj.get(1) as RDouble;
+    const bar = await rObj.get(2) as RCharacter;
+    expect(await foo.toArray()).toEqual(jsArray[0]);
+    expect(await bar.toArray()).toEqual(jsArray[1]);
+  });
+
+  test('Create a named R list with duplicate names', async () => {
+    const jsArray = [[1, 2, 3], ['x', 'y', 'z'], 7];
+    const names = ["foo", "foo", "bar"];
+    const rObj = await new webR.RList(jsArray, names);
+    expect(await rObj.type()).toEqual('list');
+    expect(await rObj.names()).toEqual(names);
+  });
+
+  test('Reject a named R list with inconsistent names length', async () => {
+    const jsArray = [[1, 2, 3], ['x', 'y', 'z']];
+    const names = ["a"];
+    const rObj = new webR.RList(jsArray, names);
+    await expect(rObj).rejects.toThrow("Can't construct named `RList`");
+  });
+
   test('Create an R list from JS object with coercion and missing values', async () => {
     const jsObj = { a: [0, true], b: [null, 4, '5'], c: [null] };
     const rObj = await new webR.RList(jsObj);

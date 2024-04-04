@@ -389,7 +389,7 @@ function dispatch(msg: Message): void {
           case 'newRObject': {
             const msg = reqMsg as NewRObjectMessage;
 
-            const payload = newRObject(msg.data.obj, msg.data.objType);
+            const payload = newRObject(msg.data.args, msg.data.objType);
             keep(msg.data.shelter, payload.obj.ptr);
 
             write(payload);
@@ -588,13 +588,12 @@ function mountImagePath(path: string, mountpoint: string) {
   mountImageData(buf, metadata, mountpoint);
 }
 
-function newRObject(data: WebRData, objType: RType | RCtor): WebRPayloadPtr {
+function newRObject(args: WebRData[], objType: RType | RCtor): WebRPayloadPtr {
   const RClass = getRWorkerClass(objType);
-  const obj = new RClass(
-    replaceInObject(data, isWebRPayloadPtr, (t: WebRPayloadPtr) =>
-      RObject.wrap(t.obj.ptr)
-    ) as WebRData
+  const _args = replaceInObject<WebRData[]>(args, isWebRPayloadPtr, (t: WebRPayloadPtr) =>
+    RObject.wrap(t.obj.ptr)
   );
+  const obj = new RClass(..._args);
   return {
     obj: {
       type: obj.type(),
