@@ -38,11 +38,12 @@
     "dist"
   ],
   "main": "dist/webr.mjs",
-  "types": "webr-main.d.ts",
+  "types": "dist/webr/webr-main.d.ts",
   "exports": {
     ".": {
       "node": "./dist/webr.cjs",
-      "default": "./dist/webr.mjs"
+      "default": "./dist/webr.mjs",
+      "types": "./dist/webr/webr-main.d.ts"
     },
     "./chan/serviceworker": "./dist/webr-serviceworker.mjs"
   },
