@@ -106,6 +106,9 @@ jobs:
             --content-type="application/wasm" --metadata-directive="REPLACE" \
             s3://${{ secrets.AWS_S3_BUCKET }}/_webr/${{ github.ref_name }}/ \
             s3://${{ secrets.AWS_S3_BUCKET }}/_webr/${{ github.ref_name }}/
+          aws cloudfront create-invalidation --distribution-id \
+            ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION_ID }} --paths "/latest/*" \
+            "/${{ github.ref_name }}/*"
   deploy_docs:
     name: Deploy webR documentation to S3
     needs: build
