@@ -727,7 +727,7 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
       );
       if (error) {
         const call = error.pluck('data', 'call') as RCall;
-        const source = call && call.type() === 'call' ? call.deparse() : 'Unknown source';
+        const source = call && call.type() === 'call' ? `\`${call.deparse()}\`` : 'unknown source';
         const message = error.pluck('data', 'message')?.toString() || 'An error occurred evaluating R code.';
         throw new Error(`Error in ${source}: ${message}`);
       }
