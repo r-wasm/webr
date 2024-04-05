@@ -2,7 +2,7 @@
 
 ## New features
 
-* The `captureGraphics` option in `EvalROptions` now allows the caller to set the arguments to be passed to the capturing `webr::canvas()` device.
+* The `captureGraphics` option in `EvalROptions` now allows the caller to set the arguments to be passed to the capturing `webr::canvas()` device (#390).
 
 * A subclass `RDataFrame` is now available for explicit construction of an R object with class `data.frame`. `RDataFrame` extends the `RList` class, and construction must be with data that can be coerced into an R `data.frame`, otherwise an error is thrown.
 
@@ -10,11 +10,13 @@
 
 ## Breaking changes
 
-* When using the generic `RObject` constructor, JavaScript objects and object arrays are now reserved for constructing an R `data.frame`. To create a standard R list, use the `RList` constructor directly.
+* When using the generic `RObject` constructor, JavaScript objects and object arrays are now reserved for constructing an R `data.frame`. To create a standard R list, use the `RList` constructor directly (#398).
 
 ## Bug Fixes
 
 * When capturing graphics with `captureR()`, clean-up now occurs even when the evaluated R code throws an error. This avoids leaking graphics devices on the device stack.
+
+* Use backticks when reporting an R call as part of an error message (#397).
 
 # webR 0.3.1
 
