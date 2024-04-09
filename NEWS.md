@@ -1,5 +1,7 @@
 # webR (development version)
 
+# webR 0.3.2
+
 ## New features
 
 * The `captureGraphics` option in `EvalROptions` now allows the caller to set the arguments to be passed to the capturing `webr::canvas()` device (#390).
