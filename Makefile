@@ -1,4 +1,4 @@
-WEBR_ROOT = $(abspath .)
+WEBR_ROOT ?= $(abspath .)
 WASM = $(WEBR_ROOT)/wasm
 HOST = $(WEBR_ROOT)/host
 TOOLS = $(WEBR_ROOT)/tools
