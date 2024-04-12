@@ -42,8 +42,8 @@
   "exports": {
     ".": {
       "node": "./dist/webr.cjs",
-      "default": "./dist/webr.mjs",
-      "types": "./dist/webr/webr-main.d.ts"
+      "types": "./dist/webr/webr-main.d.ts",
+      "default": "./dist/webr.mjs"
     },
     "./chan/serviceworker": "./dist/webr-serviceworker.mjs"
   },
