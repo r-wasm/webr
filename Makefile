@@ -35,7 +35,7 @@ docs/build: ## Build JS documentation and Quarto website
 	cd docs && $(MAKE) api && $(MAKE) html
 
 .PHONY: check
-check: ## Check Nodejs coverage
+check: ## Run unit tests and calculate coverage
 	cd src && $(MAKE) check
 
 .PHONY: check-pr
