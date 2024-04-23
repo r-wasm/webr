@@ -117,6 +117,10 @@ eval_r <- function(expr,
     res <- efun(expr)
   }
 
+  # Ensure incomplete lines are flushed to output vector
+  if (isIncomplete(out$stdout)) cat(fill = TRUE, file = out$stdout)
+  if (isIncomplete(out$stderr)) cat(fill = TRUE, file = out$stderr)
+
   # Output vector out$vec expands exponentially, return only the valid subset
   list(result = res, output = utils::head(out$vec, out$n))
 }

@@ -56,6 +56,7 @@ void init_output_connection(Rconnection con, SEXP out) {
   con->close = &output_close;
   con->vfprintf = &output_vfprintf;
   con->destroy = &output_destroy;
+  con->incomplete = FALSE;
   con->canread = FALSE;
   con->canwrite = TRUE;
   con->isopen = TRUE;
@@ -129,6 +130,9 @@ int output_vfprintf(Rconnection con, const char *format, va_list ap) {
   // If we're not in the middle of a line, reset to start of buffer
   if (data->line == data->cur) {
     data->cur = data->line = data->buf;
+    con->incomplete = FALSE;
+  } else {
+    con->incomplete = TRUE;
   }
   return res;
 }

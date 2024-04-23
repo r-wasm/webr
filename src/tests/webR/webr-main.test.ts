@@ -145,6 +145,20 @@ describe('Evaluate R code', () => {
     void shelter.purge();
   });
 
+  test('Capture incomplete lines of output while capturing R code', async () => {
+    const shelter = await new webR.Shelter();
+    const incomplete = await shelter.captureR(`
+      cat("foo")
+      cat("bar", file = stderr())
+    `, {
+      withAutoprint: true,
+      captureStreams: true,
+    });
+    expect(incomplete.output[0]).toEqual({ type: 'stdout', data: 'foo' });
+    expect(incomplete.output[1]).toEqual({ type: 'stderr', data: 'bar' });
+    void shelter.purge();
+  });
+
   test('Capture conditions while capturing R code', async () => {
     const shelter = await new webR.Shelter();
     const res = await shelter.captureR('warning("This is a warning message")', {

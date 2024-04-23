@@ -4,6 +4,10 @@
 
 * A `webR.version` property has been added, containing the current version and build information (#409).
 
+## Bug Fixes
+
+* WebR will now flush incomplete lines when capturing output streams with `Shelter.captureR()` (#412).
+
 # webR 0.3.2
 
 ## New features
