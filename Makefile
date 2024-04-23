@@ -48,7 +48,7 @@ clean: ## Remove Wasm R build
 	cd R && $(MAKE) clean
 
 .PHONY: clean-wasm
-clean-wasm: clean ## Remove WASM compilation and libs
+clean-wasm: clean ## Remove Wasm R build and supporting libs
 	rm -rf $(WASM)
 	cd libs && $(MAKE) clean
 
