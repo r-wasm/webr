@@ -53,7 +53,7 @@ clean-wasm: clean ## Remove Wasm R build and supporting libs
 	cd libs && $(MAKE) clean
 
 .PHONY: distclean
-distclean: clean-wasm clean-tools ## Remove WASM compilation, libs, tools, and dist
+distclean: clean-wasm clean-tools ## Remove Wasm R build, supporting libs, build tools, and webR distribution
 	rm -rf dist
 
 .PHONY: help
