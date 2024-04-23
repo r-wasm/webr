@@ -25,7 +25,8 @@ The following simple R script will serve files locally from the current working 
 
 ```{r eval=FALSE}
 library(httpuv)
-runServer(host = "127.0.0.1", port = 8080,
+runServer(
+  host = "127.0.0.1", port = 8080,
   app = list(
     staticPaths = list(
       "/" = staticPath(
@@ -53,7 +54,7 @@ Interruption of running R code and nested R REPLs (`readline()`, `menu()`, `brow
 Enable the `PostMessage` communication channel by explicitly setting [`WebROptions.channelType`](api/js/interfaces/WebR.WebROptions.md#channeltype) during webR initialisation:
 
 ``` js
-import { WebR, ChannelType } from 'https://webr.r-wasm.org/latest/webr.mjs';
+import { WebR, ChannelType } from 'https://webr.r-wasm.org/{{< env WEBR_VERSION_TAG >}}/webr.mjs';
 const webR = new WebR({
   channelType: ChannelType.PostMessage,
 });
@@ -66,7 +67,7 @@ When loading webR from CDN and using the `ServiceWorker` communication channel, 
 The contents of your worker scripts can simply wrap the workers hosted on the webR CDN. For example, your service worker script may simply contain,
 
 ``` javascript
-importScripts('https://webr.r-wasm.org/latest/webr-serviceworker.js');
+importScripts('https://webr.r-wasm.org/{{< env WEBR_VERSION_TAG >}}/webr-serviceworker.js');
 ```
 
 saved with the filename `webr-serviceworker.js`.
@@ -74,7 +75,7 @@ saved with the filename `webr-serviceworker.js`.
 And your web worker script may simply contain,
 
 ``` javascript
-importScripts('https://webr.r-wasm.org/latest/webr-worker.js');
+importScripts('https://webr.r-wasm.org/{{< env WEBR_VERSION_TAG >}}/webr-worker.js');
 ```
 
 saved with the filename `webr-worker.js`.

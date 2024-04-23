@@ -82,7 +82,7 @@ text(4, -4, "זה כתוב בעברית")</div>
   editor.setOptions({ fontSize: "11pt", maxLines: Infinity });
   editor.session.setMode("ace/mode/r");
 
-  import { WebR } from 'https://webr.r-wasm.org/v0.3.2/webr.mjs';
+  import { WebR } from 'https://webr.r-wasm.org/{{< env WEBR_VERSION_TAG >}}/webr.mjs';
   const webR = new WebR();
   await webR.init();
   await webR.evalRVoid('options(device=function(...){webr::canvas(width=500, height=300)})');
@@ -116,6 +116,7 @@ text(4, -4, "זה כתוב בעברית")</div>
     const result = await shelter.captureR(code, {
       withAutoprint: true,
       captureStreams: true,
+      captureGraphics: false,
       captureConditions: false
     });
     try {
@@ -149,7 +150,7 @@ In the following fully worked example, multiple plots are handled by listening f
     <p>See the JavaScript console for additional output messages.</p>
     <div id="plot-container"></div>
     <script type="module">
-      import { WebR } from 'https://webr.r-wasm.org/latest/webr.mjs';
+      import { WebR } from 'https://webr.r-wasm.org/{{< env WEBR_VERSION_TAG >}}/webr.mjs';
       const webR = new WebR();
       let canvas = null;
       let loading = document.getElementById('loading');
@@ -207,7 +208,7 @@ Click the button below to see the output of this demo,
 <button id="plot-button" class="btn btn-success btn-sm" disabled="true">Run graphics demo</button>
 <div style="text-align: center" id="plot-container"></div>
 <script type="module">
-    import { WebR } from 'https://webr.r-wasm.org/v0.3.2/webr.mjs';
+    import { WebR } from 'https://webr.r-wasm.org/{{< env WEBR_VERSION_TAG >}}/webr.mjs';
     const webR = new WebR();
     let canvas = null;
     let container = document.getElementById('plot-container');
@@ -272,7 +273,7 @@ In the following example, a set of demo plots are captured and then displayed on
     </div>
 
     <script type="module">
-      import { WebR } from 'https://webr.r-wasm.org/latest/webr.mjs';
+      import { WebR } from 'https://webr.r-wasm.org/{{< env WEBR_VERSION_TAG >}}/webr.mjs';
       const webR = new WebR();
       await webR.init();
 
@@ -334,7 +335,7 @@ When a new plot is created, the `canvasNewPage` callback is used clearing the bi
     
     <script type="module">
       /* Create a webR console using the Console helper class */
-      import { Console } from 'https://webr.r-wasm.org/latest/webr.mjs';
+      import { Console } from 'https://webr.r-wasm.org/{{< env WEBR_VERSION_TAG >}}/webr.mjs';
 
       var canvas = document.getElementById("plot-canvas")
       var ctx = canvas.getContext('2d');
@@ -420,7 +421,7 @@ In this example, a vector graphics plot is created using the `pdf()` graphics de
     <p id="loading">Please wait, webR is working on producing a plot...</div>
     <p id="link-container"></p>
     <script type="module">
-      import { WebR } from 'https://webr.r-wasm.org/latest/webr.mjs';
+      import { WebR } from 'https://webr.r-wasm.org/{{< env WEBR_VERSION_TAG >}}/webr.mjs';
       const webR = new WebR();
       await webR.init();
 

@@ -6,7 +6,7 @@
 import { ChannelMain } from './chan/channel';
 import { newChannelMain, ChannelType } from './chan/channel-common';
 import { Message } from './chan/message';
-import { BASE_URL, PKG_BASE_URL } from './config';
+import { BASE_URL, PKG_BASE_URL, WEBR_VERSION } from './config';
 import { EmPtr } from './emscripten';
 import { WebRPayloadPtr } from './payload';
 import { newRProxy, newRClassProxy } from './proxy';
@@ -199,6 +199,7 @@ export class WebR {
   #chan: ChannelMain;
   #initialised: Promise<unknown>;
   globalShelter!: Shelter;
+  version: string = WEBR_VERSION;
 
   RObject!: ReturnType<typeof newRClassProxy<typeof RWorker.RObject, RObject>>;
   RLogical!: ReturnType<typeof newRClassProxy<typeof RWorker.RLogical, RLogical>>;

@@ -254,7 +254,7 @@ In this example, R executes a plotting command and webR's output message queue i
 <canvas id="plot-canvas" width="1008" height="1008"></canvas>
 
 <script type="module">
-    import { WebR } from 'https://webr.r-wasm.org/latest/webr.mjs';
+    import { WebR } from 'https://webr.r-wasm.org/{{< env WEBR_VERSION_TAG >}}/webr.mjs';
     const webR = new WebR();
 
     await webR.evalRVoid(`
@@ -344,7 +344,7 @@ The following HTML document loads webR from CDN and creates a simple interactive
     
     <script type="module">
       /* Create a webR console using the Console helper class */
-      import { Console } from 'https://webr.r-wasm.org/latest/webr.mjs';
+      import { Console } from 'https://webr.r-wasm.org/{{< env WEBR_VERSION_TAG >}}/webr.mjs';
       const webRConsole = new Console({
         stdout: line => document.getElementById('out').append(line + '\n'),
         stderr: line => document.getElementById('out').append(line + '\n'),
@@ -388,7 +388,7 @@ After loading, the resulting web page should present an interactive R console si
   </div>
 </div>
 <script type="module">
-  import { Console } from 'https://webr.r-wasm.org/v0.3.2/webr.mjs';
+  import { Console } from 'https://webr.r-wasm.org/{{< env WEBR_VERSION_TAG >}}/webr.mjs';
   const webRConsole = new Console({
     stdout: line => document.getElementById('out').append(line + '\n'),
     stderr: line => document.getElementById('out').append(line + '\n'),
@@ -434,7 +434,7 @@ Using the [`plotly`](https://plotly.com/r/getting-started/) R package, `ggplot2`
     </div>
     
     <script type="module">
-      import { WebR } from 'https://webr.r-wasm.org/latest/webr.mjs';
+      import { WebR } from 'https://webr.r-wasm.org/{{< env WEBR_VERSION_TAG >}}/webr.mjs';
       const webR = new WebR({ interactive: false });
       await webR.init();
       const outElem = document.getElementById('out');

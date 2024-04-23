@@ -2,3 +2,4 @@ import { IN_NODE } from './compat';
 
 export const BASE_URL = IN_NODE ? __dirname + '/' : '@@BASE_URL@@';
 export const PKG_BASE_URL = '@@PKG_BASE_URL@@';
+export const WEBR_VERSION = '@@WEBR_VERSION@@';

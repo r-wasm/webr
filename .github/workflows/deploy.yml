@@ -41,6 +41,21 @@ jobs:
       - name: Set the webR CDN URL as the BASE_URL
         run: echo "BASE_URL=https://webr.r-wasm.org/${{ github.ref_name }}/" > "$HOME/.webr-config.mk"
         shell: bash
+      - name: Set versioning for main
+        if: "contains(github.ref_name, 'main')"
+        run: |
+          SHA="${{github.event.pull_request.head.sha}}${{ github.sha }}"
+          SHORT_SHA=${SHA:0:7}
+          VER=$(node -p "require('./src/package.json').version")
+          echo "WEBR_VERSION=${VER}+${SHORT_SHA}" > "$HOME/.webr-config.mk"
+          echo "WEBR_VERSION_TAG=latest" > "$HOME/.webr-config.mk"
+      - name: Set versioning for tag
+        if: "!contains(github.ref_name, 'main')"
+        run: |
+          VER=$(node -p "require('./src/package.json').version")
+          echo "WEBR_VERSION=${VER}" > "$HOME/.webr-config.mk"
+          echo "WEBR_VERSION_TAG=${{ github.ref_name }}" > "$HOME/.webr-config.mk"
+        shell: bash
       - name: Build all optional wasm libs
         env:
           EMSDK: /opt/emsdk
