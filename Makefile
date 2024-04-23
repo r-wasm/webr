@@ -43,7 +43,7 @@ check-pr: ## Run additional pull request tests, linter, and calculate coverage
 	cd src && $(MAKE) lint && $(MAKE) check && $(MAKE) check-packages
 
 .PHONY: clean
-clean:  ## Remove R WASM and R compilations
+clean: ## Remove Wasm R build
 	rm -rf $(HOST) $(WASM)/R-*
 	cd R && $(MAKE) clean
 
