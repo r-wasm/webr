@@ -4,6 +4,8 @@
 
 * A `webR.version` property has been added, containing the current version and build information (#409).
 
+* WebR now sets the environment variable `WEBR` equal to `"1"` and `WEBR_VERSION` equal to the webR version string in the WebAssembly environment (#414).
+
 # webR 0.3.2
 
 ## New features
