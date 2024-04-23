@@ -30,8 +30,8 @@ docker-container-%: ## Build webR development Docker container using a supplied 
 	docker build -t webr-build .
 	docker run -dit --name $* --mount type=bind,source=$(PWD),target=/app webr-build bash
 
-docs: docs/build ## Build JS documentation and Quarto website
-docs/build: ## Build JS documentation and Quarto website
+docs: docs/build ## Build documentation and Quarto website
+docs/build: ## Build documentation and Quarto website
 	cd docs && $(MAKE) api && $(MAKE) html
 
 .PHONY: check
