@@ -39,7 +39,7 @@ check: ## Run unit tests and calculate coverage
 	cd src && $(MAKE) check
 
 .PHONY: check-pr
-check-pr: ## Check pull request by running linting, Nodejs coverage, and Node js package check.
+check-pr: ## Run additional pull request tests, linter, and calculate coverage
 	cd src && $(MAKE) lint && $(MAKE) check && $(MAKE) check-packages
 
 .PHONY: clean
