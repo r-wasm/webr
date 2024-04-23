@@ -26,7 +26,7 @@ docker-webr: ## Build webR in a temporary docker container
 # Create a permanent docker container for building webR. Call `make`
 # from within the container to start the build.
 .PHONY: docker-container-%
-docker-container-%: ## Build docker container without webR built using a supplied name
+docker-container-%: ## Build webR development Docker container using a supplied name
 	docker build -t webr-build .
 	docker run -dit --name $* --mount type=bind,source=$(PWD),target=/app webr-build bash
 
