@@ -49,6 +49,7 @@ jobs:
           VER=$(node -p "require('./src/package.json').version")
           echo "WEBR_VERSION=${VER}+${SHORT_SHA}" > "$HOME/.webr-config.mk"
           echo "WEBR_VERSION_TAG=latest" > "$HOME/.webr-config.mk"
+        shell: bash
       - name: Set versioning for tag
         if: "!contains(github.ref_name, 'main')"
         run: |
