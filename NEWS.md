@@ -4,6 +4,10 @@
 
 * A `webR.version` property has been added, containing the current version and build information (#409).
 
+## Bug Fixes
+
+* Fix installing packages via shim with `character.only = TRUE` (#413).
+
 # webR 0.3.2
 
 ## New features
