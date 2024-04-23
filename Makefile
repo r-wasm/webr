@@ -18,7 +18,7 @@ libs: ## Compile supporting libs for webR
 	cd libs && $(MAKE)
 
 .PHONY: docker-webr
-docker-webr: ## Build webR in a temporary docker container
+docker-webr: ## Build webR in a temporary Docker container
 	mkdir -p dist
 	docker build -t webr-build .
 	docker run --rm --mount type=bind,source=$(PWD),target=/app webr-build
