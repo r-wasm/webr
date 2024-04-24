@@ -243,6 +243,17 @@ export class RObject extends RObjectBase {
     return RPairlist.wrap(Module._ATTRIB(this.ptr));
   }
 
+  class(): RCharacter {
+    const prot = { n: 0 };
+    const classCall = new RCall([new RSymbol('class'), this]);
+    protectInc(classCall, prot);
+    try {
+      return classCall.eval() as RCharacter;
+    } finally {
+      unprotect(prot.n);
+    }
+  }
+
   setNames(values: (string | null)[] | null): this {
     let namesObj: RObject;
 
