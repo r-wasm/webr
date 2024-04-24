@@ -4,6 +4,8 @@
 
 * A `webR.version` property has been added, containing the current version and build information (#409).
 
+* An `RObject.class()` method has been added, returning an `RCharacter` object with the names of the classes from which the given R object inherits. This has been implemented using R's `class()` function, and so the implicit class is similarly returned when the R object has no `class` attribute.
+
 ## Bug Fixes
 
 * Fix installing packages via shim with `character.only = TRUE` (#413).

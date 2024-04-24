@@ -53,6 +53,40 @@ test('Get RObject type as a string', async () => {
   expect(await result.toString()).toEqual('[object RObject:null]');
 });
 
+describe('Working with R object classes', () => {
+  test('Get R object intrinsic class', async () => {
+    const numeric = await new webR.RDouble([1, 2, 3]);
+    const character = await new webR.RCharacter(['a', 'b', 'c']);
+
+    const numericClass = await numeric.class();
+    const characterClass = await character.class();
+    expect(await numericClass.toArray()).toContain("numeric");
+    expect(await characterClass.toArray()).toContain("character");
+  });
+
+  test('Get R object class vector', async () => {
+    const jsObj = { a: [1, 2, 3], b: [3, 4, 5], c: ['x', 'y', 'z'] };
+    const rObj = await new webR.RDataFrame(jsObj);
+    const classes = await rObj.class();
+    expect(await classes.toArray()).toEqual(["data.frame"]);
+  });
+
+  test('Get R object class vector from attributes', async () => {
+    const rObj = await webR.evalR('x <- 123; class(x) <- c("abc", "def"); x');
+    const classes = await rObj.class();
+    expect(await classes.toArray()).toEqual(["abc", "def"]);
+  });
+
+  test('Get S4 R object class vector', async () => {
+    const rClass = await webR.evalR('getClass("MethodDefinition")');
+    const classes = await rClass.class();
+    const attrs = await rClass.attrs();
+    const attrPackage = await attrs.get('package');
+    expect(await classes.toArray()).toEqual(["classRepresentation"]);
+    expect(await attrPackage.toString()).toEqual("methods");
+  });
+});
+
 describe('Working with R lists and vectors', () => {
   test('Get R object attributes', async () => {
     const vector = await webR.evalR('c(a=1, b=2, c=3)');
