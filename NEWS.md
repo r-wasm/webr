@@ -4,7 +4,13 @@
 
 * A `webR.version` property has been added, containing the current version and build information (#409).
 
+* An `RObject.class()` method has been added, returning an `RCharacter` object with the names of the classes from which the given R object inherits. This has been implemented using R's `class()` function, and so the implicit class is similarly returned when the R object has no `class` attribute.
+
+* WebR now sets the environment variable `WEBR` equal to `"1"` and `WEBR_VERSION` equal to the webR version string in the WebAssembly environment (#414).
+
 ## Bug Fixes
+
+* Fix installing packages via shim with `character.only = TRUE` (#413).
 
 * WebR will now flush incomplete lines when capturing output streams with `Shelter.captureR()` (#412).
 
