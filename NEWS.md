@@ -12,6 +12,8 @@
 
 * Fix installing packages via shim with `character.only = TRUE` (#413).
 
+* WebR will now flush incomplete lines when capturing output streams with `Shelter.captureR()` (#412).
+
 # webR 0.3.2
 
 ## New features
