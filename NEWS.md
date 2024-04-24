@@ -6,6 +6,10 @@
 
 * An `RObject.class()` method has been added, returning an `RCharacter` object with the names of the classes from which the given R object inherits. This has been implemented using R's `class()` function, and so the implicit class is similarly returned when the R object has no `class` attribute.
 
+## Bug Fixes
+
+* Fix installing packages via shim with `character.only = TRUE` (#413).
+
 # webR 0.3.2
 
 ## New features

@@ -33,7 +33,9 @@ library_shim <- function(pkg, ..., show_menu = getOption("webr.show_menu")) {
       return(invisible(NULL))
     }
   }
-  base::library(package, character.only = TRUE, ...)
+  args <- list(package, character.only = TRUE, ...)
+  args <- args[!duplicated(names(args))]
+  do.call(base::library, args)
 }
 
 #' @rdname library_shim
@@ -46,5 +48,7 @@ require_shim <- function(pkg, ..., show_menu = getOption("webr.show_menu")) {
       return(invisible(NULL))
     }
   }
-  base::require(package, character.only = TRUE, ...)
+  args <- list(package, character.only = TRUE, ...)
+  args <- args[!duplicated(names(args))]
+  do.call(base::require, args)
 }

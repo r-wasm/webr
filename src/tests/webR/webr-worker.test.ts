@@ -15,8 +15,7 @@ beforeAll(async () => {
 
 describe('Download and install binary webR packages', () => {
   test('Install packages via evalR', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => { });
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => null);
 
     // Downloading and extracting a .tgz package
     await webR.evalR(
@@ -36,8 +35,7 @@ describe('Download and install binary webR packages', () => {
   });
 
   test('Install packages quietly', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => { });
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => null);
     await webR.evalR(
       'webr::install("Matrix", repos="https://repo.r-wasm.org/", mount = FALSE, quiet = TRUE)'
     );
@@ -46,10 +44,19 @@ describe('Download and install binary webR packages', () => {
   });
 
   test('Install packages via API', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => { });
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => null);
     await webR.installPackages(['MASS'], { mount: false });
     const pkg = (await webR.evalR('"MASS" %in% library(MASS)')) as RLogical;
+    expect(await pkg.toBoolean()).toEqual(true);
+    warnSpy.mockRestore();
+  });
+
+  test('Install packages via package shim', async () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => null);
+    const pkg = (await webR.evalR(`
+      webr::shim_install()
+      "rlang" %in% library("rlang", character.only = TRUE, show_menu = FALSE, quiet = TRUE)
+    `)) as RLogical;
     expect(await pkg.toBoolean()).toEqual(true);
     warnSpy.mockRestore();
   });
