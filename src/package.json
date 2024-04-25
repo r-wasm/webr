@@ -38,20 +38,17 @@
     "dist"
   ],
   "main": "dist/webr.mjs",
-  "types": "dist/webr/webr-main.d.ts",
+  "types": "dist/webR/webr-main.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/webR/webr-main.d.ts",
       "node": "./dist/webr.cjs",
-      "types": "./dist/webr/webr-main.d.ts",
       "default": "./dist/webr.mjs"
     },
-    "./chan/serviceworker": "./dist/webr-serviceworker.mjs"
-  },
-  "typesVersions": {
-    "*": {
-      "*": [
-        "dist/webR/*"
-      ]
+    "./chan/serviceworker": {
+      "types": "./dist/webR/chan/serviceworker.d.ts",
+      "browser": "./dist/webr-serviceworker.js",
+      "default": "./dist/webr-serviceworker.mjs"
     }
   },
   "engines": {
