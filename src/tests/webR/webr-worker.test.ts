@@ -19,14 +19,14 @@ describe('Download and install binary webR packages', () => {
 
     // Downloading and extracting a .tgz package
     await webR.evalR(
-      'webr::install("cli", repos="https://repo.r-wasm.org/", mount = FALSE)'
+      'webr::install("cli", mount = FALSE)'
     );
     let pkg = (await webR.evalR('"cli" %in% library(cli)')) as RLogical;
     expect(await pkg.toBoolean()).toEqual(true);
 
     // Downloading and mounting an Emscripten FS image
     await webR.evalR(
-      'webr::install("lattice", repos="https://repo.r-wasm.org/", mount = TRUE)'
+      'webr::install("lattice", mount = TRUE)'
     );
     pkg = (await webR.evalR('"lattice" %in% library(lattice)')) as RLogical;
     expect(await pkg.toBoolean()).toEqual(true);
@@ -37,7 +37,7 @@ describe('Download and install binary webR packages', () => {
   test('Install packages quietly', async () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => null);
     await webR.evalR(
-      'webr::install("Matrix", repos="https://repo.r-wasm.org/", mount = FALSE, quiet = TRUE)'
+      'webr::install("Matrix", mount = FALSE, quiet = TRUE)'
     );
     expect(warnSpy).not.toHaveBeenCalled();
     warnSpy.mockRestore();
