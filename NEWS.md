@@ -1,5 +1,7 @@
 # webR (development version)
 
+# webR 0.3.3
+
 ## New features
 
 * A `webR.version` property has been added, containing the current version and build information (#409).
@@ -8,11 +10,15 @@
 
 * WebR now sets the environment variable `WEBR` equal to `"1"` and `WEBR_VERSION` equal to the webR version string in the WebAssembly environment (#414).
 
+* Dev tools: Running `make help` now prints valid targets and their descriptions (#410).
+
 ## Bug Fixes
 
 * Fix installing packages via shim with `character.only = TRUE` (#413).
 
 * WebR will now flush incomplete lines when capturing output streams with `Shelter.captureR()` (#412).
+
+* Fix the `types` specification in `package.json` for the webR npm package (#404).
 
 # webR 0.3.2
 

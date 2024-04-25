@@ -26,7 +26,7 @@
             #     cd src; prefetch-npm-deps package-lock.json
             srcNpmDeps = pkgs.fetchNpmDeps {
               src = "${self}/src";
-              hash = "sha256-SyGWR07KAthTG5IA/906eloVApfGha5NCwvJpI+9raQ=";
+              hash = "sha256-d+JA/yhwsEw3KPu8NK4CIWl0OQsHJqEOTBXhCMETXr4=";
             };
 
             inherit system;
