@@ -72,7 +72,7 @@ RUN curl -L https://rig.r-pkg.org/deb/rig.gpg -o /etc/apt/trusted.gpg.d/rig.gpg 
 
 # Because $HOME gets masked by GHA with the host $HOME
 ENV R_LIBS_USER=/opt/R/current/lib/R/site-library
-RUN rig add 4.3.3
+RUN rig add 4.4.0
 
 # Download webR and configure for LLVM flang
 RUN git clone https://github.com/r-wasm/webr.git /opt/webr
