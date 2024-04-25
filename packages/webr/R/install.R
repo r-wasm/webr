@@ -29,15 +29,6 @@ install <- function(packages,
   repos <- gsub("/$", "", repos)
   contrib <- sprintf("%s/bin/emscripten/contrib/%s", repos, ver)
 
-  # Handle webR 0.3.x - R 4.3.3 on repo.r-wasm.org
-  # TODO: Once R 4.4.0 is released this can be removed from future webR builds
-  contrib <- gsub(
-    "repo.r-wasm.org/bin/emscripten/contrib/4.3",
-    "repo.r-wasm.org/bin/emscripten/contrib/4.3.3",
-    contrib,
-    fixed = TRUE
-  )
-
   if (is.null(info)) {
     info <- utils::available.packages(contriburl = contrib)
   }
