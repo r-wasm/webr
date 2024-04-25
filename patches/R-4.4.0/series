@@ -2,8 +2,6 @@ emscripten-configure.diff
 emscripten-includes.diff
 emscripten-makefiles.diff
 emscripten-lazyload.diff
-emscripten-dotcode-fortran-fix.diff
-emscripten-xdr.diff
 emscripten-unimplmented.diff
 emscripten-input.diff
 emscripten-disable-system.diff
@@ -13,8 +11,6 @@ emscripten-disable-bcEval.diff
 emscripten-fix-blas-dlsym-search.diff
 emscripten-avoid-testing-issues.diff
 emscripten-r-home-stderr.diff
-fix-signrank-wilcox.diff
-fix-devUp.diff
 flang-avoid-maxloc.diff
 fontconfig-typeof.diff
 fix-sink-release.diff

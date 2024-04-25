@@ -1,9 +1,9 @@
-Index: R-4.3.3/src/modules/lapack/dlapack.f
+Index: R-4.4.0/src/modules/lapack/dlapack.f
 ===================================================================
---- R-4.3.3.orig/src/modules/lapack/dlapack.f
-+++ R-4.3.3/src/modules/lapack/dlapack.f
-@@ -113097,6 +113097,20 @@
- *> \ingroup doubleOTHERcomputational
+--- R-4.4.0.orig/src/modules/lapack/dlapack.f
++++ R-4.4.0/src/modules/lapack/dlapack.f
+@@ -113014,6 +113014,20 @@
+ *> \ingroup pstf2
  *
  *  =====================================================================
 +      INTEGER FUNCTION MAXLOCD( N, ARR )
@@ -23,7 +23,7 @@ Index: R-4.3.3/src/modules/lapack/dlapack.f
        SUBROUTINE DPSTF2( UPLO, N, A, LDA, PIV, RANK, TOL, WORK, INFO )
  *
  *  -- LAPACK computational routine --
-@@ -113121,7 +113135,7 @@
+@@ -113038,7 +113052,7 @@
  *     ..
  *     .. Local Scalars ..
        DOUBLE PRECISION   AJJ, DSTOP, DTEMP
@@ -32,7 +32,7 @@ Index: R-4.3.3/src/modules/lapack/dlapack.f
        LOGICAL            UPPER
  *     ..
  *     .. External Functions ..
-@@ -113133,7 +113147,7 @@
+@@ -113050,7 +113064,7 @@
        EXTERNAL           DGEMV, DSCAL, DSWAP, XERBLA
  *     ..
  *     .. Intrinsic Functions ..
@@ -41,7 +41,7 @@ Index: R-4.3.3/src/modules/lapack/dlapack.f
  *     ..
  *     .. Executable Statements ..
  *
-@@ -113214,7 +113228,7 @@
+@@ -113131,7 +113145,7 @@
    120       CONTINUE
  *
              IF( J.GT.1 ) THEN
@@ -50,7 +50,7 @@ Index: R-4.3.3/src/modules/lapack/dlapack.f
                 PVT = ITEMP + J - 1
                 AJJ = WORK( N+PVT )
                 IF( AJJ.LE.DSTOP.OR.DISNAN( AJJ ) ) THEN
-@@ -113277,7 +113291,7 @@
+@@ -113194,7 +113208,7 @@
    140       CONTINUE
  *
              IF( J.GT.1 ) THEN
@@ -59,7 +59,7 @@ Index: R-4.3.3/src/modules/lapack/dlapack.f
                 PVT = ITEMP + J - 1
                 AJJ = WORK( N+PVT )
                 IF( AJJ.LE.DSTOP.OR.DISNAN( AJJ ) ) THEN
-@@ -113505,7 +113519,7 @@
+@@ -113422,7 +113436,7 @@
  *     ..
  *     .. Local Scalars ..
        DOUBLE PRECISION   AJJ, DSTOP, DTEMP
@@ -68,7 +68,7 @@ Index: R-4.3.3/src/modules/lapack/dlapack.f
        LOGICAL            UPPER
  *     ..
  *     .. External Functions ..
-@@ -113518,7 +113532,7 @@
+@@ -113435,7 +113449,7 @@
        EXTERNAL           DGEMV, DPSTF2, DSCAL, DSWAP, DSYRK, XERBLA
  *     ..
  *     .. Intrinsic Functions ..
@@ -77,7 +77,7 @@ Index: R-4.3.3/src/modules/lapack/dlapack.f
  *     ..
  *     .. Executable Statements ..
  *
-@@ -113620,7 +113634,7 @@
+@@ -113537,7 +113551,7 @@
    120             CONTINUE
  *
                    IF( J.GT.1 ) THEN
@@ -86,7 +86,7 @@ Index: R-4.3.3/src/modules/lapack/dlapack.f
                       PVT = ITEMP + J - 1
                       AJJ = WORK( N+PVT )
                       IF( AJJ.LE.DSTOP.OR.DISNAN( AJJ ) ) THEN
-@@ -113707,7 +113721,7 @@
+@@ -113624,7 +113638,7 @@
    160             CONTINUE
  *
                    IF( J.GT.1 ) THEN

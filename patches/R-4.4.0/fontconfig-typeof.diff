@@ -1,7 +1,7 @@
-Index: R-4.3.3/src/library/grDevices/src/cairo/cairoFns.c
+Index: R-4.4.0/src/library/grDevices/src/cairo/cairoFns.c
 ===================================================================
---- R-4.3.3.orig/src/library/grDevices/src/cairo/cairoFns.c
-+++ R-4.3.3/src/library/grDevices/src/cairo/cairoFns.c
+--- R-4.4.0.orig/src/library/grDevices/src/cairo/cairoFns.c
++++ R-4.4.0/src/library/grDevices/src/cairo/cairoFns.c
 @@ -1679,10 +1679,13 @@ PangoCairo_Text(double x, double y,
     with freetype2/fontconfig (FT implies FC in Cairo).
  */
