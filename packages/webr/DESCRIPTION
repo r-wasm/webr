@@ -1,7 +1,7 @@
 Type: Package
 Package: webr
 Title: WebR Support Package
-Version: 0.3.3
+Version: 0.3.3.9000
 Authors@R: c(
     person("George", "Stagg", , "george.stagg@posit.co", role = c("aut", "cre")),
     person("Lionel", "Henry", , "lionel@posit.co", role = "aut"),
