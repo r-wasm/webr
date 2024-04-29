@@ -2,3 +2,4 @@ emscripten-configure.diff
 emscripten-function-ptr.diff
 emscripten-wasm.diff
 emscripten-disable-pcre.diff
+fix-python12.diff
