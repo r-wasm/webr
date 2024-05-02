@@ -1,7 +1,7 @@
-Index: R-4.3.3/Makefile.in
+Index: R-4.4.0/Makefile.in
 ===================================================================
---- R-4.3.3.orig/Makefile.in
-+++ R-4.3.3/Makefile.in
+--- R-4.4.0.orig/Makefile.in
++++ R-4.4.0/Makefile.in
 @@ -91,6 +91,13 @@ javaconf: R
  javaconf: R
  	@$(MAKE) stamp-java
@@ -16,10 +16,10 @@ Index: R-4.3.3/Makefile.in
  
  install install-strip: installdirs svnonly
  	@for d in $(SUBDIRS); do \
-Index: R-4.3.3/src/main/Makefile.in
+Index: R-4.4.0/src/main/Makefile.in
 ===================================================================
---- R-4.3.3.orig/src/main/Makefile.in
-+++ R-4.3.3/src/main/Makefile.in
+--- R-4.4.0.orig/src/main/Makefile.in
++++ R-4.4.0/src/main/Makefile.in
 @@ -148,7 +148,57 @@ $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)
  
  $(R_binary): $(R_bin_OBJECTS) $(R_bin_DEPENDENCIES)

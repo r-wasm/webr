@@ -1,10 +1,10 @@
-Index: R-4.3.3/src/library/base/R/unix/system.unix.R
+Index: R-4.4.0/src/library/base/R/unix/system.unix.R
 ===================================================================
---- R-4.3.3.orig/src/library/base/R/unix/system.unix.R
-+++ R-4.3.3/src/library/base/R/unix/system.unix.R
-@@ -35,6 +35,11 @@ system <- function(command, intern = FALSE,
-     if(!is.logical(wait) || is.na(wait))
-         stop("'wait' must be TRUE or FALSE")
+--- R-4.4.0.orig/src/library/base/R/unix/system.unix.R
++++ R-4.4.0/src/library/base/R/unix/system.unix.R
+@@ -37,6 +37,11 @@ system <- function(command, intern = FALSE,
+     if(!is.logical(receive.console.signals) || is.na(receive.console.signals))
+         stop("'receive.console.signals' must be TRUE or FALSE")
  
 +    # Disable system() command when running under emscripten
 +    if (grepl("emscripten", R.version$os)) {
@@ -14,10 +14,11 @@ Index: R-4.3.3/src/library/base/R/unix/system.unix.R
      if(ignore.stdout) command <- paste(command, ">/dev/null")
      if(ignore.stderr) command <- paste(command, "2>/dev/null")
      if(!is.null(input)) {
-@@ -63,6 +68,11 @@ system2 <- function(command, args = character(),
-     if(!is.logical(wait) || is.na(wait))
+@@ -66,6 +71,12 @@ system2 <- function(command, args = character(),
          stop("'wait' must be TRUE or FALSE")
- 
+     if(!is.logical(receive.console.signals) || is.na(receive.console.signals))
+         stop("'receive.console.signals' must be TRUE or FALSE")
++
 +    # Disable system() command when running under emscripten
 +    if (grepl("emscripten", R.version$os)) {
 +	return(webr_hook_system(command))
@@ -26,8 +27,8 @@ Index: R-4.3.3/src/library/base/R/unix/system.unix.R
      intern <- FALSE
      command <- paste(c(env, shQuote(command), args), collapse = " ")
  
-@@ -107,13 +117,23 @@ system2 <- function(command, args = character(),
-     .Internal(system(command, intern, timeout))
+@@ -110,13 +121,23 @@ system2 <- function(command, args = character(),
+     .Internal(system(command, intern, timeout, receive.console.signals))
  }
  
 +webr_hook_system <- function(command) {
@@ -51,10 +52,10 @@ Index: R-4.3.3/src/library/base/R/unix/system.unix.R
          warning("'which' was not found on this platform")
          return(res)
      }
-Index: R-4.3.3/src/library/utils/R/sessionInfo.R
+Index: R-4.4.0/src/library/utils/R/sessionInfo.R
 ===================================================================
---- R-4.3.3.orig/src/library/utils/R/sessionInfo.R
-+++ R-4.3.3/src/library/utils/R/sessionInfo.R
+--- R-4.4.0.orig/src/library/utils/R/sessionInfo.R
++++ R-4.4.0/src/library/utils/R/sessionInfo.R
 @@ -23,6 +23,8 @@
      ## Now try to figure out the OS we are running under
      if (.Platform$OS.type == "windows") {

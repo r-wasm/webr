@@ -72,7 +72,7 @@ STAGE1_FC ?= gfortran
 
 # Stage 1: Build a native version of R so we can compile the default packages
 $(BUILD)/state/R-$(R_VERSION)/r-stage1-configured: $(BUILD)/state/R-$(R_VERSION)/r-patched
-	mkdir -p $(R_SOURCE)/build-stage1/doc
+	@mkdir -p $(R_SOURCE)/build-stage1/doc
 # Workaround for the lack of LaTeX packages
 	cd $(R_SOURCE)/build-stage1/doc && \
 	  touch NEWS NEWS.pdf NEWS.rds NEWS.2.rds NEWS.3.rds
@@ -156,8 +156,12 @@ SHLIB_LDFLAGS += -s WASM_BIGINT $(WASM_OPT_LDADD)
 
 # Stage 2: Reconfigure and build for wasm32-unknown-emscripten target
 $(BUILD)/state/R-$(R_VERSION)/r-stage2-configured: $(BUILD)/state/R-$(R_VERSION)/r-patched $(FORTRAN_WASM_LIB)
-	mkdir -p $(R_SOURCE)/build
+	@mkdir -p $(R_SOURCE)/build
+	@cp $(TOOLS)/shims/pkg-config $(HOST)/bin/pkg-config
+	@chmod +x $(HOST)/bin/pkg-config
 	cd $(R_SOURCE)/build && \
+	  PKG_CONFIG="$(HOST)/bin/pkg-config" \
+	  EM_PKG_CONFIG="$(shell which pkg-config)" \
 	  EM_PKG_CONFIG_PATH="$(WASM)/lib/pkgconfig" \
 	  MAIN_LDFLAGS="$(MAIN_LDFLAGS)" \
 	  SHLIB_LDFLAGS="$(SHLIB_LDFLAGS)" \
