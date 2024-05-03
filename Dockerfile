@@ -28,7 +28,7 @@ RUN mkdir /opt/fake_rust/ && \
 FROM webr as scratch
 # Install nodejs
 RUN apt-get update && \
-    apt-get install nodejs -y
+    apt-get install nodejs npm -y
 
 # Install Rust; these lines are based on the official Rust docker image:
 # https://github.com/rust-lang/docker-rust/blob/master/Dockerfile-debian.template
