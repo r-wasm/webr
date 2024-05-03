@@ -1,5 +1,9 @@
 # webR (development version)
 
+## New features
+
+* Updated to R version 4.4.0.
+
 # webR 0.3.3
 
 ## New features
