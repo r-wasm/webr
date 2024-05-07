@@ -82,7 +82,8 @@ RUN ./configure
 RUN R CMD INSTALL packages/webr
 
 # Build webR with supporting Wasm libs
-RUN cd libs && make all
+ARG MAKE_LIBS_TARGET="all"
+RUN cd libs && make ${MAKE_LIBS_TARGET}
 RUN make
 
 # Cleanup
