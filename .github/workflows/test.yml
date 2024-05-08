@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-docker:
+  build-webr:
     runs-on: ubuntu-latest
     container: ghcr.io/r-wasm/flang-wasm:main
     steps:
@@ -40,6 +40,28 @@ jobs:
           fail_ci_if_error: true
           verbose: true
           token: ${{ secrets.CC_TOKEN }}
+  build-docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Short commit SHA
+        id: short
+        run: |
+          SHA="${{github.event.pull_request.head.sha}}${{ github.sha }}"
+          SHORT_SHA=${SHA:0:7}
+          echo "sha: $SHORT_SHA"
+          echo "sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          build-args: |
+            WEBRCI_SHA=${{ steps.short.outputs.sha }}
+            MAKE_LIBS_TARGET=default
   build-nix:
     runs-on: ubuntu-latest
     steps:

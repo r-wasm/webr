@@ -182,6 +182,7 @@ jobs:
           push: true
           build-args: |
             WEBRCI_SHA=${{ steps.short.outputs.sha }}
+            MAKE_LIBS_TARGET=all
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
   build-nix:
