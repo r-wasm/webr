@@ -17,13 +17,13 @@ $(ONETBB_WASM_LIB): $(ONETBB_TARBALL)
 	    -DCMAKE_BUILD_TYPE=Release \
 	    -DCMAKE_FIND_ROOT_PATH=$(WASM) \
 	    -DCMAKE_INSTALL_PREFIX:PATH=$(WASM) \
-			-DTBB_STRICT=OFF \
-			-DCMAKE_CXX_FLAGS=-Wno-unused-command-line-argument \
-			-DTBB_DISABLE_HWLOC_AUTOMATIC_SEARCH=ON \
-			-DBUILD_SHARED_LIBS=OFF \
-			-DTBB_EXAMPLES=OFF \
-			-DTBB_TEST=OFF \
-			-DEMSCRIPTEN_WITHOUT_PTHREAD=true \
-			.. && \
-		cmake --build . && \
-		cmake --install .
+	    -DTBB_STRICT=OFF \
+	    -DCMAKE_CXX_FLAGS=-Wno-unused-command-line-argument \
+	    -DTBB_DISABLE_HWLOC_AUTOMATIC_SEARCH=ON \
+	    -DBUILD_SHARED_LIBS=OFF \
+	    -DTBB_EXAMPLES=OFF \
+	    -DTBB_TEST=OFF \
+	    -DEMSCRIPTEN_WITHOUT_PTHREAD=true \
+	    .. && \
+	  cmake --build . && \
+	  cmake --install .
