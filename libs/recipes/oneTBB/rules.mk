@@ -24,6 +24,7 @@ $(ONETBB_WASM_LIB): $(ONETBB_TARBALL)
 	    -DTBB_EXAMPLES=OFF \
 	    -DTBB_TEST=OFF \
 	    -DEMSCRIPTEN_WITHOUT_PTHREAD=true \
+	    -DTBB_COMMON_COMPILE_FLAGS="-U__TBB_USE_ITT_NOTIFY" \
 	    .. && \
 	  cmake --build . && \
 	  cmake --install .
