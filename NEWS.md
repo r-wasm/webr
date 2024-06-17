@@ -8,6 +8,8 @@
 
 * The `ServiceWorker` communication channel has been deprecated. Users should use the `SharedArrayBuffer` channel where cross-origin isolation is possible, or otherwise use the `PostMessage` channel. For the moment the `ServiceWorker` channel can still be used, but emits a warning at start up. The channel will be removed entirely in a future version of webR.
 
+* The R session is now set as non-interactive when capturing output using `captureR()` and `evalR()`. After output capture is complete, the status is restored (#426).
+
 ## Bug Fixes
 
 * Fix generation of R API documentation (#439).
