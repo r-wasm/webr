@@ -363,21 +363,20 @@ export class WebR {
   }
 
   /**
-   * Install a list of R packages from a Wasm binary package repo.
-   * @param {string[]} packages An array of R package names.
+   * Install a list of R packages from Wasm binary package repositories.
+   * @param {string | string[]} packages An string or array of strings
+   *   containing R package names.
    * @param {InstallPackagesOptions} [options] Options to be used when
    *   installing webR packages.
    */
-  async installPackages(packages: string[], options?: InstallPackagesOptions) {
+  async installPackages(packages: string | string[], options?: InstallPackagesOptions) {
     const op = Object.assign({
       quiet: false,
       mount: true
     }, options);
 
-    for (const name of packages) {
-      const msg = { type: 'installPackage', data: { name, options: op } };
-      await this.#chan.request(msg);
-    }
+    const msg = { type: 'installPackages', data: { name: packages, options: op } };
+    await this.#chan.request(msg);
   }
 
   /**

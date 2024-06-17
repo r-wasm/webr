@@ -421,11 +421,15 @@ function dispatch(msg: Message): void {
             break;
           }
 
-          case 'installPackage': {
+          case 'installPackages': {
             const msg = reqMsg as InstallPackagesMessage;
+            let pkgs = msg.data.name;
+            let repos = msg.data.options.repos ? msg.data.options.repos : _config.repoUrl;
+            if (typeof pkgs === "string") pkgs = [ pkgs ];
+            if (typeof repos === "string") repos = [ repos ];
             evalR(`webr::install(
-              "${msg.data.name}",
-              repos = "${msg.data.options.repos ? msg.data.options.repos : _config.repoUrl}",
+              c(${pkgs.map((r) => '"' + r + '"').join(',')}),
+              repos = c(${repos.map((r) => '"' + r + '"').join(',')}),
               quiet = ${msg.data.options.quiet ? 'TRUE' : 'FALSE'},
               mount = ${msg.data.options.mount ? 'TRUE' : 'FALSE'}
             )`);

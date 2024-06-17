@@ -26,10 +26,10 @@ export interface CallRObjectMethodMessage extends Message {
  */
 export interface InstallPackagesOptions {
   /**
-   * The R package repository from which to download packages.
+   * The R package repositories from which to download packages.
    * Default: The configured default webR package repository.
    */
-  repos?: string;
+  repos?: string | string[];
   /**
    * If `true`, do not output downloading messages.
    * Default: `false`.
@@ -44,9 +44,9 @@ export interface InstallPackagesOptions {
 
 /** @internal */
 export interface InstallPackagesMessage extends Message {
-  type: 'installPackage';
+  type: 'installPackages';
   data: {
-    name: string;
+    name: string | string[];
     options: InstallPackagesOptions;
   };
 }

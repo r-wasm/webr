@@ -14,6 +14,8 @@
 
 * The `rwasm` R package is now installed into the system library as part of the webR development Docker container (#443, r-wasm/actions#10).
 
+* `webR.installPackages()` now correctly handles both `string` and `string[]` arguments for package names and binary repositories (#437).
+
 # webR 0.3.3
 
 ## New features
