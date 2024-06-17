@@ -15,14 +15,9 @@ Communication between the main thread and the webR worker thread is managed by m
 | Name                          | Requirements                                                                                      | Limitations                                                                         |
 |-------------------|----------------------------|-------------------------|
 | `SharedArrayBuffer` (Default) | [Cross-origin Isolation](https://developer.mozilla.org/en-US/docs/Web/API/crossOriginIsolated)    | None                                                                                |
-| `ServiceWorker`               | [JavaScript service workers](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API) | A service worker script must be hosted in the same origin as the page loading webR. |
 | `PostMessage`               | -- | R code cannot be interrupted. Nested R REPLs, e.g. `browser()`, do not work. |
 
 A communication channel will be automatically selected at startup, defaulting to `SharedArrayBuffer` if the page is cross-origin isolated. It is also possible to manually select a channel type by setting the [`WebROptions.channelType`](api/js/interfaces/WebR.WebROptions.md#channeltype) configuration option at startup.
-
-::: callout-warning
-Only one JavaScript service worker can be active at at time for a given web page. As such, if you plan to use your own service worker in the web application making use of webR, then you must either use another communication channel, or integrate the required webR communication message passing into your own service worker.
-:::
 
 ## JavaScript promises
 
