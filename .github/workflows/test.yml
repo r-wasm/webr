@@ -47,20 +47,28 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Short commit SHA
-        id: short
+      - name: Obtain git ref
+        id: ref
         run: |
-          SHA="${{github.event.pull_request.head.sha}}${{ github.sha }}"
-          SHORT_SHA=${SHA:0:7}
-          echo "sha: $SHORT_SHA"
-          echo "sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          if [ ${{ github.event.pull_request.head.sha }} ]; then
+            REPO="https://github.com/${{ github.event.pull_request.head.repo.full_name }}.git"
+            SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            REPO="https://github.com/${{ github.repository }}.git"
+            SHA="${{ github.sha }}"
+          fi
+          echo "repo: $REPO"
+          echo "repo=$REPO" >> $GITHUB_OUTPUT
+          echo "sha: $SHA"
+          echo "sha=$SHA" >> $GITHUB_OUTPUT
       - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: false
           build-args: |
-            WEBRCI_SHA=${{ steps.short.outputs.sha }}
+            WEBRCI_REPO=${{ steps.ref.outputs.repo }}
+            WEBRCI_SHA=${{ steps.ref.outputs.sha }}
             MAKE_LIBS_TARGET=default
   build-nix:
     runs-on: ubuntu-latest
