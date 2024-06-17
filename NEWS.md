@@ -4,6 +4,16 @@
 
 * Updated to R version 4.4.0.
 
+## Breaking changes
+
+* The `ServiceWorker` communication channel has been deprecated. Users should use the `SharedArrayBuffer` channel where cross-origin isolation is possible, or otherwise use the `PostMessage` channel. For the moment the `ServiceWorker` channel can still be used, but emits a warning at start up. The channel will be removed entirely in a future version of webR.
+
+## Bug Fixes
+
+* Fix generation of R API documentation (#439).
+
+* The `rwasm` R package is now installed into the system library as part of the webR development Docker container (#443, r-wasm/actions#10).
+
 # webR 0.3.3
 
 ## New features
