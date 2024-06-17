@@ -668,6 +668,9 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
   const devEnvObj = new REnvironment({});
   protectInc(devEnvObj, prot);
 
+  // Set the session as non-interactive
+  Module.setValue(Module._R_Interactive, 0, 'i8');
+
   try {
     const envObj = new REnvironment(_options.env);
     protectInc(envObj, prot);
@@ -758,6 +761,9 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
       images,
     };
   } finally {
+    // Restore the session's interactive status
+    Module.setValue(Module._R_Interactive, _config.interactive ? 1 : 0, 'i8');
+
     // Close the device and destroy newly created canvas cache entries
     const newDev = devEnvObj.get('new_dev');
     if (_options.captureGraphics && newDev.type() !== "null") {
@@ -870,7 +876,7 @@ function init(config: Required<WebROptions>) {
     resolveInit: () => {
       initPersistentObjects();
       chan?.setInterrupt(Module._Rf_onintr);
-      Module.setValue(Module._R_Interactive, _config.interactive, '*');
+      Module.setValue(Module._R_Interactive, _config.interactive ? 1 : 0, 'i8');
       evalR(`options(webr_pkg_repos="${_config.repoUrl}")`);
       chan?.resolve();
     },
