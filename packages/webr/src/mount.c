@@ -74,6 +74,37 @@ SEXP ffi_mount_nodefs(SEXP source, SEXP mountpoint) {
 #endif
 }
 
+SEXP ffi_mount_idbfs(SEXP mountpoint) {
+#ifdef __EMSCRIPTEN__
+  CHECK_STRING(mountpoint);
+
+  EM_ASM({
+    // Stop if we're not able to use a IDBFS filesystem object
+    if (typeof IN_NODE === 'boolean' && IN_NODE === true) {
+      const msg = Module.allocateUTF8OnStack(
+        'The `IDBFS` filesystem object can only be used when running in a web browser.'
+      );
+      Module._Rf_error(msg);
+    }
+    const mountpoint = UTF8ToString($0);
+    try {
+      Module.FS.mount(Module.FS.filesystems.IDBFS, {}, mountpoint);
+    } catch (e) {
+      let msg = e.message;
+      if (e.name === "ErrnoError" && e.errno === 10) {
+        const dir = Module.UTF8ToString($0);
+        msg = "Unable to mount directory, `" + dir + "` is already mounted.";
+      }
+      Module._Rf_error(Module.allocateUTF8OnStack(msg));
+    }
+  }, R_CHAR(STRING_ELT(mountpoint, 0)));
+
+  return R_NilValue;
+#else
+  Rf_error("Function must be running under Emscripten.");
+#endif
+}
+
 SEXP ffi_unmount(SEXP mountpoint) {
 #ifdef __EMSCRIPTEN__
   CHECK_STRING(mountpoint);

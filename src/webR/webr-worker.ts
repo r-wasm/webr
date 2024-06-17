@@ -1,6 +1,6 @@
 import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
-import { newChannelWorker, ChannelInitMessage } from './chan/channel-common';
+import { newChannelWorker, ChannelInitMessage, ChannelType } from './chan/channel-common';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions } from './webr-main';
 import { EmPtr, Module } from './emscripten';
@@ -32,6 +32,7 @@ import {
   ShelterMessage,
   ShelterDestroyMessage,
   InstallPackagesMessage,
+  FSSyncfsMessage,
 } from './webr-chan';
 
 let initialised = false;
@@ -47,6 +48,7 @@ const onWorkerMessage = function (msg: Message) {
     }
     const messageInit = msg as ChannelInitMessage;
     chan = newChannelWorker(messageInit);
+    messageInit.data.config.channelType = messageInit.data.channelType;
     init(messageInit.data.config);
     initialised = true;
     return;
@@ -108,8 +110,25 @@ function dispatch(msg: Message): void {
           }
           case 'mount': {
             const msg = reqMsg as FSMountMessage;
-            const fs = Module.FS.filesystems[msg.data.type];
+            const type = msg.data.type;
+            if (type === "IDBFS" && _config.channelType == ChannelType.SharedArrayBuffer) {
+              throw new Error(
+                'The `IDBFS` filesystem type is not supported under the `SharedArrayBuffer` ' +
+                'communication channel. The `PostMessage` communication channel must be used.'
+              );
+            }
+            const fs = Module.FS.filesystems[type];
             Module.FS.mount(fs, msg.data.options, msg.data.mountpoint);
+            write({ obj: null, payloadType: 'raw' });
+            break;
+          }
+          case 'syncfs': {
+            const msg = reqMsg as FSSyncfsMessage;
+            Module.FS.syncfs(msg.data.populate, (err: string | undefined) => {
+              if (err) {
+                throw new Error(`Emscripten \`syncfs\` error: "${err}".`);
+              }
+            });
             write({ obj: null, payloadType: 'raw' });
             break;
           }

@@ -16,12 +16,18 @@
 #' `mountpoint`. This filesystem type can only be used when webR is running
 #' under Node.
 #'
+#' When mounting an Emscripten "idbfs" type filesystem, files will be persisted
+#' or populated from/to a browser-based IndexedDB database when the JavaScript
+#' function `Module.FS.syncfs` is invoked. See the Emscripten `IDBFS`
+#' documentation for more information. This filesystem type can only be used
+#' when webR is running in a web browser.
+#'
 #' @param mountpoint a character string giving the path to a directory to mount
 #'   onto in the Emscripten virtual filesystem.
 #' @param source a character string giving the location of the data source to be
 #'   mounted.
 #' @param type a character string giving the type of Emscripten filesystem to be
-#'   mounted: "workerfs" or "nodefs".
+#'   mounted: "workerfs", "nodefs", or "idbfs".
 #'
 #' @export
 mount <- function(mountpoint, source, type = "workerfs") {
@@ -34,6 +40,8 @@ mount <- function(mountpoint, source, type = "workerfs") {
     invisible(.Call(ffi_mount_workerfs, base_url, mountpoint))
   } else if (tolower(type) == "nodefs") {
     invisible(.Call(ffi_mount_nodefs, source, mountpoint))
+  } else if (tolower(type) == "idbfs") {
+    invisible(.Call(ffi_mount_idbfs, mountpoint))
   } else {
     stop(paste("Unsupported Emscripten Filesystem type:", type))
   }
