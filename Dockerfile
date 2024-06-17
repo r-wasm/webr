@@ -68,8 +68,9 @@ RUN curl -L https://rig.r-pkg.org/deb/rig.gpg -o /etc/apt/trusted.gpg.d/rig.gpg 
 ENV R_LIBS_USER=/opt/R/current/lib/R/site-library
 # Don't install pak. Rig installs it into the user lib, but we want it in the system lib
 RUN rig add 4.4.0 --without-pak
-# Install pak into the system lib
+# Install pak and rwasm into the system lib
 RUN /opt/R/current/bin/R -q -e 'install.packages("pak", lib = .Library)'
+RUN /opt/R/current/bin/R -q -e 'pak::pak("r-wasm/rwasm", lib = .Library)'
 
 # Download webR and configure for LLVM flang
 ARG WEBRCI_REPO="https://github.com/r-wasm/webr.git"
