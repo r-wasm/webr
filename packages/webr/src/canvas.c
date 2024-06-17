@@ -773,7 +773,7 @@ SEXP ffi_dev_canvas(SEXP args)
   error("This graphics device can only be used when running under webR.");
 }
 
-SEXP ffi_dev_canvas_purge()
+SEXP ffi_dev_canvas_purge(void)
 {
   error("This graphics device can only be used when running under webR.");
 }
@@ -783,7 +783,7 @@ SEXP ffi_dev_canvas_destroy(SEXP args)
   error("This graphics device can only be used when running under webR.");
 }
 
-SEXP ffi_dev_canvas_cache()
+SEXP ffi_dev_canvas_cache(void)
 {
   error("This graphics device can only be used when running under webR.");
 }
