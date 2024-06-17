@@ -37,15 +37,18 @@ install <- function(packages,
   deps <- unlist(tools::package_dependencies(packages, info), use.names = FALSE)
   deps <- unique(deps)
 
+  # Search for existing packages in `.libPaths()` and the `lib` argument
+  lib_loc <- c(lib, .libPaths())
+
   for (dep in deps) {
-    if (length(find.package(dep, quiet = TRUE))) {
+    if (length(find.package(dep, lib.loc = lib_loc, quiet = TRUE))) {
       next
     }
     install(dep, repos, info, lib, quiet, mount)
   }
 
   for (pkg in packages) {
-    if (length(find.package(pkg, quiet = TRUE))) {
+    if (length(find.package(pkg, lib.loc = lib_loc, quiet = TRUE))) {
       next
     }
 
