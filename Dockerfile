@@ -72,7 +72,8 @@ RUN rig add 4.4.0 --without-pak
 RUN /opt/R/current/bin/R -q -e 'install.packages("pak", lib = .Library)'
 
 # Download webR and configure for LLVM flang
-RUN git clone https://github.com/r-wasm/webr.git /opt/webr
+ARG WEBRCI_REPO="https://github.com/r-wasm/webr.git"
+RUN git clone ${WEBRCI_REPO} /opt/webr
 WORKDIR /opt/webr
 ARG WEBRCI_SHA=HEAD
 RUN git checkout ${WEBRCI_SHA}
