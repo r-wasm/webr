@@ -4,6 +4,8 @@
 
 * Updated to R version 4.4.0.
 
+* The capturing mechanism of `captureR()` has been updated so that memory reallocation is performed when outputting very long lines. If reallocation is not possible (e.g. the environment does not have enough free memory to hold the entire line), the previous behaviour of truncating the line output is maintained (#434).
+
 ## Breaking changes
 
 * The `ServiceWorker` communication channel has been deprecated. Users should use the `SharedArrayBuffer` channel where cross-origin isolation is possible, or otherwise use the `PostMessage` channel. For the moment the `ServiceWorker` channel can still be used, but emits a warning at start up. The channel will be removed entirely in a future version of webR.
