@@ -69,6 +69,7 @@
     "react-accessible-treeview": "^2.6.1",
     "react-dom": "^18.2.0",
     "react-icons": "^4.10.1",
+    "react-resizable-panels": "^2.0.19",
     "tsx": "^4.0.0",
     "xmlhttprequest-ssl": "^2.1.0",
     "xterm": "^5.1.0",

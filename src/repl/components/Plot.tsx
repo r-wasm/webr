@@ -2,6 +2,7 @@ import React from 'react';
 import './Plot.css';
 import { PlotInterface } from '../App';
 import { FaArrowCircleLeft, FaArrowCircleRight, FaRegSave, FaTrashAlt } from 'react-icons/fa';
+import { Panel } from 'react-resizable-panels';
 
 export function Plot({
   plotInterface,
@@ -67,7 +68,7 @@ export function Plot({
   const prevPlot = () => setSelectedCanvas((selectedCanvas === null) ? null : selectedCanvas - 1);
 
   return (
-    <div role="region" aria-label="Plotting Pane" className="plot">
+    <Panel id="plot" role="region" aria-label="Plotting Pane" minSize={20}>
       <div className="plot-header">
         <div role="toolbar" aria-label="Plotting Toolbar" className="plot-actions">
           <button
@@ -111,7 +112,7 @@ export function Plot({
       <div className='plot-background'>
         <div ref={plotContainerRef} className="plot-container"></div>
       </div>
-    </div>
+    </Panel>
   );
 }
 

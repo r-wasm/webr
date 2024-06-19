@@ -1,10 +1,6 @@
-.plot {
-  display: grid;
-  grid-template-rows: auto 1fr;
-}
-
 .plot-background {
   background-color: var(--bg-dark);
+  flex-grow: 1;
   display: flex;
   justify-content: center;
   align-items: center;

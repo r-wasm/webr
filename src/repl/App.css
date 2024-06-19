@@ -14,54 +14,20 @@ body {
 }
 
 .repl {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(6, 1fr);
   width: 100vw;
   height: 100vh;
 }
 
-.editor {
-  grid-row: 1 / 5;
-  grid-column: 1;
-  overflow: auto;
-  border-style: solid;
-  border-color: var(--bg-secondary);
-  border-width: 0px 2px 2px 0px;
-  padding-top: 5px;
+div[data-panel] {
+  display: flex;
+  flex-direction: column;
 }
 
-.term {
-  grid-row-start: 5;
-  grid-row-end: -1;
-  grid-column: 1;
-  border-style: solid;
-  background-color: var(--bg-primary);
-  border-color: var(--bg-secondary);
-  border-width: 2px 2px 0px 0px;
-  overflow: hidden;
-  padding: 0px 5px;
+div[data-resize-handle] {
+  padding: 2px;
+  background-color: var(--bg-secondary);
 }
 
-.editor[style*='display: none']~.term {
-  grid-row-start: 1;
-}
-
-.files {
-  grid-row: 1 / 3;
-  grid-column: 2;
-  border-style: solid;
-  border-color: var(--bg-secondary);
-  border-width: 0px 0px 2px 2px;
-  overflow: auto;
-  padding: 5px 0;
-}
-
-.plot {
-  grid-row: 3 / -1;
-  grid-column: 2;
-  border-style: solid;
-  border-color: var(--bg-secondary);
-  border-width: 2px 0px 0px 2px;
-  overflow: hidden;
+.d-none + div[data-resize-handle] {
+  display: none !important;
 }

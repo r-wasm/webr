@@ -1,7 +1,9 @@
 import React from 'react';
+import './Terminal.css';
 import { Terminal as XTerminal } from 'xterm';
 import { Readline } from 'xterm-readline';
 import { FitAddon } from 'xterm-addon-fit';
+import { Panel } from 'react-resizable-panels';
 import { TerminalInterface } from '../App';
 import { WebR } from '../../webR/webr-main';
 import 'xterm/css/xterm.css';
@@ -99,12 +101,11 @@ export function Terminal({
     };
   }, [readline, terminalInterface]);
 
-  return <div
-    role="region"
-    aria-label="Terminal Pane"
-    ref={divRef}
-    className='term'
-  ></div>;
+  return (
+    <Panel id="terminal" role="region" aria-label="Terminal Pane" order={2} minSize={20}>
+      <div className="terminal-container" ref={divRef}></div>
+    </Panel>
+  );
 }
 
 export default Terminal;

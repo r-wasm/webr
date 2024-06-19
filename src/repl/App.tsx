@@ -5,6 +5,7 @@ import Editor from './components/Editor';
 import Plot from './components/Plot';
 import Files from './components/Files';
 import { Readline } from 'xterm-readline';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { WebR } from '../webR/webr-main';
 import { CanvasMessage, PagerMessage } from '../webR/webr-chan';
 import './App.css';
@@ -73,14 +74,27 @@ async function handlePagerMessage(msg: PagerMessage) {
 function App() {
   return (
     <div className='repl'>
-      <Editor
-        webR={webR}
-        terminalInterface={terminalInterface}
-        filesInterface={filesInterface}
-      />
-      <Files webR={webR} filesInterface={filesInterface} />
-      <Terminal webR={webR} terminalInterface={terminalInterface} />
-      <Plot plotInterface={plotInterface} />
+    <PanelGroup direction="horizontal">
+      <Panel defaultSize={50} minSize={20}>
+        <PanelGroup autoSaveId="conditional" direction="vertical">
+          <Editor
+            webR={webR}
+            terminalInterface={terminalInterface}
+            filesInterface={filesInterface}
+          />
+          <PanelResizeHandle />
+          <Terminal webR={webR} terminalInterface={terminalInterface} />
+        </PanelGroup>
+      </Panel>
+      <PanelResizeHandle />
+      <Panel minSize={20}>
+        <PanelGroup direction="vertical">
+          <Files webR={webR} filesInterface={filesInterface} />
+          <PanelResizeHandle />
+          <Plot plotInterface={plotInterface} />
+        </PanelGroup>
+      </Panel>
+    </PanelGroup>
     </div>
   );
 }

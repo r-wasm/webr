@@ -6,6 +6,7 @@ import { EditorState, Compartment, Prec } from '@codemirror/state';
 import { autocompletion, CompletionContext } from '@codemirror/autocomplete';
 import { keymap } from '@codemirror/view';
 import { indentWithTab } from '@codemirror/commands';
+import { Panel } from 'react-resizable-panels';
 import { FilesInterface, TerminalInterface } from '../App';
 import { r } from 'codemirror-lang-r';
 import './Editor.css';
@@ -341,13 +342,14 @@ export function Editor({
     };
   }, [files, syncActiveFileState, activeFile, editorView]);
 
-  const displayStyle = files.length === 0 ? { display: 'none' } : undefined;
-
   return (
-    <div role="region"
+    <Panel
+      id="editor"
+      role="region"
       aria-label="Editor Pane"
-      className="editor"
-      style={displayStyle}
+      order={1}
+      minSize={20}
+      className={files.length === 0 ? "d-none" : ""}
     >
       <div className="editor-header">
         <FileTabs
@@ -364,7 +366,7 @@ export function Editor({
         ref={editorRef}
       >
       </div>
-      <p style={{ display: 'none' }} id="editor-desc">
+      <p className="d-none" id="editor-desc">
         This component is an instance of the <a href="https://codemirror.net/">CodeMirror</a> interactive text editor.
         The editor has been configured so that the Tab key controls the indentation of code.
         To move focus away from the editor, press the Escape key, and then press the Tab key directly after it.
@@ -382,7 +384,7 @@ export function Editor({
           <FaRegSave aria-hidden="true" className="icon" /> Save
         </button>}
       </div>
-    </div>
+    </Panel>
   );
 }
 

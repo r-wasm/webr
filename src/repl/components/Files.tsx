@@ -1,6 +1,7 @@
 import React, { ChangeEventHandler } from 'react';
 import * as Fa from 'react-icons/fa';
 import TreeView, { flattenTree, INode, ITreeViewProps } from 'react-accessible-treeview';
+import { Panel } from 'react-resizable-panels';
 import { WebR, WebRError } from '../../webR/webr-main';
 import type { FSNode } from '../../webR/webr-main';
 import { FilesInterface } from '../App';
@@ -235,7 +236,7 @@ export function Files({
   />;
 
   return (
-    <div role="region" aria-label="Files Pane" className='files'>
+    <Panel id="files" role="region" aria-label="Files Pane" defaultSize={35} minSize={20}>
       <div className="files-header">
         <div
           role="toolbar"
@@ -288,7 +289,7 @@ export function Files({
       <div aria-label="WebAssembly Filesystem" className="directory">
         {treeData[0].name ? treeView : undefined}
       </div>
-    </div>
+    </Panel>
   );
 }
 
