@@ -36,8 +36,9 @@ will be mapped into the virtual filesystem and mounted onto the directory
 under Node.
 
 When mounting an Emscripten "idbfs" type filesystem, files will be persisted
-or populated from/to a browser-based IndexedDB database when the JavaScript
-function \code{Module.FS.syncfs} is invoked. See the Emscripten \code{IDBFS}
+to or populated from a browser-based IndexedDB database whenever the
+JavaScript function \code{Module.FS.syncfs} is invoked. See the Emscripten \code{IDBFS}
 documentation for more information. This filesystem type can only be used
-when webR is running in a web browser.
+when webR is running in a web browser and using the \code{PostMessage}
+communication channel.
 }

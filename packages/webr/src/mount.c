@@ -15,6 +15,14 @@
     Rf_error("`" #arg "` can't be `NA`.");               \
   }
 
+#define CHECK_LOGICAL(arg) \
+  if (!Rf_isLogical(arg) || LENGTH(arg) != 1) {          \
+    Rf_error("`" #arg "` must be a logical.");           \
+  }                                                      \
+  if (LOGICAL(arg)[0] == NA_LOGICAL){                    \
+    Rf_error("`" #arg "` can't be `NA`.");               \
+  }
+
 SEXP ffi_mount_workerfs(SEXP source, SEXP mountpoint) {
 #ifdef __EMSCRIPTEN__
   CHECK_STRING(source);
@@ -99,6 +107,16 @@ SEXP ffi_mount_idbfs(SEXP mountpoint) {
     }
   }, R_CHAR(STRING_ELT(mountpoint, 0)));
 
+  return R_NilValue;
+#else
+  Rf_error("Function must be running under Emscripten.");
+#endif
+}
+
+SEXP ffi_syncfs(SEXP populate) {
+#ifdef __EMSCRIPTEN__
+  CHECK_LOGICAL(populate);
+  EM_ASM({ Module.FS.syncfs($0, () => {}) }, LOGICAL(populate)[0]);
   return R_NilValue;
 #else
   Rf_error("Function must be running under Emscripten.");

@@ -11,6 +11,7 @@ extern SEXP ffi_dev_canvas_destroy(SEXP);
 extern SEXP ffi_mount_workerfs(SEXP, SEXP);
 extern SEXP ffi_mount_nodefs(SEXP, SEXP);
 extern SEXP ffi_mount_idbfs(SEXP);
+extern SEXP ffi_syncfs(SEXP);
 extern SEXP ffi_unmount(SEXP);
 
 static
@@ -25,6 +26,7 @@ const R_CallMethodDef CallEntries[] = {
   { "ffi_mount_workerfs",         (DL_FUNC) &ffi_mount_workerfs,         2},
   { "ffi_mount_nodefs",           (DL_FUNC) &ffi_mount_nodefs,           2},
   { "ffi_mount_idbfs",            (DL_FUNC) &ffi_mount_idbfs,            1},
+  { "ffi_syncfs",                 (DL_FUNC) &ffi_syncfs,                 1},
   { "ffi_unmount",                (DL_FUNC) &ffi_unmount,                1},
   { NULL,                         NULL,                                  0}
 };
