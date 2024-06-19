@@ -157,6 +157,12 @@ export interface FSMountMessage extends Message {
 }
 
 /** @internal */
+export interface FSSyncfsMessage extends Message {
+  type: 'syncfs';
+  data: { populate: boolean };
+}
+
+/** @internal */
 export interface FSReadFileMessage extends Message {
   type: 'readFile';
   data: {

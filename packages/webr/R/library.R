@@ -21,8 +21,10 @@
 #' `show_menu` argument. By default, if no global option is set and no argument
 #' is provided, the menu will not be shown.
 #'
+#' @param pkg Character vector of package names
 #' @param show_menu Show a menu asking the user if they would like to install
 #'   the package if it is missing. Defaults to `getOption("webr.show_menu")`.
+#' @param ... Other arguments to be passed to `library` and `require`.
 #'
 #' @export
 library_shim <- function(pkg, ..., show_menu = getOption("webr.show_menu")) {

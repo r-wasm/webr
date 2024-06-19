@@ -16,12 +16,19 @@
 #' `mountpoint`. This filesystem type can only be used when webR is running
 #' under Node.
 #'
+#' When mounting an Emscripten "idbfs" type filesystem, files will be persisted
+#' to or populated from a browser-based IndexedDB database whenever the
+#' JavaScript function `Module.FS.syncfs` is invoked. See the Emscripten `IDBFS`
+#' documentation for more information. This filesystem type can only be used
+#' when webR is running in a web browser and using the `PostMessage`
+#' communication channel.
+#'
 #' @param mountpoint a character string giving the path to a directory to mount
 #'   onto in the Emscripten virtual filesystem.
 #' @param source a character string giving the location of the data source to be
 #'   mounted.
 #' @param type a character string giving the type of Emscripten filesystem to be
-#'   mounted: "workerfs" or "nodefs".
+#'   mounted: "workerfs", "nodefs", or "idbfs".
 #'
 #' @export
 mount <- function(mountpoint, source, type = "workerfs") {
@@ -34,6 +41,8 @@ mount <- function(mountpoint, source, type = "workerfs") {
     invisible(.Call(ffi_mount_workerfs, base_url, mountpoint))
   } else if (tolower(type) == "nodefs") {
     invisible(.Call(ffi_mount_nodefs, source, mountpoint))
+  } else if (tolower(type) == "idbfs") {
+    invisible(.Call(ffi_mount_idbfs, mountpoint))
   } else {
     stop(paste("Unsupported Emscripten Filesystem type:", type))
   }
@@ -43,4 +52,20 @@ mount <- function(mountpoint, source, type = "workerfs") {
 #' @export
 unmount <- function(mountpoint) {
   invisible(.Call(ffi_unmount, mountpoint))
+}
+
+#' Synchronise the Emscripten virtual filesystem
+#'
+#' @description
+#' Uses the Emscripten filesystem API to synchronise all mounted virtual
+#' filesystems with their backing storage, where it exists. The `populate`
+#' argument controls the direction of the synchronisation between Emscripten's
+#' internal data and the file system's persistent store.
+#'
+#' @param populate A boolean. When `true`, initialises the filesystem with data
+#'   from persistent storage. When `false`, writes current filesystem data to
+#'   the persistent storage.
+#' @export
+syncfs <- function(populate) {
+  invisible(.Call(ffi_syncfs, populate))
 }
