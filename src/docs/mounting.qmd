@@ -138,19 +138,19 @@ webr::mount(
 
 :::
 
-## IndexedDB-based persistent storage
+## IndexedDB Filesystem Storage
 
 When using webR in a web browser, an [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API)-based persistent storage space can be mounted using the `IDBFS` filesystem type.
 
 ::: {.callout-warning}
 
-Due to how webR blocks for input in the worker thread, the `IDBFS` filesystem type **does not work** when using the `SharedArrayBuffer` communication channel. WebR must be configured to use the `PostMessage` communication channel to use `IDBFS` persistent storage.
+Due to the way webR blocks for input in the worker thread, the `IDBFS` filesystem type **does not work** when using the `SharedArrayBuffer` communication channel. WebR must be configured to use the `PostMessage` communication channel to use `IDBFS` persistent storage.
 
 :::
 
 ### Mounting
 
-First, create the directory to contain persistent file storage, and then mount using the `IDBFS` filesystem type.
+First, create a directory to contain the IndexedDB filesystem, then use either the JavaScript or R mount API with type `"IDBFS"`.
 
 ::: {.panel-tabset}
 ## JavaScript
@@ -163,17 +163,20 @@ await webR.FS.syncfs(true);
 
 ## R
 ```{r eval=FALSE}
+dir.create("/data")
 webr::mount(mountpoint = "/data", type = "IDBFS")
-webr::eval_js("Module.FS.syncfs(true, () => {})")
+webr::syncfs(TRUE)
 ```
 
 :::
 
-### Populating and persisting files
+After mounting the filesystem using [`mount()`](api/r.html#mount), the [`syncfs()`](api/r.html#syncfs) function should been invoked with its `populate` argument set to `true`. This extra step is **required** to initialise the virtual filesystem with any previously existing data files in the browser's IndexedDB storage. Without it, the filesystem will always be initially mounted as an empty directory.
 
-After mounting the filesystem using [`WebR.FS.mount()`](api/js/classes/WebR.WebR.md#fs), the Emscripten FS API function [`FS.syncfs()`](https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.syncfs) has been invoked with the `populate` argument set to `true`. This extra step is **required** to initialise the virtual filesystem with any previously existing data files in the browser's IndexedDB storage. Without it, the filesystem will always be initially mounted as an empty directory.
+For more information, see the Emscripten FS API [`IDBFS` and `FS.syncfs()`](https://emscripten.org/docs/api_reference/Filesystem-API.html#filesystem-api-idbfs) documentation.
 
-A similar `FS.syncfs()` step is required to persist the current state of the filesystem to the browser's IndexedDB storage.
+### Persisting the filesystem to IndexedDB
+
+The `syncfs()` function should be invoked with its `populate` argument set to `false` to persist the current state of the filesystem to the browser's IndexedDB storage.
 
 ::: {.panel-tabset}
 ## JavaScript
@@ -184,16 +187,23 @@ await webR.FS.syncfs(false);
 
 ## R
 ```{r eval=FALSE}
-webr::eval_js("Module.FS.syncfs(false, () => {})")
+webr::syncfs(FALSE)
 ```
 
 :::
 
-Here the populate argument is set to `false`, meaning to save the current state of the filesystem to IndexedDB. When writing to the filesystem you should be sure to invoke `syncfs(false)` before the web page containing webR is closed to ensure that the output file data will be persisted in the backing IndexedDB storage.
+After writing to the virtual filesystem you should be sure to invoke `syncfs(false)` before the web page containing webR is closed to ensure that the filesystem data is flushed and written to the IndexedDB-based persistent storage.
+
+::: {.callout-warning}
+
+Operations performed using IndexedDB are done asynchronously. If you are mounting `IDBFS` filesystems and accessing data non-interactively you should use the JavaScript API and be sure to wait for the `Promise` returned by `webR.FS.syncfs(false)` to resolve before continuing, for example by using the `await` keyword.
+
+In a future version of webR the `webr::syncfs()` function will similarly return a Promise-like object.
+:::
 
 ### Web storage caveats
 
-Filesystem data stored in an IndexedDB database can only be accessed within the current [origin](https://developer.mozilla.org/en-US/docs/Glossary/Origin), loosely the current web page's host domain and port.
+Filesystem data stored in an IndexedDB database can only be accessed within the current [origin](https://developer.mozilla.org/en-US/docs/Glossary/Origin), loosely defined as the current web page's host domain and port.
 
 The way in which web browsers decide how much storage space to allocate for data and what to remove when limits are reached differs between browsers and is not always simple to calculate. Be aware of browser [storage quotas and eviction criteria](https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria) and note that data stored in an `IDBFS` filesystem type is stored only on a "best-effort" basis. It can be removed by the browser at any time, autonomously or by the user interacting through the browser's UI.
 
