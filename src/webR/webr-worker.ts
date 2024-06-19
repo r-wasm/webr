@@ -128,8 +128,8 @@ function dispatch(msg: Message): void {
               if (err) {
                 throw new Error(`Emscripten \`syncfs\` error: "${err}".`);
               }
+              write({ obj: null, payloadType: 'raw' });
             });
-            write({ obj: null, payloadType: 'raw' });
             break;
           }
           case 'readFile': {
