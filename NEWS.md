@@ -8,6 +8,8 @@
 
 * Enabled the Emscripten IDBFS virtual filesystem driver. This filesystem type can be used to persist data in web browser storage across page reloads. This filesystem type must be used with the `PostMessage` communication channel (#56, #442).
 
+* Added resizable panels to the webR application (#396). The `canvas()` graphics device is now resized dynamically to fit to the plotting pane.
+
 ## Breaking changes
 
 * The `ServiceWorker` communication channel has been deprecated. Users should use the `SharedArrayBuffer` channel where cross-origin isolation is possible, or otherwise use the `PostMessage` channel. For the moment the `ServiceWorker` channel can still be used, but emits a warning at start up. The channel will be removed entirely in a future version of webR.
