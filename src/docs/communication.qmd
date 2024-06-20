@@ -133,6 +133,42 @@ Messages of type `prompt` are sent to the output queue when R has given a prompt
 { type: 'prompt', data: string }
 ```
 
+#### Pager
+
+Messages of type `pager` are sent to the output queue when R's pager mechanism has been invoked and webR has been configured to install its own pager handler using [`webr::pager_install()`](api/r.html#pager_install).
+
+``` javascript
+{
+  type: 'pager',
+  data: {
+    path: string,
+    header: string,
+    title: string,
+    deleteFile: boolean
+  },
+}
+```
+
+#### Viewer
+
+Messages of type `view` are sent to the output queue when R's data viewer is invoked, for example by the `View()` function.
+
+``` javascript
+{
+  type: 'view',
+  data: {
+    title: string,
+    data: {
+      [column: string]: {
+        names: (string | null)[],
+        type: "string",
+        values: (string | null)[],
+      }
+    }
+  },
+}
+```
+
 #### Closed
 
 A message of type `closed` is issued when the webR worker thread and communication channel have been terminated using [`WebR.close()`](api/js/classes/WebR.WebR.md#close). This message indicates that the webR instance should no longer be used and no further messages will be issued. The `data` property is undefined for this type of message.
