@@ -7,7 +7,7 @@ import Files from './components/Files';
 import { Readline } from 'xterm-readline';
 import { WebR } from '../webR/webr-main';
 import { CanvasMessage, PagerMessage } from '../webR/webr-chan';
-import { Panel, PanelGroup, PanelResizeHandle, getPanelElement } from 'react-resizable-panels';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import './App.css';
 
 const webR = new WebR({

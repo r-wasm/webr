@@ -2,7 +2,7 @@ import React from 'react';
 import './Plot.css';
 import { PlotInterface } from '../App';
 import { FaArrowCircleLeft, FaArrowCircleRight, FaRegSave, FaTrashAlt } from 'react-icons/fa';
-import { Panel, getPanelElement } from 'react-resizable-panels';
+import { Panel } from 'react-resizable-panels';
 import { WebR } from '../../webR/webr-main';
 
 export function Plot({
