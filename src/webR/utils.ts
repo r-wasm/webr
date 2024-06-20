@@ -1,5 +1,6 @@
 import { IN_NODE } from './compat';
 import { WebRError } from './error';
+import { RObjectBase } from './robj-worker';
 
 export type ResolveFn = (_value?: unknown) => void;
 export type RejectFn = (_reason?: any) => void;
@@ -47,6 +48,9 @@ export function replaceInObject<T>(
     return (obj as unknown[]).map((v) =>
       replaceInObject(v, test, replacer, ...replacerArgs)
     ) as T[];
+  }
+  if (obj instanceof RObjectBase) {
+    return obj;
   }
   if (typeof obj === 'object') {
     return Object.fromEntries(

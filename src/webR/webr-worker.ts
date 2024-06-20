@@ -444,8 +444,8 @@ function dispatch(msg: Message): void {
             const msg = reqMsg as InstallPackagesMessage;
             let pkgs = msg.data.name;
             let repos = msg.data.options.repos ? msg.data.options.repos : _config.repoUrl;
-            if (typeof pkgs === "string") pkgs = [ pkgs ];
-            if (typeof repos === "string") repos = [ repos ];
+            if (typeof pkgs === "string") pkgs = [pkgs];
+            if (typeof repos === "string") repos = [repos];
             evalR(`webr::install(
               c(${pkgs.map((r) => '"' + r + '"').join(',')}),
               repos = c(${repos.map((r) => '"' + r + '"').join(',')}),
@@ -909,6 +909,11 @@ function init(config: Required<WebROptions>) {
 
     handleEvents: () => {
       chan?.handleInterrupt();
+    },
+
+    dataViewer: (ptr: RPtr, title: string) => {
+      const data = RList.wrap(ptr).toObject({ depth: 0 });
+      chan?.write({ type: 'view', data: { data, title } });
     },
 
     evalJs: (code: RPtr): unknown => {

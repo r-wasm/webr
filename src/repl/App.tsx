@@ -6,9 +6,10 @@ import Plot from './components/Plot';
 import Files from './components/Files';
 import { Readline } from 'xterm-readline';
 import { WebR } from '../webR/webr-main';
-import { CanvasMessage, PagerMessage } from '../webR/webr-chan';
+import { CanvasMessage, PagerMessage, ViewMessage } from '../webR/webr-chan';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import './App.css';
+import { NamedObject, WebRDataJsAtomic } from '../webR/robj';
 
 const webR = new WebR({
   RArgs: [],
@@ -30,6 +31,7 @@ export interface TerminalInterface {
 export interface FilesInterface {
   refreshFilesystem: () => Promise<void>;
   openFileInEditor: (name: string, path: string, readOnly: boolean) => Promise<void>;
+  openDataInEditor: (title: string, data: NamedObject<WebRDataJsAtomic<string>> ) => void;
 }
 
 export interface PlotInterface {
@@ -47,6 +49,7 @@ const terminalInterface: TerminalInterface = {
 const filesInterface: FilesInterface = {
   refreshFilesystem: () => Promise.resolve(),
   openFileInEditor: () => { throw new Error('Unable to open file, editor not initialised.'); },
+  openDataInEditor: () => { throw new Error('Unable to view data, editor not initialised.'); },
 };
 
 const plotInterface: PlotInterface = {
@@ -71,6 +74,11 @@ async function handlePagerMessage(msg: PagerMessage) {
   if (deleteFile) {
     await webR.FS.unlink(path);
   }
+}
+
+function handleViewMessage(msg: ViewMessage) {
+  const { title, data } = msg.data;
+  filesInterface.openDataInEditor(title, data);
 }
 
 const onPanelResize = (size: number) => {
@@ -155,6 +163,9 @@ void (async () => {
         break;
       case 'pager':
         await handlePagerMessage(output as PagerMessage);
+        break;
+      case 'view':
+        handleViewMessage(output as ViewMessage);
         break;
       case 'closed':
         throw new Error('The webR communication channel has been closed');

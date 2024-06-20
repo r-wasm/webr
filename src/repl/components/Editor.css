@@ -10,7 +10,7 @@
   padding: 5px 5px 0 5px;
 }
 
-.editor-container {
+.editor-container, .data-container {
   flex: 1;
   overflow: auto;
 }

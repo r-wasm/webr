@@ -1,0 +1,40 @@
+Index: R-4.4.0/src/unix/system.c
+===================================================================
+--- R-4.4.0.orig/src/unix/system.c
++++ R-4.4.0/src/unix/system.c
+@@ -115,7 +115,24 @@ void R_FlushConsole(void) {
+ }
+ #endif
+ 
++/* Dataviewer under Emscripten */
++#ifdef __EMSCRIPTEN__
++#include <emscripten.h>
++static SEXP emscripten_do_dataviewer(SEXP call, SEXP op, SEXP args, SEXP rho) {
++    SEXP data = CAR(args);
++    SEXP title = CADR(args);
++    if (!isString(title) || LENGTH(title) < 1)
++        errorcall(call, _("invalid '%s' argument"), "title");
+ 
++    EM_ASM({
++        const title = UTF8ToString($1);
++        globalThis.Module.webr.dataViewer($0, title);
++    }, data, R_CHAR(STRING_ELT(title, 0)));
++
++    return R_NilValue;
++}
++#endif
++
+ void R_setupHistory(void)
+ {
+     int value, ierr;
+@@ -326,6 +343,10 @@ int Rf_initialize_R(int ac, char **av)
+     ptr_R_EditFile = NULL; /* for future expansion */
+     R_timeout_handler = NULL;
+     R_timeout_val = 0;
++
++	#ifdef __EMSCRIPTEN__
++	ptr_do_dataviewer = emscripten_do_dataviewer;
++	#endif
+ 
+     R_GlobalContext = NULL; /* Make R_Suicide less messy... */
+ 

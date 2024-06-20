@@ -5,7 +5,7 @@ import { Message } from './chan/message';
 import { UUID as ShelterID } from './chan/task-common';
 import { EmPtr } from './emscripten';
 import { WebRPayloadWorker, WebRPayloadPtr } from './payload';
-import { RType, RCtor, WebRData } from './robj';
+import { RType, RCtor, WebRData, WebRDataJsAtomic } from './robj';
 import type { FSType, FSMountOptions } from './webr-main';
 
 export { isUUID as isShelterID, UUID as ShelterID } from './chan/task-common';
@@ -233,5 +233,15 @@ export interface PagerMessage extends Message {
     header: string;
     title: string;
     deleteFile: boolean;
+  };
+}
+
+export interface ViewMessage extends Message {
+  type: 'view';
+  data: {
+    data: {
+      [key: string]: WebRDataJsAtomic<string>;
+    };
+    title: string;
   };
 }

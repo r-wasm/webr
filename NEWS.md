@@ -10,6 +10,8 @@
 
 * Added resizable panels to the webR application (#396). The `canvas()` graphics device is now resized dynamically to fit to the plotting pane.
 
+* The R `View()` command now invokes a simple data grid viewer in the webR application.
+
 ## Breaking changes
 
 * The `ServiceWorker` communication channel has been deprecated. Users should use the `SharedArrayBuffer` channel where cross-origin isolation is possible, or otherwise use the `PostMessage` channel. For the moment the `ServiceWorker` channel can still be used, but emits a warning at start up. The channel will be removed entirely in a future version of webR.

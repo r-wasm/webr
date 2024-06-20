@@ -9,9 +9,11 @@ import { indentWithTab } from '@codemirror/commands';
 import { Panel } from 'react-resizable-panels';
 import { FilesInterface, TerminalInterface } from '../App';
 import { r } from 'codemirror-lang-r';
-import './Editor.css';
-import { WebRDataJsAtomic } from '../../webR/robj';
+import { NamedObject, WebRDataJsAtomic } from '../../webR/robj';
+import DataGrid from 'react-data-grid';
 import * as utils from './utils';
+import 'react-data-grid/lib/styles.css';
+import './Editor.css';
 
 const language = new Compartment();
 const tabSize = new Compartment();
@@ -19,12 +21,25 @@ const tabSize = new Compartment();
 export type EditorFile = {
   name: string;
   path: string;
+  type: "script" | "text" | "data",
+  readOnly: boolean,
   ref: {
     editorState: EditorState;
     scrollTop?: number;
     scrollLeft?: number;
+    data?: {
+      columns: {
+        key: string;
+        name: string;
+      }[];
+      rows: {
+        [key: string]: string;
+      }[];
+    }
   }
 };
+
+const emptyState = EditorState.create();
 
 export function FileTabs({
   files,
@@ -67,7 +82,7 @@ export function FileTabs({
             className="editor-close"
             aria-label={`Close ${f.name}`}
             onClick={(e) => {
-              if (!f.ref.editorState.readOnly && !confirm('Close ' + f.name + '?')) {
+              if (!f.readOnly && !confirm('Close ' + f.name + '?')) {
                 e.stopPropagation();
                 return;
               }
@@ -100,8 +115,9 @@ export function Editor({
   });
 
   const activeFile = files[activeFileIdx];
-  const isRFile = activeFile && activeFile.name.endsWith('.R');
-  const isReadOnly = activeFile && activeFile.ref.editorState.readOnly;
+  const isScript = activeFile && activeFile.type === "script";
+  const isData = activeFile && activeFile.type === "data";
+  const isReadOnly = activeFile && activeFile.readOnly;
 
   const completionMethods = React.useRef<null | {
     assignLineBuffer: RFunction;
@@ -265,6 +281,8 @@ export function Editor({
     setFiles([{
       name: 'Untitled1.R',
       path: '/home/web_user/Untitled1.R',
+      type: 'script',
+      readOnly: false,
       ref: {
         editorState: state,
       }
@@ -280,6 +298,33 @@ export function Editor({
    * opening files they are displayed in this codemirror instance.
    */
   React.useEffect(() => {
+    filesInterface.openDataInEditor = (title: string, data: NamedObject<WebRDataJsAtomic<string>>) => {
+      syncActiveFileState();
+
+      const columns = Object.keys(data).map((key) => {
+        return {key, name: key === "row.names" ? "" : key};
+      });
+
+      const rows = Object.entries(data).reduce((a, entry) => {
+        entry[1].values.forEach((v, j) => a[j] = Object.assign(a[j] || {}, { [entry[0]!]: v }));
+        return a;
+      }, []);
+
+      const updatedFiles = [...files];
+      const index = updatedFiles.push({
+        name: title,
+        path: `/tmp/${title}.tmp`,
+        type: "data",
+        readOnly: true,
+        ref: {
+          editorState: emptyState,
+          data: { columns, rows }
+        },
+      });
+      setFiles(updatedFiles);
+      setActiveFileIdx(index - 1);
+    };
+
     filesInterface.openFileInEditor = (name: string, path: string, readOnly: boolean) => {
       // Don't reopen the file if it's already open, switch to that tab instead
       const existsIndex = files.findIndex((f) => f.path === path);
@@ -304,6 +349,8 @@ export function Editor({
         const index = updatedFiles.push({
           name,
           path,
+          type: name.endsWith('.R') ? "script" : "text",
+          readOnly,
           ref: {
             editorState: EditorState.create({
               doc: content,
@@ -362,7 +409,7 @@ export function Editor({
       <div
         aria-label="Editor"
         aria-describedby="editor-desc"
-        className="editor-container"
+        className={`editor-container ${isData ? "d-none" : ""}`}
         ref={editorRef}
       >
       </div>
@@ -372,12 +419,24 @@ export function Editor({
         To move focus away from the editor, press the Escape key, and then press the Tab key directly after it.
         Escape and then Shift-Tab can also be used to move focus backwards.
       </p>
+      {(isData && activeFile.ref.data) &&
+        <DataGrid
+          aria-label="Data viewer"
+          columns={activeFile.ref.data.columns}
+          rows={activeFile.ref.data.rows}
+          className="data-container"
+          defaultColumnOptions={{
+            sortable: true,
+            resizable: true
+          }}
+        />
+      }
       <div
         role="toolbar"
         aria-label="Editor Toolbar"
         className="editor-actions"
       >
-        {isRFile && <button onClick={runFile}>
+        {isScript && <button onClick={runFile}>
           <FaPlay aria-hidden="true" className="icon" /> Run
         </button>}
         {!isReadOnly && <button onClick={saveFile}>
