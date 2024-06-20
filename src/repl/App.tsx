@@ -5,9 +5,9 @@ import Editor from './components/Editor';
 import Plot from './components/Plot';
 import Files from './components/Files';
 import { Readline } from 'xterm-readline';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { WebR } from '../webR/webr-main';
 import { CanvasMessage, PagerMessage } from '../webR/webr-chan';
+import { Panel, PanelGroup, PanelResizeHandle, getPanelElement } from 'react-resizable-panels';
 import './App.css';
 
 const webR = new WebR({
@@ -33,6 +33,7 @@ export interface FilesInterface {
 }
 
 export interface PlotInterface {
+  resize: (direction: "width" | "height", px: number) => void;
   newPlot: () => void;
   drawImage: (img: ImageBitmap) => void;
 }
@@ -49,6 +50,7 @@ const filesInterface: FilesInterface = {
 };
 
 const plotInterface: PlotInterface = {
+  resize: () => { return; },
   newPlot: () => { return; },
   drawImage: () => {
     throw new Error('Unable to plot, plotting not initialised.');
@@ -71,11 +73,15 @@ async function handlePagerMessage(msg: PagerMessage) {
   }
 }
 
+const onPanelResize = (size: number) => {
+  plotInterface.resize("width", size * window.innerWidth / 100);
+};
+
 function App() {
   return (
     <div className='repl'>
     <PanelGroup direction="horizontal">
-      <Panel defaultSize={50} minSize={20}>
+      <Panel defaultSize={50} minSize={10}>
         <PanelGroup autoSaveId="conditional" direction="vertical">
           <Editor
             webR={webR}
@@ -87,11 +93,11 @@ function App() {
         </PanelGroup>
       </Panel>
       <PanelResizeHandle />
-      <Panel minSize={20}>
+      <Panel onResize={onPanelResize} minSize={10}>
         <PanelGroup direction="vertical">
           <Files webR={webR} filesInterface={filesInterface} />
           <PanelResizeHandle />
-          <Plot plotInterface={plotInterface} />
+          <Plot webR={webR} plotInterface={plotInterface} />
         </PanelGroup>
       </Panel>
     </PanelGroup>
@@ -107,7 +113,12 @@ void (async () => {
 
   // Set the default graphics device and pager
   await webR.evalRVoid('webr::pager_install()');
-  await webR.evalRVoid('webr::canvas_install()');
+  await webR.evalRVoid(`
+    webr::canvas_install(
+      width = getOption("webr.fig.width", 504),
+      height = getOption("webr.fig.height", 504)
+    )
+  `);
 
   // shim function from base R with implementations for webR
   // see ?webr::shim_install for details.
