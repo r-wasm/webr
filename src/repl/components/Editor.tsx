@@ -158,7 +158,7 @@ export function Editor({
     if (from === to && !context.explicit) {
       return null;
     }
-    await completionMethods.current.assignLineBuffer(line);
+    await completionMethods.current.assignLineBuffer(line.replace(/\)+$/, ""));
     await completionMethods.current.assignToken(text);
     await completionMethods.current.assignStart(from + 1);
     await completionMethods.current.assignEnd(to + 1);
@@ -168,7 +168,7 @@ export function Editor({
       if (!val) {
         throw new Error('Missing values in completion result.');
       }
-      return { label: val };
+      return { label: val, boost: val.endsWith("=") ? 10 : 0 };
     });
 
     return { from: from, options };

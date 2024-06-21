@@ -26,6 +26,8 @@
 
 * `webR.installPackages()` now correctly handles both `string` and `string[]` arguments for package names and binary repositories (#437).
 
+* Resolved several syntax highlighting and code completion issues in the webR application.
+
 # webR 0.3.3
 
 ## New features
