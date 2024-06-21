@@ -56,7 +56,7 @@ export function Plot({
           }
           # Set canvas size for future devices
           options(webr.fig.width = ${plotSize.current.width}, webr.fig.height = ${plotSize.current.height})
-      `);
+      `, { env: {} });
       });
     };
   }, [plotInterface]);
