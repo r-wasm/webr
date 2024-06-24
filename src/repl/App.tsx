@@ -6,7 +6,8 @@ import Plot from './components/Plot';
 import Files from './components/Files';
 import { Readline } from 'xterm-readline';
 import { WebR } from '../webR/webr-main';
-import { CanvasMessage, PagerMessage, ViewMessage } from '../webR/webr-chan';
+import { bufferToBase64 } from '../webR/utils';
+import { CanvasMessage, PagerMessage, ViewMessage, BrowseMessage } from '../webR/webr-chan';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import './App.css';
 import { NamedObject, WebRDataJsAtomic } from '../webR/robj';
@@ -32,6 +33,7 @@ export interface FilesInterface {
   refreshFilesystem: () => Promise<void>;
   openFileInEditor: (name: string, path: string, readOnly: boolean) => Promise<void>;
   openDataInEditor: (title: string, data: NamedObject<WebRDataJsAtomic<string>> ) => void;
+  openHtmlInEditor: (src: string, path: string) => void;
 }
 
 export interface PlotInterface {
@@ -50,6 +52,7 @@ const filesInterface: FilesInterface = {
   refreshFilesystem: () => Promise.resolve(),
   openFileInEditor: () => { throw new Error('Unable to open file, editor not initialised.'); },
   openDataInEditor: () => { throw new Error('Unable to view data, editor not initialised.'); },
+  openHtmlInEditor: () => { throw new Error('Unable to view HTML, editor not initialised.'); },
 };
 
 const plotInterface: PlotInterface = {
@@ -74,6 +77,64 @@ async function handlePagerMessage(msg: PagerMessage) {
   if (deleteFile) {
     await webR.FS.unlink(path);
   }
+}
+
+async function handleBrowseMessage(msg: BrowseMessage) {
+  const { url } = msg.data;
+  const root = url.split('/').slice(0, -1).join('/');
+  const decoder = new TextDecoder('utf8');
+  let content = decoder.decode(await webR.FS.readFile(url));
+
+  // Replace relative URLs in HTML output with the contents of the VFS.
+  /* TODO: This should really be handled by a custom print method sending the
+   *       entire R object reference to the main thread, rather than performing
+   *       regex on HTML -- famously a bad idea because HTML is context-free.
+   *       Saying that, this does seem to work reasonably well for now.
+   *
+   *       Since we don't load the `webr` support package by default, the
+   *       alternative looks to be using hacks to register a bunch of custom S3
+   *       generics like `print.htmlwidget` in the "webr_shim" namespace, and
+   *       then maintain the `search()` order as other packages are loaded so
+   *       that our namespace is always at the front, messy.
+   */
+  const jsRegex = /<script.*src=["'`](.+\.js)["'`].*>.*<\/script>/g;
+  const jsMatches = Array.from(content.matchAll(jsRegex) || []);
+  const jsContent: {[idx: number]: string} = {};
+  await Promise.all(jsMatches.map((match, idx) => {
+    return webR.FS.readFile(`${root}/${match[1]}`)
+      .then((file) => bufferToBase64(file))
+      .then((enc) => {
+        jsContent[idx] = "data:text/javascript;base64," + enc;
+      });
+  }));
+  jsMatches.forEach((match, idx) => {
+    content = content.replace(match[0], `
+      <script type="text/javascript" src="${jsContent[idx]}"></script>
+    `);
+  });
+
+  let injectedBaseStyle = false;
+  const cssBaseStyle = `<style>body{font-family: sans-serif;}</style>`;
+  const cssRegex = /<link.*href=["'`](.+\.css)["'`].*>/g;
+  const cssMatches = Array.from(content.matchAll(cssRegex) || []);
+  const cssContent: {[idx: number]: string} = {};
+  await Promise.all(cssMatches.map((match, idx) => {
+    return webR.FS.readFile(`${root}/${match[1]}`)
+      .then((file) => bufferToBase64(file))
+      .then((enc) => {
+        cssContent[idx] = "data:text/css;base64," + enc;
+      });
+  }));
+  cssMatches.forEach((match, idx) => {
+    let cssHtml = `<link rel="stylesheet" href="${cssContent[idx]}"/>`;
+    if (!injectedBaseStyle){
+      cssHtml = cssBaseStyle + cssHtml;
+      injectedBaseStyle = true;
+    }
+    content = content.replace(match[0], cssHtml);
+  });
+
+  filesInterface.openHtmlInEditor(content, url);
 }
 
 function handleViewMessage(msg: ViewMessage) {
@@ -119,7 +180,8 @@ root.render(<StrictMode><App /></StrictMode>);
 void (async () => {
   await webR.init();
 
-  // Set the default graphics device and pager
+  // Set the default graphics device, browser, and pager
+  await webR.evalRVoid('webr::viewer_install()');
   await webR.evalRVoid('webr::pager_install()');
   await webR.evalRVoid(`
     webr::canvas_install(
@@ -136,6 +198,9 @@ void (async () => {
   const showMenu = crossOriginIsolated || navigator.serviceWorker.controller;
   await webR.evalRVoid('options(webr.show_menu = show_menu)', { env: { show_menu: !!showMenu } });
   await webR.evalRVoid('webr::global_prompt_install()', { withHandlers: false });
+
+  // Additional options for running packages under wasm
+  await webR.evalRVoid('options(rgl.printRglwidget = TRUE)');
 
   // Clear the loading message
   terminalInterface.write('\x1b[2K\r');
@@ -166,6 +231,9 @@ void (async () => {
         break;
       case 'view':
         handleViewMessage(output as ViewMessage);
+        break;
+      case 'browse':
+        void handleBrowseMessage(output as BrowseMessage);
         break;
       case 'closed':
         throw new Error('The webR communication channel has been closed');
