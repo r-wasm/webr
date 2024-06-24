@@ -63,6 +63,7 @@
     "classnames": "^2.2.6",
     "codemirror": "^6.0.1",
     "codemirror-lang-r": "^0.1.0-2",
+    "jszip": "^3.10.1",
     "lezer-r": "^0.1.1",
     "lightningcss": "^1.21.5",
     "prop-types": "^15.7.2",
