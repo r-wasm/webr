@@ -16,6 +16,8 @@
 
 * Printing a HTML element or HTML widget in the webR application app now shows the HTML content in an embedded viewer `iframe` (#384, #431). With thanks to @timelyportfolio for the basic [implementation method](https://www.jsinr.me/2024/01/10/selfcontained-htmlwidgets/).
 
+* The webR application now allows users to download an archive of a directory and its contents from the virtual filesystem (#388).
+
 ## Breaking changes
 
 * The `ServiceWorker` communication channel has been deprecated. Users should use the `SharedArrayBuffer` channel where cross-origin isolation is possible, or otherwise use the `PostMessage` channel. For the moment the `ServiceWorker` channel can still be used, but emits a warning at start up. The channel will be removed entirely in a future version of webR.

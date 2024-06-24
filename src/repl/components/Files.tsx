@@ -5,6 +5,7 @@ import { Panel } from 'react-resizable-panels';
 import { WebR, WebRError } from '../../webR/webr-main';
 import type { FSNode } from '../../webR/webr-main';
 import { FilesInterface } from '../App';
+import JSZip from 'jszip';
 import './Files.css';
 
 const FolderIcon = ({ isOpen }: { isOpen: boolean }) => isOpen
@@ -54,6 +55,31 @@ export function Files({
   const uploadRef = React.useRef<HTMLInputElement | null>(null);
   const uploadButtonRef = React.useRef<HTMLButtonElement | null>(null);
   const downloadButtonRef = React.useRef<HTMLButtonElement | null>(null);
+
+  /* Take an `INode` selected from the tree in the UI and create a zip archive
+  * of the contents. Directories are added to the archive recursively.
+  */
+  const zipFromFSNode = async (zip: JSZip, node: INode) => {
+    if (!zip || !node || !treeData) {
+      return;
+    }
+
+    if (node.children && node.children.length > 0) {
+      const dir = zip.folder(node.name);
+      await Promise.all(node.children.map((childId) => {
+        const child = treeData.find((value) => value.id === childId);
+        return zipFromFSNode(dir!, child!);
+      }));
+    } else {
+      const name = node.name;
+      const path = getNodePath(node);
+      await webR.FS.readFile(path).then((data) => {
+        zip.file(name, data, { binary: true });
+      }).catch((error: Error) => {
+        console.warn(`Problem encountered when creating archive: "${error.message}".`);
+      });
+    }
+  };
 
   const nodeRenderer: ITreeViewProps['nodeRenderer'] = ({
     element,
@@ -109,20 +135,29 @@ export function Files({
   };
 
   const onDownload: React.MouseEventHandler<HTMLButtonElement> = () => {
-    if (!selectedNode) {
-      return;
-    }
-    const path = getNodePath(selectedNode);
-    void webR.FS.readFile(path).then((data) => {
-      const filename = selectedNode.name;
+    const doDownload = (filename: string, data: ArrayBufferView) => {
       const blob = new Blob([data], { type: 'application/octet-stream' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.download = filename;
+      link.download = filename.replace(/[/\\<>:"|?*]/, '_');
       link.href = url;
       link.click();
       link.remove();
-    });
+    };
+
+    if (!selectedNode) {
+      return;
+    } else if (isFileSelected) {
+      const path = getNodePath(selectedNode);
+      void webR.FS.readFile(path).then((data) => doDownload(selectedNode.name, data));
+    } else {
+      void (async () => {
+        const zip = new JSZip();
+        await zipFromFSNode(zip, selectedNode);
+        const data = await zip.generateAsync({type : "uint8array"});
+        doDownload(`${selectedNode.name}.zip`, data);
+      })();
+    }
   };
 
   const onOpen = async () => {
@@ -268,9 +303,10 @@ export function Files({
             ref={downloadButtonRef}
             onClick={onDownload}
             className="download-file"
-            disabled={!selectedNode || !isFileSelected}
+            disabled={!selectedNode}
           >
-            <Fa.FaFileDownload aria-hidden="true" className="icon" /> Download file
+            <Fa.FaFileDownload aria-hidden="true" className="icon" />
+            Download {isFileSelected ? "file" : "directory"}
           </button>
           <button
             onClick={() => { void onOpen(); }}
