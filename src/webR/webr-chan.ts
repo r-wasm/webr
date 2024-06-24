@@ -245,3 +245,8 @@ export interface ViewMessage extends Message {
     title: string;
   };
 }
+
+export interface BrowseMessage extends Message {
+  type: 'browse';
+  data: { url: string };
+}

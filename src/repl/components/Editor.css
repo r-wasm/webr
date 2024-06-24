@@ -112,3 +112,14 @@
 .d-none {
   display: none !important;
 }
+
+.html-viewer-container {
+  width: 100%;
+  height: 100%;
+}
+
+iframe.html-viewer {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
