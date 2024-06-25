@@ -2,6 +2,7 @@ body {
   padding: 0;
   margin: 0;
   font-family: sans-serif;
+  overflow: hidden;
 }
 
 :root {
@@ -15,7 +16,8 @@ body {
 
 .repl {
   width: 100vw;
-  height: 100vh;
+  height: 100vh; /* Fallback for dvh */
+  height: 100dvh;
 }
 
 div[data-panel] {

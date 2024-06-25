@@ -2,7 +2,7 @@ import React from 'react';
 import './Plot.css';
 import { PlotInterface } from '../App';
 import { FaArrowCircleLeft, FaArrowCircleRight, FaRegSave, FaTrashAlt } from 'react-icons/fa';
-import { Panel } from 'react-resizable-panels';
+import { Panel, ImperativePanelHandle } from 'react-resizable-panels';
 import { WebR } from '../../webR/webr-main';
 
 export function Plot({
@@ -13,6 +13,7 @@ export function Plot({
   plotInterface: PlotInterface;
 }) {
   const plotContainerRef = React.useRef<HTMLDivElement | null>(null);
+  const panelRef = React.useRef<ImperativePanelHandle | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const canvasElements = React.useRef<HTMLCanvasElement[]>([]);
   const plotSize = React.useRef<{width: number, height: number}>({width: 1008, height: 1008});
@@ -42,7 +43,8 @@ export function Plot({
 
     // Resize the canvas() device when the plotting pane changes size
     plotInterface.resize = (direction, px) => {
-      plotSize.current[direction] = Math.max(px / 1.5, 150);
+      const pixelRatio = window.devicePixelRatio || 1.0;
+      plotSize.current[direction] = Math.max( pixelRatio * px / 1.5, 150);
       void webR.init().then(async () => {
         await webR.evalRVoid(`
           # Close any active canvas devices
@@ -60,6 +62,14 @@ export function Plot({
       });
     };
   }, [plotInterface]);
+
+  const onResize = (size:number) => plotInterface.resize("height", size * window.innerHeight / 100);
+  React.useEffect(() => {
+    window.addEventListener("resize", () => {
+      if (!panelRef.current) return;
+      onResize(panelRef.current.getSize());
+    });
+  }, []);
 
   // Update the plot container to display the currently selected canvas element
   React.useEffect(() => {
@@ -91,10 +101,16 @@ export function Plot({
 
   const nextPlot = () => setSelectedCanvas((selectedCanvas === null) ? null : selectedCanvas + 1);
   const prevPlot = () => setSelectedCanvas((selectedCanvas === null) ? null : selectedCanvas - 1);
-  const onResize = (size:number) => plotInterface.resize("height", size * window.innerHeight / 100);
 
   return (
-    <Panel id="plot" role="region" aria-label="Plotting Pane" minSize={20} onResize={onResize}>
+    <Panel
+      id="plot"
+      role="region"
+      aria-label="Plotting Pane"
+      minSize={20}
+      onResize={onResize}
+      ref={panelRef}
+    >
       <div className="plot-header">
         <div role="toolbar" aria-label="Plotting Toolbar" className="plot-actions">
           <button
