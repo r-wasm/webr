@@ -8,7 +8,7 @@ import { Readline } from 'xterm-readline';
 import { WebR } from '../webR/webr-main';
 import { bufferToBase64 } from '../webR/utils';
 import { CanvasMessage, PagerMessage, ViewMessage, BrowseMessage } from '../webR/webr-chan';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { Panel, PanelGroup, PanelResizeHandle, ImperativePanelHandle } from 'react-resizable-panels';
 import './App.css';
 import { NamedObject, WebRDataJsAtomic } from '../webR/robj';
 
@@ -147,6 +147,14 @@ const onPanelResize = (size: number) => {
 };
 
 function App() {
+  const rightPanelRef = React.useRef<ImperativePanelHandle | null>(null);
+  React.useEffect(() => {
+    window.addEventListener("resize", () => {
+      if (!rightPanelRef.current) return;
+      onPanelResize(rightPanelRef.current.getSize());
+    });
+  }, []);
+
   return (
     <div className='repl'>
     <PanelGroup direction="horizontal">
@@ -162,7 +170,7 @@ function App() {
         </PanelGroup>
       </Panel>
       <PanelResizeHandle />
-      <Panel onResize={onPanelResize} minSize={10}>
+      <Panel ref={rightPanelRef} onResize={onPanelResize} minSize={10}>
         <PanelGroup direction="vertical">
           <Files webR={webR} filesInterface={filesInterface} />
           <PanelResizeHandle />
@@ -195,7 +203,7 @@ void (async () => {
   await webR.evalRVoid('webr::shim_install()');
 
   // If supported, show a menu when prompted for missing package installation
-  const showMenu = crossOriginIsolated || navigator.serviceWorker.controller;
+  const showMenu = crossOriginIsolated;
   await webR.evalRVoid('options(webr.show_menu = show_menu)', { env: { show_menu: !!showMenu } });
   await webR.evalRVoid('webr::global_prompt_install()', { withHandlers: false });
 

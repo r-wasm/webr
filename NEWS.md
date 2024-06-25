@@ -1,8 +1,10 @@
 # webR (development version)
 
+# webR 0.4.0
+
 ## New features
 
-* Updated to R version 4.4.0.
+* Updated to R version 4.4.1.
 
 * The capturing mechanism of `captureR()` has been updated so that memory reallocation is performed when outputting very long lines. If reallocation is not possible (e.g. the environment does not have enough free memory to hold the entire line), the previous behaviour of truncating the line output is maintained (#434).
 
