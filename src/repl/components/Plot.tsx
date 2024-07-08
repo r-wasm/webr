@@ -43,8 +43,7 @@ export function Plot({
 
     // Resize the canvas() device when the plotting pane changes size
     plotInterface.resize = (direction, px) => {
-      const pixelRatio = window.devicePixelRatio || 1.0;
-      plotSize.current[direction] = Math.max( pixelRatio * px / 1.5, 150);
+      plotSize.current[direction] = px;
       void webR.init().then(async () => {
         await webR.evalRVoid(`
           # Close any active canvas devices
