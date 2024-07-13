@@ -7,7 +7,6 @@ emscripten-input.diff
 emscripten-disable-system.diff
 emscripten-jumpctxt.diff
 emscripten-xhr-download.diff
-emscripten-disable-bcEval.diff
 emscripten-fix-blas-dlsym-search.diff
 emscripten-avoid-testing-issues.diff
 emscripten-r-home-stderr.diff
