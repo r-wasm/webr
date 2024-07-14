@@ -1,0 +1,9 @@
+#terminal {
+  background-color: var(--bg-primary);
+  padding: 0px 5px;
+}
+
+.terminal-container {
+  flex-grow: 1;
+  overflow: auto;
+}

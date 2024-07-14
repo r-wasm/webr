@@ -94,7 +94,8 @@ canvas_purge <- function() {
 #' @param ... Arguments to be passed to the graphics device.
 #' @export
 canvas_install <- function(...) {
+  args <- as.list(match.call()[-1])
   options(device = function() {
-    webr::canvas(...)
+    do.call(webr::canvas, args)
   })
 }

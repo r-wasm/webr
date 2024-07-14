@@ -1,6 +1,5 @@
-.files {
-  display: grid;
-  grid-template-rows: auto 1fr;
+#files {
+  padding: 5px 0;
 }
 
 .files-header {
@@ -34,6 +33,7 @@
   user-select: none;
   padding: 0 10px;
   overflow: auto;
+  flex-grow: 1;
   color: var(--primary);
 }
 

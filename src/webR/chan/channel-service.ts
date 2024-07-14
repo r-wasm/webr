@@ -33,6 +33,11 @@ export class ServiceWorkerChannelMain extends ChannelMain {
 
   constructor(config: Required<WebROptions>) {
     super();
+    console.warn(
+      "The ServiceWorker communication channel is deprecated and will be removed in a future version of webR. " +
+      "Consider using the PostMessage channel instead. If blocking input is required (for example, `browser()`) " +
+      "the SharedArrayBuffer channel should be used. See https://docs.r-wasm.org/webr/latest/serving.html for further information."
+    );
     const initWorker = (worker: Worker) => {
       this.#handleEventsFromWorker(worker);
       this.close = () => {

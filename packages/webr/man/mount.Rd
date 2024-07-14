@@ -17,7 +17,7 @@ onto in the Emscripten virtual filesystem.}
 mounted.}
 
 \item{type}{a character string giving the type of Emscripten filesystem to be
-mounted: "workerfs" or "nodefs".}
+mounted: "workerfs", "nodefs", or "idbfs".}
 }
 \description{
 Uses the Emscripten filesystem API to mount a filesystem object onto a given
@@ -34,4 +34,11 @@ the path to a physical directory on the host filesystem. The host directory
 will be mapped into the virtual filesystem and mounted onto the directory
 \code{mountpoint}. This filesystem type can only be used when webR is running
 under Node.
+
+When mounting an Emscripten "idbfs" type filesystem, files will be persisted
+to or populated from a browser-based IndexedDB database whenever the
+JavaScript function \code{Module.FS.syncfs} is invoked. See the Emscripten \code{IDBFS}
+documentation for more information. This filesystem type can only be used
+when webR is running in a web browser and using the \code{PostMessage}
+communication channel.
 }

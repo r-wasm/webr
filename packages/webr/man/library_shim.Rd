@@ -10,6 +10,10 @@ library_shim(pkg, ..., show_menu = getOption("webr.show_menu"))
 require_shim(pkg, ..., show_menu = getOption("webr.show_menu"))
 }
 \arguments{
+\item{pkg}{Character vector of package names}
+
+\item{...}{Other arguments to be passed to \code{library} and \code{require}.}
+
 \item{show_menu}{Show a menu asking the user if they would like to install
 the package if it is missing. Defaults to \code{getOption("webr.show_menu")}.}
 }

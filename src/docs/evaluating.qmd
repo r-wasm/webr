@@ -70,3 +70,5 @@ Stream output is returned as elements of `output` with a `type` property of `std
 Any raised conditions are also included as elements of `output` with a `type` property of `message`, `warning`, or `error`. A reference to the condition is returned in the form of an [`RObject`](api/js/modules/RMain.md#robject) proxy in the `data` property.
 
 Plots captured by the [`webr::canvas()`](api/r.html#canvas) graphics device are included as elements of `images`, in the form of [`ImageBitmap`](https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap) objects. The captured images may be displayed on the page using the [`drawImage()`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage) method of a HTML Canvas element's [2D rendering context](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D).
+
+During capture with `evalR()` and `captureR()` the R session is set as non-interactive. After the output capture has completed, the session's interactive status will be restored.

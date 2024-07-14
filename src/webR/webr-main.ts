@@ -25,6 +25,7 @@ import {
   EvalROptions,
   FSMessage,
   FSMountMessage,
+  FSSyncfsMessage,
   FSReadFileMessage,
   FSWriteFileMessage,
   InstallPackagesOptions,
@@ -97,7 +98,7 @@ export type FSNode = {
 };
 
 /** An Emscripten Filesystem type */
-export type FSType = 'NODEFS' | 'WORKERFS';
+export type FSType = 'NODEFS' | 'WORKERFS' | 'IDBFS';
 
 /**
  * Configuration settings to be used when mounting Filesystem objects with
@@ -363,21 +364,20 @@ export class WebR {
   }
 
   /**
-   * Install a list of R packages from a Wasm binary package repo.
-   * @param {string[]} packages An array of R package names.
+   * Install a list of R packages from Wasm binary package repositories.
+   * @param {string | string[]} packages An string or array of strings
+   *   containing R package names.
    * @param {InstallPackagesOptions} [options] Options to be used when
    *   installing webR packages.
    */
-  async installPackages(packages: string[], options?: InstallPackagesOptions) {
+  async installPackages(packages: string | string[], options?: InstallPackagesOptions) {
     const op = Object.assign({
       quiet: false,
       mount: true
     }, options);
 
-    for (const name of packages) {
-      const msg = { type: 'installPackage', data: { name, options: op } };
-      await this.#chan.request(msg);
-    }
+    const msg = { type: 'installPackages', data: { name: packages, options: op } };
+    await this.#chan.request(msg);
   }
 
   /**
@@ -473,6 +473,10 @@ export class WebR {
       mountpoint: string
     ): Promise<void> => {
       const msg: FSMountMessage = { type: 'mount', data: { type, options, mountpoint } };
+      await this.#chan.request(msg);
+    },
+    syncfs: async (populate: boolean): Promise<void> => {
+      const msg: FSSyncfsMessage = { type: 'syncfs', data: { populate } };
       await this.#chan.request(msg);
     },
     readFile: async (path: string, flags?: string): Promise<Uint8Array> => {

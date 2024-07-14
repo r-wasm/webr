@@ -14,3 +14,4 @@ emscripten-r-home-stderr.diff
 flang-avoid-maxloc.diff
 fontconfig-typeof.diff
 fix-sink-release.diff
+emscripten-dataviewer.diff

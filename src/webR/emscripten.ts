@@ -136,6 +136,7 @@ export interface Module extends EmscriptenModule {
     readConsole: () => number;
     resolveInit: () => void;
     handleEvents: () => void;
+    dataViewer: (data: RPtr, title: string) => void;
     evalJs: (code: RPtr) => unknown;
     evalR: (expr: string | RObject, options?: EvalROptions) => RObject;
     captureR: (expr: string | RObject, options: EvalROptions) => {

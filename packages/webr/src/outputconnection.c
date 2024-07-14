@@ -43,11 +43,10 @@ SEXP ffi_new_output_connections(void) {
   return out;
 }
 
-#define BUFSIZE 10000
 struct output_con_data {
   SEXP output;
-  char buf[BUFSIZE];
-  char *line, *cur;
+  char *buf, *line, *cur;
+  size_t bufsize;
 };
 
 static
@@ -63,6 +62,8 @@ void init_output_connection(Rconnection con, SEXP out) {
 
   struct output_con_data *data = malloc(sizeof(struct output_con_data));
   data->output = out;
+  data->bufsize = 10000;
+  data->buf = malloc(data->bufsize);
   data->cur = data->line = data->buf;
   con->private = data;
 }
@@ -81,6 +82,8 @@ void output_close(Rconnection con) {
 static
 void output_destroy(Rconnection con) {
   if (con->private) {
+    struct output_con_data *data = con->private;
+    free(data->buf);
     free(con->private);
   }
 }
@@ -92,15 +95,27 @@ int output_vfprintf(Rconnection con, const char *format, va_list ap) {
 
   va_list aq;
   va_copy(aq, ap);
-  int res = vsnprintf(data->cur, BUFSIZE - curlen, format, aq);
+  int res = vsnprintf(data->cur, data->bufsize - curlen, format, aq);
   va_end(aq);
 
   if (res < 0) {
     data->cur[0] = '\0';
-  } else if (res >= BUFSIZE - curlen) {
+  } else if (res >= data->bufsize - curlen) {
+    // Not enough space to print output, expand buffer to accommodate
+    char *newbuf = realloc(data->buf, data->bufsize + res + 1);
+    if (newbuf) {
+      // Successful reallocation, we should now have enough room to continue
+      data->cur = newbuf + (data->cur - data->buf);
+      data->line = newbuf + (data->line - data->buf);
+      data->buf = newbuf;
+      data->bufsize = data->bufsize + res + 1;
+      return output_vfprintf(con, format, ap);
+    }
+
+    // Realloc failed, not enough memory to expand, fallback to truncation
     Rf_warning("printing of extremely long output is truncated");
-    data->buf[BUFSIZE - 1] = '\0';
-    res = BUFSIZE - curlen - 1;
+    data->buf[data->bufsize - 1] = '\0';
+    res = data->bufsize - curlen - 1;
   }
   data->cur += res < 0 ? 0 : res;
 

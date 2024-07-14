@@ -1,8 +1,40 @@
 # webR (development version)
 
+# webR 0.4.0
+
 ## New features
 
-* Updated to R version 4.4.0.
+* Updated to R version 4.4.1.
+
+* The capturing mechanism of `captureR()` has been updated so that memory reallocation is performed when outputting very long lines. If reallocation is not possible (e.g. the environment does not have enough free memory to hold the entire line), the previous behaviour of truncating the line output is maintained (#434).
+
+* Enabled the Emscripten IDBFS virtual filesystem driver. This filesystem type can be used to persist data in web browser storage across page reloads. This filesystem type must be used with the `PostMessage` communication channel (#56, #442).
+
+* Added resizable panels to the webR application (#396). The `canvas()` graphics device is now resized dynamically to fit to the plotting pane.
+
+* The R `View()` command now invokes a simple data grid viewer in the webR application.
+
+* A function `viewer_install()` is added to the webR support package. The function sets up R so as to generate an output message over the webR communication channel when a URL viewer is invoked (#295).
+
+* Printing a HTML element or HTML widget in the webR application app now shows the HTML content in an embedded viewer `iframe` (#384, #431). With thanks to @timelyportfolio for the basic [implementation method](https://www.jsinr.me/2024/01/10/selfcontained-htmlwidgets/).
+
+* The webR application now allows users to download an archive of a directory and its contents from the virtual filesystem (#388).
+
+## Breaking changes
+
+* The `ServiceWorker` communication channel has been deprecated. Users should use the `SharedArrayBuffer` channel where cross-origin isolation is possible, or otherwise use the `PostMessage` channel. For the moment the `ServiceWorker` channel can still be used, but emits a warning at start up. The channel will be removed entirely in a future version of webR.
+
+* The R session is now set as non-interactive when capturing output using `captureR()` and `evalR()`. After output capture is complete, the status is restored (#426).
+
+## Bug Fixes
+
+* Fix generation of R API documentation (#439).
+
+* The `rwasm` R package is now installed into the system library as part of the webR development Docker container (#443, r-wasm/actions#10).
+
+* `webR.installPackages()` now correctly handles both `string` and `string[]` arguments for package names and binary repositories (#437).
+
+* Resolved several syntax highlighting and code completion issues in the webR application.
 
 # webR 0.3.3
 

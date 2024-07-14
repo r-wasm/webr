@@ -1,21 +1,16 @@
-.plot {
-  display: grid;
-  grid-template-rows: auto 1fr;
-}
-
 .plot-background {
   background-color: var(--bg-dark);
+  flex-grow: 1;
+  overflow: auto;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 0;
-  min-width: 0;
 }
 
 .plot-container {
   max-width: 90%;
   max-height: 90%;
-  aspect-ratio: 1 / 1;
+  overflow: hidden;
   background-color: white;
 }
 

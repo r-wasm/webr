@@ -1,5 +1,6 @@
 import { IN_NODE } from './compat';
 import { WebRError } from './error';
+import { RObjectBase } from './robj-worker';
 
 export type ResolveFn = (_value?: unknown) => void;
 export type RejectFn = (_reason?: any) => void;
@@ -47,6 +48,9 @@ export function replaceInObject<T>(
     return (obj as unknown[]).map((v) =>
       replaceInObject(v, test, replacer, ...replacerArgs)
     ) as T[];
+  }
+  if (obj instanceof RObjectBase) {
+    return obj;
   }
   if (typeof obj === 'object') {
     return Object.fromEntries(
@@ -102,4 +106,15 @@ export function throwUnreachable(context?: string) {
   msg = msg + (context ? ': ' + context : '.');
 
   throw new WebRError(msg);
+}
+
+// From https://stackoverflow.com/a/9458996
+export function bufferToBase64(buffer: ArrayBuffer) {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return window.btoa(binary);
 }

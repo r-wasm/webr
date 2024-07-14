@@ -1,6 +1,6 @@
 import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
-import { newChannelWorker, ChannelInitMessage } from './chan/channel-common';
+import { newChannelWorker, ChannelInitMessage, ChannelType } from './chan/channel-common';
 import { Message, Request, newResponse } from './chan/message';
 import { FSNode, WebROptions } from './webr-main';
 import { EmPtr, Module } from './emscripten';
@@ -32,6 +32,7 @@ import {
   ShelterMessage,
   ShelterDestroyMessage,
   InstallPackagesMessage,
+  FSSyncfsMessage,
 } from './webr-chan';
 
 let initialised = false;
@@ -47,6 +48,7 @@ const onWorkerMessage = function (msg: Message) {
     }
     const messageInit = msg as ChannelInitMessage;
     chan = newChannelWorker(messageInit);
+    messageInit.data.config.channelType = messageInit.data.channelType;
     init(messageInit.data.config);
     initialised = true;
     return;
@@ -108,9 +110,26 @@ function dispatch(msg: Message): void {
           }
           case 'mount': {
             const msg = reqMsg as FSMountMessage;
-            const fs = Module.FS.filesystems[msg.data.type];
+            const type = msg.data.type;
+            if (type === "IDBFS" && _config.channelType == ChannelType.SharedArrayBuffer) {
+              throw new Error(
+                'The `IDBFS` filesystem type is not supported under the `SharedArrayBuffer` ' +
+                'communication channel. The `PostMessage` communication channel must be used.'
+              );
+            }
+            const fs = Module.FS.filesystems[type];
             Module.FS.mount(fs, msg.data.options, msg.data.mountpoint);
             write({ obj: null, payloadType: 'raw' });
+            break;
+          }
+          case 'syncfs': {
+            const msg = reqMsg as FSSyncfsMessage;
+            Module.FS.syncfs(msg.data.populate, (err: string | undefined) => {
+              if (err) {
+                throw new Error(`Emscripten \`syncfs\` error: "${err}".`);
+              }
+              write({ obj: null, payloadType: 'raw' });
+            });
             break;
           }
           case 'readFile': {
@@ -421,11 +440,15 @@ function dispatch(msg: Message): void {
             break;
           }
 
-          case 'installPackage': {
+          case 'installPackages': {
             const msg = reqMsg as InstallPackagesMessage;
+            let pkgs = msg.data.name;
+            let repos = msg.data.options.repos ? msg.data.options.repos : _config.repoUrl;
+            if (typeof pkgs === "string") pkgs = [pkgs];
+            if (typeof repos === "string") repos = [repos];
             evalR(`webr::install(
-              "${msg.data.name}",
-              repos = "${msg.data.options.repos ? msg.data.options.repos : _config.repoUrl}",
+              c(${pkgs.map((r) => '"' + r + '"').join(',')}),
+              repos = c(${repos.map((r) => '"' + r + '"').join(',')}),
               quiet = ${msg.data.options.quiet ? 'TRUE' : 'FALSE'},
               mount = ${msg.data.options.mount ? 'TRUE' : 'FALSE'}
             )`);
@@ -664,6 +687,9 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
   const devEnvObj = new REnvironment({});
   protectInc(devEnvObj, prot);
 
+  // Set the session as non-interactive
+  Module.setValue(Module._R_Interactive, 0, 'i8');
+
   try {
     const envObj = new REnvironment(_options.env);
     protectInc(envObj, prot);
@@ -754,6 +780,9 @@ function captureR(expr: string | RObject, options: EvalROptions = {}): {
       images,
     };
   } finally {
+    // Restore the session's interactive status
+    Module.setValue(Module._R_Interactive, _config.interactive ? 1 : 0, 'i8');
+
     // Close the device and destroy newly created canvas cache entries
     const newDev = devEnvObj.get('new_dev');
     if (_options.captureGraphics && newDev.type() !== "null") {
@@ -866,7 +895,7 @@ function init(config: Required<WebROptions>) {
     resolveInit: () => {
       initPersistentObjects();
       chan?.setInterrupt(Module._Rf_onintr);
-      Module.setValue(Module._R_Interactive, _config.interactive, '*');
+      Module.setValue(Module._R_Interactive, _config.interactive ? 1 : 0, 'i8');
       evalR(`options(webr_pkg_repos="${_config.repoUrl}")`);
       chan?.resolve();
     },
@@ -880,6 +909,11 @@ function init(config: Required<WebROptions>) {
 
     handleEvents: () => {
       chan?.handleInterrupt();
+    },
+
+    dataViewer: (ptr: RPtr, title: string) => {
+      const data = RList.wrap(ptr).toObject({ depth: 0 });
+      chan?.write({ type: 'view', data: { data, title } });
     },
 
     evalJs: (code: RPtr): unknown => {
