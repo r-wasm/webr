@@ -1,4 +1,4 @@
-ONETBB_VERSION = 2021.12.0
+ONETBB_VERSION = 2021.13.0
 ONETBB_TARBALL = $(DOWNLOAD)/oneTBB-$(ONETBB_VERSION).tar.gz
 ONETBB_URL = https://github.com/oneapi-src/oneTBB/archive/refs/tags/v$(ONETBB_VERSION).tar.gz
 
