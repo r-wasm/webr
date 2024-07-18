@@ -13,6 +13,7 @@ import { RLogical, RInteger, RDouble, initPersistentObjects, objs } from './robj
 import { RPtr, RType, RCtor, WebRData, WebRDataRaw } from './robj';
 import { protect, protectInc, unprotect, parseEvalBare, UnwindProtectException, safeEval } from './utils-r';
 import { generateUUID } from './chan/task-common';
+import { ungzip } from 'pako';
 
 import type { readFileSync } from 'fs';
 import type { parentPort } from 'worker_threads';
@@ -582,13 +583,30 @@ function mountImageData(data: any, metadata: { files: any[] }, mountpoint: strin
 
 // Download an Emscripten FS image and mount to the VFS
 function mountImageUrl(url: string, mountpoint: string) {
-  const dataResp = downloadFileContent(url);
-  const metaResp = downloadFileContent(url.replace(new RegExp('.data$'), '.js.metadata'));
+  const dataUrlBase = url
+    .replace(/\.data\.gz$/, '')
+    .replace(/\.data$/, '')
+    .replace(/\.js.metadata$/, '');
 
-  if (dataResp.status < 200 || dataResp.status >= 300
-    || metaResp.status < 200 || metaResp.status >= 300) {
-    throw new Error('Unable to download Emscripten filesystem image.' +
-      'See the JavaScript console for further details.');
+  const metaResp = downloadFileContent(`${dataUrlBase}.js.metadata`);
+  if (metaResp.status < 200 || metaResp.status >= 300) {
+    throw new Error("Can't download Emscripten filesystem image metadata.");
+  }
+  const metadata = JSON.parse(
+    new TextDecoder().decode(metaResp.response as ArrayBuffer)
+  ) as { files: any[], gzip: boolean };
+
+  const dataResp = downloadFileContent(
+    metadata.gzip ? `${dataUrlBase}.data.gz` : `${dataUrlBase}.data`
+  );
+  if (dataResp.status < 200 || dataResp.status >= 300) {
+    throw new Error("Can't download Emscripten filesystem image data.");
+  }
+
+  // Decompress filesystem data, if required
+  if (metadata.gzip) {
+    const compressed = dataResp.response as ArrayBuffer;
+    dataResp.response = ungzip(compressed).buffer;
   }
 
   mountImageData(
