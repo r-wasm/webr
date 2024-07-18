@@ -594,7 +594,7 @@ function mountImageUrl(url: string, mountpoint: string) {
   }
   const metadata = JSON.parse(
     new TextDecoder().decode(metaResp.response as ArrayBuffer)
-  ) as { files: any[], gzip: boolean };
+  ) as { files: any[], gzip?: boolean };
 
   const dataResp = downloadFileContent(
     metadata.gzip ? `${dataUrlBase}.data.gz` : `${dataUrlBase}.data`
@@ -621,11 +621,24 @@ function mountImagePath(path: string, mountpoint: string) {
   const fs = require('fs') as {
     readFileSync: typeof readFileSync;
   };
-  const buf = fs.readFileSync(path);
-  const metadata = JSON.parse(fs.readFileSync(
-    path.replace(new RegExp('.data$'), '.js.metadata'),
-    'utf8'
-  )) as { files: unknown[] };
+
+  const dataPathBase = path
+    .replace(/\.data\.gz$/, '')
+    .replace(/\.data$/, '')
+    .replace(/\.js.metadata$/, '');
+
+  const metadata = JSON.parse(
+    fs.readFileSync(`${dataPathBase}.js.metadata`, 'utf8')
+  ) as { files: unknown[], gzip?: boolean };
+
+  let buf: ArrayBufferLike = fs.readFileSync(
+    metadata.gzip ? `${dataPathBase}.data.gz` : `${dataPathBase}.data`
+  );
+
+  // Decompress filesystem data, if required
+  if (metadata.gzip) {
+    buf = ungzip(buf);
+  }
   mountImageData(buf, metadata, mountpoint);
 }
 
