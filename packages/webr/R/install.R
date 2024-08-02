@@ -34,7 +34,10 @@ install <- function(packages,
   }
 
   # Avoid `recursive` here so that deps of broken packages are not downloaded
-  deps <- unlist(tools::package_dependencies(packages, info), use.names = FALSE)
+  deps <- unlist(
+    tools::package_dependencies(packages, info, c("Depends", "Imports")),
+    use.names = FALSE
+  )
   deps <- unique(deps)
 
   # Search for existing packages in `.libPaths()` and the `lib` argument
