@@ -26,7 +26,7 @@ Index: R-4.4.0/src/main/Makefile.in
  	$(MAIN_LINK) -o $@ $(R_bin_OBJECTS) $(R_bin_LDADD)
 +
 +MAIN_WEBR_LDADD  = --use-preload-plugins
-+MAIN_WEBR_LDADD += --preload-file "$(prefix)/tmp/lib@/usr/lib"
++MAIN_WEBR_LDADD += --embed-file "$(prefix)/tmp/lib@/usr/lib"
 +MAIN_WEBR_LDADD += --extern-pre-js $(prefix)/pre.js
 +
 +ifdef WEBR_REPO

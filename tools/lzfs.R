@@ -34,6 +34,20 @@ list_dirs <- function(src_path, full = TRUE, ...) {
     else ""
 }
 
+run_with_check <- function(command, args) {
+    res <- system2(command, args, stdout = TRUE, stderr = TRUE)
+    # If there is some problem, print the output and stop
+    status <- attr(res, "status")
+    if (!is.null(status) && status != 0) {
+        stop(
+            "An error occurred running `",
+            command,
+            "`:\n",
+            paste(res, collapse = "\n")
+        )
+    }
+}
+
 dest <- ""
 out <- stdout()
 url <- "."
@@ -207,6 +221,7 @@ for (paths in strsplit(image_vec, "@")) {
         files <- basename(files)
         data_file <- paste0(gsub("^/", "", dest_dir), '.data')
         js_file <- paste0(gsub("^/", "", dest_dir), '.js')
+        meta_file <- paste0(gsub("^/", "", dest_dir), '.js.metadata')
         data_url <- file.path(gsub("/$", "", url), data_file)
 
         files_out <- append(files_out,
@@ -228,25 +243,18 @@ for (paths in strsplit(image_vec, "@")) {
         }
         file_packager <- file.path(emscripten_tools, "file_packager")
 
-        res <- system2(file_packager,
+        run_with_check(file_packager,
             args = c(file.path(dest, data_file),
                 "--preload", sprintf("'%s@/'", src_path),
                 "--separate-metadata",
                 sprintf("--js-output='%s'", file.path(dest, js_file))
-            ),
-            stdout = TRUE,
-            stderr = TRUE
-        )
-        unlink(file.path(dest, js_file))
-
-        # If there is some problem, print the output of `file_packager` and stop
-        status <- attr(res, "status")
-        if (!is.null(status) && status != 0) {
-            stop(
-                "An error occurred running `file_packager`:\n",
-                paste(res, collapse = "\n")
             )
-        }
+        )
+        run_with_check("gzip", c("-f", file.path(dest, data_file)))
+        meta <- readLines(file.path(dest, meta_file), warn = FALSE)
+        meta <- gsub("}$", ",\"gzip\":true}", meta)
+        writeLines(meta, file.path(dest, meta_file))
+        unlink(file.path(dest, js_file))
     }
 }
 
