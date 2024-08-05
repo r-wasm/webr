@@ -310,6 +310,9 @@ export class WebR {
         case 'console.error':
           console.error(msg.data);
           break;
+        case 'close':
+          this.#chan.close();
+          break;
         default:
           throw new WebRError('Unknown system message type `' + msg.type + '`');
       }

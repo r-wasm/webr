@@ -175,7 +175,19 @@ export class SharedBufferChannelWorker implements ChannelWorker {
   }
 
   run(args: string[]) {
-    Module.callMain(args);
+    try{
+      Module.callMain(args);
+    } catch (e) {
+      if (e instanceof WebAssembly.RuntimeError) {
+        this.writeSystem({ type: 'console.error', data: e.message });
+        this.writeSystem({
+          type: 'console.error',
+          data: "An unrecoverable WebAssembly error has occurred, the webR worker will be closed.",
+        });
+        this.writeSystem({ type: 'close' });
+      }
+      throw e;
+    }
   }
 
   setInterrupt(interrupt: () => void) {
