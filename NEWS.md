@@ -10,6 +10,10 @@
 
 * R package dependencies listed only in the `LinkingTo` field are no longer downloaded by `webr::install()`. Such packages are required for building an R package, but not at runtime. This saves time and network resources when installing R packages from a WebAssembly CRAN-like repository (#463).
 
+* Unrecoverable `WebAssembly.RuntimeError` errors are now handled by emitting an error message, closing the communication channel, and terminating the webR worker thread.
+
+* When the communication channel has been closed, reject any attempts to to write to the channel (e.g. `webR.evalR()`, `webR.writeConsole()`) with a relevant error message, rather than not resolving the returned `Promise` at all.
+
 ## Bug Fixes
 
 * Partially revert 7c624f7, returning HTML Canvas scaling to the behaviour in webR 0.3.3.
