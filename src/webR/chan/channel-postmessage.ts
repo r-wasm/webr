@@ -29,7 +29,10 @@ export class PostMessageChannelMain extends ChannelMain {
     const initWorker = (worker: Worker) => {
       this.#worker = worker;
       this.#handleEventsFromWorker(worker);
-      this.close = () => worker.terminate();
+      this.close = () => {
+        worker.terminate();
+        this.putClosedMessage();
+      };
       const msg = {
         type: 'init',
         data: { config, channelType: ChannelType.PostMessage },
