@@ -11,7 +11,7 @@ import { Endpoint } from './task-common';
 import { ChannelMain, ChannelWorker } from './channel';
 import { ChannelType } from './channel-common';
 import { WebROptions } from '../webr-main';
-import { WebRChannelError } from '../error';
+import { WebRChannelError, WebRWorkerError } from '../error';
 
 import { IN_NODE } from '../compat';
 import type { Worker as NodeWorker } from 'worker_threads';
@@ -25,6 +25,7 @@ export class ServiceWorkerChannelMain extends ChannelMain {
   initialised: Promise<unknown>;
 
   resolve: (_?: unknown) => void;
+  reject: (message: string | Error) => void;
   close = () => { return; };
 
   #syncMessageCache = new Map<string, Message>();
@@ -33,6 +34,8 @@ export class ServiceWorkerChannelMain extends ChannelMain {
 
   constructor(config: Required<WebROptions>) {
     super();
+    ({ resolve: this.resolve, reject: this.reject, promise: this.initialised } = promiseHandles());
+
     console.warn(
       "The ServiceWorker communication channel is deprecated and will be removed in a future version of webR. " +
       "Consider using the PostMessage channel instead. If blocking input is required (for example, `browser()`) " +
@@ -69,8 +72,6 @@ export class ServiceWorkerChannelMain extends ChannelMain {
       const worker = new Worker(`${config.serviceWorkerUrl}webr-worker.js`);
       initWorker(worker);
     }
-
-    ({ resolve: this.resolve, promise: this.initialised } = promiseHandles());
   }
 
   activeRegistration(): ServiceWorker {
@@ -154,9 +155,21 @@ export class ServiceWorkerChannelMain extends ChannelMain {
       (worker as unknown as NodeWorker).on('message', (message: Message) => {
         this.#onMessageFromWorker(worker, message);
       });
+      (worker as unknown as NodeWorker).on('error', (ev: Event) => {
+        console.error(ev);
+        this.reject(new WebRWorkerError(
+          "An error occurred initialising the webR ServiceWorkerChannel worker."
+        ));
+      });
     } else {
       worker.onmessage = (ev: MessageEvent) =>
         this.#onMessageFromWorker(worker, ev.data as Message);
+      worker.onerror = (ev) => {
+        console.error(ev);
+        this.reject(new WebRWorkerError(
+          "An error occurred initialising the webR ServiceWorkerChannel worker."
+        ));
+      };
     }
   }
 

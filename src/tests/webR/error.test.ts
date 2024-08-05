@@ -34,6 +34,23 @@ test('Caught WebRError has the expected error name property', async () => {
   expect(error).toHaveProperty('message', expect.stringContaining('unexpected end of input'));
 });
 
+test('An error is thrown if starting the webR worker fails', async () => {
+  let error: Error | undefined;
+
+  const tempR = new WebR({
+    baseUrl: '../non/existent/path/',
+  });
+
+  await tempR.init().catch((e) => {
+    if (e instanceof WebRError) {
+      error = e;
+    }
+  });
+
+  expect(error).toHaveProperty('name', 'WebRWorkerError');
+  expect(error).toHaveProperty('message', expect.stringContaining('An error occurred'));
+});
+
 afterAll(() => {
   return webR.close();
 });
