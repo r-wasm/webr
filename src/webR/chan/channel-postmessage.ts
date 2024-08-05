@@ -29,7 +29,10 @@ export class PostMessageChannelMain extends ChannelMain {
     const initWorker = (worker: Worker) => {
       this.#worker = worker;
       this.#handleEventsFromWorker(worker);
-      this.close = () => worker.terminate();
+      this.close = () => {
+        worker.terminate();
+        this.putClosedMessage();
+      };
       const msg = {
         type: 'init',
         data: { config, channelType: ChannelType.PostMessage },
@@ -263,7 +266,16 @@ export class PostMessageChannelWorker {
           this.#dispatch(msg);
         }
       } catch (e) {
-        // Don't break the REPL loop on any other Wasm issues
+        // Close on unrecoverable error
+        if (e instanceof WebAssembly.RuntimeError) {
+          this.writeSystem({ type: 'console.error', data: e.message });
+          this.writeSystem({
+            type: 'console.error',
+            data: "An unrecoverable WebAssembly error has occurred, the webR worker will be closed.",
+          });
+          this.writeSystem({ type: 'close' });
+        }
+        // Don't break the REPL loop on other Wasm `Exception` errors
         if (!(e instanceof (WebAssembly as any).Exception)) {
           throw e;
         }

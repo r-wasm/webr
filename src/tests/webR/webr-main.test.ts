@@ -1034,6 +1034,11 @@ test('Close webR communication channel', async () => {
   // Close the channel
   tempR.close();
   await expect(closedPromise).resolves.toEqual(true);
+
+  // Writing messages after closing the channel is an error
+  expect(() => tempR.writeConsole('foo <- 123')).toThrow(
+    "The webR communication channel has been closed"
+  );
 });
 
 test('Default and user provided REnv properties are merged', async () => {
