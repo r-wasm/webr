@@ -5,7 +5,7 @@ import { syncResponse } from './task-main';
 import { ChannelMain, ChannelWorker } from './channel';
 import { ChannelType } from './channel-common';
 import { WebROptions } from '../webr-main';
-import { WebRChannelError } from '../error';
+import { WebRChannelError, WebRWorkerError } from '../error';
 
 import { IN_NODE } from '../compat';
 import type { Worker as NodeWorker } from 'worker_threads';
@@ -17,13 +17,17 @@ if (IN_NODE) {
 
 export class SharedBufferChannelMain extends ChannelMain {
   #interruptBuffer?: Int32Array;
+  #workerErrorMessage = "An error occurred initialising the webR SharedBufferChannel worker.";
 
   initialised: Promise<unknown>;
   resolve: (_?: unknown) => void;
+  reject: (message: string | Error) => void;
   close = () => { return; };
 
   constructor(config: Required<WebROptions>) {
     super();
+    ({ resolve: this.resolve, reject: this.reject, promise: this.initialised } = promiseHandles());
+
     const initWorker = (worker: Worker) => {
       this.#handleEventsFromWorker(worker);
       this.close = () => {
@@ -45,8 +49,6 @@ export class SharedBufferChannelMain extends ChannelMain {
       const worker = new Worker(`${config.baseUrl}webr-worker.js`);
       initWorker(worker);
     }
-
-    ({ resolve: this.resolve, promise: this.initialised } = promiseHandles());
   }
 
   interrupt() {
@@ -62,9 +64,17 @@ export class SharedBufferChannelMain extends ChannelMain {
       (worker as unknown as NodeWorker).on('message', (message: Message) => {
         void this.#onMessageFromWorker(worker, message);
       });
+      (worker as unknown as NodeWorker).on('error', (ev: Event) => {
+        console.error(ev);
+        this.reject(new WebRWorkerError(this.#workerErrorMessage));
+      });
     } else {
       worker.onmessage = (ev: MessageEvent) =>
         this.#onMessageFromWorker(worker, ev.data as Message);
+      worker.onerror = (ev) => {
+        console.error(ev);
+        this.reject(new WebRWorkerError(this.#workerErrorMessage));
+      };
     }
   }
 
