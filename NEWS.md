@@ -1,5 +1,19 @@
 # webR (development version)
 
+# webR 0.4.1
+
+## New features
+
+* When mounting Emscripten VFS images, filesystem `.data` files may be optionally `gzip` compressed. Compressed VFS filesystem data must have the file extension `.data.gz`, and the metadata JSON stored in the `.js.metadata` file must include the property `gzip: true` (#460).
+
+## Breaking changes
+
+* R package dependencies listed only in the `LinkingTo` field are no longer downloaded by `webr::install()`. Such packages are required for building an R package, but not at runtime. This saves time and network resources when installing R packages from a WebAssembly CRAN-like repository (#463).
+
+## Bug Fixes
+
+* Partially revert 7c624f7, returning HTML Canvas scaling to the behaviour in webR 0.3.3.
+
 # webR 0.4.0
 
 ## New features

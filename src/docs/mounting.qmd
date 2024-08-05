@@ -56,6 +56,10 @@ webr::mount(
 
 A URL for the filesystem image `.data` file should be provided as the source argument, and the image will be mounted in the virtual filesystem under the path given by the `mountpoint` argument. If the `mountpoint` directory does not exist, it will be created prior to mounting.
 
+### Compression
+
+Filesystem image `.data` files may optionally be `gzip` compressed prior to deployment. The file extension for compressed filesystem images should be `.data.gz`, and compression should be indicated by setting the property `gzip: true` on the metadata JSON stored in the `.js.metadata` file. 
+
 ### JavaScript API
 
 WebR's JavaScript API includes the [`WebR.FS.mount()`](api/js/classes/WebR.WebR.md#fs) function, a thin wrapper around Emscripten's own [`FS.mount()`](https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.mount). The JavaScript API provides more flexibility but requires a little more set up, including creating the `mountpoint` directory if it does not already exist.
