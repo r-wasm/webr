@@ -17,7 +17,6 @@ if (IN_NODE) {
 
 export class SharedBufferChannelMain extends ChannelMain {
   #interruptBuffer?: Int32Array;
-  #workerErrorMessage = "An error occurred initialising the webR SharedBufferChannel worker.";
 
   initialised: Promise<unknown>;
   resolve: (_?: unknown) => void;
@@ -66,14 +65,18 @@ export class SharedBufferChannelMain extends ChannelMain {
       });
       (worker as unknown as NodeWorker).on('error', (ev: Event) => {
         console.error(ev);
-        this.reject(new WebRWorkerError(this.#workerErrorMessage));
+        this.reject(new WebRWorkerError(
+          "An error occurred initialising the webR SharedBufferChannel worker."
+        ));
       });
     } else {
       worker.onmessage = (ev: MessageEvent) =>
         this.#onMessageFromWorker(worker, ev.data as Message);
       worker.onerror = (ev) => {
         console.error(ev);
-        this.reject(new WebRWorkerError(this.#workerErrorMessage));
+        this.reject(new WebRWorkerError(
+          "An error occurred initialising the webR SharedBufferChannel worker."
+        ));
       };
     }
   }

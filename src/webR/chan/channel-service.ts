@@ -28,7 +28,6 @@ export class ServiceWorkerChannelMain extends ChannelMain {
   reject: (message: string | Error) => void;
   close = () => { return; };
 
-  #workerErrorMessage = "An error occurred initialising the webR ServiceWorkerChannel worker.";
   #syncMessageCache = new Map<string, Message>();
   #registration?: ServiceWorkerRegistration;
   #interrupted = false;
@@ -158,14 +157,18 @@ export class ServiceWorkerChannelMain extends ChannelMain {
       });
       (worker as unknown as NodeWorker).on('error', (ev: Event) => {
         console.error(ev);
-        this.reject(new WebRWorkerError(this.#workerErrorMessage));
+        this.reject(new WebRWorkerError(
+          "An error occurred initialising the webR ServiceWorkerChannel worker."
+        ));
       });
     } else {
       worker.onmessage = (ev: MessageEvent) =>
         this.#onMessageFromWorker(worker, ev.data as Message);
       worker.onerror = (ev) => {
         console.error(ev);
-        this.reject(new WebRWorkerError(this.#workerErrorMessage));
+        this.reject(new WebRWorkerError(
+          "An error occurred initialising the webR ServiceWorkerChannel worker."
+        ));
       };
     }
   }
