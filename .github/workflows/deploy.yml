@@ -120,6 +120,14 @@ jobs:
       - name: Upload files to S3 bucket
         run: |
           aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }}/_webr/${{ github.ref_name }}/
+          gzip -k R.bin.wasm
+          aws s3 cp --content-encoding="gzip" --content-type="application/wasm" \
+            --metadata-directive="REPLACE" R.bin.wasm.gz \
+            s3://${{ secrets.AWS_S3_BUCKET }}/_webr/${{ github.ref_name }}/R.bin.wasm
+          aws s3 cp --exclude "*" --include "*.js.metadata" --recursive \
+            --content-type="text/javascript" --metadata-directive="REPLACE" \
+            s3://${{ secrets.AWS_S3_BUCKET }}/_webr/${{ github.ref_name }}/ \
+            s3://${{ secrets.AWS_S3_BUCKET }}/_webr/${{ github.ref_name }}/
           aws s3 cp --exclude "*" --include "*.data" --include "*.so" --recursive \
             --content-type="application/wasm" --metadata-directive="REPLACE" \
             s3://${{ secrets.AWS_S3_BUCKET }}/_webr/${{ github.ref_name }}/ \
