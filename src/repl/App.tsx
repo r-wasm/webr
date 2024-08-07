@@ -17,7 +17,6 @@ const webR = new WebR({
   REnv: {
     R_HOME: '/usr/lib/R',
     FONTCONFIG_PATH: '/etc/fonts',
-    R_ENABLE_JIT: '0',
     COLORTERM: 'truecolor',
   },
 });
