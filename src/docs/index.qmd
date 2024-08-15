@@ -15,6 +15,10 @@ WebR makes it possible to run R code in the browser without the need for an R se
 The webR project is under active development, and the API is subject to change. Be aware that if you are using the latest build of webR the contents of this documentation might be out of date.
 :::
 
+::: callout-note
+Some browsers (especially mobile browsers) may place hard caps on the amount of RAM accessible by WebAssmebly *regardless of the amount of memory available on the host device*. Please keep this in mind when developing webR intended for use on mobile devices. Consider including a warning to mobile users if you expect your webR application to exceed 500 MB.
+:::
+
 ## Try it out
 
 ### WebR REPL
