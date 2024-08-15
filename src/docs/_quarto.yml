@@ -50,7 +50,9 @@ website:
 
 format:
   html:
-    theme: cosmo
+    theme: 
+      light: cosmo
+      dark: darkly
     link-external-newwindow: true
     link-external-filter: '^(?:http:|https:)\/\/docs\.r-wasm\.org'
     toc: true
