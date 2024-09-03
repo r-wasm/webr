@@ -32,7 +32,11 @@ SEXP ffi_mount_workerfs(SEXP source, SEXP mountpoint) {
     const source = UTF8ToString($0);
     const mountpoint = UTF8ToString($1);
     try {
-      Module.mountImageUrl(source, mountpoint);
+      if (ENVIRONMENT_IS_NODE) {
+        Module.mountImagePath(source, mountpoint);
+      } else {
+        Module.mountImageUrl(source, mountpoint);
+      }
     } catch (e) {
       let msg = e.message;
       if (e.name === "ErrnoError" && e.errno === 10) {

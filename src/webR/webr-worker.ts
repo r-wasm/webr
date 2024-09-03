@@ -544,9 +544,28 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
   }
 }
 
-function mountImageData(data: any, metadata: { files: any[] }, mountpoint: string) {
+function mountUnderNode(type: Emscripten.FileSystemType, opts: FSMountOptions, mountpoint: string) {
+  if (!IN_NODE || type !== Module.FS.filesystems.WORKERFS ) {
+    return Module.FS._mount(type, opts, mountpoint) as void;
+  }
+
+  if ('packages' in opts && opts.packages) {
+    opts.packages.forEach((pkg) => {
+      // Main thread communication casts `Blob` to Uint8Array
+      // FIXME: Use a replacer + reviver to handle `Blob`s
+      mountImageData(pkg.blob as ArrayBufferLike, pkg.metadata, mountpoint);
+    });
+  } else {
+    throw new Error(
+      "Can't mount data under Node. " +
+      "Mounting with `WORKERFS` under Node must use the `packages` key."
+    );
+  }
+}
+
+function mountImageData(data: ArrayBufferLike | Buffer, metadata: FSMetaData, mountpoint: string) {
   if (IN_NODE) {
-    const buf = data as Buffer;
+    const buf = Buffer.from(data);
     const WORKERFS = Module.FS.filesystems.WORKERFS as WorkerFileSystemType;
 
     if (!WORKERFS.reader) WORKERFS.reader = {
@@ -922,6 +941,8 @@ function init(config: Required<WebROptions>) {
 
   Module.preRun.push(() => {
     if (IN_NODE) {
+      Module.FS._mount = Module.FS.mount;
+      Module.FS.mount = mountUnderNode;
       globalThis.FS = Module.FS;
       (globalThis as any).chan = chan;
     }

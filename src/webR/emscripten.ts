@@ -8,6 +8,7 @@ export interface Module extends EmscriptenModule {
    * time of writing.
    */
   FS: typeof FS & {
+    _mount: typeof FS.mount;
     mkdirTree(path: string): void;
     filesystems: {
       [key: string]: Emscripten.FileSystemType;

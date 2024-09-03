@@ -487,6 +487,33 @@ export class WebR {
       options: FSMountOptions<T>,
       mountpoint: string
     ): Promise<void> => {
+      // Convert blobs to ArrayBuffer for transfer over the communication channel
+      // FIXME: Use a replacer + reviver to transfer `Blob`s
+      let promises: Promise<void>[] = [];
+      if ('blobs' in options && options.blobs) {
+        promises = [...promises, ...options.blobs.map((item) => {
+          if (item.data instanceof Blob) {
+            return item.data.arrayBuffer().then((data) => {
+              item.data = new Uint8Array(data);
+            });
+          } else {
+            return Promise.resolve();
+          }
+        })];
+      }
+      if ('packages' in options && options.packages) {
+        promises = [...promises, ...options.packages.map((pkg) => {
+          if (pkg.blob instanceof Blob) {
+            return pkg.blob.arrayBuffer().then((data) => {
+              pkg.blob = new Uint8Array(data);
+            });
+          } else {
+            return Promise.resolve();
+          }
+        })];
+      }
+      await Promise.all(promises);
+
       const msg: FSMountMessage = { type: 'mount', data: { type, options, mountpoint } };
       await this.#chan.request(msg);
     },
