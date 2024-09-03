@@ -29,10 +29,10 @@ SEXP ffi_mount_workerfs(SEXP source, SEXP mountpoint) {
   CHECK_STRING(mountpoint);
 
   EM_ASM({
-    const baseUrl = UTF8ToString($0);
+    const source = UTF8ToString($0);
     const mountpoint = UTF8ToString($1);
     try {
-      Module.mountImageUrl(`${baseUrl}.data`, mountpoint);
+      Module.mountImageUrl(source, mountpoint);
     } catch (e) {
       let msg = e.message;
       if (e.name === "ErrnoError" && e.errno === 10) {

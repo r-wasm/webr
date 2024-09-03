@@ -37,8 +37,7 @@ mount <- function(mountpoint, source, type = "workerfs") {
 
   # Mount specified Emscripten filesystem type onto the given mountpoint
   if (tolower(type) == "workerfs") {
-    base_url <- gsub(".data$", "", source)
-    invisible(.Call(ffi_mount_workerfs, base_url, mountpoint))
+    invisible(.Call(ffi_mount_workerfs, source, mountpoint))
   } else if (tolower(type) == "nodefs") {
     invisible(.Call(ffi_mount_nodefs, source, mountpoint))
   } else if (tolower(type) == "idbfs") {
