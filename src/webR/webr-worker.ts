@@ -2,7 +2,7 @@ import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
 import { newChannelWorker, ChannelInitMessage, ChannelType } from './chan/channel-common';
 import { Message, Request, newResponse } from './chan/message';
-import { FSMountOptions, FSNode, FSMetaData, WebROptions } from './webr-main';
+import { FSNode, WebROptions } from './webr-main';
 import { EmPtr, Module } from './emscripten';
 import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
@@ -13,9 +13,7 @@ import { RLogical, RInteger, RDouble, initPersistentObjects, objs } from './robj
 import { RPtr, RType, RCtor, WebRData, WebRDataRaw } from './robj';
 import { protect, protectInc, unprotect, parseEvalBare, UnwindProtectException, safeEval } from './utils-r';
 import { generateUUID } from './chan/task-common';
-import { ungzip } from 'pako';
-
-import type { readFileSync } from 'fs';
+import { mountFSNode, mountImageUrl, mountImagePath } from './mount';
 import type { parentPort } from 'worker_threads';
 
 import {
@@ -71,13 +69,6 @@ if (IN_NODE) {
 type XHRResponse = {
   status: number;
   response: string | ArrayBuffer;
-};
-
-type WorkerFileSystemType = Emscripten.FileSystemType & {
-  reader: { readAsArrayBuffer: (chunk: any) => ArrayBuffer },
-  FILE_MODE: number
-  createNode: (dir: FS.FSNode, file: string, mode: number, dev: number,
-    contents: ArrayBufferView, mtime?: Date) => FS.FSNode;
 };
 
 let _config: Required<WebROptions>;
@@ -544,146 +535,6 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
   }
 }
 
-function mountUnderNode(type: Emscripten.FileSystemType, opts: FSMountOptions, mountpoint: string) {
-  if (!IN_NODE || type !== Module.FS.filesystems.WORKERFS ) {
-    return Module.FS._mount(type, opts, mountpoint) as void;
-  }
-
-  if ('packages' in opts && opts.packages) {
-    opts.packages.forEach((pkg) => {
-      // Main thread communication casts `Blob` to Uint8Array
-      // FIXME: Use a replacer + reviver to handle `Blob`s
-      mountImageData(pkg.blob as ArrayBufferLike, pkg.metadata, mountpoint);
-    });
-  } else {
-    throw new Error(
-      "Can't mount data under Node. " +
-      "Mounting with `WORKERFS` under Node must use the `packages` key."
-    );
-  }
-}
-
-function mountImageData(data: ArrayBufferLike | Buffer, metadata: FSMetaData, mountpoint: string) {
-  if (IN_NODE) {
-    const buf = Buffer.from(data);
-    const WORKERFS = Module.FS.filesystems.WORKERFS as WorkerFileSystemType;
-
-    if (!WORKERFS.reader) WORKERFS.reader = {
-      readAsArrayBuffer: (chunk: Buffer) => new Uint8Array(chunk),
-    };
-
-    metadata.files.forEach((f: { filename: string, start: number, end: number }) => {
-      const contents: Buffer & { size?: number } = buf.subarray(f.start, f.end);
-      contents.size = contents.byteLength;
-      contents.slice = (start?: number, end?: number) => {
-        const sub: Buffer & { size?: number } = contents.subarray(start, end);
-        sub.size = sub.byteLength;
-        return sub;
-      };
-      const parts = (mountpoint + f.filename).split('/');
-      const file = parts.pop();
-      if (!file) {
-        throw new Error(`Invalid mount path "${mountpoint}${f.filename}".`);
-      }
-      const dir = parts.join('/');
-      Module.FS.mkdirTree(dir);
-      const dirNode = Module.FS.lookupPath(dir, {}).node;
-      WORKERFS.createNode(dirNode, file, WORKERFS.FILE_MODE, 0, contents);
-    });
-  } else {
-    Module.FS.mount(Module.FS.filesystems.WORKERFS, {
-      packages: [{
-        blob: new Blob([data]),
-        metadata,
-      }],
-    }, mountpoint);
-  }
-}
-
-// Decode archive data and metadata encoded in v2.0 VFS image
-function decodeVFSArchive(data: ArrayBufferLike) {
-  const buffer = ungzip(data).buffer;
-  const view = new DataView(buffer);
-  const magic = view.getUint32(view.byteLength - 16);
-  // const reserved = view.getUint32(view.byteLength - 12);
-  const block = view.getUint32(view.byteLength - 8);
-  const len = view.getUint32(view.byteLength - 4);
-
-  if (magic !== 2003133010 || block === 0 || len === 0) {
-    throw new Error("Can't mount `.tar` archive, no VFS metadata found.");
-  }
-
-  const bytes = new DataView(buffer, 512 * block, len);
-  const metadata = JSON.parse(new TextDecoder().decode(bytes)) as FSMetaData;
-  return { data: buffer, metadata };
-}
-
-// Download an Emscripten FS image and mount to the VFS
-function mountImageUrl(url: string, mountpoint: string) {
-  if (/\.tgz$|\.tar\.gz$|\.tar$/.test(url)) {
-    // New (v2.0) VFS format - metadata appended to package
-    const dataResp = downloadFileContent(url);
-    if (dataResp.status < 200 || dataResp.status >= 300) {
-      throw new Error("Can't download Emscripten filesystem image.");
-    }
-    const { data, metadata } = decodeVFSArchive(dataResp.response as ArrayBuffer);
-    mountImageData(data, metadata, mountpoint);
-  } else {
-    // Legacy (v1.0) VFS format - from Emscripten's file_packager
-    const urlBase = url.replace(/\.data\.gz$|\.data$|\.js.metadata$/, '');
-    const metaResp = downloadFileContent(`${urlBase}.js.metadata`);
-    if (metaResp.status < 200 || metaResp.status >= 300) {
-      throw new Error("Can't download Emscripten filesystem image metadata.");
-    }
-
-    const metadata = JSON.parse(
-      new TextDecoder().decode(metaResp.response as ArrayBuffer)
-    ) as FSMetaData;
-
-    const ext = metadata.gzip ? '.data.gz' : '.data';
-    const dataResp = downloadFileContent(`${urlBase}${ext}`);
-    if (dataResp.status < 200 || dataResp.status >= 300) {
-      throw new Error("Can't download Emscripten filesystem image data.");
-    }
-
-    // Decompress filesystem data, if required
-    let data = dataResp.response as ArrayBuffer;
-    if (metadata.gzip) {
-      data = ungzip(data).buffer;
-    }
-    mountImageData(data, metadata, mountpoint);
-  }
-}
-
-// Read an Emscripten FS image from disk and mount to the VFS (requires Node)
-function mountImagePath(path: string, mountpoint: string) {
-  const fs = require('fs') as {
-    readFileSync: typeof readFileSync;
-  };
-
-  if (/\.tgz$|\.tar\.gz$|\.tar$/.test(path)) {
-    // New (v2.0) VFS format - metadata appended to package
-    const buffer = fs.readFileSync(path);
-    const { data, metadata } = decodeVFSArchive(buffer);
-    mountImageData(data, metadata, mountpoint);
-  } else {
-    // Legacy (v1.0) VFS format - from Emscripten's file_packager
-    const pathBase = path.replace(/\.data\.gz$|\.data$|\.js.metadata$/, '');
-    const metadata = JSON.parse(
-      fs.readFileSync(`${pathBase}.js.metadata`, 'utf8')
-    ) as FSMetaData;
-
-    const ext = metadata.gzip ? '.data.gz' : '.data';
-    let data: ArrayBufferLike = fs.readFileSync(`${pathBase}${ext}`);
-
-    // Decompress filesystem data, if required
-    if (metadata.gzip) {
-      data = ungzip(data).buffer;
-    }
-    mountImageData(data, metadata, mountpoint);
-  }
-}
-
 function newRObject(args: WebRData[], objType: RType | RCtor): WebRPayloadPtr {
   const RClass = getRWorkerClass(objType);
   const _args = replaceInObject<WebRData[]>(args, isWebRPayloadPtr, (t: WebRPayloadPtr) =>
@@ -942,7 +793,7 @@ function init(config: Required<WebROptions>) {
   Module.preRun.push(() => {
     if (IN_NODE) {
       Module.FS._mount = Module.FS.mount;
-      Module.FS.mount = mountUnderNode;
+      Module.FS.mount = mountFSNode;
       globalThis.FS = Module.FS;
       (globalThis as any).chan = chan;
     }

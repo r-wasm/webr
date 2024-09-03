@@ -26,7 +26,7 @@ export interface Module extends EmscriptenModule {
   setPrompt: (prompt: string) => void;
   downloadFileContent: (
     URL: string,
-    headers: Array<string>
+    headers?: Array<string>
   ) => {
     status: number;
     response: string | ArrayBuffer;
