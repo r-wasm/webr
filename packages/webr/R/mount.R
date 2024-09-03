@@ -5,10 +5,13 @@
 #' directory in the virtual filesystem. The mountpoint will be created if it
 #' does not already exist.
 #'
-#' When mounting an Emscripten "workerfs" type filesystem the `source` should
-#' be the URL for a filesystem image with filename ending `.data`, as produced
-#' by Emscripten's `file_packager` tool. The filesystem image and metadata will
-#' be downloaded and mounted onto the directory `mountpoint`.
+#' When mounting an Emscripten "workerfs" type filesystem the `source` should be
+#' the URL or path to a filesystem image, as produced by Emscripten's
+#' `file_packager` tool or as the result of appending filesystem metadata to an
+#' `.tar` archive using [rwasm::add_tar_index()]. The filesystem image may be
+#' gzip compressed, indicated by the property `gzip: true` in the associated
+#' filesystem metadata. The filesystem metadata and contents will be loaded and
+#' mounted onto the directory `mountpoint`.
 #'
 #' When mounting an Emscripten "nodefs" type filesystem, the `source` should be
 #' the path to a physical directory on the host filesystem. The host directory
