@@ -1,5 +1,17 @@
 # webR (development version)
 
+## New features
+
+* Added support for directly mounting (optionally compressed) `.tar` archives as filesystem images. Archives must be pre-processed using the `rwasm` R package to append filesystem image metadata to `.tar` archive data.
+
+## Breaking changes
+
+* When installing binary R packages, webR will now default to mounting the R package binary `.tgz` file as a filesystem image. If this fails (e.g. the `.tgz` has not been processed to add filesystem image metadata) webR will fall back to a traditional install by extracting the contents of the `.tgz` file.
+
+## Bug Fixes
+
+* Mounting filesystem images using the `WORKERFS` filesystem type now works correctly under Node.js (#328).
+
 # webR 0.4.1
 
 ## New features
