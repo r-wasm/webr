@@ -32,7 +32,7 @@ SEXP ffi_mount_workerfs(SEXP source, SEXP mountpoint) {
     const source = UTF8ToString($0);
     const mountpoint = UTF8ToString($1);
     try {
-      if (ENVIRONMENT_IS_NODE) {
+      if (ENVIRONMENT_IS_NODE && !/^https?:/.test(source)) {
         Module.mountImagePath(source, mountpoint);
       } else {
         Module.mountImageUrl(source, mountpoint);
