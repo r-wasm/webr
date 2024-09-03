@@ -222,7 +222,7 @@ for (paths in strsplit(image_vec, "@")) {
         data_file <- paste0(gsub("^/", "", dest_dir), '.data')
         js_file <- paste0(gsub("^/", "", dest_dir), '.js')
         meta_file <- paste0(gsub("^/", "", dest_dir), '.js.metadata')
-        data_url <- file.path(gsub("/$", "", url), data_file)
+        data_url <- file.path(gsub("/$", "", url), paste0(data_file, '.gz'))
 
         files_out <- append(files_out,
             sprintf(image_tmpl, parents, files, data_url, paths[2])
