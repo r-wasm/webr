@@ -106,10 +106,22 @@ export type FSType = 'NODEFS' | 'WORKERFS' | 'IDBFS';
  */
 export type FSMountOptions<T extends FSType = FSType> =
   T extends 'NODEFS' ? { root: string } : {
-    blobs?: Array<{ name: string, data: Blob }>;
+    blobs?: Array<{ name: string, data: Blob | ArrayBufferLike }>;
     files?: Array<File | FileList>;
-    packages?: Array<{ metadata: any, blob: Blob }>;
+    packages?: Array<{ metadata: FSMetaData, blob: Blob | ArrayBufferLike }>;
   };
+
+/**
+ * Emscripten filesystem image metadata
+ */
+export type FSMetaData = {
+  files: {
+    filename: string;
+    start: number;
+    end: number;
+  }[],
+  gzip?: boolean;
+};
 
 /**
  * The configuration settings to be used when starting webR.

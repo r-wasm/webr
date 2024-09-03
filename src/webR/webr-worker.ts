@@ -2,7 +2,7 @@ import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
 import { newChannelWorker, ChannelInitMessage, ChannelType } from './chan/channel-common';
 import { Message, Request, newResponse } from './chan/message';
-import { FSNode, WebROptions } from './webr-main';
+import { FSMountOptions, FSNode, FSMetaData, WebROptions } from './webr-main';
 import { EmPtr, Module } from './emscripten';
 import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
@@ -581,39 +581,59 @@ function mountImageData(data: any, metadata: { files: any[] }, mountpoint: strin
   }
 }
 
+// Decode archive data and metadata encoded in v2.0 VFS image
+function decodeVFSArchive(data: ArrayBufferLike) {
+  const buffer = ungzip(data).buffer;
+  const view = new DataView(buffer);
+  const magic = view.getUint32(view.byteLength - 16);
+  // const reserved = view.getUint32(view.byteLength - 12);
+  const block = view.getUint32(view.byteLength - 8);
+  const len = view.getUint32(view.byteLength - 4);
+
+  if (magic !== 2003133010 || block === 0 || len === 0) {
+    throw new Error("Can't mount `.tar` archive, no VFS metadata found.");
+  }
+
+  const bytes = new DataView(buffer, 512 * block, len);
+  const metadata = JSON.parse(new TextDecoder().decode(bytes)) as FSMetaData;
+  return { data: buffer, metadata };
+}
+
 // Download an Emscripten FS image and mount to the VFS
 function mountImageUrl(url: string, mountpoint: string) {
-  const dataUrlBase = url
-    .replace(/\.data\.gz$/, '')
-    .replace(/\.data$/, '')
-    .replace(/\.js.metadata$/, '');
+  if (/\.tgz$|\.tar\.gz$|\.tar$/.test(url)) {
+    // New (v2.0) VFS format - metadata appended to package
+    const dataResp = downloadFileContent(url);
+    if (dataResp.status < 200 || dataResp.status >= 300) {
+      throw new Error("Can't download Emscripten filesystem image.");
+    }
+    const { data, metadata } = decodeVFSArchive(dataResp.response as ArrayBuffer);
+    mountImageData(data, metadata, mountpoint);
+  } else {
+    // Legacy (v1.0) VFS format - from Emscripten's file_packager
+    const urlBase = url.replace(/\.data\.gz$|\.data$|\.js.metadata$/, '');
+    const metaResp = downloadFileContent(`${urlBase}.js.metadata`);
+    if (metaResp.status < 200 || metaResp.status >= 300) {
+      throw new Error("Can't download Emscripten filesystem image metadata.");
+    }
 
-  const metaResp = downloadFileContent(`${dataUrlBase}.js.metadata`);
-  if (metaResp.status < 200 || metaResp.status >= 300) {
-    throw new Error("Can't download Emscripten filesystem image metadata.");
+    const metadata = JSON.parse(
+      new TextDecoder().decode(metaResp.response as ArrayBuffer)
+    ) as FSMetaData;
+
+    const ext = metadata.gzip ? '.data.gz' : '.data';
+    const dataResp = downloadFileContent(`${urlBase}${ext}`);
+    if (dataResp.status < 200 || dataResp.status >= 300) {
+      throw new Error("Can't download Emscripten filesystem image data.");
+    }
+
+    // Decompress filesystem data, if required
+    let data = dataResp.response as ArrayBuffer;
+    if (metadata.gzip) {
+      data = ungzip(data).buffer;
+    }
+    mountImageData(data, metadata, mountpoint);
   }
-  const metadata = JSON.parse(
-    new TextDecoder().decode(metaResp.response as ArrayBuffer)
-  ) as { files: any[], gzip?: boolean };
-
-  const dataResp = downloadFileContent(
-    metadata.gzip ? `${dataUrlBase}.data.gz` : `${dataUrlBase}.data`
-  );
-  if (dataResp.status < 200 || dataResp.status >= 300) {
-    throw new Error("Can't download Emscripten filesystem image data.");
-  }
-
-  // Decompress filesystem data, if required
-  if (metadata.gzip) {
-    const compressed = dataResp.response as ArrayBuffer;
-    dataResp.response = ungzip(compressed).buffer;
-  }
-
-  mountImageData(
-    dataResp.response,
-    JSON.parse(new TextDecoder().decode(metaResp.response as ArrayBuffer)) as { files: any[] },
-    mountpoint
-  );
 }
 
 // Read an Emscripten FS image from disk and mount to the VFS (requires Node)
@@ -622,24 +642,27 @@ function mountImagePath(path: string, mountpoint: string) {
     readFileSync: typeof readFileSync;
   };
 
-  const dataPathBase = path
-    .replace(/\.data\.gz$/, '')
-    .replace(/\.data$/, '')
-    .replace(/\.js.metadata$/, '');
+  if (/\.tgz$|\.tar\.gz$|\.tar$/.test(path)) {
+    // New (v2.0) VFS format - metadata appended to package
+    const buffer = fs.readFileSync(path);
+    const { data, metadata } = decodeVFSArchive(buffer);
+    mountImageData(data, metadata, mountpoint);
+  } else {
+    // Legacy (v1.0) VFS format - from Emscripten's file_packager
+    const pathBase = path.replace(/\.data\.gz$|\.data$|\.js.metadata$/, '');
+    const metadata = JSON.parse(
+      fs.readFileSync(`${pathBase}.js.metadata`, 'utf8')
+    ) as FSMetaData;
 
-  const metadata = JSON.parse(
-    fs.readFileSync(`${dataPathBase}.js.metadata`, 'utf8')
-  ) as { files: unknown[], gzip?: boolean };
+    const ext = metadata.gzip ? '.data.gz' : '.data';
+    let data: ArrayBufferLike = fs.readFileSync(`${pathBase}${ext}`);
 
-  let buf: ArrayBufferLike = fs.readFileSync(
-    metadata.gzip ? `${dataPathBase}.data.gz` : `${dataPathBase}.data`
-  );
-
-  // Decompress filesystem data, if required
-  if (metadata.gzip) {
-    buf = ungzip(buf);
+    // Decompress filesystem data, if required
+    if (metadata.gzip) {
+      data = ungzip(data).buffer;
+    }
+    mountImageData(data, metadata, mountpoint);
   }
-  mountImageData(buf, metadata, mountpoint);
 }
 
 function newRObject(args: WebRData[], objType: RType | RCtor): WebRPayloadPtr {
