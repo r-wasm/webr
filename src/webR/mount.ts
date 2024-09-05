@@ -159,7 +159,7 @@ function decodeVFSArchive(data: ArrayBufferLike) {
   const len = view.getUint32(view.byteLength - 4);
 
   if (magic !== 2003133010 || block === 0 || len === 0) {
-    throw new Error("Can't mount `.tar` archive, no VFS metadata found.");
+    throw new Error("Can't mount archive, no VFS metadata found.");
   }
 
   const bytes = new DataView(buffer, 512 * block, len);
