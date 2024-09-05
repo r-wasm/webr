@@ -38,6 +38,7 @@ import {
 export { Console, ConsoleCallbacks } from './console';
 export * from './robj-main';
 export * from './error';
+export * from './webr-chan';
 export { ChannelType } from './chan/channel-common';
 
 /**
