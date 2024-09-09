@@ -153,10 +153,10 @@ function mountImageData(data: ArrayBufferLike | Buffer, metadata: FSMetaData, mo
 function decodeVFSArchive(data: ArrayBufferLike) {
   const buffer = ungzip(data).buffer;
   const view = new DataView(buffer);
-  const magic = view.getUint32(view.byteLength - 16);
-  // const reserved = view.getUint32(view.byteLength - 12);
-  const block = view.getUint32(view.byteLength - 8);
-  const len = view.getUint32(view.byteLength - 4);
+  const magic = view.getInt32(view.byteLength - 16);
+  // const reserved = view.getInt32(view.byteLength - 12);
+  const block = view.getInt32(view.byteLength - 8);
+  const len = view.getInt32(view.byteLength - 4);
 
   if (magic !== 2003133010 || block === 0 || len === 0) {
     throw new Error("Can't mount archive, no VFS metadata found.");
