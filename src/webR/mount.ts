@@ -152,6 +152,18 @@ function mountImageData(data: ArrayBufferLike | Buffer, metadata: FSMetaData, mo
 // Decode archive data and metadata encoded in v2.0 VFS image
 function decodeVFSArchive(data: ArrayBufferLike) {
   const buffer = ungzip(data).buffer;
+  const index = getArchiveMetadata(buffer) || findArchiveMetadata(buffer);
+  if (!index) {
+      throw new Error("Can't mount archive, no VFS metadata found.");
+  }
+
+  const bytes = new DataView(buffer, 512 * index.block, index.len);
+  const metadata = JSON.parse(new TextDecoder().decode(bytes)) as FSMetaData;
+  return { data: buffer, metadata };
+}
+
+// Use archive "hint" data to get metadata offset and length
+function getArchiveMetadata(buffer: ArrayBufferLike) {
   const view = new DataView(buffer);
   const magic = view.getInt32(view.byteLength - 16);
   // const reserved = view.getInt32(view.byteLength - 12);
@@ -159,10 +171,40 @@ function decodeVFSArchive(data: ArrayBufferLike) {
   const len = view.getInt32(view.byteLength - 4);
 
   if (magic !== 2003133010 || block === 0 || len === 0) {
-    throw new Error("Can't mount archive, no VFS metadata found.");
+    return null;
+  } else {
+    return { block, len };
   }
+}
 
-  const bytes = new DataView(buffer, 512 * block, len);
-  const metadata = JSON.parse(new TextDecoder().decode(bytes)) as FSMetaData;
-  return { data: buffer, metadata };
+// Search the .tar archive for the metadata file
+function findArchiveMetadata(buffer: ArrayBufferLike) {
+  const decoder = new TextDecoder();
+  let offset = 0;
+  while (offset < buffer.byteLength) {
+    const header = buffer.slice(offset, offset + 512);
+    offset += 512;
+
+    // End of archive
+    if (new Uint8Array(header).every(byte => byte === 0)) {
+      return null;
+    }
+
+    // Skip directories, global, and vendor-specific extended headers
+    const type = decoder.decode(header.slice(156, 157));
+    if (/5|g|[A-Z]/.test(type)) {
+      continue;
+    }
+
+    // Entry data
+    const filename = decoder.decode(header.slice(0, 100)).replace(/\0+$/, '');
+    const len = parseInt(decoder.decode(header.slice(124, 136)), 8);
+    if (filename == '.vfs-index.json') {
+      return { block: offset / 512, len };
+    }
+
+    // Skip to the next block
+    offset += 512 * Math.ceil(len / 512.);
+  }
+  return null;
 }
