@@ -67,21 +67,23 @@ install <- function(packages,
     if (!quiet) message(paste("Downloading webR package:", pkg))
 
     if (mount) {
-      # Try package.data URL, fallback to .tgz download if unavailable
-      tryCatch(
-        {
-          install_vfs_image(repo, lib, pkg, pkg_ver)
-        },
-        error = function(cnd) {
-          if (!grepl("Unable to download", conditionMessage(cnd))) {
-            stop(cnd)
-          }
-          install_tgz(repo, lib, pkg, pkg_ver)
-        }
-      )
-    } else {
-      install_tgz(repo, lib, pkg, pkg_ver)
+      # Try mounting `.tgz` as v2.0 image, fallback to `.data` v1.0 image
+      tryCatch({
+        install_vfs_image(repo, lib, pkg, pkg_ver, ".tgz")
+        next
+      }, error = function(cnd) {
+        warning(paste(cnd$message, "Falling back to `.data` filesystem image."))
+      })
+
+      tryCatch({
+        install_vfs_image(repo, lib, pkg, pkg_ver, ".data")
+        next
+      }, error = function(cnd) {
+        warning(paste(cnd$message, "Falling back to copying archive contents."))
+      })
     }
+
+    install_tgz(repo, lib, pkg, pkg_ver)
   }
   invisible(NULL)
 }
@@ -100,8 +102,8 @@ install_tgz <- function(repo, lib, pkg, pkg_ver) {
   )
 }
 
-install_vfs_image <- function(repo, lib, pkg, pkg_ver) {
-  data_url <- file.path(repo, paste0(pkg, "_", pkg_ver, ".data"))
+install_vfs_image <- function(repo, lib, pkg, pkg_ver, ext) {
+  data_url <- file.path(repo, paste0(pkg, "_", pkg_ver, ext))
   mountpoint <- file.path(lib, pkg)
   mount(mountpoint, data_url)
 }

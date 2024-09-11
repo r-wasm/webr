@@ -24,10 +24,13 @@ Uses the Emscripten filesystem API to mount a filesystem object onto a given
 directory in the virtual filesystem. The mountpoint will be created if it
 does not already exist.
 
-When mounting an Emscripten "workerfs" type filesystem the \code{source} should
-be the URL for a filesystem image with filename ending \code{.data}, as produced
-by Emscripten's \code{file_packager} tool. The filesystem image and metadata will
-be downloaded and mounted onto the directory \code{mountpoint}.
+When mounting an Emscripten "workerfs" type filesystem the \code{source} should be
+the URL or path to a filesystem image, as produced by Emscripten's
+\code{file_packager} tool or as the result of appending filesystem metadata to an
+\code{.tar} archive using \code{\link[rwasm:add_tar_index]{rwasm::add_tar_index()}}. The filesystem image may be
+gzip compressed, indicated by the property \code{gzip: true} in the associated
+filesystem metadata. The filesystem metadata and contents will be loaded and
+mounted onto the directory \code{mountpoint}.
 
 When mounting an Emscripten "nodefs" type filesystem, the \code{source} should be
 the path to a physical directory on the host filesystem. The host directory

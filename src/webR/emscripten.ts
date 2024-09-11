@@ -8,6 +8,7 @@ export interface Module extends EmscriptenModule {
    * time of writing.
    */
   FS: typeof FS & {
+    _mount: typeof FS.mount;
     mkdirTree(path: string): void;
     filesystems: {
       [key: string]: Emscripten.FileSystemType;
@@ -25,7 +26,7 @@ export interface Module extends EmscriptenModule {
   setPrompt: (prompt: string) => void;
   downloadFileContent: (
     URL: string,
-    headers: Array<string>
+    headers?: Array<string>
   ) => {
     status: number;
     response: string | ArrayBuffer;

@@ -13,9 +13,7 @@ import { RLogical, RInteger, RDouble, initPersistentObjects, objs } from './robj
 import { RPtr, RType, RCtor, WebRData, WebRDataRaw } from './robj';
 import { protect, protectInc, unprotect, parseEvalBare, UnwindProtectException, safeEval } from './utils-r';
 import { generateUUID } from './chan/task-common';
-import { ungzip } from 'pako';
-
-import type { readFileSync } from 'fs';
+import { mountFSNode, mountImageUrl, mountImagePath } from './mount';
 import type { parentPort } from 'worker_threads';
 
 import {
@@ -71,13 +69,6 @@ if (IN_NODE) {
 type XHRResponse = {
   status: number;
   response: string | ArrayBuffer;
-};
-
-type WorkerFileSystemType = Emscripten.FileSystemType & {
-  reader: { readAsArrayBuffer: (chunk: any) => ArrayBuffer },
-  FILE_MODE: number
-  createNode: (dir: FS.FSNode, file: string, mode: number, dev: number,
-    contents: ArrayBufferView, mtime?: Date) => FS.FSNode;
 };
 
 let _config: Required<WebROptions>;
@@ -544,104 +535,6 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
   }
 }
 
-function mountImageData(data: any, metadata: { files: any[] }, mountpoint: string) {
-  if (IN_NODE) {
-    const buf = data as Buffer;
-    const WORKERFS = Module.FS.filesystems.WORKERFS as WorkerFileSystemType;
-
-    if (!WORKERFS.reader) WORKERFS.reader = {
-      readAsArrayBuffer: (chunk: Buffer) => new Uint8Array(chunk),
-    };
-
-    metadata.files.forEach((f: { filename: string, start: number, end: number }) => {
-      const contents: Buffer & { size?: number } = buf.subarray(f.start, f.end);
-      contents.size = contents.byteLength;
-      contents.slice = (start?: number, end?: number) => {
-        const sub: Buffer & { size?: number } = contents.subarray(start, end);
-        sub.size = sub.byteLength;
-        return sub;
-      };
-      const parts = (mountpoint + f.filename).split('/');
-      const file = parts.pop();
-      if (!file) {
-        throw new Error(`Invalid mount path "${mountpoint}${f.filename}".`);
-      }
-      const dir = parts.join('/');
-      Module.FS.mkdirTree(dir);
-      const dirNode = Module.FS.lookupPath(dir, {}).node;
-      WORKERFS.createNode(dirNode, file, WORKERFS.FILE_MODE, 0, contents);
-    });
-  } else {
-    Module.FS.mount(Module.FS.filesystems.WORKERFS, {
-      packages: [{
-        blob: new Blob([data]),
-        metadata,
-      }],
-    }, mountpoint);
-  }
-}
-
-// Download an Emscripten FS image and mount to the VFS
-function mountImageUrl(url: string, mountpoint: string) {
-  const dataUrlBase = url
-    .replace(/\.data\.gz$/, '')
-    .replace(/\.data$/, '')
-    .replace(/\.js.metadata$/, '');
-
-  const metaResp = downloadFileContent(`${dataUrlBase}.js.metadata`);
-  if (metaResp.status < 200 || metaResp.status >= 300) {
-    throw new Error("Can't download Emscripten filesystem image metadata.");
-  }
-  const metadata = JSON.parse(
-    new TextDecoder().decode(metaResp.response as ArrayBuffer)
-  ) as { files: any[], gzip?: boolean };
-
-  const dataResp = downloadFileContent(
-    metadata.gzip ? `${dataUrlBase}.data.gz` : `${dataUrlBase}.data`
-  );
-  if (dataResp.status < 200 || dataResp.status >= 300) {
-    throw new Error("Can't download Emscripten filesystem image data.");
-  }
-
-  // Decompress filesystem data, if required
-  if (metadata.gzip) {
-    const compressed = dataResp.response as ArrayBuffer;
-    dataResp.response = ungzip(compressed).buffer;
-  }
-
-  mountImageData(
-    dataResp.response,
-    JSON.parse(new TextDecoder().decode(metaResp.response as ArrayBuffer)) as { files: any[] },
-    mountpoint
-  );
-}
-
-// Read an Emscripten FS image from disk and mount to the VFS (requires Node)
-function mountImagePath(path: string, mountpoint: string) {
-  const fs = require('fs') as {
-    readFileSync: typeof readFileSync;
-  };
-
-  const dataPathBase = path
-    .replace(/\.data\.gz$/, '')
-    .replace(/\.data$/, '')
-    .replace(/\.js.metadata$/, '');
-
-  const metadata = JSON.parse(
-    fs.readFileSync(`${dataPathBase}.js.metadata`, 'utf8')
-  ) as { files: unknown[], gzip?: boolean };
-
-  let buf: ArrayBufferLike = fs.readFileSync(
-    metadata.gzip ? `${dataPathBase}.data.gz` : `${dataPathBase}.data`
-  );
-
-  // Decompress filesystem data, if required
-  if (metadata.gzip) {
-    buf = ungzip(buf);
-  }
-  mountImageData(buf, metadata, mountpoint);
-}
-
 function newRObject(args: WebRData[], objType: RType | RCtor): WebRPayloadPtr {
   const RClass = getRWorkerClass(objType);
   const _args = replaceInObject<WebRData[]>(args, isWebRPayloadPtr, (t: WebRPayloadPtr) =>
@@ -899,6 +792,8 @@ function init(config: Required<WebROptions>) {
 
   Module.preRun.push(() => {
     if (IN_NODE) {
+      Module.FS._mount = Module.FS.mount;
+      Module.FS.mount = mountFSNode;
       globalThis.FS = Module.FS;
       (globalThis as any).chan = chan;
     }

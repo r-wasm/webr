@@ -1,7 +1,7 @@
 Type: Package
 Package: webr
 Title: WebR Support Package
-Version: 0.4.1
+Version: 0.4.1.9000
 Authors@R: c(
     person("George", "Stagg", , "george.stagg@posit.co", role = c("aut", "cre")),
     person("Lionel", "Henry", , "lionel@posit.co", role = "aut"),
@@ -17,4 +17,4 @@ Imports:
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
