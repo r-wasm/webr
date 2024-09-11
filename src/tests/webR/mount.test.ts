@@ -39,6 +39,15 @@ describe('Mount filesystem using R API', () => {
     await cleanupMnt();
   });
 
+  test('Mount v2.0 filesystem image - no metadata hint', async () => {
+    await expect(webR.evalRVoid(
+      'webr::mount("/mnt", "tests/webR/data/test_image_no_hint.tgz", "workerfs")'
+    )).resolves.not.toThrow();
+    expect(await webR.evalRString("list.files('/mnt/abc')[2]")).toEqual("foo.csv");
+    expect(await webR.evalRString("readLines('/mnt/abc/bar.csv')[1]")).toEqual("a, b, c");
+    await cleanupMnt();
+  });
+
   test('Mount filesystem image from URL', async () => {
     const url = "https://repo.r-wasm.org/bin/emscripten/contrib/4.4/cli_3.6.3.js.metadata";
     await expect(webR.evalRVoid(`
