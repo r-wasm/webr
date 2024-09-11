@@ -1,5 +1,7 @@
 # webR (development version)
 
+# webR 0.4.2
+
 ## New features
 
 * Added support for directly mounting (optionally compressed) `.tar` archives as filesystem images. Archives must be pre-processed using the `rwasm` R package to append filesystem image metadata to `.tar` archive data.
