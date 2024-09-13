@@ -16,7 +16,7 @@ The webR project is under active development, and the API is subject to change. 
 :::
 
 ::: callout-note
-Some browsers (especially mobile browsers) may place restrictive limits on the amount of RAM provided to WebAssmebly *regardless of the amount of memory available on the host device*. Please keep this in mind when developing applications with webR intended for use on mobile devices.
+Some browsers (especially mobile browsers) may place restrictive limits on the amount of RAM provided to WebAssembly *regardless of the amount of memory available on the host device*. Please keep this in mind when developing applications with webR intended for use on mobile devices.
 :::
 
 ## Try it out
