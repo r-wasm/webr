@@ -842,9 +842,10 @@ function init(config: Required<WebROptions>) {
       chan?.write({ type: 'view', data: { data, title } });
     },
 
-    evalJs: (code: RPtr): unknown => {
+    evalJs: (code: RPtr): RPtr => {
       try {
-        return (0, eval)(Module.UTF8ToString(code));
+        const js = (0, eval)(Module.UTF8ToString(code)) as WebRData;
+        return (new RObject(js)).ptr;
       } catch (e) {
         /* Capture continuation token and resume R's non-local transfer here.
          * By resuming here we avoid potentially unwinding a target intermediate
