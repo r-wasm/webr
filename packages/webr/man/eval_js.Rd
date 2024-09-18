@@ -29,6 +29,8 @@ future.
 \examples{
 eval_js("123 + 456")
 eval_js("Math.sin(1)")
+eval_js("true")
+eval_js("undefined")
 eval_js("(new Date()).toUTCString()")
 eval_js("new RList({ foo: 123, bar: 456, baz: ['a', 'b', 'c']})")
 }
