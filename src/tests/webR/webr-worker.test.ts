@@ -138,21 +138,36 @@ describe('Execute JavaScript code from R', () => {
 
   test('Return types are as expected', async () => {
     /*
-     * Return type behaviour should match `emscripten_run_script_int` from
-     * Emscripten's C API. Note that the `eval_js` function may change in the
+     * JavaScript objects are converted to R objects using the `RObject` generic
+     * constructor. Other R object types can be returned by explicitly invoking
+     * another constructor. Note that the `eval_js` function may change in the
      * future so as to return different types.
      */
-    // Integers are returned as is
-    const res1 = (await webR.evalR('webr::eval_js("1 + 2")')) as RInteger;
-    expect(await res1.toNumber()).toEqual(3);
+    const res1 = (await webR.evalR('webr::eval_js("123 + 456") == 579')) as RLogical;
+    expect(await res1.toBoolean()).toBeTruthy();
 
-    // Doubles are truncated to integer
-    const res2 = (await webR.evalR('webr::eval_js("Math.E")')) as RInteger;
-    expect(await res2.toNumber()).toEqual(2);
+    const res2 = (await webR.evalR(`
+      abs(webr::eval_js("Math.sin(1)") - sin(1)) < .Machine$double.eps
+    `)) as RLogical;
+    expect(await res2.toBoolean()).toBeTruthy();
 
-    // Other objects are converted to integer 0
-    const res3 = (await webR.evalR('webr::eval_js("\'abc\'")')) as RInteger;
-    expect(await res3.toNumber()).toEqual(0);
+    const res3 = (await webR.evalR('webr::eval_js("true")')) as RLogical;
+    expect(await res3.toBoolean()).toBeTruthy();
+
+    const res4 = (await webR.evalR('is.null(webr::eval_js("undefined"))')) as RLogical;
+    expect(await res4.toBoolean()).toBeTruthy();
+
+    const res5 = (await webR.evalR(`
+      class(webr::eval_js("(new Date()).toUTCString()")) == "character"
+    `)) as RLogical;
+    expect(await res5.toBoolean()).toBeTruthy();
+
+    const res6 = (await webR.evalR(`
+      list <- webr::eval_js("new RList({ foo: 123, bar: 456, baz: ['a', 'b', 'c']})")
+      all(list$foo == 123, list$bar == 456, list$baz[[2]] == "b")
+    `)) as RLogical;
+    expect(await res6.toBoolean()).toBeTruthy();
+
   });
 });
 
