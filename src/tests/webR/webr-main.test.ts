@@ -236,6 +236,7 @@ describe('Evaluate R code', () => {
           }
         }
         globalThis.OffscreenCanvas = OffscreenCanvas;
+        undefined;
       ")
     `);
 

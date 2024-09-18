@@ -67,6 +67,7 @@ test('HTML canvas events call console callbacks', async () => {
         }
       }
       globalThis.OffscreenCanvas = OffscreenCanvas;
+      undefined;
     ")
   `);
 
