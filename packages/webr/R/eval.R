@@ -128,21 +128,27 @@ eval_r <- function(expr,
 #' Evaluate JavaScript code
 #'
 #' @description
-#' This function evaluates the given character string as JavaScript code. The
-#' result is returned as an integer.
+#' This function evaluates the given character string as JavaScript code.
+#' Returned JavaScript objects are converted to R objects using the `RObject`
+#' generic constructor, and specific R object types can be returned by invoking
+#' the R object constructor directly in the evaluated JavaScript.
 #'
 #' @details
 #' The JavaScript code is evaluated using `emscripten_run_script_int` from the
 #' Emscripten C API. In the event of a JavaScript exception an R error condition
 #' will be raised with the exception message.
 #'
-#' This is an experimental function that may undergo a breaking change in the
-#' future so as to support different return types.
+#' This is an experimental function that may undergo a breaking changes in the
+#' future.
 #'
 #' @param code The JavaScript code to evaluate.
 #'
-#' @return Integer result of evaluating the code.
-#'
+#' @return Result of evaluating the JavaScript code, returned as an R object.
+#' @examples
+#' eval_js("123 + 456")
+#' eval_js("Math.sin(1)")
+#' eval_js("(new Date()).toUTCString()")
+#' eval_js("new RList({ foo: 123, bar: 456, baz: ['a', 'b', 'c']})")
 #' @export
 #' @useDynLib webr, .registration = TRUE
 eval_js <- function(code) {
