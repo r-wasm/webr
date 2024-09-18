@@ -95,6 +95,11 @@ function newObjectFromData(obj: WebRData): RObject {
     return new (getRWorkerClass(obj.type))(obj);
   }
 
+  // Map JS's 'undefined' type to R's NULL object
+  if (typeof obj == 'undefined') {
+    return new RNull();
+  }
+
   // Conversion of explicit R NULL value
   if (obj && typeof obj === 'object' && 'type' in obj && obj.type === 'null') {
     return new RNull();
