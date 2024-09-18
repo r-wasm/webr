@@ -632,7 +632,12 @@ export class RList extends RObject {
       protectInc(ptr, prot);
 
       data.values.forEach((v, i) => {
-        Module._SET_VECTOR_ELT(ptr, i, new RObject(v).ptr);
+        // When we specifically use the `RList` constructor, deeply convert R objects to R lists
+        if (v && typeof v === "object") {
+          Module._SET_VECTOR_ELT(ptr, i, new RList(v).ptr);
+        } else {
+          Module._SET_VECTOR_ELT(ptr, i, new RObject(v).ptr);
+        }
       });
 
       const _names = names ? names : data.names;
