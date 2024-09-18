@@ -7,6 +7,7 @@ import { Complex, isComplex, NamedEntries, NamedObject, WebRDataRaw, WebRDataSca
 import { WebRData, WebRDataAtomic, RPtr, RType, RTypeMap, RTypeNumber, RCtor } from './robj';
 import { isWebRDataJs, WebRDataJs, WebRDataJsAtomic, WebRDataJsNode } from './robj';
 import { WebRDataJsNull, WebRDataJsString, WebRDataJsSymbol } from './robj';
+import { isSimpleObject } from './utils';
 import { envPoke, parseEvalBare, protect, protectInc, unprotect } from './utils-r';
 import { protectWithIndex, reprotect, unprotectIndex, safeEval } from './utils-r';
 import { EvalROptions, ShelterID, isShelterID } from './webr-chan';
@@ -134,7 +135,7 @@ function newObjectFromData(obj: WebRData): RObject {
     return RDataFrame.fromObject(obj);
   }
 
-  throw new Error('Robj construction for this JS object is not yet supported');
+  throw new Error('R object construction for this JS object is not yet supported.');
 }
 
 function newObjectFromArray(arr: WebRData[]): RObject {
@@ -633,7 +634,7 @@ export class RList extends RObject {
 
       data.values.forEach((v, i) => {
         // When we specifically use the `RList` constructor, deeply convert R objects to R lists
-        if (v && typeof v === "object") {
+        if (isSimpleObject(v)) {
           Module._SET_VECTOR_ELT(ptr, i, new RList(v).ptr);
         } else {
           Module._SET_VECTOR_ELT(ptr, i, new RObject(v).ptr);
