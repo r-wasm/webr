@@ -1,5 +1,6 @@
 import { IN_NODE } from './compat';
 import { WebRError } from './error';
+import { isComplex, isWebRDataJs } from './robj';
 import { RObjectBase } from './robj-worker';
 
 export type ResolveFn = (_value?: unknown) => void;
@@ -106,6 +107,22 @@ export function throwUnreachable(context?: string) {
   msg = msg + (context ? ': ' + context : '.');
 
   throw new WebRError(msg);
+}
+
+export function isSimpleObject(value: any): value is {[key: string | number | symbol]: any} {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    !(ArrayBuffer.isView(value)) &&
+    !isComplex(value) &&
+    !isWebRDataJs(value) &&
+    !(value instanceof Date) &&
+    !(value instanceof RegExp) &&
+    !(value instanceof Error) &&
+    !(value instanceof RObjectBase) &&
+    Object.getPrototypeOf(value) === Object.prototype
+  );
 }
 
 // From https://stackoverflow.com/a/9458996

@@ -7,9 +7,6 @@ import { EmPtr, Module } from './emscripten';
 import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
 import { WebRPayloadRaw, WebRPayloadPtr, WebRPayloadWorker, isWebRPayloadPtr } from './payload';
-import { RObject, isRObject, REnvironment, RList, RCall, getRWorkerClass } from './robj-worker';
-import { RCharacter, RString, keep, destroy, purge, shelters } from './robj-worker';
-import { RLogical, RInteger, RDouble, initPersistentObjects, objs } from './robj-worker';
 import { RPtr, RType, RCtor, WebRData, WebRDataRaw } from './robj';
 import { protect, protectInc, unprotect, parseEvalBare, UnwindProtectException, safeEval } from './utils-r';
 import { generateUUID } from './chan/task-common';
@@ -34,8 +31,59 @@ import {
   FSSyncfsMessage,
 } from './webr-chan';
 
+import {
+  RCall,
+  RCharacter,
+  RComplex,
+  RDataFrame,
+  RDouble,
+  REnvironment,
+  RInteger,
+  RList,
+  RLogical,
+  RObject,
+  RPairlist,
+  RRaw,
+  RString,
+  RSymbol,
+  destroy,
+  getRWorkerClass,
+  initPersistentObjects,
+  isRObject,
+  keep,
+  objs,
+  purge,
+  shelters,
+} from './robj-worker';
+
 let initialised = false;
 let chan: ChannelWorker | undefined;
+
+// Make webR Worker R objects available in WorkerGlobalScope
+Object.assign(globalThis, {
+  RCall,
+  RCharacter,
+  RComplex,
+  RDataFrame,
+  RDouble,
+  REnvironment,
+  RInteger,
+  RList,
+  RLogical,
+  RObject,
+  RPairlist,
+  RRaw,
+  RString,
+  RSymbol,
+  destroy,
+  getRWorkerClass,
+  initPersistentObjects,
+  isRObject,
+  keep,
+  objs,
+  purge,
+  shelters,
+});
 
 const onWorkerMessage = function (msg: Message) {
   if (!msg || !msg.type) {
@@ -842,9 +890,10 @@ function init(config: Required<WebROptions>) {
       chan?.write({ type: 'view', data: { data, title } });
     },
 
-    evalJs: (code: RPtr): unknown => {
+    evalJs: (code: RPtr): RPtr => {
       try {
-        return (0, eval)(Module.UTF8ToString(code));
+        const js = (0, eval)(Module.UTF8ToString(code)) as WebRData;
+        return (new RObject(js)).ptr;
       } catch (e) {
         /* Capture continuation token and resume R's non-local transfer here.
          * By resuming here we avoid potentially unwinding a target intermediate

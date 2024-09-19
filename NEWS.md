@@ -1,5 +1,11 @@
 # webR (development version)
 
+## Breaking changes
+
+* The `webr::eval_js()` function can now return other types of R object, not just scalar integers. Returned JavaScript objects are converted to R objects using the `RObject` generic constructor, and specific R object types can be returned by invoking the R object constructor directly in the evaluated JavaScript.
+
+* When explicitly creating a list using the `RList` constructor, nested JavaScript objects at a deeper level are also converted into R list objects. This does not affect the generic `RObject` constructor, as the default is for JavaScript objects to map to R `data.frame` objects using the `RDataFrame` constructor.
+
 # webR 0.4.2
 
 ## New features
