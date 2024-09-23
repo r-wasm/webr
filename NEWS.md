@@ -6,6 +6,10 @@
 
 * When explicitly creating a list using the `RList` constructor, nested JavaScript objects at a deeper level are also converted into R list objects. This does not affect the generic `RObject` constructor, as the default is for JavaScript objects to map to R `data.frame` objects using the `RDataFrame` constructor.
 
+## Bug Fixes
+
+* (Regression) Mounting filesystem images using the `WORKERFS` filesystem type now works again in the browser using the JavaScript API from the main thread (#488).
+
 # webR 0.4.2
 
 ## New features
