@@ -17,6 +17,31 @@ type WorkerFileSystemType = Emscripten.FileSystemType & {
 };
 
 /**
+ * Hooked FS.mount() for using WORKERFS under Node.js or with `Blob` objects
+ * replaced with Uint8Array over the communication channel.
+ * @internal
+ */
+export function mountFS(type: Emscripten.FileSystemType, opts: FSMountOptions, mountpoint: string) {
+  // For non-WORKERFS filesystem types, just call the original FS.mount()
+  if (type !== Module.FS.filesystems.WORKERFS) {
+    return Module.FS._mount(type, opts, mountpoint) as void;
+  }
+
+  // Otherwise, handle `packages` using our own internal mountImageData()
+  if ('packages' in opts && opts.packages) {
+    opts.packages.forEach((pkg) => {
+      mountImageData(pkg.blob as ArrayBufferLike, pkg.metadata, mountpoint);
+    });
+  } else {
+    // TODO: Handle `blobs` and `files` keys.
+    throw new Error(
+      "Can't mount data. You must use the `packages` key when mounting with `WORKERFS` in webR."
+    );
+  }
+}
+
+
+/**
  * Download an Emscripten FS image and mount to the VFS
  * @internal
  */
@@ -88,29 +113,6 @@ export function mountImagePath(path: string, mountpoint: string) {
   }
 }
 
-/**
- * An implementation of FS.mount() for WORKERFS under Node.js
- * @internal
- */
-export function mountFSNode(type: Emscripten.FileSystemType, opts: FSMountOptions, mountpoint: string) {
-  if (!IN_NODE || type !== Module.FS.filesystems.WORKERFS) {
-    return Module.FS._mount(type, opts, mountpoint) as void;
-  }
-
-  if ('packages' in opts && opts.packages) {
-    opts.packages.forEach((pkg) => {
-      // Main thread communication casts `Blob` to Uint8Array
-      // FIXME: Use a replacer + reviver to handle `Blob`s
-      mountImageData(pkg.blob as ArrayBufferLike, pkg.metadata, mountpoint);
-    });
-  } else {
-    throw new Error(
-      "Can't mount data under Node. " +
-      "Mounting with `WORKERFS` under Node must use the `packages` key."
-    );
-  }
-}
-
 // Mount the filesystem image `data` and `metadata` to the VFS at `mountpoint`
 function mountImageData(data: ArrayBufferLike | Buffer, metadata: FSMetaData, mountpoint: string) {
   if (IN_NODE) {
@@ -140,7 +142,9 @@ function mountImageData(data: ArrayBufferLike | Buffer, metadata: FSMetaData, mo
       WORKERFS.createNode(dirNode, file, WORKERFS.FILE_MODE, 0, contents);
     });
   } else {
-    Module.FS.mount(Module.FS.filesystems.WORKERFS, {
+    // Main thread communication casts `Blob` to Uint8Array
+    // FIXME: Use a replacer + reviver to handle `Blob`s
+    Module.FS._mount(Module.FS.filesystems.WORKERFS, {
       packages: [{
         blob: new Blob([data]),
         metadata,

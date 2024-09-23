@@ -10,7 +10,7 @@ import { WebRPayloadRaw, WebRPayloadPtr, WebRPayloadWorker, isWebRPayloadPtr } f
 import { RPtr, RType, RCtor, WebRData, WebRDataRaw } from './robj';
 import { protect, protectInc, unprotect, parseEvalBare, UnwindProtectException, safeEval } from './utils-r';
 import { generateUUID } from './chan/task-common';
-import { mountFSNode, mountImageUrl, mountImagePath } from './mount';
+import { mountFS, mountImageUrl, mountImagePath } from './mount';
 import type { parentPort } from 'worker_threads';
 
 import {
@@ -840,8 +840,6 @@ function init(config: Required<WebROptions>) {
 
   Module.preRun.push(() => {
     if (IN_NODE) {
-      Module.FS._mount = Module.FS.mount;
-      Module.FS.mount = mountFSNode;
       globalThis.FS = Module.FS;
       (globalThis as any).chan = chan;
     }
@@ -852,6 +850,10 @@ function init(config: Required<WebROptions>) {
     Module.ENV.HOME = _config.homedir;
     Module.FS.chdir(_config.homedir);
     Module.ENV = Object.assign(Module.ENV, env);
+
+    // Hook Emscripten's FS.mount() to handle ArrayBuffer data from the channel
+    Module.FS._mount = Module.FS.mount;
+    Module.FS.mount = mountFS;
   });
 
   chan?.setDispatchHandler(dispatch);
