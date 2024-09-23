@@ -14,16 +14,15 @@ $(HDF5_TARBALL):
 # How to include --with-szlib=zlib?
 
 $(HDF5_WASM_LIB): $(HDF5_TARBALL)
-	mkdir -p $(BUILD)/hdf5-$(HDF5_VERSION)/build
-	tar -C $(BUILD) -xf $(HDF5_TARBALL)
-	cd $(BUILD)/hdf5-$(HDF5_VERSION)/build && \
-	  emconfigure ../configure \
-      --enable-build-mode=production \ 
-      --disable-dependency-tracking \ 
-      --disable-silent-rules \ 
-	    --enable-shared=no \
-	    --enable-static=yes \
-      --enable-cxx \ 
-	    --prefix=$(WASM) && \
-  emmake make install
+        mkdir -p $(BUILD)/hdf5-$(HDF5_VERSION)/build
+        tar -C $(BUILD) -xf $(HDF5_TARBALL)
+        cd $(BUILD)/hdf5-$(HDF5_VERSION)/build && \
+                emconfigure ../configure \
+                --enable-build-mode=production \ 
+                --disable-dependency-tracking \ 
+                --disable-silent-rules \ 
+                --enable-shared=no \
+                --enable-static=yes \
+                --prefix=$(WASM) && \
+        emmake make install
 
