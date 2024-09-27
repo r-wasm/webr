@@ -128,7 +128,7 @@ export interface Module extends EmscriptenModule {
   // TODO: Namespace all webR properties
   webr: {
     UnwindProtectException: typeof UnwindProtectException;
-    chan: ChannelWorker | undefined,
+    channel: ChannelWorker | undefined,
     canvas: {
       [key: number]: {
         ctx: OffscreenCanvasRenderingContext2D;
