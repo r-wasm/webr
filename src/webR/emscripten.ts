@@ -2,6 +2,7 @@ import type { RPtr, RTypeNumber } from './robj';
 import type { RObject, RList } from './robj-worker';
 import type { EvalROptions } from './webr-chan';
 import type { UnwindProtectException } from './utils-r';
+import type { ChannelWorker } from './chan/channel';
 
 export interface Module extends EmscriptenModule {
   /* Add mkdirTree to FS namespace, missing from @types/emscripten at the
@@ -127,6 +128,7 @@ export interface Module extends EmscriptenModule {
   // TODO: Namespace all webR properties
   webr: {
     UnwindProtectException: typeof UnwindProtectException;
+    chan: ChannelWorker | undefined,
     canvas: {
       [key: number]: {
         ctx: OffscreenCanvasRenderingContext2D;

@@ -296,7 +296,7 @@ void canvasMode(int mode, pDevDesc RGD) {
             const canvas = Module.webr.canvas[$0];
             if (!canvas.capture) {
                 const image = canvas.offscreen.transferToImageBitmap();
-                chan.write({ type: 'canvas', data: {
+                Module.webr.channel.write({ type: 'canvas', data: {
                     event: 'canvasImage',
                     image,
                     id: $0,
@@ -347,7 +347,7 @@ void canvasNewPage(const pGEcontext gc, pDevDesc RGD)
 
     EM_ASM({
         if (!Module.webr.canvas[$0].capture) {
-            chan.write({ type: 'canvas', data: {
+            Module.webr.channel.write({ type: 'canvas', data: {
                 event: 'canvasNewPage',
                 id: $0,
             } });

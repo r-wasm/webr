@@ -866,6 +866,7 @@ function init(config: Required<WebROptions>) {
     UnwindProtectException: UnwindProtectException,
     evalR: evalR,
     captureR: captureR,
+    channel: chan,
     canvas: {},
 
     resolveInit: () => {
