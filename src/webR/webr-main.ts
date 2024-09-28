@@ -136,7 +136,7 @@ export interface WebROptions {
 
   /**
    * Environment variables to be made available for the R process.
-   * Default: `{ R_HOME: '/usr/lib/R', R_ENABLE_JIT: 0 }`.
+   * Default: `{ R_HOME: '/usr/lib/R' }`.
    */
   REnv?: { [key: string]: string };
 
@@ -187,7 +187,6 @@ export interface WebROptions {
 const defaultEnv = {
   FONTCONFIG_PATH: '/etc/fonts',
   R_HOME: '/usr/lib/R',
-  R_ENABLE_JIT: '0',
   WEBR: '1',
   WEBR_VERSION: WEBR_VERSION,
 };

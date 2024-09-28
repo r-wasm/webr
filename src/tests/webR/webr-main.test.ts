@@ -1052,9 +1052,9 @@ test('Default and user provided REnv properties are merged', async () => {
   await tempR.init();
 
   // Confirm default REnv settings
-  const jit = await tempR.evalRString('Sys.getenv("R_ENABLE_JIT")');
+  const webr = await tempR.evalRString('Sys.getenv("WEBR")');
   const home = await tempR.evalRString('Sys.getenv("R_HOME")');
-  expect(jit).toEqual('0');
+  expect(webr).toEqual('1');
   expect(home).toEqual('/usr/lib/R');
 
   // Confirm a user REnv setting
