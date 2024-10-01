@@ -14,9 +14,9 @@ $(HDF5_TARBALL):
 # How to include --with-szlib=zlib?
 
 $(HDF5_WASM_LIB): $(HDF5_TARBALL)
-	mkdir -p $(BUILD)/hdf5-$(HDF5_VERSION)/build
-	tar -C $(BUILD) -xf $(HDF5_TARBALL)
-	cd $(BUILD)/hdf5-$(HDF5_VERSION)/build && \
+	mkdir -p $(BUILD)/hdf5-$(HDF5_VERSION)/hdfsrc/build
+	tar -C $(BUILD)/hdf5-$(HDF5_VERSION) -xf $(HDF5_TARBALL)
+	cd $(BUILD)/hdf5-$(HDF5_VERSION)/hdfsrc/build && \
 	emconfigure ../configure \
 		--enable-build-mode=production \ 
 		--disable-dependency-tracking \ 
