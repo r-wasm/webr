@@ -12,7 +12,7 @@ viewer_install <- function() {
   options(
     viewer = function(url, ...) {
       webr::eval_js(paste0(
-        "chan.write({",
+        "Module.webr.channel.write({",
         "  type: 'browse',",
         "  data: { url: '", url, "' },",
         "});"

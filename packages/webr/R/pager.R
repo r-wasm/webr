@@ -13,7 +13,7 @@ pager_install <- function() {
   options(
     pager = function(files, header, title, delete.file) {
       webr::eval_js(paste0(
-        "chan.write({",
+        "Module.webr.channel.write({",
         "  type: 'pager',",
         "  data: {",
         "    path: '", files[1], "',",
