@@ -18,11 +18,11 @@ $(HDF5_WASM_LIB): $(HDF5_TARBALL)
 	tar -C $(BUILD)/hdf5-$(HDF5_VERSION) -xf $(HDF5_TARBALL)
 	cd $(BUILD)/hdf5-$(HDF5_VERSION)/hdfsrc/build && \
 	emconfigure ../configure \
-		--enable-build-mode=production \ 
-		--disable-dependency-tracking \ 
-		--disable-silent-rules \ 
-		--enable-shared=no \
-		--enable-static=yes \
-		--prefix=$(WASM) && \
+	  --enable-build-mode=production \
+	  --disable-dependency-tracking \
+	  --disable-silent-rules \
+	  --enable-shared=no \
+	  --enable-static=yes \
+	  --prefix=$(WASM) && \
 	emmake make install
 
