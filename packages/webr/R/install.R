@@ -68,12 +68,15 @@ install <- function(packages,
 
     if (mount) {
       # Try mounting `.tgz` as v2.0 VFS image, fallback to extracting the .tgz
-      tryCatch({
-        install_vfs_image(repo, lib, pkg, pkg_ver)
-        next
-      }, error = function(cnd) {
-        warning(paste(cnd$message, "Falling back to traditional `.tgz` extraction."))
-      })
+      tryCatch(
+        {
+          install_vfs_image(repo, lib, pkg, pkg_ver)
+          next
+        },
+        error = function(cnd) {
+          warning(paste(cnd$message, "Falling back to traditional `.tgz` extraction."))
+        }
+      )
     }
 
     install_tgz(repo, lib, pkg, pkg_ver)
