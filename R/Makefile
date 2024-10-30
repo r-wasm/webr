@@ -96,7 +96,6 @@ $(BUILD)/state/R-$(R_VERSION)/r-stage1-configured: $(BUILD)/state/R-$(R_VERSION)
 	    --enable-R-profiling=no \
 	    --with-pcre2 \
 	    --disable-nls \
-	    --enable-byte-compiled-packages=no \
 	    --enable-long-double=no \
 	    --enable-R-shlib
 	touch $@
@@ -182,7 +181,6 @@ $(BUILD)/state/R-$(R_VERSION)/r-stage2-configured: $(BUILD)/state/R-$(R_VERSION)
 	    --enable-R-profiling=no \
 	    --with-pcre2 \
 	    --disable-nls \
-	    --enable-byte-compiled-packages=no \
 	    --enable-static=yes \
 	    --host=wasm32-unknown-emscripten \
 	    --with-internal-tzcode
@@ -248,7 +246,6 @@ $(BUILD)/state/R-$(R_VERSION)/r-stage2: $(BUILD)/state/R-$(R_VERSION)/r-stage1 $
 .PHONY: Rprofile
 Rprofile: $(BUILD)/state/R-$(R_VERSION)/r-stage2
 	mkdir -p "$(R_WASM)/lib/R/etc/"
-	echo "options(expressions=400)" > "$(R_WASM)/lib/R/etc/Rprofile.site"
 	echo "options(bitmapType='cairo')" >> "$(R_WASM)/lib/R/etc/Rprofile.site"
 
 .PHONY: install
