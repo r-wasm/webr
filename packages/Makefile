@@ -27,8 +27,7 @@ $(R_WASM_LIB)/%: $(PKG_SRCS)
 	$(R_HOST_EXE) CMD INSTALL --library="$(R_WASM_LIB)" $(notdir $@) \
 	  --no-docs \
 	  --no-test-load \
-	  --no-staged-install \
-	  --no-byte-compile
+	  --no-staged-install
 
 clean:
 	rm -rf $(PKG_PATHS)

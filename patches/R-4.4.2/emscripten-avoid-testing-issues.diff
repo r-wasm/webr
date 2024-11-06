@@ -1,7 +1,7 @@
-Index: R-4.4.0/src/library/base/man/stopifnot.Rd
+Index: R-4.4.2/src/library/base/man/stopifnot.Rd
 ===================================================================
---- R-4.4.0.orig/src/library/base/man/stopifnot.Rd
-+++ R-4.4.0/src/library/base/man/stopifnot.Rd
+--- R-4.4.2.orig/src/library/base/man/stopifnot.Rd
++++ R-4.4.2/src/library/base/man/stopifnot.Rd
 @@ -138,6 +138,7 @@ warnifnot <- stopifnot ; N <- length(bdy <- body(warni
  
  ##' warnifnot(): a "only-warning" version of stopifnot()
@@ -18,10 +18,10 @@ Index: R-4.4.0/src/library/base/man/stopifnot.Rd
  \keyword{environment}
  \keyword{programming}
  \keyword{error}
-Index: R-4.4.0/src/library/base/man/validUTF8.Rd
+Index: R-4.4.2/src/library/base/man/validUTF8.Rd
 ===================================================================
---- R-4.4.0.orig/src/library/base/man/validUTF8.Rd
-+++ R-4.4.0/src/library/base/man/validUTF8.Rd
+--- R-4.4.2.orig/src/library/base/man/validUTF8.Rd
++++ R-4.4.2/src/library/base/man/validUTF8.Rd
 @@ -60,6 +60,7 @@ validEnc(x) # typically the last, x[10], is invalid
  Encoding(x) <-"UTF-8"
  validEnc(x) # typically the last, x[10], is invalid
@@ -35,10 +35,10 @@ Index: R-4.4.0/src/library/base/man/validUTF8.Rd
            validEnc(G)) # typically TRUE
  }
 +}
-Index: R-4.4.0/src/library/base/man/warnings.Rd
+Index: R-4.4.2/src/library/base/man/warnings.Rd
 ===================================================================
---- R-4.4.0.orig/src/library/base/man/warnings.Rd
-+++ R-4.4.0/src/library/base/man/warnings.Rd
+--- R-4.4.2.orig/src/library/base/man/warnings.Rd
++++ R-4.4.2/src/library/base/man/warnings.Rd
 @@ -93,7 +93,7 @@ summary(warnings())
  
  ## Often the most useful way to look at many warnings:
@@ -48,10 +48,10 @@ Index: R-4.4.0/src/library/base/man/warnings.Rd
  ww <- warnings()
  uw <- unique(ww)
  sw <- summary(ww)
-Index: R-4.4.0/src/library/utils/man/news.Rd
+Index: R-4.4.2/src/library/utils/man/news.Rd
 ===================================================================
---- R-4.4.0.orig/src/library/utils/man/news.Rd
-+++ R-4.4.0/src/library/utils/man/news.Rd
+--- R-4.4.2.orig/src/library/utils/man/news.Rd
++++ R-4.4.2/src/library/utils/man/news.Rd
 @@ -138,6 +138,7 @@ news(query, package = "R", lib.loc = NULL, format = NU
  }
  
@@ -65,10 +65,10 @@ Index: R-4.4.0/src/library/utils/man/news.Rd
  }
  }
 +}
-Index: R-4.4.0/src/library/utils/tests/Sweave-tst.R
+Index: R-4.4.2/src/library/utils/tests/Sweave-tst.R
 ===================================================================
---- R-4.4.0.orig/src/library/utils/tests/Sweave-tst.R
-+++ R-4.4.0/src/library/utils/tests/Sweave-tst.R
+--- R-4.4.2.orig/src/library/utils/tests/Sweave-tst.R
++++ R-4.4.2/src/library/utils/tests/Sweave-tst.R
 @@ -15,7 +15,7 @@
  #  https://www.R-project.org/Licenses/
  
@@ -83,10 +83,10 @@ Index: R-4.4.0/src/library/utils/tests/Sweave-tst.R
  
  cat('Time elapsed: ', proc.time() - .proctime00,'\n')
 +}
-Index: R-4.4.0/src/library/methods/tests/envRefClass.R
+Index: R-4.4.2/src/library/methods/tests/envRefClass.R
 ===================================================================
---- R-4.4.0.orig/src/library/methods/tests/envRefClass.R
-+++ R-4.4.0/src/library/methods/tests/envRefClass.R
+--- R-4.4.2.orig/src/library/methods/tests/envRefClass.R
++++ R-4.4.2/src/library/methods/tests/envRefClass.R
 @@ -4,7 +4,7 @@ rp ## show() failed ..
  rc <- getClass("refClass")
  rp <- rc@prototype
@@ -96,10 +96,10 @@ Index: R-4.4.0/src/library/methods/tests/envRefClass.R
  (ner <- new("envRefClass")) # show() failed
  stopifnot(all.equal(rp,rp), all.equal(ner,ner))
  be <- baseenv()
-Index: R-4.4.0/src/library/methods/tests/nextWithDots.R
+Index: R-4.4.2/src/library/methods/tests/nextWithDots.R
 ===================================================================
---- R-4.4.0.orig/src/library/methods/tests/nextWithDots.R
-+++ R-4.4.0/src/library/methods/tests/nextWithDots.R
+--- R-4.4.2.orig/src/library/methods/tests/nextWithDots.R
++++ R-4.4.2/src/library/methods/tests/nextWithDots.R
 @@ -1,9 +1,10 @@
  setClass("A")
 -setClass("B", contains = c("array", "A"))
@@ -122,10 +122,10 @@ Index: R-4.4.0/src/library/methods/tests/nextWithDots.R
 +removeClass("C"); removeClass("BB"); removeClass("A")
  removeGeneric("withDots")
  rm(a, bb, a2)
-Index: R-4.4.0/src/library/compiler/tests/basics.R
+Index: R-4.4.2/src/library/compiler/tests/basics.R
 ===================================================================
---- R-4.4.0.orig/src/library/compiler/tests/basics.R
-+++ R-4.4.0/src/library/compiler/tests/basics.R
+--- R-4.4.2.orig/src/library/compiler/tests/basics.R
++++ R-4.4.2/src/library/compiler/tests/basics.R
 @@ -90,7 +90,7 @@ stopifnot(identical(p, pp))
  h <- ls(compiler:::inlineHandlers, all.names = TRUE)
  p <- sub("package:", "", sapply(h, find))
@@ -135,10 +135,10 @@ Index: R-4.4.0/src/library/compiler/tests/basics.R
  
  
  ## Check assumption about simple .Internals
-Index: R-4.4.0/src/library/grDevices/tests/saved-recordPlot.R
+Index: R-4.4.2/src/library/grDevices/tests/saved-recordPlot.R
 ===================================================================
---- R-4.4.0.orig/src/library/grDevices/tests/saved-recordPlot.R
-+++ R-4.4.0/src/library/grDevices/tests/saved-recordPlot.R
+--- R-4.4.2.orig/src/library/grDevices/tests/saved-recordPlot.R
++++ R-4.4.2/src/library/grDevices/tests/saved-recordPlot.R
 @@ -3,6 +3,7 @@
  ## Subject: [Rd] recordPlot/replayPlot not working with saveRDS/readRDS
  ## Date: Mon, 2 Apr 2018 12:23:06 -0500
@@ -152,10 +152,10 @@ Index: R-4.4.0/src/library/grDevices/tests/saved-recordPlot.R
      identical(tt[[1]], tt[[2]]),
      identical(tt[[3]], tt[[2]]))
 +}
-Index: R-4.4.0/src/library/grDevices/tests/encodings.R
+Index: R-4.4.2/src/library/grDevices/tests/encodings.R
 ===================================================================
---- R-4.4.0.orig/src/library/grDevices/tests/encodings.R
-+++ R-4.4.0/src/library/grDevices/tests/encodings.R
+--- R-4.4.2.orig/src/library/grDevices/tests/encodings.R
++++ R-4.4.2/src/library/grDevices/tests/encodings.R
 @@ -12,6 +12,7 @@ musl <- grepl("musl", R.version$os)
      q("no")
  }
@@ -192,10 +192,10 @@ Index: R-4.4.0/src/library/grDevices/tests/encodings.R
  #}
  
  ## Now with --as-cran settings in recent R, only.
-Index: R-4.4.0/src/library/grDevices/tests/encodings2.R
+Index: R-4.4.2/src/library/grDevices/tests/encodings2.R
 ===================================================================
---- R-4.4.0.orig/src/library/grDevices/tests/encodings2.R
-+++ R-4.4.0/src/library/grDevices/tests/encodings2.R
+--- R-4.4.2.orig/src/library/grDevices/tests/encodings2.R
++++ R-4.4.2/src/library/grDevices/tests/encodings2.R
 @@ -15,11 +15,12 @@ pdfenc <- c("ISOLatin1", "ISOLatin2", "ISOLatin7", "IS
      q("no")
  }
@@ -226,10 +226,10 @@ Index: R-4.4.0/src/library/grDevices/tests/encodings2.R
  }
  dev.off()
 +}
-Index: R-4.4.0/src/library/grDevices/tests/urw-fonts.R
+Index: R-4.4.2/src/library/grDevices/tests/urw-fonts.R
 ===================================================================
---- R-4.4.0.orig/src/library/grDevices/tests/urw-fonts.R
-+++ R-4.4.0/src/library/grDevices/tests/urw-fonts.R
+--- R-4.4.2.orig/src/library/grDevices/tests/urw-fonts.R
++++ R-4.4.2/src/library/grDevices/tests/urw-fonts.R
 @@ -59,7 +59,8 @@ for(i in seq_along(pdfenc)) {
          try(do_one(pdfenc[i], enc[i], i >= 7))
          dev.off()
@@ -250,10 +250,10 @@ Index: R-4.4.0/src/library/grDevices/tests/urw-fonts.R
          unlink(f)
      }
  }
-Index: R-4.4.0/src/library/grDevices/tests/zzcheck-encodings.R
+Index: R-4.4.2/src/library/grDevices/tests/zzcheck-encodings.R
 ===================================================================
---- R-4.4.0.orig/src/library/grDevices/tests/zzcheck-encodings.R
-+++ R-4.4.0/src/library/grDevices/tests/zzcheck-encodings.R
+--- R-4.4.2.orig/src/library/grDevices/tests/zzcheck-encodings.R
++++ R-4.4.2/src/library/grDevices/tests/zzcheck-encodings.R
 @@ -1,5 +1,8 @@
  ### Optonally compare encodings results with the ref directories
  
@@ -268,10 +268,10 @@ Index: R-4.4.0/src/library/grDevices/tests/zzcheck-encodings.R
  
  if(cnt) stop("Differences found")
 +}
-Index: R-4.4.0/src/library/base/man/source.Rd
+Index: R-4.4.2/src/library/base/man/source.Rd
 ===================================================================
---- R-4.4.0.orig/src/library/base/man/source.Rd
-+++ R-4.4.0/src/library/base/man/source.Rd
+--- R-4.4.2.orig/src/library/base/man/source.Rd
++++ R-4.4.2/src/library/base/man/source.Rd
 @@ -213,6 +213,9 @@ withAutoprint({ formals(sourceDir); body(sourceDir) },
                max.deparse.length = 20, verbose = TRUE)
  %% --> tests in  ../../../../tests/eval-etc.R
@@ -290,10 +290,10 @@ Index: R-4.4.0/src/library/base/man/source.Rd
  \keyword{file}
  \keyword{programming}
  \keyword{connection}
-Index: R-4.4.0/src/library/grDevices/tests/encodings3.R
+Index: R-4.4.2/src/library/grDevices/tests/encodings3.R
 ===================================================================
---- R-4.4.0.orig/src/library/grDevices/tests/encodings3.R
-+++ R-4.4.0/src/library/grDevices/tests/encodings3.R
+--- R-4.4.2.orig/src/library/grDevices/tests/encodings3.R
++++ R-4.4.2/src/library/grDevices/tests/encodings3.R
 @@ -50,6 +50,9 @@ if(!capabilities("cairo")) q("no")
  text(0.5+seq_along(four), 4, four)
  dev.off()

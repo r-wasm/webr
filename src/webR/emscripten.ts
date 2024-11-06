@@ -24,7 +24,6 @@ export interface Module extends EmscriptenModule {
   noImageDecoding: boolean;
   noAudioDecoding: boolean;
   noWasmDecoding: boolean;
-  setPrompt: (prompt: string) => void;
   downloadFileContent: (
     URL: string,
     headers?: Array<string>
@@ -137,6 +136,7 @@ export interface Module extends EmscriptenModule {
       };
     };
     readConsole: () => number;
+    setPrompt: (prompt: string) => void;
     resolveInit: () => void;
     handleEvents: () => void;
     dataViewer: (data: RPtr, title: string) => void;

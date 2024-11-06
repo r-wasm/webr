@@ -1,7 +1,7 @@
-Index: R-4.4.0/configure
+Index: R-4.4.2/configure
 ===================================================================
---- R-4.4.0.orig/configure
-+++ R-4.4.0/configure
+--- R-4.4.2.orig/configure
++++ R-4.4.2/configure
 @@ -15089,7 +15089,7 @@ _LT_EOF
        archive_expsym_cmds='sed "s|^|_|" $export_symbols >$output_objdir/$soname.expsym~$CC -shared $pic_flag $libobjs $deplibs $compiler_flags $wl-h,$soname $wl--retain-symbols-file,$output_objdir/$soname.expsym $wl--image-base,`expr ${RANDOM-$$} % 4096 / 2 \* 262144 + 1342177280` -o $lib'
        ;;
@@ -56,15 +56,6 @@ Index: R-4.4.0/configure
    version_type=linux # correct to gnu/linux during the next big refactor
    need_lib_prefix=no
    need_version=no
-@@ -43517,7 +43517,7 @@ case "${host_os}" in
- ##    flags to all (C, C++ and Fortran) compiler flags.
- 
- case "${host_os}" in
--  mingw*|windows*|winnt|msys)
-+  mingw*|windows*|winnt|msys|emscripten*)
-     ;;
-   *)
-     r_save_CFLAGS=${CFLAGS}
 @@ -53146,6 +53146,11 @@ fi
  
  ## libcurl

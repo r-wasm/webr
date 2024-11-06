@@ -57,6 +57,7 @@ import {
 } from './robj-worker';
 
 let initialised = false;
+let resolved = false;
 let chan: ChannelWorker | undefined;
 
 // Make webR Worker R objects available in WorkerGlobalScope
@@ -875,12 +876,18 @@ function init(config: Required<WebROptions>) {
       Module.setValue(Module._R_Interactive, _config.interactive ? 1 : 0, 'i8');
       evalR(`options(webr_pkg_repos="${_config.repoUrl}")`);
       chan?.resolve();
+      resolved = true; 
+    },
+
+    setPrompt: (prompt: string) => {
+      chan?.write({ type: 'prompt', data: prompt });
     },
 
     readConsole: () => {
       if (!chan) {
         throw new Error("Can't read console input without a communication channel");
       }
+      if (!resolved) Module.webr.resolveInit();
       return chan.inputOrDispatch();
     },
 
@@ -931,11 +938,9 @@ function init(config: Required<WebROptions>) {
   Module.print = (text: string) => {
     chan?.write({ type: 'stdout', data: text });
   };
+
   Module.printErr = (text: string) => {
     chan?.write({ type: 'stderr', data: text });
-  };
-  Module.setPrompt = (prompt: string) => {
-    chan?.write({ type: 'prompt', data: prompt });
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access

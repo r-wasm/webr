@@ -1,7 +1,7 @@
-Index: R-4.4.0/src/main/errors.c
+Index: R-4.4.2/src/main/errors.c
 ===================================================================
---- R-4.4.0.orig/src/main/errors.c
-+++ R-4.4.0/src/main/errors.c
+--- R-4.4.2.orig/src/main/errors.c
++++ R-4.4.2/src/main/errors.c
 @@ -1078,7 +1078,7 @@ static void jump_to_top_ex(Rboolean traceback,
  	}
      }

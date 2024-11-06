@@ -1,23 +1,15 @@
-Index: R-4.4.0/src/unix/sys-std.c
+Index: R-4.4.2/src/unix/sys-std.c
 ===================================================================
---- R-4.4.0.orig/src/unix/sys-std.c
-+++ R-4.4.0/src/unix/sys-std.c
-@@ -61,6 +61,7 @@
- 
- #ifdef __EMSCRIPTEN__
- #include <ctype.h>              /* for isspace */
-+#include "Parse.h"
- #endif
- 
- extern SA_TYPE SaveAction;
-@@ -327,8 +328,17 @@ void (* R_PolledEvents)(void) = nop;
+--- R-4.4.2.orig/src/unix/sys-std.c
++++ R-4.4.2/src/unix/sys-std.c
+@@ -323,8 +323,17 @@ void (* R_PolledEvents)(void) = nop;
  
  static void nop(void){}
  
 +#ifdef __EMSCRIPTEN__
 +#include <emscripten.h>
 +static void handleEvents(void){
-+	EM_ASM(globalThis.Module.webr.handleEvents());
++    EM_ASM(globalThis.Module.webr.handleEvents());
 +}
 +void (* R_PolledEvents)(void) = handleEvents;
 +int R_wait_usec = 100000;
@@ -28,12 +20,12 @@ Index: R-4.4.0/src/unix/sys-std.c
  
  /* For X11 devices */
  void (* Rg_PolledEvents)(void) = nop;
-@@ -1051,8 +1061,12 @@ Rstd_ReadConsole(const char *prompt, unsigned char *bu
+@@ -1051,8 +1060,12 @@ Rstd_ReadConsole(const char *prompt, unsigned char *bu
  	else
  #endif /* HAVE_LIBREADLINE */
  	{
 +#ifdef __EMSCRIPTEN__
-+        EM_ASM(globalThis.Module.setPrompt(UTF8ToString($0)), prompt);
++	    EM_ASM(globalThis.Module.webr.setPrompt(UTF8ToString($0)), prompt);
 +#else
  	    fputs(prompt, stdout);
  	    fflush(stdout);
@@ -41,16 +33,11 @@ Index: R-4.4.0/src/unix/sys-std.c
  	}
  
  	if(R_InputHandlers == NULL)
-@@ -1110,10 +1124,25 @@ Rstd_ReadConsole(const char *prompt, unsigned char *bu
+@@ -1110,10 +1123,20 @@ Rstd_ReadConsole(const char *prompt, unsigned char *bu
  		else
  #endif /* HAVE_LIBREADLINE */
  		{
 +#ifdef __EMSCRIPTEN__
-+		    static int initialised = 0;
-+		    if (!initialised) {
-+			EM_ASM(globalThis.Module.webr.resolveInit());
-+			initialised = 1;
-+		    }
 +		    const char* input = (const char*) EM_ASM_INT(return globalThis.Module.webr.readConsole());
 +		    if (input) {
 + 		        strncpy((char*) buf, input, len);
@@ -67,10 +54,10 @@ Index: R-4.4.0/src/unix/sys-std.c
  		}
  	    }
  	}
-Index: R-4.4.0/src/main/main.c
+Index: R-4.4.2/src/main/main.c
 ===================================================================
---- R-4.4.0.orig/src/main/main.c
-+++ R-4.4.0/src/main/main.c
+--- R-4.4.2.orig/src/main/main.c
++++ R-4.4.2/src/main/main.c
 @@ -321,7 +321,7 @@ static unsigned char DLLbuf[CONSOLE_BUFFER_SIZE+1], *D
  }
  

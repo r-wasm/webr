@@ -68,6 +68,11 @@ describe('Run R default package examples and tests', () => {
     expect(await test.toNumber()).toEqual(0);
   });
 
+  test('grid', async () => {
+    const test = await evalTest('grid');
+    expect(await test.toNumber()).toEqual(0);
+  });
+
   test('compiler', async () => {
     const test = await evalTest('compiler');
     expect(await test.toNumber()).toEqual(0);
@@ -75,13 +80,6 @@ describe('Run R default package examples and tests', () => {
 
   test('base', async () => {
     const test = await evalTest('base');
-    expect(await test.toNumber()).toEqual(0);
-  });
-
-  test('grid', async () => {
-    await webR.evalR('options(expressions=5000)');
-    await webR.evalR('graphics.off()');
-    const test = await evalTest('grid');
     expect(await test.toNumber()).toEqual(0);
   });
 });
