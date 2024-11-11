@@ -1,5 +1,5 @@
 ARG BASE=ghcr.io/r-wasm/flang-wasm:main
-FROM $BASE as webr
+FROM $BASE AS webr
 
 # Setup environment for Emscripten
 ENV PATH="/opt/emsdk:/opt/emsdk/upstream/emscripten:${PATH}"
@@ -12,7 +12,7 @@ ENV EMFC="/opt/flang/host/bin/flang-new"
 # 
 # Installing this makes sure the toolchain installed in the later step is used
 # instead of the one that the distro (Ubuntu) provides.
-FROM webr as deb_build
+FROM webr AS deb_build
 RUN mkdir /opt/fake_rust/ && \
     apt-get update && \
     apt-get install -y equivs lsb-release &&\
@@ -25,7 +25,7 @@ RUN mkdir /opt/fake_rust/ && \
     mv rustc_99.0_all.deb cargo_99.0_all.deb /opt/fake_rust/
 
 # Step 2: Do the necessary setups
-FROM webr as scratch
+FROM webr AS webr_scratch
 # Install nodejs
 RUN apt-get update && \
     apt-get install nodejs npm -y
@@ -67,7 +67,7 @@ RUN curl -L https://rig.r-pkg.org/deb/rig.gpg -o /etc/apt/trusted.gpg.d/rig.gpg 
 # Because $HOME gets masked by GHA with the host $HOME
 ENV R_LIBS_USER=/opt/R/current/lib/R/site-library
 # Don't install pak. Rig installs it into the user lib, but we want it in the system lib
-RUN rig add 4.4.1 --without-pak
+RUN rig add 4.4.2 --without-pak
 # Install pak and rwasm into the system lib
 RUN /opt/R/current/bin/R -q -e 'install.packages("pak", lib = .Library)'
 RUN /opt/R/current/bin/R -q -e 'pak::pak("r-wasm/rwasm", lib = .Library)'
@@ -99,7 +99,7 @@ RUN sed -i.bak 's|#define TYPEOF|#define FT_TYPEOF|g' /opt/emsdk/upstream/emscri
 
 # Step 3: Squash docker image layers
 FROM webr
-COPY --from=scratch / /
+COPY --from=webr_scratch / /
 ENV PATH="/usr/local/cargo/bin:${PATH}"
 ENV RUSTUP_HOME=/usr/local/rustup
 ENV CARGO_HOME=/usr/local/cargo

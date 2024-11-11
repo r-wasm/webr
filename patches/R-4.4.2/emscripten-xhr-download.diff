@@ -1,7 +1,7 @@
-Index: R-4.4.0/src/modules/internet/libcurl.c
+Index: R-4.4.2/src/modules/internet/libcurl.c
 ===================================================================
---- R-4.4.0.orig/src/modules/internet/libcurl.c
-+++ R-4.4.0/src/modules/internet/libcurl.c
+--- R-4.4.2.orig/src/modules/internet/libcurl.c
++++ R-4.4.2/src/modules/internet/libcurl.c
 @@ -55,6 +55,7 @@ static int current_timeout = 0;
  
  static int current_timeout = 0;

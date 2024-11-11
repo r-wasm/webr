@@ -1,12 +1,12 @@
-Index: R-4.4.0/src/library/base/R/unix/system.unix.R
+Index: R-4.4.2/src/library/base/R/unix/system.unix.R
 ===================================================================
---- R-4.4.0.orig/src/library/base/R/unix/system.unix.R
-+++ R-4.4.0/src/library/base/R/unix/system.unix.R
+--- R-4.4.2.orig/src/library/base/R/unix/system.unix.R
++++ R-4.4.2/src/library/base/R/unix/system.unix.R
 @@ -37,6 +37,11 @@ system <- function(command, intern = FALSE,
      if(!is.logical(receive.console.signals) || is.na(receive.console.signals))
          stop("'receive.console.signals' must be TRUE or FALSE")
  
-+    # Disable system() command when running under emscripten
++    # Hook system() command when running under emscripten
 +    if (grepl("emscripten", R.version$os)) {
 +	return(webr_hook_system(command))
 +    }
@@ -19,7 +19,7 @@ Index: R-4.4.0/src/library/base/R/unix/system.unix.R
      if(!is.logical(receive.console.signals) || is.na(receive.console.signals))
          stop("'receive.console.signals' must be TRUE or FALSE")
 +
-+    # Disable system() command when running under emscripten
++    # Hook system() command when running under emscripten
 +    if (grepl("emscripten", R.version$os)) {
 +	return(webr_hook_system(command))
 +    }
@@ -52,10 +52,10 @@ Index: R-4.4.0/src/library/base/R/unix/system.unix.R
          warning("'which' was not found on this platform")
          return(res)
      }
-Index: R-4.4.0/src/library/utils/R/sessionInfo.R
+Index: R-4.4.2/src/library/utils/R/sessionInfo.R
 ===================================================================
---- R-4.4.0.orig/src/library/utils/R/sessionInfo.R
-+++ R-4.4.0/src/library/utils/R/sessionInfo.R
+--- R-4.4.2.orig/src/library/utils/R/sessionInfo.R
++++ R-4.4.2/src/library/utils/R/sessionInfo.R
 @@ -23,6 +23,8 @@
      ## Now try to figure out the OS we are running under
      if (.Platform$OS.type == "windows") {

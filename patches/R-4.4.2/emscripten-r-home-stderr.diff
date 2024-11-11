@@ -1,7 +1,7 @@
-Index: R-4.4.0/src/scripts/R.sh.in
+Index: R-4.4.2/src/scripts/R.sh.in
 ===================================================================
---- R-4.4.0.orig/src/scripts/R.sh.in
-+++ R-4.4.0/src/scripts/R.sh.in
+--- R-4.4.2.orig/src/scripts/R.sh.in
++++ R-4.4.2/src/scripts/R.sh.in
 @@ -28,7 +28,7 @@ if test -n "${R_HOME}" && \
  
  if test -n "${R_HOME}" && \
