@@ -948,7 +948,7 @@ function init(config: Required<WebROptions>) {
 
   // At the next tick, launch the REPL. This never returns.
   setTimeout(() => {
-    const scriptSrc = `${_config.baseUrl}R.bin.js`;
+    const scriptSrc = `${_config.baseUrl}R.js`;
     void loadScript(scriptSrc);
   });
 }

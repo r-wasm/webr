@@ -227,10 +227,10 @@ install:
 	@mkdir -p $(DIST)
 	$(MAKE) vfs
 	@cp "$(R_SOURCE)/build/src/main/R.wasm" "$(DIST)/R.wasm"
-	@cat $(R_WASM)/pre.js $(R_SOURCE)/build/src/main/R.bin > $(DIST)/R.bin.js
+	@cat $(R_WASM)/pre.js $(R_SOURCE)/build/src/main/R.bin > $(DIST)/R.js
 # Patch Emscripten library to redirect a warning message to console.warn()
-	@sed -i.bak 's/out("LazyFiles/console.warn("LazyFiles/' $(DIST)/R.bin.js
-	@rm $(DIST)/R.bin.js.bak
+	@sed -i.bak 's/out("LazyFiles/console.warn("LazyFiles/' $(DIST)/R.js
+	@rm $(DIST)/R.js.bak
 
 # Build lazy virtual filesystem, backed by XHR when loaded in browsers
 WASM_LAZY_VFS := $(WASM_LAZY_VFS)
