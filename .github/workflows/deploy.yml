@@ -88,13 +88,13 @@ jobs:
           verbose: true
           token: ${{ secrets.CC_TOKEN }}
       - name: Archive webR build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: webr-dist
           path: |
             dist
       - name: Archive webR documentation artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: webr-docs
           path: |
@@ -109,7 +109,7 @@ jobs:
       contents: read
     steps:
       - name: Download build archive
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: webr-dist
       - name: Configure AWS credentials
@@ -145,7 +145,7 @@ jobs:
       contents: read
     steps:
       - name: Download docs archive
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: webr-docs
       - name: Configure AWS credentials
