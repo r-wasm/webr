@@ -72,6 +72,9 @@ RUN rig add 4.4.2 --without-pak
 RUN /opt/R/current/bin/R -q -e 'install.packages("pak", lib = .Library)'
 RUN /opt/R/current/bin/R -q -e 'pak::pak("r-wasm/rwasm", lib = .Library)'
 
+# Setup P3M
+RUN echo 'options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/noble/latest"))' >> /root/.Rprofile
+
 # Download webR and configure for LLVM flang
 ARG WEBRCI_REPO="https://github.com/r-wasm/webr.git"
 RUN git clone ${WEBRCI_REPO} /opt/webr
