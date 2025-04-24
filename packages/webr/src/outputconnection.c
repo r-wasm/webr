@@ -126,7 +126,7 @@ int output_vfprintf(Rconnection con, const char *format, va_list ap) {
       const char *names[] = { "type", "data", "" };
       SEXP elt = PROTECT(Rf_mkNamed(VECSXP, names));
       SET_VECTOR_ELT(elt, 0, Rf_mkString(con->description));
-      SET_VECTOR_ELT(elt, 1, Rf_mkChar(data->line));
+      SET_VECTOR_ELT(elt, 1, Rf_mkCharCE(data->line, CE_UTF8));
 
       SEXP vec = VECTOR_ELT(data->output, 2);
       int len = Rf_length(vec);

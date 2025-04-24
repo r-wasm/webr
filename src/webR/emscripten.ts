@@ -92,10 +92,12 @@ export interface Module extends EmscriptenModule {
   _Rf_lang4: (ptr1: RPtr, ptr2: RPtr, ptr3: RPtr, ptr4: RPtr) => RPtr;
   _Rf_lang5: (ptr1: RPtr, ptr2: RPtr, ptr3: RPtr, ptr4: RPtr, ptr5: RPtr) => RPtr;
   _Rf_lang6: (ptr1: RPtr, ptr2: RPtr, ptr3: RPtr, ptr4: RPtr, ptr5: RPtr, ptr6: RPtr) => RPtr;
-  _Rf_mkChar: (ptr: number) => RPtr;
+  _Rf_mkChar: (string: number) => RPtr;
+  _Rf_mkCharCE: (string: number, encoding: number) => RPtr;
   _Rf_mkString: (ptr: number) => RPtr;
   _Rf_onintr: () => void;
   _Rf_protect: (ptr: RPtr) => RPtr;
+  _Rf_translateCharUTF8: (ptr: RPtr) => RPtr;
   _R_ContinueUnwind: (cont: RPtr) => never;
   _R_ProtectWithIndex: (ptr1: RPtr, ptr2: RPtr) => void;
   _R_Reprotect: (ptr1: RPtr, ptr2: RPtr) => void;
@@ -124,6 +126,8 @@ export interface Module extends EmscriptenModule {
   _SET_VECTOR_ELT: (ptr: RPtr, idx: number, val: RPtr) => void;
   _setup_Rmainloop: () => void;
   _strcpy: (dest: RPtr, src: RPtr) => number;
+  _vmaxget: () => number;
+  _vmaxset: (ptr: number) => void;
   // TODO: Namespace all webR properties
   webr: {
     UnwindProtectException: typeof UnwindProtectException;
