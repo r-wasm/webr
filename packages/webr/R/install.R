@@ -10,12 +10,14 @@
 #' @param mount Logical. If `TRUE`, download and mount packages using Emscripten
 #'   filesystem images.
 #' @param quiet Logical. If `TRUE`, do not output downloading messages.
-install <- function(packages,
-                    repos = NULL,
-                    info = NULL,
-                    lib = NULL,
-                    quiet = FALSE,
-                    mount = TRUE) {
+install <- function(
+  packages,
+  repos = NULL,
+  info = NULL,
+  lib = NULL,
+  quiet = FALSE,
+  mount = TRUE
+) {
   if (is.null(lib)) {
     lib <- .libPaths()[[1]]
   }
@@ -74,7 +76,10 @@ install <- function(packages,
           next
         },
         error = function(cnd) {
-          warning(paste(cnd$message, "Falling back to traditional `.tgz` extraction."))
+          warning(paste(
+            cnd$message,
+            "Falling back to traditional `.tgz` extraction."
+          ))
         }
       )
     }

@@ -69,9 +69,7 @@ test_package <- function(pkg) {
   old_wd <- getwd()
   pkgdir <- find.package(pkg)
 
-  message(gettextf("Testing examples for package %s", sQuote(pkg)),
-    domain = NA
-  )
+  message(gettextf("Testing examples for package %s", sQuote(pkg)), domain = NA)
   rfile <- tools:::.createExdotR(pkg, pkgdir, silent = TRUE)
 
   if (length(rfile)) {
@@ -79,15 +77,15 @@ test_package <- function(pkg) {
     failfile <- paste0(outfile, ".fail")
     unlink(failfile)
     remove_lines_in_file(rfile, c("quit('no')", "q()"))
-    tryCatch(sink_source_to_file(rfile, failfile),
-      error = function(cond) {
-        stop(cond)
-      }
-    )
+    tryCatch(sink_source_to_file(rfile, failfile), error = function(cond) {
+      stop(cond)
+    })
     file.rename(failfile, outfile)
   } else {
-    warning(gettextf("no examples found for package %s", sQuote(pkg)),
-      call. = FALSE, domain = NA
+    warning(
+      gettextf("no examples found for package %s", sQuote(pkg)),
+      call. = FALSE,
+      domain = NA
     )
   }
 
@@ -100,10 +98,13 @@ test_package <- function(pkg) {
     file.copy(Sys.glob(file.path(testdir, "*")), this, recursive = TRUE)
     setwd(this)
     on.exit(setwd(old_wd), add = TRUE)
-    message(gettextf(
-      "Running specific tests for package %s",
-      sQuote(pkg)
-    ), domain = NA)
+    message(
+      gettextf(
+        "Running specific tests for package %s",
+        sQuote(pkg)
+      ),
+      domain = NA
+    )
     rfiles <- dir(".", pattern = "\\.[rR]$")
     for (f in rfiles) {
       remove_lines_in_file(f, c("quit('no')", "q()"))
@@ -111,11 +112,9 @@ test_package <- function(pkg) {
       outfile <- sub("rout$", "Rout", paste0(f, "out"))
       failfile <- paste0(outfile, ".fail")
       unlink(failfile)
-      tryCatch(sink_source_to_file(f, failfile),
-        error = function(cond) {
-          stop(cond)
-        }
-      )
+      tryCatch(sink_source_to_file(f, failfile), error = function(cond) {
+        stop(cond)
+      })
       file.rename(failfile, outfile)
     }
   }

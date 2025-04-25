@@ -12,6 +12,7 @@
 pager_install <- function() {
   options(
     pager = function(files, header, title, delete.file) {
+      # fmt: skip
       webr::eval_js(paste0(
         "Module.webr.channel.write({",
         "  type: 'pager',",

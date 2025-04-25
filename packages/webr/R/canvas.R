@@ -41,12 +41,14 @@
 #' @param ... Additional graphics device arguments (ignored).
 #' @return A function with no arguments. When called returns an integer vector
 #' of canvas cache IDs for `OffscreenCanvas` elements captured by this device.
-canvas <- function(width = 504,
-                   height = 504,
-                   pointsize = 12,
-                   bg = "transparent",
-                   capture = FALSE,
-                   ...) {
+canvas <- function(
+  width = 504,
+  height = 504,
+  pointsize = 12,
+  bg = "transparent",
+  capture = FALSE,
+  ...
+) {
   env <- new.env(parent = emptyenv())
   .Call(ffi_dev_canvas, width, height, pointsize, bg, capture, env)
 
