@@ -811,6 +811,15 @@ export class RFunction extends RObject {
 }
 
 export class RString extends RObject {
+  static CEType = {
+    CE_NATIVE: 0,
+    CE_UTF8: 1,
+    CE_LATIN1: 2,
+    CE_BYTES: 3,
+    CE_SYMBOL: 5,
+    CE_ANY: 99
+  } as const;
+
   // Unlike symbols, strings are not cached and must thus be protected
   constructor(x: WebRDataScalar<string>) {
     if (x instanceof RObjectBase) {
@@ -822,14 +831,19 @@ export class RString extends RObject {
     const name = Module.allocateUTF8(x as string);
 
     try {
-      super(new RObjectBase(Module._Rf_mkChar(name)));
+      super(new RObjectBase(Module._Rf_mkCharCE(name, RString.CEType.CE_UTF8)));
     } finally {
       Module._free(name);
     }
   }
 
   toString(): string {
-    return Module.UTF8ToString(Module._R_CHAR(this.ptr));
+    const vmax = Module._vmaxget();
+    try {
+      return Module.UTF8ToString(Module._Rf_translateCharUTF8(this.ptr));
+    } finally {
+      Module._vmaxset(vmax);
+    }
   }
 
   toJs(): WebRDataJsString {
@@ -1254,9 +1268,16 @@ export class RCharacter extends RVectorAtomic<string> {
   }
 
   toArray(): (string | null)[] {
-    return this.detectMissing().map((m, idx) =>
-      m ? null : Module.UTF8ToString(Module._R_CHAR(Module._STRING_ELT(this.ptr, idx)))
-    );
+    const vmax = Module._vmaxget();
+    try {
+      return this.detectMissing().map((m, idx) =>
+        m ? null : Module.UTF8ToString(
+          Module._Rf_translateCharUTF8(Module._STRING_ELT(this.ptr, idx))
+        )
+      );
+    } finally {
+      Module._vmaxset(vmax);
+    }
   }
 }
 

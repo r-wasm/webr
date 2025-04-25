@@ -6,7 +6,7 @@
 SEXP r_obj_address(SEXP x) {
   static char buf[100];
   snprintf(buf, 100, "%p", (void*) x);
-  return Rf_mkChar(buf);
+  return Rf_mkCharCE(buf, CE_UTF8);
 }
 
 SEXP ffi_obj_address(SEXP x) {
