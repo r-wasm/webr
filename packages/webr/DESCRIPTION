@@ -5,7 +5,8 @@ Version: 0.4.2.9000
 Authors@R: c(
     person("George", "Stagg", , "george.stagg@posit.co", role = c("aut", "cre")),
     person("Lionel", "Henry", , "lionel@posit.co", role = "aut"),
-    person("Posit Software, PBC", role = c("cph", "fnd"))
+    person("Posit Software, PBC", role = c("cph", "fnd"),
+           comment = c(ROR = "03wc8by49"))
   )
 Description: An R package to act as an interface to webR and provide
     supporting functions.
