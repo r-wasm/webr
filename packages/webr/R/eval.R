@@ -17,12 +17,14 @@
 #'
 #' @export
 #' @useDynLib webr, .registration = TRUE
-eval_r <- function(expr,
-                   conditions = TRUE,
-                   streams = FALSE,
-                   autoprint = FALSE,
-                   handlers = TRUE,
-                   env = parent.frame()) {
+eval_r <- function(
+  expr,
+  conditions = TRUE,
+  streams = FALSE,
+  autoprint = FALSE,
+  handlers = TRUE,
+  env = parent.frame()
+) {
   res <- NULL
 
   # The following C routine prepares an output object that is used to capture

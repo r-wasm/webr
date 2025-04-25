@@ -11,6 +11,7 @@
 viewer_install <- function() {
   options(
     viewer = function(url, ...) {
+      # fmt: skip
       webr::eval_js(paste0(
         "Module.webr.channel.write({",
         "  type: 'browse',",

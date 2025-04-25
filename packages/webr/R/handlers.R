@@ -28,7 +28,8 @@ prompt_download <- function(package, show_menu) {
     utils::menu(
       c("Yes", "No"),
       title = paste0(
-        'Failed to load package "', package,
+        'Failed to load package "',
+        package,
         '". Do you want to try downloading it from the webR binary repo?'
       )
     )
