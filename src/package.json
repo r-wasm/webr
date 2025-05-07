@@ -81,6 +81,7 @@
     "xterm-readline": "^1.1.1"
   },
   "devDependencies": {
+    "@jupyterlite/contents": "^0.5.1",
     "@types/emscripten": "^1.39.6",
     "@types/jest": "^28.1.8",
     "@types/node": "^17.0.35",

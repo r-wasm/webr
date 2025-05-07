@@ -19,6 +19,11 @@
 #' `mountpoint`. This filesystem type can only be used when webR is running
 #' under Node.
 #'
+#' When mounting a Jupyterlite "drivefs" type filesystem, the `source` should be
+#' the drive name to mount. The default value for `source` is the empty string,
+#' which is the initial drive name used by Jupyterlite. This filesystem type can
+#' only be used when webR is running in a Jupyterlite notebook session.
+#'
 #' When mounting an Emscripten "idbfs" type filesystem, files will be persisted
 #' to or populated from a browser-based IndexedDB database whenever the
 #' JavaScript function `Module.FS.syncfs` is invoked. See the Emscripten `IDBFS`
@@ -31,7 +36,7 @@
 #' @param source a character string giving the location of the data source to be
 #'   mounted.
 #' @param type a character string giving the type of Emscripten filesystem to be
-#'   mounted: "workerfs", "nodefs", or "idbfs".
+#'   mounted: "workerfs", "nodefs", "drivefs", or "idbfs".
 #'
 #' @export
 mount <- function(mountpoint, source, type = "workerfs") {
@@ -43,6 +48,11 @@ mount <- function(mountpoint, source, type = "workerfs") {
     invisible(.Call(ffi_mount_workerfs, source, mountpoint))
   } else if (tolower(type) == "nodefs") {
     invisible(.Call(ffi_mount_nodefs, source, mountpoint))
+  } else if (tolower(type) == "drivefs") {
+    if (missing(source) || is.null(source)) {
+      source <- ""
+    }
+    invisible(.Call(ffi_mount_drivefs, source, mountpoint))
   } else if (tolower(type) == "idbfs") {
     invisible(.Call(ffi_mount_idbfs, mountpoint))
   } else {

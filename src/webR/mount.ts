@@ -6,6 +6,7 @@
 import { ungzip } from 'pako';
 import { Module } from './emscripten';
 import { IN_NODE } from './compat';
+import { DriveFS } from '@jupyterlite/contents';
 import type { FSMountOptions, FSMetaData } from './webr-main';
 import type { readFileSync } from 'fs';
 
@@ -40,6 +41,24 @@ export function mountFS(type: Emscripten.FileSystemType, opts: FSMountOptions, m
   }
 }
 
+/**
+ * Mount a Jupyterlite DriveFS Emscripten filesystem to the VFS
+ * @internal
+ */
+export function mountDriveFS(driveName: string, mountpoint: string): void {
+  // DriveFS requires the current jupyterlite application base URL
+  const baseUrl = location.origin + '/';
+
+  const fs = new DriveFS({
+    FS: (globalThis as any).FS as DriveFS.IOptions['FS'],
+    PATH: (globalThis as any).PATH as DriveFS.IOptions['PATH'],
+    ERRNO_CODES: (globalThis as any).ERRNO_CODES as object,
+    baseUrl,
+    driveName,
+    mountpoint,
+  });
+  Module.FS.mount(fs, {}, mountpoint);
+}
 
 /**
  * Download an Emscripten FS image and mount to the VFS
@@ -158,7 +177,7 @@ function decodeVFSArchive(data: ArrayBufferLike) {
   const buffer = ungzip(data).buffer;
   const index = getArchiveMetadata(buffer) || findArchiveMetadata(buffer);
   if (!index) {
-      throw new Error("Can't mount archive, no VFS metadata found.");
+    throw new Error("Can't mount archive, no VFS metadata found.");
   }
 
   const bytes = new DataView(buffer, 512 * index.block, index.len);

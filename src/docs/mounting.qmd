@@ -17,8 +17,10 @@ Emscripten's API allows for several types of virtual filesystem, depending on th
 | `WORKERFS` | Mount Emscripten filesystem images. | &#x2705; | &#x2705; |
 | `NODEFS` | Mount existing host directories. | &#x274C; | &#x2705; |
 | `IDBFS` | Browser-based persistent storage using the [IndexedDB API](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API). | &#x2705;[^idbfs] | &#x274C; |
+| `DRIVEFS` | Mount a [JupyterLite](https://jupyterlite.readthedocs.io/en/stable/) DriveFS filesystem. | &#x2705;[^lite] | &#x274C; |
 
 [^idbfs]: Using the `PostMessage` [communication channel](communication.qmd) only.
+[^lite]: When webR is running as a [JupyterLite kernel](https://github.com/r-wasm/jupyterlite-webr-kernel) only.
 
 ## Filesystem images
 
@@ -224,3 +226,30 @@ Filesystem data stored in an IndexedDB database can only be accessed within the 
 The way in which web browsers decide how much storage space to allocate for data and what to remove when limits are reached differs between browsers and is not always simple to calculate. Be aware of browser [storage quotas and eviction criteria](https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria) and note that data stored in an `IDBFS` filesystem type is stored only on a "best-effort" basis. It can be removed by the browser at any time, autonomously or by the user interacting through the browser's UI.
 
 In private browsing mode, for example, stored data is usually deleted when the private session ends.
+
+## JupyterLite DriveFS Filesystem Storage
+
+When using webR as a [JupyterLite kernel](https://github.com/r-wasm/jupyterlite-webr-kernel), the in-browser storage provided by JupyterLite can be mounted using the `DRIVEFS` filesystem type.
+
+The webR kernel mounts the default Jupyterlite storage drive automatically at startup with the mountpoint `/drive`, and so usually you will not need to mount the storage manually.
+
+
+### Mounting
+
+An optional drive name can be given as the `driveName` option or `source` argument. When omitted, the default value for `source` is the empty string, the default drive name used by JupyterLite.
+
+::: {.panel-tabset}
+## JavaScript
+
+``` javascript
+await webR.FS.mkdir("/drive");
+await webR.FS.mount("DRIVEFS", { driveName: "" }, "/drive");
+```
+
+## R
+
+```{r eval=FALSE}
+webr::mount(mountpoint = "/drive", source = "", type = "DRIVEFS")
+```
+
+:::

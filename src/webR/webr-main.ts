@@ -99,13 +99,14 @@ export type FSNode = {
 };
 
 /** An Emscripten Filesystem type */
-export type FSType = 'NODEFS' | 'WORKERFS' | 'IDBFS';
+export type FSType = 'NODEFS' | 'WORKERFS' | 'IDBFS' | 'DRIVEFS';
 
 /**
  * Configuration settings to be used when mounting Filesystem objects with
  * Emscripten
  */
 export type FSMountOptions<T extends FSType = FSType> =
+  T extends 'DRIVEFS' ? { driveName?: string; } :
   T extends 'NODEFS' ? { root: string } : {
     blobs?: Array<{ name: string, data: Blob | ArrayBufferLike }>;
     files?: Array<File | FileList>;

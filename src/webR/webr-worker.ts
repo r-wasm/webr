@@ -2,7 +2,7 @@ import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
 import { newChannelWorker, ChannelInitMessage, ChannelType } from './chan/channel-common';
 import { Message, Request, newResponse } from './chan/message';
-import { FSNode, WebROptions } from './webr-main';
+import { FSMountOptions, FSNode, WebROptions } from './webr-main';
 import { EmPtr, Module } from './emscripten';
 import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
@@ -10,7 +10,7 @@ import { WebRPayloadRaw, WebRPayloadPtr, WebRPayloadWorker, isWebRPayloadPtr } f
 import { RPtr, RType, RCtor, WebRData, WebRDataRaw } from './robj';
 import { protect, protectInc, unprotect, parseEvalBare, UnwindProtectException, safeEval } from './utils-r';
 import { generateUUID } from './chan/task-common';
-import { mountFS, mountImageUrl, mountImagePath } from './mount';
+import { mountFS, mountImageUrl, mountImagePath, mountDriveFS } from './mount';
 import type { parentPort } from 'worker_threads';
 
 import {
@@ -152,14 +152,23 @@ function dispatch(msg: Message): void {
           case 'mount': {
             const msg = reqMsg as FSMountMessage;
             const type = msg.data.type;
+            const mountpoint = msg.data.mountpoint;
             if (type === "IDBFS" && _config.channelType == ChannelType.SharedArrayBuffer) {
               throw new Error(
                 'The `IDBFS` filesystem type is not supported under the `SharedArrayBuffer` ' +
                 'communication channel. The `PostMessage` communication channel must be used.'
               );
             }
-            const fs = Module.FS.filesystems[type];
-            Module.FS.mount(fs, msg.data.options, msg.data.mountpoint);
+
+            if (type === "DRIVEFS") {
+              const options = msg.data.options as FSMountOptions<typeof type>;
+              const driveName = options.driveName || '';
+              mountDriveFS(driveName, mountpoint);
+            } else {
+              const fs = Module.FS.filesystems[type];
+              Module.FS.mount(fs, msg.data.options, mountpoint);
+            }
+
             write({ obj: null, payloadType: 'raw' });
             break;
           }
@@ -934,6 +943,7 @@ function init(config: Required<WebROptions>) {
   Module.downloadFileContent = downloadFileContent;
   Module.mountImageUrl = mountImageUrl;
   Module.mountImagePath = mountImagePath;
+  Module.mountDriveFS = mountDriveFS;
 
   Module.print = (text: string) => {
     chan?.write({ type: 'stdout', data: text });

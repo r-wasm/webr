@@ -117,6 +117,32 @@ SEXP ffi_mount_idbfs(SEXP mountpoint) {
 #endif
 }
 
+SEXP ffi_mount_drivefs(SEXP source, SEXP mountpoint) {
+#ifdef __EMSCRIPTEN__
+  CHECK_STRING(source);
+  CHECK_STRING(mountpoint);
+
+  EM_ASM({
+    const driveName = UTF8ToString($0);
+    const mountpoint = UTF8ToString($1);
+    try {
+      Module.mountDriveFS(driveName, mountpoint);
+    } catch (e) {
+      let msg = e.message;
+      if (e.name === "ErrnoError" && e.errno === 10) {
+        const dir = Module.UTF8ToString($1);
+        msg = "Unable to mount directory, `" + dir + "` is already mounted.";
+      }
+      Module._Rf_error(Module.allocateUTF8OnStack(msg));
+    }
+  }, R_CHAR(STRING_ELT(source, 0)), R_CHAR(STRING_ELT(mountpoint, 0)));
+
+  return R_NilValue;
+#else
+  Rf_error("Function must be running under Emscripten.");
+#endif
+}
+
 SEXP ffi_syncfs(SEXP populate) {
 #ifdef __EMSCRIPTEN__
   CHECK_LOGICAL(populate);
