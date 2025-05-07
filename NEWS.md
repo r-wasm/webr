@@ -1,5 +1,7 @@
 # webR (development version)
 
+# webR 0.4.3
+
 ## New features
 
 * Added support for mounting JupyterLite DriveFS filesystems within the webR JupyterLite kernel (#533).
