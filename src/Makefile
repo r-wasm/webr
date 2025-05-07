@@ -72,7 +72,7 @@ publish: $(PKG_DIST)/webr.mjs $(PKG_DIST)/vfs
 # binaries and lazy vfs into the npm package.
 $(PKG_DIST)/webr.mjs $(PKG_DIST)/vfs: webR/config.ts node_modules esbuild.ts
 	npm run build -- --prod
-	cd "$(DIST)" && cp -r vfs R.bin.* *.so "$(PKG_DIST)"
+	cd "$(DIST)" && cp -r vfs R.* *.so "$(PKG_DIST)"
 
 clean:
 	rm -rf "$(PKG_DIST)"
