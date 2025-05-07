@@ -1,5 +1,11 @@
 # webR (development version)
 
+## New features
+
+* Added support for mounting JupyterLite DriveFS filesystems within the webR JupyterLite kernel (#533).
+
+* Updated to R version 4.4.2 (#498).
+
 ## Breaking changes
 
 * The `webr::eval_js()` function can now return other types of R object, not just scalar integers. Returned JavaScript objects are converted to R objects using the `RObject` generic constructor, and specific R object types can be returned by invoking the R object constructor directly in the evaluated JavaScript.
@@ -7,6 +13,8 @@
 * When explicitly creating a list using the `RList` constructor, nested JavaScript objects at a deeper level are also converted into R list objects. This does not affect the generic `RObject` constructor, as the default is for JavaScript objects to map to R `data.frame` objects using the `RDataFrame` constructor.
 
 ## Bug Fixes
+
+* Added a workaround for compiling against older FreeType (#485).
 
 * (Regression) Mounting filesystem images using the `WORKERFS` filesystem type now works again in the browser using the JavaScript API from the main thread (#488).
 
