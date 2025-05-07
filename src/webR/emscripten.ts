@@ -33,6 +33,7 @@ export interface Module extends EmscriptenModule {
   };
   mountImageUrl: (url: string, mountpoint: string) => void;
   mountImagePath: (path: string, mountpoint: string) => void;
+  mountDriveFS: (driveName: string, mountpoint: string) => void;
   // Exported Emscripten JS API
   allocateUTF8: typeof allocateUTF8;
   allocateUTF8OnStack: typeof allocateUTF8OnStack;

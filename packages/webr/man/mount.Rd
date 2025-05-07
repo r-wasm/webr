@@ -17,7 +17,7 @@ onto in the Emscripten virtual filesystem.}
 mounted.}
 
 \item{type}{a character string giving the type of Emscripten filesystem to be
-mounted: "workerfs", "nodefs", or "idbfs".}
+mounted: "workerfs", "nodefs", "drivefs", or "idbfs".}
 }
 \description{
 Uses the Emscripten filesystem API to mount a filesystem object onto a given
@@ -37,6 +37,11 @@ the path to a physical directory on the host filesystem. The host directory
 will be mapped into the virtual filesystem and mounted onto the directory
 \code{mountpoint}. This filesystem type can only be used when webR is running
 under Node.
+
+When mounting a Jupyterlite "drivefs" type filesystem, the \code{source} should be
+the drive name to mount. The default value for \code{source} is the empty string,
+which is the initial drive name used by Jupyterlite. This filesystem type can
+only be used when webR is running in a Jupyterlite notebook session.
 
 When mounting an Emscripten "idbfs" type filesystem, files will be persisted
 to or populated from a browser-based IndexedDB database whenever the

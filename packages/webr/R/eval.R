@@ -147,12 +147,14 @@ eval_r <- function(
 #'
 #' @return Result of evaluating the JavaScript code, returned as an R object.
 #' @examples
+#' \dontrun{
 #' eval_js("123 + 456")
 #' eval_js("Math.sin(1)")
 #' eval_js("true")
 #' eval_js("undefined")
 #' eval_js("(new Date()).toUTCString()")
 #' eval_js("new RList({ foo: 123, bar: 456, baz: ['a', 'b', 'c']})")
+#' }
 #' @export
 #' @useDynLib webr, .registration = TRUE
 eval_js <- function(code) {
