@@ -60,6 +60,8 @@
     "@codemirror/state": "^6.2.1",
     "@codemirror/view": "^6.15.0",
     "@msgpack/msgpack": "^2.8.0",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0",
     "classnames": "^2.2.6",
     "codemirror": "^6.0.1",
     "codemirror-lang-r": "^0.1.0-2",
@@ -76,9 +78,7 @@
     "react-resizable-panels": "^2.0.19",
     "tsx": "^4.0.0",
     "xmlhttprequest-ssl": "^2.1.0",
-    "xterm": "^5.1.0",
-    "xterm-addon-fit": "^0.7.0",
-    "xterm-readline": "^1.1.1"
+    "xterm-readline": "^1.1.2"
   },
   "devDependencies": {
     "@jupyterlite/contents": "^0.5.1",

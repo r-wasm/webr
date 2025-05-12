@@ -1,12 +1,12 @@
 import React from 'react';
 import './Terminal.css';
-import { Terminal as XTerminal } from 'xterm';
+import { Terminal as XTerminal } from '@xterm/xterm';
 import { Readline } from 'xterm-readline';
-import { FitAddon } from 'xterm-addon-fit';
+import { FitAddon } from '@xterm/addon-fit';
 import { Panel } from 'react-resizable-panels';
 import { TerminalInterface } from '../App';
 import { WebR } from '../../webR/webr-main';
-import 'xterm/css/xterm.css';
+import '@xterm/xterm/css/xterm.css';
 
 export function Terminal({
   webR,
