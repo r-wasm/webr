@@ -6,7 +6,7 @@ ENV PATH="/opt/emsdk:/opt/emsdk/upstream/emscripten:${PATH}"
 ENV EMSDK="/opt/emsdk"
 ENV WEBR_ROOT="/opt/webr"
 ENV EM_NODE_JS="/usr/bin/node"
-ENV EMFC="/opt/flang/host/bin/flang-new"
+ENV EMFC="/opt/flang/host/bin/flang"
 
 # Step 1: Build fake Rust DEB packages
 # 
@@ -96,9 +96,6 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN rm -rf /tmp/rig
 RUN rm -rf libs/download libs/build src/node_modules R/download
 RUN cd src && make clean
-
-# Temp workaround for https://github.com/emscripten-core/emscripten/issues/22571
-RUN sed -i.bak 's|#define TYPEOF|#define FT_TYPEOF|g' /opt/emsdk/upstream/emscripten/cache/sysroot/include/freetype2/config/ftconfig.h
 
 # Step 3: Squash docker image layers
 FROM webr

@@ -92,7 +92,7 @@
             # will look for it in the home directory, which does not exist in a
             # build.
             configurePhase = ''
-              EMFC=${pkg-flang-wasm}/host/bin/flang-new ./configure
+              EMFC=${pkg-flang-wasm}/host/bin/flang ./configure
 
               cd src
               npm config set cache "${srcNpmDeps}" --location project

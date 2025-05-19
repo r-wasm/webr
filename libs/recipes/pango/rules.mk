@@ -18,7 +18,7 @@ $(PANGO_WASM_LIB): $(PANGO_TARBALL) $(PANGO_DEPS)
 	cp -r "$(WEBR_ROOT)/patches/pango-$(PANGO_VERSION)/." \
 	  "$(BUILD)/pango-$(PANGO_VERSION)/patches"
 	cd $(BUILD)/pango-$(PANGO_VERSION)/build && quilt push -a && \
-	  LDFLAGS="$(LDFLAGS) -sUSE_FREETYPE=1 -sUSE_PTHREADS=0" \
+	  LDFLAGS="$(LDFLAGS) --use-port=freetype -sUSE_PTHREADS=0" \
 	  PTHREAD_CFLAGS=" " \
 	  emconfigure ../configure \
 	    --enable-shared=no \

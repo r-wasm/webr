@@ -9,8 +9,8 @@ TOOLS = $(WEBR_ROOT)/tools
 HOST = $(WEBR_ROOT)/host
 WASM = $(WEBR_ROOT)/wasm
 
-EM_LIBS := -s USE_BZIP2=1
-EM_LIBS += -s USE_ZLIB=1
+EM_LIBS := --use-port=bzip2
+EM_LIBS += --use-port=zlib
 
 WASM_OPT ?= -Oz
 
@@ -34,7 +34,6 @@ WASM_LDFLAGS += -L$(WASM)/lib
 WASM_LDFLAGS += $(EM_LIBS)
 WASM_LDFLAGS += $(WASM_OPT)
 WASM_LDFLAGS += -fwasm-exceptions
-WASM_LDFLAGS += -s SUPPORT_LONGJMP=wasm
 
 export CPPFLAGS = $(WASM_CPPFLAGS)
 export CFLAGS = $(WASM_CFLAGS)
