@@ -1,8 +1,8 @@
-Index: R-4.4.2/src/unix/sys-std.c
+Index: R-4.5.0/src/unix/sys-std.c
 ===================================================================
---- R-4.4.2.orig/src/unix/sys-std.c
-+++ R-4.4.2/src/unix/sys-std.c
-@@ -323,8 +323,17 @@ void (* R_PolledEvents)(void) = nop;
+--- R-4.5.0.orig/src/unix/sys-std.c
++++ R-4.5.0/src/unix/sys-std.c
+@@ -323,8 +323,17 @@ getInputHandler(InputHandler *handlers,
  
  static void nop(void){}
  
@@ -20,7 +20,7 @@ Index: R-4.4.2/src/unix/sys-std.c
  
  /* For X11 devices */
  void (* Rg_PolledEvents)(void) = nop;
-@@ -1051,8 +1060,12 @@ Rstd_ReadConsole(const char *prompt, unsigned char *bu
+@@ -1092,8 +1101,12 @@ Rstd_ReadConsole(const char *prompt, uns
  	else
  #endif /* HAVE_LIBREADLINE */
  	{
@@ -33,7 +33,7 @@ Index: R-4.4.2/src/unix/sys-std.c
  	}
  
  	if(R_InputHandlers == NULL)
-@@ -1110,10 +1123,20 @@ Rstd_ReadConsole(const char *prompt, unsigned char *bu
+@@ -1153,10 +1166,20 @@ Rstd_ReadConsole(const char *prompt, uns
  		else
  #endif /* HAVE_LIBREADLINE */
  		{
@@ -54,11 +54,11 @@ Index: R-4.4.2/src/unix/sys-std.c
  		}
  	    }
  	}
-Index: R-4.4.2/src/main/main.c
+Index: R-4.5.0/src/main/main.c
 ===================================================================
---- R-4.4.2.orig/src/main/main.c
-+++ R-4.4.2/src/main/main.c
-@@ -321,7 +321,7 @@ static unsigned char DLLbuf[CONSOLE_BUFFER_SIZE+1], *D
+--- R-4.5.0.orig/src/main/main.c
++++ R-4.5.0/src/main/main.c
+@@ -324,7 +324,7 @@ static void R_ReplConsole(SEXP rho, int
  }
  
  

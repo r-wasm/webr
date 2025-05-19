@@ -1,8 +1,8 @@
-Index: R-4.4.2/src/library/base/man/stopifnot.Rd
+Index: R-4.5.0/src/library/base/man/stopifnot.Rd
 ===================================================================
---- R-4.4.2.orig/src/library/base/man/stopifnot.Rd
-+++ R-4.4.2/src/library/base/man/stopifnot.Rd
-@@ -138,6 +138,7 @@ warnifnot <- stopifnot ; N <- length(bdy <- body(warni
+--- R-4.5.0.orig/src/library/base/man/stopifnot.Rd
++++ R-4.5.0/src/library/base/man/stopifnot.Rd
+@@ -138,6 +138,7 @@ stopifnot("m must be symmetric"= m == t(
  
  ##' warnifnot(): a "only-warning" version of stopifnot()
  ##'   {Yes, learn how to use do.call(substitute, ...) in a powerful manner !!}
@@ -18,11 +18,11 @@ Index: R-4.4.2/src/library/base/man/stopifnot.Rd
  \keyword{environment}
  \keyword{programming}
  \keyword{error}
-Index: R-4.4.2/src/library/base/man/validUTF8.Rd
+Index: R-4.5.0/src/library/base/man/validUTF8.Rd
 ===================================================================
---- R-4.4.2.orig/src/library/base/man/validUTF8.Rd
-+++ R-4.4.2/src/library/base/man/validUTF8.Rd
-@@ -60,6 +60,7 @@ validEnc(x) # typically the last, x[10], is invalid
+--- R-4.5.0.orig/src/library/base/man/validUTF8.Rd
++++ R-4.5.0/src/library/base/man/validUTF8.Rd
+@@ -60,6 +60,7 @@ validEnc(x) # depends on the locale
  Encoding(x) <-"UTF-8"
  validEnc(x) # typically the last, x[10], is invalid
  
@@ -30,16 +30,16 @@ Index: R-4.4.2/src/library/base/man/validUTF8.Rd
  ## Maybe advantageous to declare it "unknown":
  G <- x ; Encoding(G[!validEnc(G)]) <- "unknown"
  try( substr(x, 1,1) ) # gives 'invalid multibyte string' error in a UTF-8 locale
-@@ -69,3 +70,4 @@ all.equal(validEnc(x),
+@@ -69,3 +70,4 @@ nchar(G) # fine, too
  all.equal(validEnc(x),
            validEnc(G)) # typically TRUE
  }
 +}
-Index: R-4.4.2/src/library/base/man/warnings.Rd
+Index: R-4.5.0/src/library/base/man/warnings.Rd
 ===================================================================
---- R-4.4.2.orig/src/library/base/man/warnings.Rd
-+++ R-4.4.2/src/library/base/man/warnings.Rd
-@@ -93,7 +93,7 @@ summary(warnings())
+--- R-4.5.0.orig/src/library/base/man/warnings.Rd
++++ R-4.5.0/src/library/base/man/warnings.Rd
+@@ -93,7 +93,7 @@ tail(warnings(), 2) # see the last two w
  
  ## Often the most useful way to look at many warnings:
  summary(warnings())
@@ -48,11 +48,11 @@ Index: R-4.4.2/src/library/base/man/warnings.Rd
  ww <- warnings()
  uw <- unique(ww)
  sw <- summary(ww)
-Index: R-4.4.2/src/library/utils/man/news.Rd
+Index: R-4.5.0/src/library/utils/man/news.Rd
 ===================================================================
---- R-4.4.2.orig/src/library/utils/man/news.Rd
-+++ R-4.4.2/src/library/utils/man/news.Rd
-@@ -138,6 +138,7 @@ news(query, package = "R", lib.loc = NULL, format = NU
+--- R-4.5.0.orig/src/library/utils/man/news.Rd
++++ R-4.5.0/src/library/utils/man/news.Rd
+@@ -138,6 +138,7 @@ news(query, package = "R", lib.loc = NUL
  }
  
  \examples{
@@ -60,34 +60,34 @@ Index: R-4.4.2/src/library/utils/man/news.Rd
  ## Build a db of all R news entries.
  db <- news()
  \dontshow{
-@@ -172,3 +173,4 @@ table(news(Version >= "3.6.0", db = db3)$Version)
+@@ -173,3 +174,4 @@ sort(table(db3[, "Category"]), decreasin
  table(news(Version >= "3.6.0", db = db3)$Version)
  }
  }
 +}
-Index: R-4.4.2/src/library/utils/tests/Sweave-tst.R
+Index: R-4.5.0/src/library/utils/tests/Sweave-tst.R
 ===================================================================
---- R-4.4.2.orig/src/library/utils/tests/Sweave-tst.R
-+++ R-4.4.2/src/library/utils/tests/Sweave-tst.R
+--- R-4.5.0.orig/src/library/utils/tests/Sweave-tst.R
++++ R-4.5.0/src/library/utils/tests/Sweave-tst.R
 @@ -15,7 +15,7 @@
  #  https://www.R-project.org/Licenses/
  
  ## Testing Sweave
 -
 +if (FALSE) { # Sweave fails under emscripten (throws a syscall error)
- .proctime00 <- proc.time()
  library(utils)
  options(digits = 5) # to avoid trivial printed differences
-@@ -82,3 +82,4 @@ cat('Time elapsed: ', proc.time() - .proctime00,'\n')
- 
- 
- cat('Time elapsed: ', proc.time() - .proctime00,'\n')
+ options(show.signif.stars = FALSE) # avoid fancy quotes in o/p
+@@ -86,3 +86,4 @@ stopifnot(exprs = {
+     tools::Rcmd(c("Sweave", "--help")) == 0L
+     tools::Rcmd(c("Sweave", "--pdf", testfile)) == 0L
+ })
 +}
-Index: R-4.4.2/src/library/methods/tests/envRefClass.R
+Index: R-4.5.0/src/library/methods/tests/envRefClass.R
 ===================================================================
---- R-4.4.2.orig/src/library/methods/tests/envRefClass.R
-+++ R-4.4.2/src/library/methods/tests/envRefClass.R
-@@ -4,7 +4,7 @@ rp ## show() failed ..
+--- R-4.5.0.orig/src/library/methods/tests/envRefClass.R
++++ R-4.5.0/src/library/methods/tests/envRefClass.R
+@@ -4,7 +4,7 @@
  rc <- getClass("refClass")
  rp <- rc@prototype
  str(rp) ## failed
@@ -96,10 +96,10 @@ Index: R-4.4.2/src/library/methods/tests/envRefClass.R
  (ner <- new("envRefClass")) # show() failed
  stopifnot(all.equal(rp,rp), all.equal(ner,ner))
  be <- baseenv()
-Index: R-4.4.2/src/library/methods/tests/nextWithDots.R
+Index: R-4.5.0/src/library/methods/tests/nextWithDots.R
 ===================================================================
---- R-4.4.2.orig/src/library/methods/tests/nextWithDots.R
-+++ R-4.4.2/src/library/methods/tests/nextWithDots.R
+--- R-4.5.0.orig/src/library/methods/tests/nextWithDots.R
++++ R-4.5.0/src/library/methods/tests/nextWithDots.R
 @@ -1,9 +1,10 @@
  setClass("A")
 -setClass("B", contains = c("array", "A"))
@@ -114,7 +114,7 @@ Index: R-4.4.2/src/library/methods/tests/nextWithDots.R
  
  withDots <- function(x, ...) names(list(...))
  
-@@ -15,6 +16,6 @@ removeClass("C"); removeClass("B"); removeClass("A")
+@@ -15,6 +16,6 @@ setMethod("withDots", "C", function(x, .
            callNextMethod()
            )
  stopifnot(identical(withDots(1, a=1, b=2), withDots(new("C"), a=1, b=2)))
@@ -122,11 +122,11 @@ Index: R-4.4.2/src/library/methods/tests/nextWithDots.R
 +removeClass("C"); removeClass("BB"); removeClass("A")
  removeGeneric("withDots")
  rm(a, bb, a2)
-Index: R-4.4.2/src/library/compiler/tests/basics.R
+Index: R-4.5.0/src/library/compiler/tests/basics.R
 ===================================================================
---- R-4.4.2.orig/src/library/compiler/tests/basics.R
-+++ R-4.4.2/src/library/compiler/tests/basics.R
-@@ -90,7 +90,7 @@ stopifnot(identical(p, pp))
+--- R-4.5.0.orig/src/library/compiler/tests/basics.R
++++ R-4.5.0/src/library/compiler/tests/basics.R
+@@ -90,7 +90,7 @@ stopifnot(sfc(x) == sf(x))
  h <- ls(compiler:::inlineHandlers, all.names = TRUE)
  p <- sub("package:", "", sapply(h, find))
  pp <- sapply(h, function(n) get(n, compiler:::inlineHandlers)$package)
@@ -135,10 +135,10 @@ Index: R-4.4.2/src/library/compiler/tests/basics.R
  
  
  ## Check assumption about simple .Internals
-Index: R-4.4.2/src/library/grDevices/tests/saved-recordPlot.R
+Index: R-4.5.0/src/library/grDevices/tests/saved-recordPlot.R
 ===================================================================
---- R-4.4.2.orig/src/library/grDevices/tests/saved-recordPlot.R
-+++ R-4.4.2/src/library/grDevices/tests/saved-recordPlot.R
+--- R-4.5.0.orig/src/library/grDevices/tests/saved-recordPlot.R
++++ R-4.5.0/src/library/grDevices/tests/saved-recordPlot.R
 @@ -3,6 +3,7 @@
  ## Subject: [Rd] recordPlot/replayPlot not working with saveRDS/readRDS
  ## Date: Mon, 2 Apr 2018 12:23:06 -0500
@@ -147,16 +147,16 @@ Index: R-4.4.2/src/library/grDevices/tests/saved-recordPlot.R
  # Save displaylist for a simple plot
  png('test.png')
  dev.control(displaylist ="enable")
-@@ -32,3 +33,4 @@ stopifnot(
+@@ -32,3 +33,4 @@ sapply(tt, head)
  stopifnot(
      identical(tt[[1]], tt[[2]]),
      identical(tt[[3]], tt[[2]]))
 +}
-Index: R-4.4.2/src/library/grDevices/tests/encodings.R
+Index: R-4.5.0/src/library/grDevices/tests/encodings.R
 ===================================================================
---- R-4.4.2.orig/src/library/grDevices/tests/encodings.R
-+++ R-4.4.2/src/library/grDevices/tests/encodings.R
-@@ -12,6 +12,7 @@ musl <- grepl("musl", R.version$os)
+--- R-4.5.0.orig/src/library/grDevices/tests/encodings.R
++++ R-4.5.0/src/library/grDevices/tests/encodings.R
+@@ -12,6 +12,7 @@ if (!l10n_info()[["UTF-8"]]) {
      q("no")
  }
  musl <- grepl("musl", R.version$os)
@@ -164,7 +164,7 @@ Index: R-4.4.2/src/library/grDevices/tests/encodings.R
  
  Sys.unsetenv("_R_CHECK_MBCS_CONVERSION_FAILURE_")
  
-@@ -96,12 +97,14 @@ dev.off()
+@@ -96,12 +97,14 @@ text(1.5, 8, seven, adj = c(0,0))
  dev.off()
  
  ##if(!musl) { ## musl's iconv does not support "latin2", only "iso88592"
@@ -179,7 +179,7 @@ Index: R-4.4.2/src/library/grDevices/tests/encodings.R
  ##}
  
  
-@@ -126,10 +129,12 @@ dev.off()
+@@ -126,10 +129,12 @@ text(1.5, 7, seven, adj = c(0,0))
  dev.off()
  
  ##if(!musl) {
@@ -192,11 +192,11 @@ Index: R-4.4.2/src/library/grDevices/tests/encodings.R
  #}
  
  ## Now with --as-cran settings in recent R, only.
-Index: R-4.4.2/src/library/grDevices/tests/encodings2.R
+Index: R-4.5.0/src/library/grDevices/tests/encodings2.R
 ===================================================================
---- R-4.4.2.orig/src/library/grDevices/tests/encodings2.R
-+++ R-4.4.2/src/library/grDevices/tests/encodings2.R
-@@ -15,11 +15,12 @@ pdfenc <- c("ISOLatin1", "ISOLatin2", "ISOLatin7", "IS
+--- R-4.5.0.orig/src/library/grDevices/tests/encodings2.R
++++ R-4.5.0/src/library/grDevices/tests/encodings2.R
+@@ -15,11 +15,12 @@ if (!l10n_info()[["UTF-8"]]) {
      q("no")
  }
  
@@ -211,7 +211,7 @@ Index: R-4.4.2/src/library/grDevices/tests/encodings2.R
           "iso-8859-7", "iso-8859-5", "KOI8-R", "KOI8-U",
           "CP1252", "CP1250", "CP1251", "CP1253", "CP1257")
  
-@@ -99,6 +100,9 @@ if(!capabilities("cairo")) q("no")
+@@ -99,6 +100,9 @@ for(i in seq_along(pdfenc)) {
      }
  }
  
@@ -221,15 +221,15 @@ Index: R-4.4.2/src/library/grDevices/tests/encodings2.R
  if(!capabilities("cairo")) q("no")
  ## Now test cairo_pdf(): do not expect any messages
  cairo_pdf("cairo_pdf-encodings.pdf", width = 9, height = 9, onefile = TRUE)
-@@ -107,3 +111,4 @@ dev.off()
+@@ -107,3 +111,4 @@ for (e in enc) {
      do_one(e, e)
  }
  dev.off()
 +}
-Index: R-4.4.2/src/library/grDevices/tests/urw-fonts.R
+Index: R-4.5.0/src/library/grDevices/tests/urw-fonts.R
 ===================================================================
---- R-4.4.2.orig/src/library/grDevices/tests/urw-fonts.R
-+++ R-4.4.2/src/library/grDevices/tests/urw-fonts.R
+--- R-4.5.0.orig/src/library/grDevices/tests/urw-fonts.R
++++ R-4.5.0/src/library/grDevices/tests/urw-fonts.R
 @@ -59,7 +59,8 @@ for(i in seq_along(pdfenc)) {
          try(do_one(pdfenc[i], enc[i], i >= 7))
          dev.off()
@@ -250,10 +250,10 @@ Index: R-4.4.2/src/library/grDevices/tests/urw-fonts.R
          unlink(f)
      }
  }
-Index: R-4.4.2/src/library/grDevices/tests/zzcheck-encodings.R
+Index: R-4.5.0/src/library/grDevices/tests/zzcheck-encodings.R
 ===================================================================
---- R-4.4.2.orig/src/library/grDevices/tests/zzcheck-encodings.R
-+++ R-4.4.2/src/library/grDevices/tests/zzcheck-encodings.R
+--- R-4.5.0.orig/src/library/grDevices/tests/zzcheck-encodings.R
++++ R-4.5.0/src/library/grDevices/tests/zzcheck-encodings.R
 @@ -1,5 +1,8 @@
  ### Optonally compare encodings results with the ref directories
  
@@ -263,16 +263,16 @@ Index: R-4.4.2/src/library/grDevices/tests/zzcheck-encodings.R
  if(is.na(Sys.getenv("R_GRDEVICES_COMPARE_PS_PDF", unset = NA))) q("no")
  ## mustl has a very different libiconv.
  musl <- grepl("musl", R.version$os)
-@@ -38,3 +41,4 @@ if(cnt) stop("Differences found")
+@@ -38,3 +41,4 @@ for(f in files) {
  }
  
  if(cnt) stop("Differences found")
 +}
-Index: R-4.4.2/src/library/base/man/source.Rd
+Index: R-4.5.0/src/library/base/man/source.Rd
 ===================================================================
---- R-4.4.2.orig/src/library/base/man/source.Rd
-+++ R-4.4.2/src/library/base/man/source.Rd
-@@ -213,6 +213,9 @@ withAutoprint({ formals(sourceDir); body(sourceDir) },
+--- R-4.5.0.orig/src/library/base/man/source.Rd
++++ R-4.5.0/src/library/base/man/source.Rd
+@@ -213,6 +213,9 @@ withAutoprint({ formals(sourceDir); body
                max.deparse.length = 20, verbose = TRUE)
  %% --> tests in  ../../../../tests/eval-etc.R
  
@@ -282,7 +282,7 @@ Index: R-4.4.2/src/library/base/man/source.Rd
  ## Continuing after (catchable) errors:
  tc <- textConnection('1:3
   2 + "3"
-@@ -223,6 +226,7 @@ stopifnot(identical(r, list(value = 42, visible=TRUE))
+@@ -223,6 +226,7 @@ r <- source(tc, catch.aborts = TRUE)
  ## .. in spite of error: happily continuing! ..
  stopifnot(identical(r, list(value = 42, visible=TRUE)))
  }
@@ -290,11 +290,11 @@ Index: R-4.4.2/src/library/base/man/source.Rd
  \keyword{file}
  \keyword{programming}
  \keyword{connection}
-Index: R-4.4.2/src/library/grDevices/tests/encodings3.R
+Index: R-4.5.0/src/library/grDevices/tests/encodings3.R
 ===================================================================
---- R-4.4.2.orig/src/library/grDevices/tests/encodings3.R
-+++ R-4.4.2/src/library/grDevices/tests/encodings3.R
-@@ -50,6 +50,9 @@ if(!capabilities("cairo")) q("no")
+--- R-4.5.0.orig/src/library/grDevices/tests/encodings3.R
++++ R-4.5.0/src/library/grDevices/tests/encodings3.R
+@@ -50,6 +50,9 @@ text(0.5+seq_along(three), 3, three)
  text(0.5+seq_along(four), 4, four)
  dev.off()
  
@@ -304,9 +304,27 @@ Index: R-4.4.2/src/library/grDevices/tests/encodings3.R
  if(!capabilities("cairo")) q("no")
  cairo_pdf("cairo_pdf-encodings3.pdf", width = 7, height = 7, onefile = TRUE)
  plot(1:10, 1:10, type = "n")
-@@ -61,4 +64,5 @@ dev.off()
+@@ -61,4 +64,5 @@ text(0.5+seq_along(two), 2, two)
  text(0.5+seq_along(three), 3, three)
  text(0.5+seq_along(four), 4, four)
  dev.off()
 +}
  
+Index: R-4.5.0/src/library/tools/man/R.Rd
+===================================================================
+--- R-4.5.0.orig/src/library/tools/man/R.Rd
++++ R-4.5.0/src/library/tools/man/R.Rd
+@@ -58,6 +58,8 @@ R(fun, args = list(), opts = "--no-save
+   calling the function).
+ }
+ \examples{
++# The `system()` function is unsupported under Emscripten.
++\dontrun{
+ ## Compute cos(0) in an inferior R process.
+ ## By default, only return the value of the function call.
+ R(cos, list(0))
+@@ -73,3 +75,4 @@ e$status
+ ## The function call gave an error:
+ e$value
+ }
++}

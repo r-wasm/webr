@@ -1,5 +1,9 @@
 # webR (development version)
 
+## New features
+
+* Updated to R version 4.5.0.
+
 ## Breaking changes
 
 * Updated to Emscripten version 4.0.8.

@@ -4,10 +4,6 @@ emscripten-sigsuspend.diff
 emscripten-lazyload.diff
 emscripten-input.diff
 emscripten-system.diff
-emscripten-jumpctxt.diff
 emscripten-dataviewer.diff
 emscripten-avoid-testing-issues.diff
 emscripten-r-home-stderr.diff
-fontconfig-typeof.diff
-fix-sink-release.diff
-flang-avoid-maxloc.diff

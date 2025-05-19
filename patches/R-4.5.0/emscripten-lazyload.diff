@@ -1,7 +1,7 @@
-Index: R-4.4.2/src/library/datasets/Makefile.in
+Index: R-4.5.0/src/library/datasets/Makefile.in
 ===================================================================
---- R-4.4.2.orig/src/library/datasets/Makefile.in
-+++ R-4.4.2/src/library/datasets/Makefile.in
+--- R-4.5.0.orig/src/library/datasets/Makefile.in
++++ R-4.5.0/src/library/datasets/Makefile.in
 @@ -26,7 +26,7 @@ all: Makefile DESCRIPTION
  	  $(INSTALL_DATA) $${f} $(top_builddir)/library/$(pkg)/data; \
  	done
@@ -11,11 +11,11 @@ Index: R-4.4.2/src/library/datasets/Makefile.in
  	  R_DEFAULT_PACKAGES=NULL LC_ALL=C $(R_EXE) > /dev/null
  	@$(INSTALL_DATA) $(srcdir)/data/morley.tab \
  	  $(top_builddir)/library/$(pkg)/data
-Index: R-4.4.2/Makeconf.in
+Index: R-4.5.0/Makeconf.in
 ===================================================================
---- R-4.4.2.orig/Makeconf.in
-+++ R-4.4.2/Makeconf.in
-@@ -164,3 +164,13 @@ Rexecmodulesdir = $(rhome)/modules$(R_ARCH)
+--- R-4.5.0.orig/Makeconf.in
++++ R-4.5.0/Makeconf.in
+@@ -164,3 +164,13 @@ Rexeclibdir = $(rhome)/lib$(R_ARCH)
  ## switching to automake.
  ## </FIXME>
  Rexecmodulesdir = $(rhome)/modules$(R_ARCH)
@@ -29,11 +29,11 @@ Index: R-4.4.2/Makeconf.in
 +  LIB_LOC_ARG = lib.loc = \"$(R_INSTALL_LIBRARY)\"
 +  TARGET_LIB_LOC_ARG = target.lib.loc = \"$(R_INSTALL_LIBRARY)\"
 +endif
-Index: R-4.4.2/share/make/basepkg.mk
+Index: R-4.5.0/share/make/basepkg.mk
 ===================================================================
---- R-4.4.2.orig/share/make/basepkg.mk
-+++ R-4.4.2/share/make/basepkg.mk
-@@ -127,7 +127,7 @@ mklazy:
+--- R-4.5.0.orig/share/make/basepkg.mk
++++ R-4.5.0/share/make/basepkg.mk
+@@ -127,7 +127,7 @@ mkexec:
  ## only used if byte-compilation is disabled
  mklazy:
  	@$(INSTALL_DATA) all.R $(top_builddir)/library/$(pkg)/R/$(pkg)
@@ -42,11 +42,11 @@ Index: R-4.4.2/share/make/basepkg.mk
  	  R_DEFAULT_PACKAGES=$(DEFPKGS) LC_ALL=C $(R_EXE) > /dev/null
  
  mklazycomp: $(top_builddir)/library/$(pkg)/R/$(pkg).rdb
-Index: R-4.4.2/share/make/lazycomp.mk
+Index: R-4.5.0/share/make/lazycomp.mk
 ===================================================================
---- R-4.4.2.orig/share/make/lazycomp.mk
-+++ R-4.4.2/share/make/lazycomp.mk
-@@ -7,11 +7,11 @@ $(top_builddir)/library/$(pkg)/R/$(pkg).rdb: all.R
+--- R-4.5.0.orig/share/make/lazycomp.mk
++++ R-4.5.0/share/make/lazycomp.mk
+@@ -7,11 +7,11 @@
  $(top_builddir)/library/$(pkg)/R/$(pkg).rdb: all.R
  	@$(INSTALL_DATA) all.R $(top_builddir)/library/$(pkg)/R/$(pkg)
  	@if test -n "$(R_NO_BASE_COMPILE)"; then \
@@ -60,11 +60,11 @@ Index: R-4.4.2/share/make/lazycomp.mk
  	  _R_COMPILE_PKGS_=1 R_COMPILER_SUPPRESS_ALL=1 \
  	  R_DEFAULT_PACKAGES=$(DEFPKGS) LC_ALL=C $(R_EXE) > /dev/null; \
  	fi
-Index: R-4.4.2/src/library/methods/Makefile.in
+Index: R-4.5.0/src/library/methods/Makefile.in
 ===================================================================
---- R-4.4.2.orig/src/library/methods/Makefile.in
-+++ R-4.4.2/src/library/methods/Makefile.in
-@@ -37,6 +37,9 @@ RfilesLazy: $(top_builddir)/library/$(pkg)/R/$(pkg).rd
+--- R-4.5.0.orig/src/library/methods/Makefile.in
++++ R-4.5.0/src/library/methods/Makefile.in
+@@ -37,6 +37,9 @@ include $(top_srcdir)/share/make/basepkg
  
  RfilesLazy: $(top_builddir)/library/$(pkg)/R/$(pkg).rdb
  
@@ -74,7 +74,7 @@ Index: R-4.4.2/src/library/methods/Makefile.in
  ## loadNamespace() depends on the NAMESPACE file.  We remove the
  ## dumped copy (it is rebuilt later), and we have already installed
  ## NAMESPACE in the library tree.
-@@ -44,15 +47,22 @@ $(top_builddir)/library/$(pkg)/R/$(pkg).rdb: all.R  $(
+@@ -44,15 +47,22 @@ RfilesLazy: $(top_builddir)/library/$(pk
  ## Depending on names.c at least catches the latter.
  $(top_builddir)/library/$(pkg)/R/$(pkg).rdb: all.R  $(srcdir)/NAMESPACE \
    $(top_srcdir)/src/main/names.c
@@ -98,10 +98,10 @@ Index: R-4.4.2/src/library/methods/Makefile.in
  
  ## not supported
  Rsimple:
-Index: R-4.4.2/src/library/methods/R/zzz.R
+Index: R-4.5.0/src/library/methods/R/zzz.R
 ===================================================================
---- R-4.4.2.orig/src/library/methods/R/zzz.R
-+++ R-4.4.2/src/library/methods/R/zzz.R
+--- R-4.5.0.orig/src/library/methods/R/zzz.R
++++ R-4.5.0/src/library/methods/R/zzz.R
 @@ -21,6 +21,8 @@
    ## Initialize the methods package.
    function(libname, pkgname)
@@ -111,11 +111,11 @@ Index: R-4.4.2/src/library/methods/R/zzz.R
      where <- environment(sys.function())  # the namespace
      coerceVars <- c("as", "as<-", "is", "new", "S3Part", "S3Part<-", "slot",
                      "slot<-")
-Index: R-4.4.2/src/library/tools/Makefile.in
+Index: R-4.5.0/src/library/tools/Makefile.in
 ===================================================================
---- R-4.4.2.orig/src/library/tools/Makefile.in
-+++ R-4.4.2/src/library/tools/Makefile.in
-@@ -52,7 +52,7 @@ $(top_builddir)/library/$(pkg)/R/$(pkg).rdb: Makefile 
+--- R-4.5.0.orig/src/library/tools/Makefile.in
++++ R-4.5.0/src/library/tools/Makefile.in
+@@ -59,7 +59,7 @@ $(top_builddir)/library/$(pkg)/R/$(pkg).
  	@$(ECHO) "byte-compiling package '$(pkg)'"
  	@$(INSTALL_DATA) all.R $(top_builddir)/library/$(pkg)/R/$(pkg)
  	@(cat $(srcdir)/R/makeLazyLoad.R; \
@@ -124,7 +124,7 @@ Index: R-4.4.2/src/library/tools/Makefile.in
  	  _R_COMPILE_PKGS_=1 R_COMPILER_SUPPRESS_ALL=1 \
  	  R_SYSTEM_ABI='@R_SYSTEM_ABI@' \
  	  R_DEFAULT_PACKAGES=NULL LC_ALL=C $(R_EXE) > /dev/null
-@@ -62,7 +62,7 @@ Rlazy: mkR mkRsimple
+@@ -69,7 +69,7 @@ Rsimple: mkR mkRsimple
  Rlazy: mkR mkRsimple
  	@$(INSTALL_DATA) all.R $(top_builddir)/library/$(pkg)/R/$(pkg)
  	@(cat $(srcdir)/R/makeLazyLoad.R; \
@@ -133,10 +133,10 @@ Index: R-4.4.2/src/library/tools/Makefile.in
  	  R_SYSTEM_ABI='@R_SYSTEM_ABI@' \
  	  R_DEFAULT_PACKAGES=NULL LC_ALL=C $(R_EXE) > /dev/null
  
-Index: R-4.4.2/src/library/tools/R/makeLazyLoad.R
+Index: R-4.5.0/src/library/tools/R/makeLazyLoad.R
 ===================================================================
---- R-4.4.2.orig/src/library/tools/R/makeLazyLoad.R
-+++ R-4.4.2/src/library/tools/R/makeLazyLoad.R
+--- R-4.5.0.orig/src/library/tools/R/makeLazyLoad.R
++++ R-4.5.0/src/library/tools/R/makeLazyLoad.R
 @@ -20,11 +20,12 @@ code2LazyLoadDB <-
      function(package, lib.loc = NULL,
               keep.source = getOption("keep.source.pkgs"),
@@ -194,10 +194,10 @@ Index: R-4.4.2/src/library/tools/R/makeLazyLoad.R
          file.copy(loaderFile, codeFile, TRUE)
      }
  
-Index: R-4.4.2/src/library/base/makebasedb.R
+Index: R-4.5.0/src/library/base/makebasedb.R
 ===================================================================
---- R-4.4.2.orig/src/library/base/makebasedb.R
-+++ R-4.4.2/src/library/base/makebasedb.R
+--- R-4.5.0.orig/src/library/base/makebasedb.R
++++ R-4.5.0/src/library/base/makebasedb.R
 @@ -116,7 +116,11 @@ local({
      if (length(search()[search()!="Autoloads"]) != 2)
          stop("start R with NO packages loaded to create the data base")
@@ -211,11 +211,11 @@ Index: R-4.4.2/src/library/base/makebasedb.R
  
      if (file.info(baseFileBase)["size"] < 20000) # crude heuristic
          stop("may already be using lazy loading on base");
-Index: R-4.4.2/src/library/base/R/library.R
+Index: R-4.5.0/src/library/base/R/library.R
 ===================================================================
---- R-4.4.2.orig/src/library/base/R/library.R
-+++ R-4.4.2/src/library/base/R/library.R
-@@ -771,7 +771,7 @@ function(package = NULL, lib.loc = NULL, quiet = FALSE
+--- R-4.5.0.orig/src/library/base/R/library.R
++++ R-4.5.0/src/library/base/R/library.R
+@@ -771,7 +771,7 @@ function(package = NULL, lib.loc = NULL,
      ## don't waste time looking for the standard packages:
      ## we know where they are and this can take a significant
      ## time with 1000+ packages installed.
