@@ -1,5 +1,13 @@
 # webR (development version)
 
+## Breaking changes
+
+* Updated to Emscripten version 4.0.8.
+
+* Updated the base LLVM distribution to LLVM 20, rebasing our Fortran for WebAssembly patches on the latest release of LLVM at time of writing (v20.1.4). The LLVM Fortran compiler binary name is now `flang` and webR's build scripts have been updated to reflect this.
+
+* Errors of type `WebRWorkerError` initially caused by Emscripten filesystem errors are now raised with message `"ErrnoError: n"`, where `n` is the error number, rather than the generic `"FS Error"` message.
+
 # webR 0.4.3
 
 ## New features
