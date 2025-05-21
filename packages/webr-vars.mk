@@ -7,7 +7,7 @@ WEBR_HOST_INCLUDES = -I$(R_SOURCE)/build-stage1/include -I$(R_SOURCE)/src/includ
 WEBR_LDFLAGS = -L$(WEBR_ROOT)/wasm/lib
 
 EM_CXX_FIXES = -DRCPP_DEMANGLER_ENABLED=0 -D__STRICT_ANSI__
-EM_CFLAGS = $(WEBR_HOST_INCLUDES) $(WASM_OPT)
+EM_CFLAGS = $(WEBR_HOST_INCLUDES) $(WASM_OPT) -fvisibility=default
 
 CXX98 = em++
 CXX11 = em++
