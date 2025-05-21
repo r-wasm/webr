@@ -69,7 +69,6 @@ export class ServiceWorkerChannelMain extends ChannelMain {
         `${config.baseUrl}webr-worker.js`,
         (worker: Worker) => initWorker(worker),
         (error: Error) => {
-          console.error("Worker loading error:", error);
           this.reject(new WebRWorkerError(`Worker loading error: ${error.message}`));
         }
       );
