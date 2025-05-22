@@ -3,7 +3,7 @@
 
   # Flake inputs
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     nixpkg-flang-wasm.url = "github:r-wasm/flang-wasm/main";
   };
 
@@ -49,12 +49,11 @@
               clang
               emscripten
               gperf
-              lzma
               pcre2
               python3
               quilt
               wget
-              nodejs_18
+              nodejs
 
               # Inputs for building R borrowed from:
               # https://github.com/NixOS/nixpkgs/blob/85f1ba3e/pkgs/applications/science/math/R/default.nix
