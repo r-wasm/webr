@@ -1,5 +1,5 @@
 Name: zlib
 Description: Emscripten ports version of zlib library
 Version: 1.2.8
-Cflags: -sUSE_ZLIB=1
-Libs: -sUSE_ZLIB=1
+Cflags: --use-port=zlib
+Libs: --use-port=zlib

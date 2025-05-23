@@ -16,7 +16,10 @@ async function cleanupMnt() {
     await webR.FS.unmount("/mnt");
   } catch (e) {
     const err = e as Error;
-    if (err.message !== "FS error") throw err;
+    // Disregard any filesystem errors caused by attempting to unmount
+    if (!err.message.includes("ErrnoError")) {
+      throw err;
+    }
   }
 }
 
@@ -70,7 +73,7 @@ describe('Mount filesystem using JS API', () => {
   test('Mount filesystem image using Buffer', async () => {
     const data = fs.readFileSync("tests/webR/data/test_image.data");
     const buf = fs.readFileSync("tests/webR/data/test_image.js.metadata");
-    const metadata = JSON.parse(new TextDecoder().decode(buf)) as FSMetaData; 
+    const metadata = JSON.parse(new TextDecoder().decode(buf)) as FSMetaData;
     await expect(
       webR.FS.mount("WORKERFS", { packages: [{ blob: data, metadata: metadata }] }, '/mnt')
     ).resolves.not.toThrow();
@@ -82,7 +85,7 @@ describe('Mount filesystem using JS API', () => {
   test('Mount filesystem image using Blob', async () => {
     const data = new Blob([fs.readFileSync("tests/webR/data/test_image.data")]);
     const buf = fs.readFileSync("tests/webR/data/test_image.js.metadata");
-    const metadata = JSON.parse(new TextDecoder().decode(buf)) as FSMetaData; 
+    const metadata = JSON.parse(new TextDecoder().decode(buf)) as FSMetaData;
     await expect(
       webR.FS.mount("WORKERFS", { packages: [{ blob: data, metadata: metadata }] }, '/mnt')
     ).resolves.not.toThrow();

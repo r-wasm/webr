@@ -6,7 +6,7 @@ ENV PATH="/opt/emsdk:/opt/emsdk/upstream/emscripten:${PATH}"
 ENV EMSDK="/opt/emsdk"
 ENV WEBR_ROOT="/opt/webr"
 ENV EM_NODE_JS="/usr/bin/node"
-ENV EMFC="/opt/flang/host/bin/flang-new"
+ENV EMFC="/opt/flang/host/bin/flang"
 
 # Step 1: Build fake Rust DEB packages
 # 
@@ -67,7 +67,7 @@ RUN curl -L https://rig.r-pkg.org/deb/rig.gpg -o /etc/apt/trusted.gpg.d/rig.gpg 
 # Because $HOME gets masked by GHA with the host $HOME
 ENV R_LIBS_USER=/opt/R/current/lib/R/site-library
 # Don't install pak. Rig installs it into the user lib, but we want it in the system lib
-RUN rig add 4.4.2 --without-pak
+RUN rig add 4.5.0 --without-pak
 # Install pak and rwasm into the system lib
 RUN /opt/R/current/bin/R -q -e 'install.packages("pak", lib = .Library)'
 RUN /opt/R/current/bin/R -q -e 'pak::pak("r-wasm/rwasm", lib = .Library)'
@@ -96,9 +96,6 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN rm -rf /tmp/rig
 RUN rm -rf libs/download libs/build src/node_modules R/download
 RUN cd src && make clean
-
-# Temp workaround for https://github.com/emscripten-core/emscripten/issues/22571
-RUN sed -i.bak 's|#define TYPEOF|#define FT_TYPEOF|g' /opt/emsdk/upstream/emscripten/cache/sysroot/include/freetype2/config/ftconfig.h
 
 # Step 3: Squash docker image layers
 FROM webr

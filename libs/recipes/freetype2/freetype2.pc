@@ -1,5 +1,5 @@
 Name: freetype
 Description: Emscripten ports version of freetype library
 Version: 18.0.12
-Cflags: -sUSE_FREETYPE=1
-Libs: -sUSE_FREETYPE=1
+Cflags: --use-port=freetype
+Libs: --use-port=freetype

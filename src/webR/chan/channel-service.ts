@@ -65,8 +65,12 @@ export class ServiceWorkerChannelMain extends ChannelMain {
     };
 
     if (isCrossOrigin(config.serviceWorkerUrl)) {
-      newCrossOriginWorker(`${config.serviceWorkerUrl}webr-worker.js`, (worker: Worker) =>
-        initWorker(worker)
+      newCrossOriginWorker(
+        `${config.baseUrl}webr-worker.js`,
+        (worker: Worker) => initWorker(worker),
+        (error: Error) => {
+          this.reject(new WebRWorkerError(`Worker loading error: ${error.message}`));
+        }
       );
     } else {
       const worker = new Worker(`${config.serviceWorkerUrl}webr-worker.js`);

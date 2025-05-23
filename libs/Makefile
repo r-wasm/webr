@@ -9,8 +9,8 @@ TOOLS = $(WEBR_ROOT)/tools
 HOST = $(WEBR_ROOT)/host
 WASM = $(WEBR_ROOT)/wasm
 
-EM_LIBS := -s USE_BZIP2=1
-EM_LIBS += -s USE_ZLIB=1
+EM_LIBS := --use-port=bzip2
+EM_LIBS += --use-port=zlib
 
 WASM_OPT ?= -Oz
 

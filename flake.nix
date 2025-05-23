@@ -3,7 +3,7 @@
 
   # Flake inputs
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     nixpkg-flang-wasm.url = "github:r-wasm/flang-wasm/main";
   };
 
@@ -26,7 +26,7 @@
             #     cd src; prefetch-npm-deps package-lock.json
             srcNpmDeps = pkgs.fetchNpmDeps {
               src = "${self}/src";
-              hash = "sha256-rl8sVi8q+M3fHRYCYpLEzhfvS1sa0IsYsiBJD7S9+6k=";
+              hash = "sha256-lj1kK3Kkjq+PYNsVJWTNaRQB6b9OQjJWwOuJJS+933M=";
             };
 
             inherit system;
@@ -49,12 +49,11 @@
               clang
               emscripten
               gperf
-              lzma
               pcre2
               python3
               quilt
               wget
-              nodejs_18
+              nodejs
 
               # Inputs for building R borrowed from:
               # https://github.com/NixOS/nixpkgs/blob/85f1ba3e/pkgs/applications/science/math/R/default.nix
@@ -92,7 +91,7 @@
             # will look for it in the home directory, which does not exist in a
             # build.
             configurePhase = ''
-              EMFC=${pkg-flang-wasm}/host/bin/flang-new ./configure
+              EMFC=${pkg-flang-wasm}/host/bin/flang ./configure
 
               cd src
               npm config set cache "${srcNpmDeps}" --location project

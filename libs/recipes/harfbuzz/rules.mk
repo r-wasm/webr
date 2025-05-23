@@ -13,7 +13,7 @@ $(HARFBUZZ_WASM_LIB): $(HARFBUZZ_TARBALL)
 	mkdir -p $(BUILD)/harfbuzz-$(HARFBUZZ_VERSION)/build
 	tar -C $(BUILD) -xf $(HARFBUZZ_TARBALL)
 	cd $(BUILD)/harfbuzz-$(HARFBUZZ_VERSION)/build && \
-	  LDFLAGS="$(LDFLAGS) -sUSE_PTHREADS=0" \
+	  LDFLAGS="$(LDFLAGS) --use-port=freetype -sUSE_PTHREADS=0" \
 	  emconfigure ../configure \
 	    --host=wasm32-unknown-linux \
 	    --enable-shared=no \

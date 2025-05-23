@@ -1,60 +1,60 @@
-Index: R-4.4.2/src/modules/internet/libcurl.c
+Index: R-4.5.0/src/modules/internet/libcurl.c
 ===================================================================
---- R-4.4.2.orig/src/modules/internet/libcurl.c
-+++ R-4.4.2/src/modules/internet/libcurl.c
-@@ -55,6 +55,7 @@ static int current_timeout = 0;
- 
+--- R-4.5.0.orig/src/modules/internet/libcurl.c
++++ R-4.5.0/src/modules/internet/libcurl.c
+@@ -56,6 +56,7 @@ extern void Rsleep(double timeint);
  static int current_timeout = 0;
+ static double current_time = 0;
  
 +#ifdef HAVE_LIBCURL
  # if LIBCURL_VERSION_MAJOR < 7 || (LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR < 28)
  
  // curl/curl.h includes <sys/select.h> and headers it requires.
-@@ -93,6 +94,7 @@ R_curl_multi_wait(CURLM *multi_handle,
+@@ -94,6 +95,7 @@ R_curl_multi_wait(CURLM *multi_handle,
      return mc;
  }
  #endif
-+#endif // HAVE_LIBCURL
++#endif /* HAVE_LIBCURL */
  
- SEXP attribute_hidden in_do_curlVersion(SEXP call, SEXP op, SEXP args, SEXP rho)
+ attribute_hidden SEXP in_do_curlVersion(SEXP call, SEXP op, SEXP args, SEXP rho)
  {
-@@ -322,7 +324,6 @@ rcvBody(void *buffer, size_t size, size_t nmemb, void 
+@@ -340,7 +342,6 @@ rcvBody(void *buffer, size_t size, size_
      // needed to discard spurious ftp 'body' otherwise written to stdout
      return size * nmemb;
  }
--#endif
+-#endif /* HAVE_LIBCURL */
  
  static void handle_cleanup(void *data)
  {
-@@ -330,6 +331,7 @@ static void handle_cleanup(void *data)
+@@ -348,6 +349,7 @@ static void handle_cleanup(void *data)
      if (hnd)
  	curl_easy_cleanup(hnd);
  }
-+#endif // HAVE_LIBCURL
++#endif /* HAVE_LIBCURL */
  
- SEXP attribute_hidden
+ attribute_hidden SEXP
  in_do_curlGetHeaders(SEXP call, SEXP op, SEXP args, SEXP rho)
-@@ -522,7 +524,6 @@ int progress(void *clientp, CURL_LEN dltotal, CURL_LEN
-     return 0;
- # endif
+@@ -573,7 +575,6 @@ int prereq_multi(void *clientp, char *co
+     return CURL_PREREQFUNC_OK;
  }
+ #endif
 -#endif // HAVE_LIBCURL
  
  typedef struct {
      struct curl_slist *headers;
-@@ -575,6 +576,7 @@ static void download_cleanup(void *data)
- 	hide(c->pbar->wprog);
- #endif
+@@ -844,6 +845,7 @@ static void download_close_finished(down
+ 	download_cleanup_url(i, c);
+     }
  }
-+#endif // HAVE_LIBCURL
++#endif /* HAVE_LIBCURL */
  
  /* download(url, destfile, quiet, mode, headers, cacheOK) */
  
-Index: R-4.4.0/src/modules/internet/Makefile.in
+Index: R-4.5.0/src/modules/internet/Makefile.in
 ===================================================================
---- R-4.4.0.orig/src/modules/internet/Makefile.in
-+++ R-4.4.0/src/modules/internet/Makefile.in
-@@ -11,7 +11,7 @@ SOURCES = Rhttpd.c Rsock.c internet.c libcurl.c sock.c
+--- R-4.5.0.orig/src/modules/internet/Makefile.in
++++ R-4.5.0/src/modules/internet/Makefile.in
+@@ -11,7 +11,7 @@ R_HOME = $(top_builddir)
  
  include $(top_builddir)/Makeconf
  
@@ -63,10 +63,10 @@ Index: R-4.4.0/src/modules/internet/Makefile.in
  HEADERS = sock.h
  DEPENDS = $(SOURCES:.c=.d)
  OBJECTS = $(SOURCES:.c=.o)
-Index: R-4.4.0/src/library/utils/R/unix/download.file.R
+Index: R-4.5.0/src/library/utils/R/unix/download.file.R
 ===================================================================
---- R-4.4.0.orig/src/library/utils/R/unix/download.file.R
-+++ R-4.4.0/src/library/utils/R/unix/download.file.R
+--- R-4.5.0.orig/src/library/utils/R/unix/download.file.R
++++ R-4.5.0/src/library/utils/R/unix/download.file.R
 @@ -25,13 +25,17 @@ download.file <-
      if (missing(method))
  	method <- getOption("download.file.method", default = "auto")
@@ -106,26 +106,26 @@ Index: R-4.4.0/src/library/utils/R/unix/download.file.R
  	   "lynx" =
  	       stop("method 'lynx' is defunct", domain = NA),
             ## otherwise {should never happen}
-Index: R-4.4.0/src/main/names.c
+Index: R-4.5.0/src/main/names.c
 ===================================================================
---- R-4.4.0.orig/src/main/names.c
-+++ R-4.4.0/src/main/names.c
-@@ -1010,6 +1010,10 @@ FUNTAB R_FunTab[] =
- {"curlGetHeaders",do_curlGetHeaders,0,	11,	5,	{PP_FUNCALL, PREC_FN,	0}},
+--- R-4.5.0.orig/src/main/names.c
++++ R-4.5.0/src/main/names.c
+@@ -1013,6 +1013,10 @@ FUNTAB R_FunTab[] =
  {"curlDownload",do_curlDownload, 0,	11,	6,	{PP_FUNCALL, PREC_FN,	0}},
  {"compilerVersion",do_compilerVersion, 0,	11,	0,	{PP_FUNCALL, PREC_FN,	0}},
-+
+ 
 +#ifdef __EMSCRIPTEN__
 +{"xhrDownload",do_xhrDownload, 0, 11, 6,  {PP_FUNCALL, PREC_FN, 0}},
 +#endif
- 
++
  {NULL,		NULL,		0,	0,	0,	{PP_INVALID, PREC_FN,	0}},
  };
-Index: R-4.4.0/src/modules/internet/internet.c
+ 
+Index: R-4.5.0/src/modules/internet/internet.c
 ===================================================================
---- R-4.4.0.orig/src/modules/internet/internet.c
-+++ R-4.4.0/src/modules/internet/internet.c
-@@ -41,6 +41,11 @@ in_newCurlUrl(const char *description, const char * co
+--- R-4.5.0.orig/src/modules/internet/internet.c
++++ R-4.5.0/src/modules/internet/internet.c
+@@ -41,6 +41,11 @@ SEXP in_do_curlGetHeaders(SEXP call, SEX
  SEXP in_do_curlDownload(SEXP call, SEXP op, SEXP args, SEXP rho);
  Rconnection
  in_newCurlUrl(const char *description, const char * const mode, SEXP headers, int type);
@@ -137,7 +137,7 @@ Index: R-4.4.0/src/modules/internet/internet.c
  
  #ifdef Win32
  static void *in_R_HTTPOpen2(const char *url, const char *agent, const char *headers, int cacheOK);
-@@ -731,5 +736,10 @@ R_init_internet(DllInfo *info)
+@@ -728,5 +733,10 @@ R_init_internet(DllInfo *info)
      tmp->curlDownload = in_do_curlDownload;
      tmp->newcurlurl =  in_newCurlUrl;
  
@@ -148,10 +148,10 @@ Index: R-4.4.0/src/modules/internet/internet.c
 +
      R_setInternetRoutines(tmp);
  }
-Index: R-4.4.0/src/modules/internet/xhr.c
+Index: R-4.5.0/src/modules/internet/xhr.c
 ===================================================================
 --- /dev/null
-+++ R-4.4.0/src/modules/internet/xhr.c
++++ R-4.5.0/src/modules/internet/xhr.c
 @@ -0,0 +1,351 @@
 +/*
 + *  R : A Computer Language for Statistical Data Analysis
@@ -504,11 +504,11 @@ Index: R-4.4.0/src/modules/internet/xhr.c
 +    return ScalarInteger(0);
 +}
 +#endif
-Index: R-4.4.0/src/include/Internal.h
+Index: R-4.5.0/src/include/Internal.h
 ===================================================================
---- R-4.4.0.orig/src/include/Internal.h
-+++ R-4.4.0/src/include/Internal.h
-@@ -119,6 +119,9 @@ SEXP do_D2POSIXlt(SEXP, SEXP, SEXP, SEXP);
+--- R-4.5.0.orig/src/include/Internal.h
++++ R-4.5.0/src/include/Internal.h
+@@ -120,6 +120,9 @@ SEXP do_cum(SEXP, SEXP, SEXP, SEXP);
  SEXP do_curlDownload(SEXP, SEXP, SEXP, SEXP);
  SEXP do_curlGetHeaders(SEXP, SEXP, SEXP, SEXP);
  SEXP do_curlVersion(SEXP, SEXP, SEXP, SEXP);
@@ -518,10 +518,10 @@ Index: R-4.4.0/src/include/Internal.h
  SEXP do_D2POSIXlt(SEXP, SEXP, SEXP, SEXP);
  SEXP do_date(SEXP, SEXP, SEXP, SEXP);
  SEXP do_debug(SEXP, SEXP, SEXP, SEXP);
-Index: R-4.4.0/src/include/Rmodules/Rinternet.h
+Index: R-4.5.0/src/include/Rmodules/Rinternet.h
 ===================================================================
---- R-4.4.0.orig/src/include/Rmodules/Rinternet.h
-+++ R-4.4.0/src/include/Rmodules/Rinternet.h
+--- R-4.5.0.orig/src/include/Rmodules/Rinternet.h
++++ R-4.5.0/src/include/Rmodules/Rinternet.h
 @@ -68,6 +68,11 @@ typedef struct {
      R_CurlRoutine curlGetHeaders;
      R_CurlRoutine curlDownload;
@@ -534,11 +534,11 @@ Index: R-4.4.0/src/include/Rmodules/Rinternet.h
  } R_InternetRoutines;
  
  R_InternetRoutines *R_setInternetRoutines(R_InternetRoutines *routines);
-Index: R-4.4.0/src/main/internet.c
+Index: R-4.5.0/src/main/internet.c
 ===================================================================
---- R-4.4.0.orig/src/main/internet.c
-+++ R-4.4.0/src/main/internet.c
-@@ -298,3 +298,28 @@ R_newCurlUrl(const char *description, const char * con
+--- R-4.5.0.orig/src/main/internet.c
++++ R-4.5.0/src/main/internet.c
+@@ -298,3 +298,28 @@ R_newCurlUrl(const char *description, co
      return (Rconnection)0; /* -Wall in gcc, but Solaris compiler complains */
  }
  
@@ -567,11 +567,11 @@ Index: R-4.4.0/src/main/internet.c
 +    return (Rconnection)0;
 +}
 +#endif
-Index: R-4.4.0/src/main/connections.c
+Index: R-4.5.0/src/main/connections.c
 ===================================================================
---- R-4.4.0.orig/src/main/connections.c
-+++ R-4.4.0/src/main/connections.c
-@@ -5501,6 +5501,10 @@ R_newCurlUrl(const char *description, const char * con
+--- R-4.5.0.orig/src/main/connections.c
++++ R-4.5.0/src/main/connections.c
+@@ -5863,6 +5863,10 @@ attribute_hidden SEXP do_sumconnection(S
  // in internet module: 'type' is unused
  extern Rconnection
  R_newCurlUrl(const char *description, const char * const mode, SEXP headers, int type);
@@ -582,16 +582,7 @@ Index: R-4.4.0/src/main/connections.c
  
  
  /* op = 0: .Internal( url(description, open, blocking, encoding, method, headers))
-@@ -5515,7 +5519,7 @@ attribute_hidden SEXP do_url(SEXP call, SEXP op, SEXP 
-     char *class2 = "url";
-     const char *url, *open;
-     int ncon, block, raw = 0, defmeth,
--	meth = 0, // 0: "internal" | "wininet", 1: "libcurl"
-+	meth = 0, // 0: "internal" | "wininet", 1: "libcurl", 2: "xhr"
- 	winmeth = 0;  // 0: "internal", 1: "wininet" (Windows only)
-     cetype_t ienc = CE_NATIVE;
-     Rconnection con = NULL;
-@@ -5589,10 +5593,17 @@ attribute_hidden SEXP do_url(SEXP call, SEXP op, SEXP 
+@@ -5952,10 +5956,17 @@ attribute_hidden SEXP do_url(SEXP call,
      // --------- method
      const char *cmeth = CHAR(asChar(CAD4R(args)));
      meth = streql(cmeth, "libcurl"); // 1 if "libcurl", else 0
@@ -609,7 +600,7 @@ Index: R-4.4.0/src/main/connections.c
      if (streql(cmeth, "wininet")) {
  #ifdef Win32
  	winmeth = 1;
-@@ -5656,12 +5667,19 @@ attribute_hidden SEXP do_url(SEXP call, SEXP op, SEXP 
+@@ -6019,12 +6030,19 @@ attribute_hidden SEXP do_url(SEXP call,
  	con = newfile(url + nh, ienc, strlen(open) ? open : "r", raw);
  	class2 = "file";
      } else if (inet) {
