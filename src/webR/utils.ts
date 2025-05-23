@@ -87,17 +87,27 @@ export function newCrossOriginWorker(url: string, cb: (worker: Worker) => void, 
         const worker = new Worker(URL.createObjectURL(new Blob([req.responseText])));
         cb(worker);
       } catch (error) {
-        if (onError) onError(error instanceof Error ? error : new Error(String(error)));
+        if (onError) {
+          onError(error instanceof Error ? error : new Error(String(error)));
+        } else {
+          throw error;
+        }
       }
     } else {
-      if (onError) onError(new Error(`Worker loading error: HTTP ${req.status}`));
-      else console.error(`HTTP Error: ${req.status}`);
+      if (onError) {
+        onError(new Error(`Worker loading error: HTTP ${req.status}`));
+      } else {
+        console.error(`HTTP Error: ${req.status}`);
+      }
     }
   };
 
   req.onerror = () => {
-    if (onError) onError(new Error(`Network error loading ${url}`));
-    else console.error(`Network error loading ${url}`);
+    if (onError) {
+      onError(new Error(`Network error loading ${url}`));
+    } else {
+      console.error(`Network error loading ${url}`);
+    }
   };
   req.send();
 }
