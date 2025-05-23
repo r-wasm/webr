@@ -1075,7 +1075,7 @@ test('WebR starts and is usable without lazy filesystem entries', async () => {
   expect(sum).toEqual(276711);
 
   // Confirm no lazy filesystem entries have been added
-  await expect(tempR.FS.lookupPath('/usr/lib/R/doc/NEWS.rds')).rejects.toThrow('FS error');
+  await expect(tempR.FS.lookupPath('/usr/lib/R/doc/NEWS.rds')).rejects.toThrow('ErrnoError');
 
   tempR.close();
 });

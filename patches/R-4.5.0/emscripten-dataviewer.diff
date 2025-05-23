@@ -1,8 +1,8 @@
-Index: R-4.4.2/src/unix/system.c
+Index: R-4.5.0/src/unix/system.c
 ===================================================================
---- R-4.4.2.orig/src/unix/system.c
-+++ R-4.4.2/src/unix/system.c
-@@ -115,7 +115,24 @@ void R_FlushConsole(void) {
+--- R-4.5.0.orig/src/unix/system.c
++++ R-4.5.0/src/unix/system.c
+@@ -115,6 +115,23 @@ void R_FlushConsole(void) {
  }
  #endif
  
@@ -14,7 +14,7 @@ Index: R-4.4.2/src/unix/system.c
 +    SEXP title = CADR(args);
 +    if (!isString(title) || LENGTH(title) < 1)
 +        errorcall(call, _("invalid '%s' argument"), "title");
- 
++
 +    EM_ASM({
 +        const title = UTF8ToString($1);
 +        globalThis.Module.webr.dataViewer($0, title);
@@ -23,18 +23,17 @@ Index: R-4.4.2/src/unix/system.c
 +    return R_NilValue;
 +}
 +#endif
-+
+ 
  void R_setupHistory(void)
  {
-     int value, ierr;
-@@ -326,6 +343,10 @@ int Rf_initialize_R(int ac, char **av)
-     ptr_R_EditFile = NULL; /* for future expansion */
+@@ -328,6 +345,10 @@ int Rf_initialize_R(int ac, char **av)
      R_timeout_handler = NULL;
      R_timeout_val = 0;
-+
+ 
 +	#ifdef __EMSCRIPTEN__
 +	ptr_do_dataviewer = emscripten_do_dataviewer;
 +	#endif
- 
++
      R_GlobalContext = NULL; /* Make R_Suicide less messy... */
  
+     if((R_Home = R_HomeDir()) == NULL)

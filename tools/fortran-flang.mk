@@ -1,4 +1,4 @@
-EMFC = $(HOST)/bin/flang-new
+EMFC = $(HOST)/bin/flang
 
 FORTRAN_WASM_LIB = $(WASM)/lib/libFortranRuntime.a
 FORTRAN_WASM_LDADD = -L$(WASM)/lib -lFortranRuntime

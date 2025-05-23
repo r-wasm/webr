@@ -1,8 +1,8 @@
-Index: R-4.4.2/configure
+Index: R-4.5.0/configure
 ===================================================================
---- R-4.4.2.orig/configure
-+++ R-4.4.2/configure
-@@ -15089,7 +15089,7 @@ _LT_EOF
+--- R-4.5.0.orig/configure
++++ R-4.5.0/configure
+@@ -15180,7 +15180,7 @@ _LT_EOF
        archive_expsym_cmds='sed "s|^|_|" $export_symbols >$output_objdir/$soname.expsym~$CC -shared $pic_flag $libobjs $deplibs $compiler_flags $wl-h,$soname $wl--retain-symbols-file,$output_objdir/$soname.expsym $wl--image-base,`expr ${RANDOM-$$} % 4096 / 2 \* 262144 + 1342177280` -o $lib'
        ;;
  
@@ -11,7 +11,7 @@ Index: R-4.4.2/configure
        tmp_diet=no
        if test linux-dietlibc = "$host_os"; then
  	case $cc_basename in
-@@ -15861,7 +15861,7 @@ printf "%s\n" "$lt_cv_irix_exported_symbol" >&6; }
+@@ -15952,7 +15952,7 @@ printf "%s\n" "$lt_cv_irix_exported_symb
        link_all_deplibs=yes
        ;;
  
@@ -20,7 +20,7 @@ Index: R-4.4.2/configure
        case $cc_basename in
        tcc*)
  	# Fabrice Bellard et al's Tiny C Compiler
-@@ -16919,7 +16919,7 @@ linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu*)
+@@ -17010,7 +17010,7 @@ linux*android*)
    ;;
  
  # This must be glibc/ELF.
@@ -29,7 +29,7 @@ Index: R-4.4.2/configure
    version_type=linux # correct to gnu/linux during the next big refactor
    need_lib_prefix=no
    need_version=no
-@@ -19071,7 +19071,7 @@ fi
+@@ -19162,7 +19162,7 @@ fi
          inherit_rpath_CXX=yes
          ;;
  
@@ -38,7 +38,7 @@ Index: R-4.4.2/configure
          case $cc_basename in
            KCC*)
  	    # Kuck and Associates, Inc. (KAI) C++ Compiler
-@@ -20962,7 +20962,7 @@ linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu*)
+@@ -21053,7 +21053,7 @@ linux*android*)
    ;;
  
  # This must be glibc/ELF.
@@ -47,7 +47,7 @@ Index: R-4.4.2/configure
    version_type=linux # correct to gnu/linux during the next big refactor
    need_lib_prefix=no
    need_version=no
-@@ -24094,7 +24094,7 @@ linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu*)
+@@ -24185,7 +24185,7 @@ linux*android*)
    ;;
  
  # This must be glibc/ELF.
@@ -56,7 +56,7 @@ Index: R-4.4.2/configure
    version_type=linux # correct to gnu/linux during the next big refactor
    need_lib_prefix=no
    need_version=no
-@@ -53146,6 +53146,11 @@ fi
+@@ -56776,6 +56776,11 @@ fi
  
  ## libcurl
  
@@ -68,7 +68,7 @@ Index: R-4.4.2/configure
  # Extract the first word of "curl-config", so it can be a program name with args.
  set dummy curl-config; ac_word=$2
  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-@@ -53340,7 +53345,9 @@ fi
+@@ -56970,7 +56975,9 @@ printf "%s\n" "#define HAVE_LIBCURL 1" >
  else
    as_fn_error $? "libcurl >= 7.28.0 library and headers are required with support for https" "$LINENO" 5
  fi

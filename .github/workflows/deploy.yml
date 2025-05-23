@@ -32,7 +32,7 @@ jobs:
         run: Rscript -e 'install.packages(c("rmarkdown", "rvest"))'
       - name: Configure webR for flang
         env:
-          EMFC: /opt/flang/host/bin/flang-new
+          EMFC: /opt/flang/host/bin/flang
         run: ./configure
       - name: Setup Emscripten PATH
         run: echo "/opt/emsdk:/opt/emsdk/upstream/emscripten" >> $GITHUB_PATH

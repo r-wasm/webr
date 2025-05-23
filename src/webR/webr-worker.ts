@@ -513,11 +513,14 @@ function dispatch(msg: Message): void {
             throw new Error('Unknown event `' + reqMsg.type + '`');
         }
       } catch (_e) {
-        const e = _e as Error;
-        write({
-          payloadType: 'err',
-          obj: { name: e.name, message: e.message, stack: e.stack },
-        });
+        const e = _e as Error & { errno?: number };
+        const errorObj = {
+          name: e.name,
+          message: e.message,
+          errno: e.errno,
+          stack: e.stack
+        };
+        write({ payloadType: 'err', obj: errorObj });
 
         /* Capture continuation token and resume R's non-local transfer.
          * If the exception has reached this point there should no longer be
@@ -885,7 +888,7 @@ function init(config: Required<WebROptions>) {
       Module.setValue(Module._R_Interactive, _config.interactive ? 1 : 0, 'i8');
       evalR(`options(webr_pkg_repos="${_config.repoUrl}")`);
       chan?.resolve();
-      resolved = true; 
+      resolved = true;
     },
 
     setPrompt: (prompt: string) => {

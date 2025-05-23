@@ -24,6 +24,7 @@ export type WebRPayloadErr = {
   obj: {
     message: string;
     name: string;
+    errno?: number;
     stack?: string;
   };
   payloadType: 'err';
@@ -38,7 +39,9 @@ export type WebRPayloadWorker = WebRPayloadRaw | WebRPayloadPtr | WebRPayloadErr
 export function webRPayloadAsError(payload: WebRPayloadErr): Error {
   const e = new WebRWorkerError(payload.obj.message);
   // Forward the error name to the main thread, if more specific than a general `Error`
-  if (payload.obj.name !== 'Error') {
+  if (payload.obj.name == 'ErrnoError') {
+    e.message = `ErrnoError: ${String(payload.obj.errno)}`;
+  } else if (payload.obj.name !== 'Error') {
     e.name = payload.obj.name;
   }
   e.stack = payload.obj.stack;
