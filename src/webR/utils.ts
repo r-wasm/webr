@@ -78,12 +78,26 @@ export function replaceInObject<T>(
  * no longer cross-origin. In that case, the cross-origin restriction
  * bypass is not possible, and the script is permitted to be loaded.
  */
-export function newCrossOriginWorker(url: string, cb: (worker: Worker) => void): void {
+export function newCrossOriginWorker(url: string, cb: (worker: Worker) => void, onError?: (error: Error) => void): void {
   const req = new XMLHttpRequest();
   req.open('get', url, true);
   req.onload = () => {
-    const worker = new Worker(URL.createObjectURL(new Blob([req.responseText])));
-    cb(worker);
+    if (req.status >= 200 && req.status < 300) {
+      try {
+        const worker = new Worker(URL.createObjectURL(new Blob([req.responseText])));
+        cb(worker);
+      } catch (error) {
+        if (onError) onError(error instanceof Error ? error : new Error(String(error)));
+      }
+    } else {
+      if (onError) onError(new Error(`Worker loading error: HTTP ${req.status}`));
+      else console.error(`HTTP Error: ${req.status}`);
+    }
+  };
+
+  req.onerror = () => {
+    if (onError) onError(new Error(`Network error loading ${url}`));
+    else console.error(`Network error loading ${url}`);
   };
   req.send();
 }
