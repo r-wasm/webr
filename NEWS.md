@@ -12,6 +12,10 @@
 
 * Errors of type `WebRWorkerError` initially caused by Emscripten filesystem errors are now raised with message `"ErrnoError: n"`, where `n` is the error number, rather than the generic `"FS Error"` message.
 
+## Bug Fixes
+
+* Better handle worker loading errors with an error callback in `newCrossOriginWorker` (#539).
+
 # webR 0.4.3
 
 ## New features
