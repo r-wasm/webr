@@ -11,18 +11,22 @@ $(HDF5_TARBALL):
 	mkdir -p $(DOWNLOAD)
 	wget $(HDF5_URL) -O $@
 
-# How to include --with-szlib=zlib?
-
 $(HDF5_WASM_LIB): $(HDF5_TARBALL)
+	rm -rf $(BUILD)/hdf5-$(HDF5_VERSION)
 	mkdir -p $(BUILD)/hdf5-$(HDF5_VERSION)/hdfsrc/build
 	tar -C $(BUILD)/hdf5-$(HDF5_VERSION) -xf $(HDF5_TARBALL)
 	cd $(BUILD)/hdf5-$(HDF5_VERSION)/hdfsrc/build && \
+	RUNSERIAL="node" RUNPARALLEL="node" \
 	emconfigure ../configure \
 	  --enable-build-mode=production \
 	  --disable-dependency-tracking \
 	  --disable-silent-rules \
+	  --disable-tests \
 	  --enable-shared=no \
 	  --enable-static=yes \
 	  --prefix=$(WASM) && \
-	emmake make install
+	emmake make \
+	  H5make_libsettings_LDADD="-s NODERAWFS=1" \
+	  H5detect_LDADD="-s NODERAWFS=1" \
+	  install
 
