@@ -27,6 +27,8 @@ $(HDF5_WASM_LIB): $(HDF5_TARBALL)
 	  --prefix=$(WASM) && \
 	emmake make \
 	  H5make_libsettings_LDADD="-s NODERAWFS=1" \
-	  H5detect_LDADD="-s NODERAWFS=1" \
-	  install
+	  H5detect_LDADD="-s NODERAWFS=1" && \
+	sed -i.bak 's/H5BLD_LIBS="-lz /H5BLD_LIBS="/' bin/h5cc && \
+	emmake make install
+	
 
