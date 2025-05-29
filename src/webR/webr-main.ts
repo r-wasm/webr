@@ -351,6 +351,20 @@ export class WebR {
   }
 
   /**
+   * Stream output messages from the communication channel via an async generator.
+   * @yields {Promise<Message>} Output messages from the communication channel.
+   */
+  async *stream(): AsyncGenerator<Message, void> {
+    for (;;) {
+      const output = await this.#chan.read();
+      if (output.type === 'closed') {
+        return;
+      }
+      yield output;
+    }
+  }
+
+  /**
    * Flush the output queue in the communication channel and return all output
    * messages.
    * @returns {Promise<Message[]>} The output messages
