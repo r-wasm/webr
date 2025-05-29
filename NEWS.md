@@ -4,6 +4,8 @@
 
 * Updated to R version 4.5.0.
 
+* Added an async generator function `WebR.stream()` to the webR JavaScript API, providing an alternative way to stream output messages from the worker thread (#541).
+
 ## Breaking changes
 
 * Updated to Emscripten version 4.0.8.
