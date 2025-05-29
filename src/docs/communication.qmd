@@ -63,16 +63,17 @@ From the main thread, messages can be sent to the webR worker thread using [`Web
 
 Messages from the worker thread can be obtained from the output queue using [`WebR.read()`](api/js/classes/WebR.WebR.md#read) to receive the next message in the queue, or [`WebR.flush()`](api/js/classes/WebR.WebR.md#flush) to receive an array of all queued output messages. These methods both return promises resolving to the output messages.
 
+Messages can be streamed from the worker thread using [`WebR.stream()`](api/js/classes/WebR.WebR.md#stream), which returns an [AsyncIterable](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols) that can be iterated over to receive output messages as they are produced.
+
 The [`WebR.close()`](api/js/classes/WebR.WebR.md#close) method closes down the communication channel. This stops the webR worker thread and should only be used once communication with an R process is no longer required.
 
 #### Handling messages
 
-A useful pattern for a web application making use of webR is to handle output messages in an asynchronous loop,
+A useful pattern for a web application making use of webR is to handle output messages as they are produced using the async generator returned by [`WebR.stream()`](api/js/classes/WebR.WebR.md#stream).
 
 ``` javascript
 async function run() {
-  for (;;) {
-    const output = await webR.read();
+  for await (const output of webR.stream()) {
     switch (output.type) {
       case 'stdout':
         console.log(output.data);
