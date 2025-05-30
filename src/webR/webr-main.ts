@@ -33,6 +33,8 @@ import {
   NewShelterMessage,
   ShelterDestroyMessage,
   ShelterMessage,
+  FSRenameMessage,
+  FSAnalyzePathMessage,
 } from './webr-chan';
 
 export { Console, ConsoleCallbacks } from './console';
@@ -123,6 +125,19 @@ export type FSMetaData = {
     end: number;
   }[],
   gzip?: boolean;
+};
+
+/** Emscripten filesystem entry information, as given by `FS.analyzePath()` */
+export type FSAnalyzeInfo = {
+  isRoot: boolean,
+  exists: boolean,
+  error: Error,
+  name: string,
+  path: string,
+  object?: FSNode,
+  parentExists: boolean,
+  parentPath: string,
+  parentObject?: FSNode,
 };
 
 /**
@@ -488,6 +503,11 @@ export class WebR {
   }
 
   FS = {
+    analyzePath: async (path: string, dontResolveLastLink?: boolean): Promise<FSAnalyzeInfo> => {
+      const msg: FSAnalyzePathMessage = { type: 'analyzePath', data: { path, dontResolveLastLink } };
+      const payload = await this.#chan.request(msg);
+      return payload.obj as FSAnalyzeInfo;
+    },
     lookupPath: async (path: string): Promise<FSNode> => {
       const msg: FSMessage = { type: 'lookupPath', data: { path } };
       const payload = await this.#chan.request(msg);
@@ -541,6 +561,10 @@ export class WebR {
       const msg: FSReadFileMessage = { type: 'readFile', data: { path, flags } };
       const payload = await this.#chan.request(msg);
       return payload.obj as Uint8Array;
+    },
+    rename: async (oldpath: string, newpath: string): Promise<void> => {
+      const msg: FSRenameMessage = { type: 'rename', data: { oldpath, newpath } };
+      await this.#chan.request(msg);
     },
     rmdir: async (path: string): Promise<void> => {
       const msg: FSMessage = { type: 'rmdir', data: { path } };

@@ -57,6 +57,8 @@ export function mountDriveFS(driveName: string, mountpoint: string): void {
     driveName,
     mountpoint,
   });
+
+  // @ts-expect-error DriveFS does not have `syncfs`, expected by Emscripten.FileSystemType.
   Module.FS.mount(fs, {}, mountpoint);
 }
 

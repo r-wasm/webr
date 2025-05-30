@@ -6,6 +6,8 @@
 
 * Added an async generator function `WebR.stream()` to the webR JavaScript API, providing an alternative way to stream output messages from the worker thread (#541).
 
+* Expose Emscripten's `FS.rename()` and `FS.analyzePath()` functions on the `WebR.FS` object in JavaScript (#543).
+
 ## Breaking changes
 
 * Updated to Emscripten version 4.0.8.
