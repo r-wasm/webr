@@ -33,6 +33,7 @@ import {
   NewShelterMessage,
   ShelterDestroyMessage,
   ShelterMessage,
+  FSRenameMessage,
 } from './webr-chan';
 
 export { Console, ConsoleCallbacks } from './console';
@@ -541,6 +542,10 @@ export class WebR {
       const msg: FSReadFileMessage = { type: 'readFile', data: { path, flags } };
       const payload = await this.#chan.request(msg);
       return payload.obj as Uint8Array;
+    },
+    rename: async (oldpath: string, newpath: string): Promise<void> => {
+      const msg: FSRenameMessage = { type: 'rename', data: { oldpath, newpath } };
+      await this.#chan.request(msg);
     },
     rmdir: async (path: string): Promise<void> => {
       const msg: FSMessage = { type: 'rmdir', data: { path } };

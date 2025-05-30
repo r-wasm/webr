@@ -87,6 +87,14 @@ describe('Test webR virtual filesystem', () => {
     expect(Object.keys(dirInfo.contents!)).not.toContain('testFile');
   });
 
+  test('Rename a file on the VFS', async () => {
+    await expect(webR.FS.writeFile('/tmp/foo', testFileContents)).resolves.not.toThrow();
+    await expect(webR.FS.rename('/tmp/foo', '/tmp/bar')).resolves.not.toThrow();
+    const fileInfo = await webR.FS.lookupPath('/tmp/bar');
+    expect(fileInfo).toHaveProperty('name', 'bar');
+    expect(fileInfo).toHaveProperty('isFolder', false);
+  });
+
   test('Create a new directory on the VFS', async () => {
     await expect(webR.FS.mkdir('/newdir')).resolves.not.toThrow();
     const dirInfo = webR.FS.lookupPath('/newdir');

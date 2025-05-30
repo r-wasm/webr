@@ -29,6 +29,7 @@ import {
   ShelterDestroyMessage,
   InstallPackagesMessage,
   FSSyncfsMessage,
+  FSRenameMessage,
 } from './webr-chan';
 
 import {
@@ -193,6 +194,14 @@ function dispatch(msg: Message): void {
               payloadType: 'raw',
             };
             write(out as WebRPayloadRaw, [out.obj.buffer]);
+            break;
+          }
+          case 'rename': {
+            const msg = reqMsg as FSRenameMessage;
+            write({
+              obj: Module.FS.rename(msg.data.oldpath, msg.data.newpath),
+              payloadType: 'raw',
+            });
             break;
           }
           case 'rmdir': {

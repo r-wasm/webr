@@ -157,6 +157,15 @@ export interface FSMountMessage extends Message {
 }
 
 /** @internal */
+export interface FSRenameMessage extends Message {
+  type: 'rename';
+  data: {
+    oldpath: string;
+    newpath: string;
+  };
+}
+
+/** @internal */
 export interface FSSyncfsMessage extends Message {
   type: 'syncfs';
   data: { populate: boolean };
