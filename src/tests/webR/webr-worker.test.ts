@@ -108,10 +108,22 @@ describe('Test webR virtual filesystem', () => {
     expect(fileInfo).toHaveProperty('isFolder', true);
   });
 
+  test('Analyze a directory on the VFS', async () => {
+    const fileInfo = await webR.FS.analyzePath('/newdir');
+    expect(fileInfo).toHaveProperty('object');
+    expect(fileInfo.object).toHaveProperty('name', 'newdir');
+    expect(fileInfo.object).toHaveProperty('isFolder', true);
+  });
+
   test('Remove a directory on the VFS', async () => {
     await expect(webR.FS.rmdir('/newdir')).resolves.not.toThrow();
     const dirInfo = await webR.FS.lookupPath('/');
     expect(Object.keys(dirInfo.contents!)).not.toContain('newdir');
+  });
+
+  test('Analyze a non-existent directory on the VFS', async () => {
+    const fileInfo = await webR.FS.analyzePath('/newdir');
+    expect(fileInfo).toHaveProperty('exists', false);
   });
 
   test('Mount and unmount a directory on the VFS', async () => {

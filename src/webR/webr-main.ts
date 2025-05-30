@@ -34,6 +34,7 @@ import {
   ShelterDestroyMessage,
   ShelterMessage,
   FSRenameMessage,
+  FSAnalyzePathMessage,
 } from './webr-chan';
 
 export { Console, ConsoleCallbacks } from './console';
@@ -124,6 +125,19 @@ export type FSMetaData = {
     end: number;
   }[],
   gzip?: boolean;
+};
+
+/** Emscripten filesystem entry information, as given by `FS.analyzePath()` */
+export type FSAnalyzeInfo = {
+  isRoot: boolean,
+  exists: boolean,
+  error: Error,
+  name: string,
+  path: string,
+  object?: FSNode,
+  parentExists: boolean,
+  parentPath: string,
+  parentObject?: FSNode,
 };
 
 /**
@@ -489,6 +503,11 @@ export class WebR {
   }
 
   FS = {
+    analyzePath: async (path: string, dontResolveLastLink?: boolean): Promise<FSAnalyzeInfo> => {
+      const msg: FSAnalyzePathMessage = { type: 'analyzePath', data: { path, dontResolveLastLink } };
+      const payload = await this.#chan.request(msg);
+      return payload.obj as FSAnalyzeInfo;
+    },
     lookupPath: async (path: string): Promise<FSNode> => {
       const msg: FSMessage = { type: 'lookupPath', data: { path } };
       const payload = await this.#chan.request(msg);

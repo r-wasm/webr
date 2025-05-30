@@ -2,7 +2,7 @@ import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
 import { newChannelWorker, ChannelInitMessage, ChannelType } from './chan/channel-common';
 import { Message, Request, newResponse } from './chan/message';
-import { FSMountOptions, FSNode, WebROptions } from './webr-main';
+import { FSAnalyzeInfo, FSMountOptions, FSNode, WebROptions } from './webr-main';
 import { EmPtr, Module } from './emscripten';
 import { IN_NODE } from './compat';
 import { replaceInObject, throwUnreachable } from './utils';
@@ -30,6 +30,7 @@ import {
   InstallPackagesMessage,
   FSSyncfsMessage,
   FSRenameMessage,
+  FSAnalyzePathMessage,
 } from './webr-chan';
 
 import {
@@ -133,6 +134,27 @@ function dispatch(msg: Message): void {
         chan?.write(newResponse(req.data.uuid, resp, transferables));
       try {
         switch (reqMsg.type) {
+          case 'analyzePath': {
+            const msg = reqMsg as FSAnalyzePathMessage;
+            const info = Module.FS.analyzePath(msg.data.path, msg.data.dontResolveLastLink);
+            const data: FSAnalyzeInfo = {
+              isRoot: info.isRoot,
+              exists: info.exists,
+              error: info.error,
+              name: info.name,
+              path: info.path,
+              parentExists: info.parentExists,
+              parentPath: info.parentPath,
+              object: info.exists ? copyFSNode(info.object as FSNode) : undefined,
+              parentObject: info.parentExists ? copyFSNode(info.parentObject as FSNode) : undefined,
+            };
+
+            write({
+              obj: data,
+              payloadType: 'raw',
+            });
+            break;
+          }
           case 'lookupPath': {
             const msg = reqMsg as FSMessage;
             const node = Module.FS.lookupPath(msg.data.path, {}).node;

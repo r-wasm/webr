@@ -147,6 +147,15 @@ export interface FSMessage extends Message {
 }
 
 /** @internal */
+export interface FSAnalyzePathMessage extends Message {
+  type: 'analyzePath';
+  data: {
+    path: string,
+    dontResolveLastLink?: boolean,
+  };
+}
+
+/** @internal */
 export interface FSMountMessage extends Message {
   type: 'mount';
   data: {
