@@ -1,5 +1,7 @@
 # webR (development version)
 
+# webR 0.5.0
+
 ## New features
 
 * Updated to R version 4.5.0.
@@ -7,6 +9,10 @@
 * Added an async generator function `WebR.stream()` to the webR JavaScript API, providing an alternative way to stream output messages from the worker thread (#541).
 
 * Expose Emscripten's `FS.rename()` and `FS.analyzePath()` functions on the `WebR.FS` object in JavaScript (#543).
+
+* Added libaec 1.1.3 to the WebAssembly system libraries (#491).
+
+* Added HDF5 1.12.3 to the WebAssembly system libraries (#540).
 
 ## Breaking changes
 
@@ -17,6 +23,8 @@
 * Errors of type `WebRWorkerError` initially caused by Emscripten filesystem errors are now raised with message `"ErrnoError: n"`, where `n` is the error number, rather than the generic `"FS Error"` message.
 
 ## Bug Fixes
+
+* (Regression) Fix linking to the FreeType library when building webR (#531).
 
 * Better handle worker loading errors with an error callback in `newCrossOriginWorker` (#539).
 
