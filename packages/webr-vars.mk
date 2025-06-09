@@ -42,3 +42,6 @@ override LIBINTL =
 
 override LIBR =
 override ALL_LIBS = $(PKG_LIBS) $(SHLIB_LIBADD) $(LIBR) $(LIBINTL)
+
+override STRIP_STATIC_LIB = touch
+override STRIP_SHARED_LIB = touch
