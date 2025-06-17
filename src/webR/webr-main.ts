@@ -108,7 +108,7 @@ export type FSType = 'NODEFS' | 'WORKERFS' | 'IDBFS' | 'DRIVEFS';
  * Emscripten
  */
 export type FSMountOptions<T extends FSType = FSType> =
-  T extends 'DRIVEFS' ? { driveName?: string; } :
+  T extends 'DRIVEFS' ? { driveName?: string; browsingContextId?: string } :
   T extends 'NODEFS' ? { root: string } : {
     blobs?: Array<{ name: string, data: Blob | ArrayBufferLike }>;
     files?: Array<File | FileList>;

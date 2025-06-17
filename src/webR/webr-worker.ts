@@ -185,8 +185,7 @@ function dispatch(msg: Message): void {
 
             if (type === "DRIVEFS") {
               const options = msg.data.options as FSMountOptions<typeof type>;
-              const driveName = options.driveName || '';
-              mountDriveFS(driveName, mountpoint);
+              mountDriveFS(mountpoint, options);
             } else {
               const fs = Module.FS.filesystems[type];
               Module.FS.mount(fs, msg.data.options, mountpoint);
