@@ -1,5 +1,13 @@
 # webR (development version)
 
+## New features
+
+* Updated to R version 4.5.1.
+
+## Breaking changes
+
+* Upgraded JupyterLite DriveFS filesystem to v0.6.2, for use with JupyterLite v0.6.0 and later (#549).
+
 # webR 0.5.0
 
 ## New features
