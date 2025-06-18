@@ -45,7 +45,7 @@ export function mountFS(type: Emscripten.FileSystemType, opts: FSMountOptions, m
  * Mount a Jupyterlite DriveFS Emscripten filesystem to the VFS
  * @internal
  */
-export function mountDriveFS(driveName: string, mountpoint: string): void {
+export function mountDriveFS(mountpoint: string, options: FSMountOptions<'DRIVEFS'>): void {
   // DriveFS requires the current jupyterlite application base URL
   const baseUrl = location.origin + '/';
 
@@ -54,9 +54,15 @@ export function mountDriveFS(driveName: string, mountpoint: string): void {
     PATH: (globalThis as any).PATH as DriveFS.IOptions['PATH'],
     ERRNO_CODES: (globalThis as any).ERRNO_CODES as object,
     baseUrl,
-    driveName,
+    driveName: options?.driveName || '',
     mountpoint,
+    browsingContextId: options?.browsingContextId || '',
   });
+
+  // FIXME: Explicitly bind context stripped by Emscripten's internal `FS.checkOpExists`
+  fs.node_ops.readdir = fs.node_ops.readdir.bind(fs.node_ops);
+  fs.node_ops.getattr = fs.node_ops.getattr.bind(fs.node_ops);
+  fs.node_ops.setattr = fs.node_ops.setattr.bind(fs.node_ops);
 
   // @ts-expect-error DriveFS does not have `syncfs`, expected by Emscripten.FileSystemType.
   Module.FS.mount(fs, {}, mountpoint);

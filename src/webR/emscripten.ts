@@ -3,6 +3,7 @@ import type { RObject, RList } from './robj-worker';
 import type { EvalROptions } from './webr-chan';
 import type { UnwindProtectException } from './utils-r';
 import type { ChannelWorker } from './chan/channel';
+import type { FSMountOptions } from './webr-main';
 
 export interface Module extends EmscriptenModule {
   /* Add mkdirTree to FS namespace, missing from @types/emscripten at the
@@ -33,7 +34,7 @@ export interface Module extends EmscriptenModule {
   };
   mountImageUrl: (url: string, mountpoint: string) => void;
   mountImagePath: (path: string, mountpoint: string) => void;
-  mountDriveFS: (driveName: string, mountpoint: string) => void;
+  mountDriveFS: (mountpoint: string, options: FSMountOptions<'DRIVEFS'>) => void;
   // Exported Emscripten JS API
   allocateUTF8: typeof allocateUTF8;
   allocateUTF8OnStack: typeof allocateUTF8OnStack;
