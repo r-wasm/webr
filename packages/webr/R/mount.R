@@ -52,7 +52,8 @@ mount <- function(mountpoint, source, type = "workerfs") {
     if (missing(source) || is.null(source)) {
       source <- ""
     }
-    invisible(.Call(ffi_mount_drivefs, source, mountpoint))
+    id <- getOption("webr.drivefs.browsingContextId")
+    invisible(.Call(ffi_mount_drivefs, source, id, mountpoint))
   } else if (tolower(type) == "idbfs") {
     invisible(.Call(ffi_mount_idbfs, mountpoint))
   } else {
