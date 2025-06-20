@@ -1,5 +1,11 @@
 # webR (development version)
 
+# webR 0.5.2
+
+## Bug Fixes
+
+* Install correct R version 4.5.1 in the webR Docker container.
+
 # webR 0.5.1
 
 ## New features
