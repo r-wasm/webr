@@ -1,5 +1,13 @@
 # webR (development version)
 
+# webR 0.5.3
+
+## Bug Fixes
+
+* Raise initial memory default (#552).
+
+* Use the `self` flake input in `flake.nix`.
+
 # webR 0.5.2
 
 ## Bug Fixes
