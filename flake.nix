@@ -37,7 +37,7 @@
         ({ pkgs, pkg-flang-wasm, system, srcNpmDeps, ... }: {
           default = pkgs.stdenv.mkDerivation {
             name = "webr";
-            src = ./.;
+            src = self;
 
             nativeBuildInputs = with pkgs; [
               pkg-flang-wasm
