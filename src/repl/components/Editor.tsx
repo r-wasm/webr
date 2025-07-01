@@ -50,11 +50,13 @@ export function FileTabs({
   files,
   activeFileIdx,
   setActiveFileIdx,
-  closeFile
+  focusEditor,
+  closeFile,
 }: {
   files: EditorItem[];
   activeFileIdx: number;
   setActiveFileIdx: React.Dispatch<React.SetStateAction<number>>;
+  focusEditor: () => void;
   closeFile: (e: React.SyntheticEvent, index: number) => void;
 }) {
   return (
@@ -74,7 +76,10 @@ export function FileTabs({
           <button
             className="editor-switch"
             aria-label={`Switch to ${f.name}`}
-            onClick={() => setActiveFileIdx(index)}
+            onClick={() => {
+              setActiveFileIdx(index);
+              setTimeout(focusEditor, 0);
+            }}
           >
           </button>
           <div
@@ -342,6 +347,12 @@ export function Editor({
     };
   }, [saveFile, editorView, activeFile]);
 
+  const focusEditor = React.useCallback(() => {
+    if (editorView) {
+      editorView.focus();
+    }
+  }, [editorView]);
+
   React.useEffect(() => {
     if (!editorRef.current) {
       return;
@@ -514,6 +525,7 @@ export function Editor({
           activeFileIdx={activeFileIdx}
           setActiveFileIdx={setActiveFileIdx}
           closeFile={closeFile}
+          focusEditor={focusEditor}
         />
       </div>
       <div
