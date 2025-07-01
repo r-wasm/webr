@@ -207,6 +207,16 @@ export function Editor({
   React.useEffect(() => {
     let shelter: Shelter | null = null;
 
+    // Load files from URL, if a share code has been provided
+    const updateFilesFromURL = async (url: URL) => {
+      const shareHash = url.hash.match(/(code)=(.*)/);
+      if (shareHash && shareHash[1] === 'code') {
+      const items = await shareDataToEditorItems(shareHash[2]);
+      void filesInterface.refreshFilesystem();
+      setFiles(items);
+      }
+    }
+
     void webR.init().then(async () => {
       shelter = await new webR.Shelter();
       await webR.evalRVoid('rc.settings(func=TRUE, fuzzy=TRUE)');
@@ -219,15 +229,14 @@ export function Editor({
         retrieveCompletions: await shelter.evalR('utils:::.retrieveCompletions') as RFunction,
       };
 
-      // Load files from URL, if a share code has been provided
       const url = new URL(window.location.href);
-      const shareHash = url.hash.match(/(code)=(.*)/);
-      if (shareHash && shareHash[1] === 'code') {
-        const items = await shareDataToEditorItems(shareHash[2]);
-        void filesInterface.refreshFilesystem();
-        setFiles(items);
-      }
+      updateFilesFromURL(url);
     });
+
+    addEventListener("hashchange", (event: HashChangeEvent) => {
+      const url = new URL(event.newURL);
+      updateFilesFromURL(url);
+    })
 
     return function cleanup() {
       if (shelter) void shelter.purge();
