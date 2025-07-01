@@ -38,6 +38,7 @@ type EditorFile = EditorBase & {
   path: string;
   type: "text",
   readOnly: boolean,
+  dirty: boolean;
   editorState: EditorState;
   scrollTop?: number;
   scrollLeft?: number;
@@ -80,7 +81,7 @@ export function FileTabs({
             className="editor-filename"
             aria-hidden="true"
           >
-            {f.name}
+            {f.name}{f.type === "text" && !f.readOnly && f.dirty ? '*' : null}
           </div>
           <button
             className="editor-close"
@@ -117,6 +118,12 @@ export function Editor({
   const [activeFileIdx, setActiveFileIdx] = React.useState(0);
   const runSelectedCode = React.useRef((): void => {
     throw new Error('Unable to run code, webR not initialised.');
+  });
+  const saveCurrentFile = React.useRef((): void => {
+    throw new Error('Unable to save file, editor not properly initialized.');
+  });
+  const setCurrentFileDirty = React.useRef((_: boolean): void => {
+    throw new Error('Unable to update file, editor not properly initialized.');
   });
 
   const activeFile = files[activeFileIdx];
@@ -182,21 +189,40 @@ export function Editor({
 
   const editorExtensions = [
     basicSetup,
-    language.of(r()),
     tabSize.of(EditorState.tabSize.of(2)),
     Prec.high(
       keymap.of([
         indentWithTab,
         {
+          key: 'Mod-s',
+          run: () => {
+            saveCurrentFile.current();
+            return true;
+          },
+        },
+      ])
+    ),
+    EditorView.updateListener.of((update) => {
+      if (update.docChanged) {
+        setCurrentFileDirty.current(true);
+      }
+    }),
+  ];
+
+  const scriptExtensions = [
+    editorExtensions,
+    language.of(r()),
+    Prec.high(
+      keymap.of([
+        {
           key: 'Mod-Enter',
           run: () => {
-            if (!runSelectedCode.current) return false;
             runSelectedCode.current();
             return true;
           },
         },
-      ]
-      )),
+      ])
+    ),
     autocompletion({ override: [completion] })
   ];
 
@@ -248,6 +274,31 @@ export function Editor({
     }
   }, [activeFile, editorView]);
 
+  const setFileDirty = React.useCallback((dirty: boolean) => {
+    setFiles(prevFiles =>
+      prevFiles.map((file, index) => {
+        if (editorView && index === activeFileIdx && file.type === "text") {
+          file.scrollTop = editorView.scrollDOM.scrollTop;
+          file.scrollLeft = editorView.scrollDOM.scrollLeft;
+          return {
+            ...file,
+            editorState: editorView.state,
+            scrollTop: editorView.scrollDOM.scrollTop,
+            scrollLeft: editorView.scrollDOM.scrollLeft,
+            dirty
+          }
+        }
+        return file;
+      })
+    );
+  }, [activeFileIdx, editorView]);
+
+  React.useEffect(() => {
+    setCurrentFileDirty.current = (dirty: boolean): void => {
+      setFileDirty(dirty);
+    };
+  }, [setFileDirty, editorView, activeFile]);
+
   const runFile = React.useCallback(() => {
     if (!editorView) {
       return;
@@ -265,8 +316,8 @@ export function Editor({
     });
   }, [syncActiveFileState, editorView]);
 
-  const saveFile: React.MouseEventHandler<HTMLButtonElement> = React.useCallback(() => {
-    if (!editorView || activeFile.type !== "text") {
+  const saveFile = React.useCallback(() => {
+    if (!editorView || activeFile.type !== "text" || activeFile.readOnly) {
       return;
     }
 
@@ -274,19 +325,28 @@ export function Editor({
     const code = editorView.state.doc.toString();
     const data = new TextEncoder().encode(code);
 
-    webR.FS.writeFile(activeFile.path, data).then(() => {
-      void filesInterface.refreshFilesystem();
-    }, (reason) => {
-      console.error(reason);
-      throw new Error(`Can't save editor contents. See the JavaScript console for details.`);
-    });
+    webR.FS.writeFile(activeFile.path, data)
+      .then(() => setFileDirty(false))
+      .then(() => {
+        void filesInterface.refreshFilesystem();
+      }, (reason) => {
+        setFileDirty(true)
+        console.error(reason);
+        throw new Error(`Can't save editor contents. See the JavaScript console for details.`);
+      })
   }, [syncActiveFileState, editorView]);
+
+  React.useEffect(() => {
+    saveCurrentFile.current = (): void => {
+      saveFile();
+    };
+  }, [saveFile, editorView, activeFile]);
 
   React.useEffect(() => {
     if (!editorRef.current) {
       return;
     }
-    const state = EditorState.create({ extensions: editorExtensions });
+    const state = EditorState.create({ extensions: scriptExtensions });
     const view = new EditorView({
       state,
       parent: editorRef.current,
@@ -298,6 +358,7 @@ export function Editor({
       path: '/home/web_user/Untitled1.R',
       type: 'text',
       readOnly: false,
+      dirty: true,
       editorState: state,
     }]);
 
@@ -322,7 +383,7 @@ export function Editor({
       syncActiveFileState();
 
       const columns = Object.keys(data).map((key) => {
-        return {key, name: key === "row.names" ? "" : key};
+        return { key, name: key === "row.names" ? "" : key };
       });
 
       const rows = Object.entries(data).reduce((a, entry) => {
@@ -372,7 +433,7 @@ export function Editor({
       return webR.FS.readFile(path).then((data) => {
         syncActiveFileState();
         const updatedFiles = [...files];
-        const extensions = name.toLowerCase().endsWith('.r') ? editorExtensions : [];
+        const extensions = name.toLowerCase().endsWith('.r') ? scriptExtensions : editorExtensions;
         if (readOnly) extensions.push(EditorState.readOnly.of(true));
 
         // Get file content, dealing with backspace characters until none remain
@@ -387,6 +448,7 @@ export function Editor({
           path,
           type: "text",
           readOnly,
+          dirty: false,
           editorState: EditorState.create({
             doc: content,
             extensions,
