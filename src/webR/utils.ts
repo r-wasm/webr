@@ -159,3 +159,13 @@ export function bufferToBase64(buffer: ArrayBuffer) {
   }
   return window.btoa(binary);
 }
+
+// From https://stackoverflow.com/a/21797381
+export function base64ToBuffer(base64: string) {
+    var binaryString = window.atob(base64);
+    var bytes = new Uint8Array(binaryString.length);
+    for (var i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+}

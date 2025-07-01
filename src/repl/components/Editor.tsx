@@ -14,6 +14,9 @@ import DataGrid from 'react-data-grid';
 import * as utils from './utils';
 import 'react-data-grid/lib/styles.css';
 import './Editor.css';
+import { deflate, inflate } from "pako";
+import { encode, decode } from '@msgpack/msgpack';
+import { bufferToBase64, base64ToBuffer } from '../../webR/utils';
 
 const language = new Compartment();
 const tabSize = new Compartment();
@@ -43,6 +46,23 @@ type EditorFile = EditorBase & {
   scrollTop?: number;
   scrollLeft?: number;
 };
+
+export interface ShareItem {
+  name: string;
+  path: string;
+  data: Uint8Array;
+}
+
+export function isShareItems(files: any): files is ShareItem[] {
+  return Array.isArray(files) && files.every((file) =>
+    'name' in file &&
+    typeof file.name === 'string' &&
+    'path' in file &&
+    typeof file.path === 'string' &&
+    'data' in file &&
+    file.data instanceof Uint8Array
+  )
+}
 
 export type EditorItem = EditorData | EditorHtml | EditorFile;
 
@@ -146,6 +166,44 @@ export function Editor({
     retrieveCompletions: RFunction;
   }>(null);
 
+  const editorToShareData = async (files: EditorItem[]): Promise<string> => {
+    const shareFiles: ShareItem[] = await Promise.all(
+      files.filter((file): file is EditorFile => file.type === "text" && !file.readOnly)
+        .map(async (file) => ({
+          name: file.name,
+          path: file.path,
+          data: await webR.FS.readFile(file.path)
+        }))
+    );
+    const compressed = deflate(encode(shareFiles));
+    return bufferToBase64(compressed);
+  };
+
+  const shareDataToEditorItems = async (data: string): Promise<EditorItem[]> => {
+    const buffer = base64ToBuffer(data);
+    const items = decode(inflate(buffer));
+    if (!isShareItems(items)) {
+      throw new Error("Provided URL data is not a valid set of share files.");
+    }
+
+    void Promise.all(items.map(async ({ path, data }) => await webR.FS.writeFile(path, data)));
+    return items.map((file) => {
+      const extensions = file.name.toLowerCase().endsWith('.r') ? scriptExtensions : editorExtensions;
+      const state = EditorState.create({
+        doc: new TextDecoder().decode(file.data),
+        extensions
+      });
+      return {
+        name: file.name,
+        readOnly: false,
+        path: file.path,
+        type: "text",
+        dirty: false,
+        editorState: state,
+      };
+    });
+  }
+
   React.useEffect(() => {
     let shelter: Shelter | null = null;
 
@@ -160,6 +218,15 @@ export function Editor({
         completeToken: await shelter.evalR('utils:::.completeToken') as RFunction,
         retrieveCompletions: await shelter.evalR('utils:::.retrieveCompletions') as RFunction,
       };
+
+      // Load files from URL, if a share code has been provided
+      const url = new URL(window.location.href);
+      const shareHash = url.hash.match(/(code)=(.*)/);
+      if (shareHash && shareHash[1] === 'code') {
+        const items = await shareDataToEditorItems(shareHash[2]);
+        void filesInterface.refreshFilesystem();
+        setFiles(items);
+      }
     });
 
     return function cleanup() {
@@ -321,24 +388,24 @@ export function Editor({
     });
   }, [syncActiveFileState, editorView]);
 
-  const saveFile = React.useCallback(() => {
+  const saveFile = React.useCallback(async () => {
     if (!editorView || activeFile.type !== "text" || activeFile.readOnly) {
       return;
     }
 
     syncActiveFileState();
-    const code = editorView.state.doc.toString();
-    const data = new TextEncoder().encode(code);
+    const content = editorView.state.doc.toString();
+    const data = new TextEncoder().encode(content);
 
-    webR.FS.writeFile(activeFile.path, data)
-      .then(() => setFileDirty(false))
-      .then(() => {
-        void filesInterface.refreshFilesystem();
-      }, (reason) => {
-        setFileDirty(true)
-        console.error(reason);
-        throw new Error(`Can't save editor contents. See the JavaScript console for details.`);
-      })
+    try {
+      await webR.FS.writeFile(activeFile.path, data);
+      void filesInterface.refreshFilesystem();
+      setFileDirty(false);
+    } catch (err) {
+      setFileDirty(true)
+      console.error(err);
+      throw new Error(`Can't save editor contents. See the JavaScript console for details.`);
+    }
   }, [syncActiveFileState, editorView]);
 
   React.useEffect(() => {
@@ -377,6 +444,21 @@ export function Editor({
       view.destroy();
     };
   }, []);
+
+
+  /*
+   * Update the share URL as active files are saved
+   */
+  React.useEffect(() => {
+    const shouldUpdate = files.filter((file): file is EditorFile => file.type === 'text').every((file) => !file.dirty);
+    if (files.length > 0 && shouldUpdate) {
+      editorToShareData(files).then((shareData) => {
+        const url = new URL(window.location.href);
+        url.hash = `code=${shareData}`;
+        window.history.pushState({}, '', url.toString());
+      });
+    }
+  }, [files]);
 
   /*
    * Register this component with the files interface so that when it comes to
