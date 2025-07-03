@@ -468,6 +468,7 @@ export function Editor({
       setShareModalOpen(false);
 
       const updatedFiles: EditorItem[] = [...files];
+      let index = null;
 
       for (const file of openFiles) {
         const _options = {
@@ -479,7 +480,7 @@ export function Editor({
         // If file is already open, switch to that tab
         const existsIndex = files.findIndex((f) => "path" in f && f.path === file.path);
         if (existsIndex >= 0 && !_options.forceRead) {
-          setActiveFileIdx(existsIndex);
+          index ??= existsIndex;
           continue;
         }
 
@@ -517,16 +518,17 @@ export function Editor({
           if (existsIndex >= 0) {
             // Switch to and update existing tab content
             updatedFiles[existsIndex] = newFile;
-            setActiveFileIdx(existsIndex);
+            index ??= existsIndex;
           } else {
             // Add this new file content to the list of open files
-            const index = updatedFiles.push(newFile);
-            setActiveFileIdx(index - 1);
+            const newIndex = updatedFiles.push(newFile);
+            index ??= newIndex - 1;
           }
         });
       }
 
       setFiles(updatedFiles);
+      setActiveFileIdx(index ?? 0);
     };
   }, [files, filesInterface]);
 
