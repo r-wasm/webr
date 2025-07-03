@@ -32,7 +32,7 @@ export interface TerminalInterface {
 
 export interface FilesInterface {
   refreshFilesystem: () => Promise<void>;
-  openFileInEditor: (name: string, path: string, options?: { readOnly?: boolean, forceRead?: boolean }) => Promise<void>;
+  openFilesInEditor: (openFiles: { name: string, path: string, readOnly?: boolean, forceRead?: boolean }[]) => Promise<void>;
   openDataInEditor: (title: string, data: NamedObject<WebRDataJsAtomic<string>>) => void;
   openHtmlInEditor: (src: string, path: string) => void;
 }
@@ -51,7 +51,7 @@ const terminalInterface: TerminalInterface = {
 
 const filesInterface: FilesInterface = {
   refreshFilesystem: () => Promise.resolve(),
-  openFileInEditor: () => { throw new Error('Unable to open file, editor not initialised.'); },
+  openFilesInEditor: () => { throw new Error('Unable to open file(s), editor not initialised.'); },
   openDataInEditor: () => { throw new Error('Unable to view data, editor not initialised.'); },
   openHtmlInEditor: () => { throw new Error('Unable to view HTML, editor not initialised.'); },
 };
@@ -74,7 +74,7 @@ function handleCanvasMessage(msg: CanvasMessage) {
 
 async function handlePagerMessage(msg: PagerMessage) {
   const { path, title, deleteFile } = msg.data;
-  await filesInterface.openFileInEditor(title, path, { readOnly: true });
+  await filesInterface.openFilesInEditor([{ name: title, path, readOnly: true }]);
   if (deleteFile) {
     await webR.FS.unlink(path);
   }

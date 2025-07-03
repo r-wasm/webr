@@ -458,62 +458,75 @@ export function Editor({
       setActiveFileIdx(index - 1);
     };
 
-    filesInterface.openFileInEditor = (
+    filesInterface.openFilesInEditor = async (openFiles: {
       name: string,
       path: string,
-      options: { readOnly?: boolean; forceRead?: boolean } = {}
-    ) => {
-      const _options = {
-        readOnly: false,
-        forceRead: false,
-        ...options,
-      };
-
+      readOnly?: boolean;
+      forceRead?: boolean
+    }[]) => {
       // Dismiss sharing modal
       setShareModalOpen(false);
 
-      // If file is already open, switch to that tab
-      const existsIndex = files.findIndex((f) => "path" in f && f.path === path);
-      if (existsIndex >= 0 && !_options.forceRead) {
-        setActiveFileIdx(existsIndex);
-        return Promise.resolve();
-      }
-
-      // Otherwise, read the file contents from the VFS
       const updatedFiles: EditorItem[] = [...files];
-      return webR.FS.readFile(path).then((data) => {
-        syncActiveFileState();
-        let extensions = name.toLowerCase().endsWith('.r') ? scriptExtensions : editorExtensions;
-        if (_options.readOnly) extensions = [EditorState.readOnly.of(true)];
 
-        // Get file content, dealing with backspace characters until none remain
-        let content = new TextDecoder().decode(data);
-        while (content.match(/.[\b]/)) {
-          content = content.replace(/.[\b]/g, '');
-        }
-        const newFile: EditorItem = {
-          name,
-          path,
-          type: "text",
-          readOnly: _options.readOnly,
-          dirty: false,
-          editorState: EditorState.create({
-            doc: content,
-            extensions,
-          }),
+      for (const file of openFiles) {
+        const _options = {
+          readOnly: false,
+          forceRead: false,
+          ...file,
         };
 
-        if (existsIndex >= 0) {
-          // Switch to and update existing tab content
-          updatedFiles[existsIndex] = newFile;
+        // If file is already open, switch to that tab
+        const existsIndex = files.findIndex((f) => "path" in f && f.path === file.path);
+        if (existsIndex >= 0 && !_options.forceRead) {
           setActiveFileIdx(existsIndex);
-        } else {
-          // Add this new file content to the list of open files
-          const index = updatedFiles.push(newFile);
-          setActiveFileIdx(index - 1);
+          continue;
         }
-        setFiles(updatedFiles);
-      });
+
+        // Otherwise, read the file contents from the VFS
+        await webR.FS.readFile(file.path).then((data) => {
+          syncActiveFileState();
+          let extensions = file.name.toLowerCase().endsWith('.r') ? scriptExtensions : editorExtensions;
+          if (_options.readOnly) extensions = [EditorState.readOnly.of(true)];
+
+          let content = "";
+          try {
+            // Get file content, dealing with backspace characters until none remain
+            content = new TextDecoder("utf-8", { fatal: true }).decode(data);
+            while (content.match(/.[\b]/)) {
+              content = content.replace(/.[\b]/g, '');
+            }
+          } catch (err) {
+            // Deal with binary data
+            if (!(err instanceof TypeError)) throw err;
+            content = `<< ${data.byteLength} bytes of binary data >>`;
+          }
+
+          const newFile: EditorItem = {
+            name: file.name,
+            path: file.path,
+            type: "text",
+            readOnly: _options.readOnly,
+            dirty: false,
+            editorState: EditorState.create({
+              doc: content,
+              extensions,
+            }),
+          };
+
+          if (existsIndex >= 0) {
+            // Switch to and update existing tab content
+            updatedFiles[existsIndex] = newFile;
+            setActiveFileIdx(existsIndex);
+          } else {
+            // Add this new file content to the list of open files
+            const index = updatedFiles.push(newFile);
+            setActiveFileIdx(index - 1);
+          }
+        });
+      }
+
+      setFiles(updatedFiles);
     };
   }, [files, filesInterface]);
 
