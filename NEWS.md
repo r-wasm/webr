@@ -4,6 +4,10 @@
 
 * (Regression, again) Fix linking to the FreeType library when building webR (See #504 for details).
 
+## New features
+
+* Support sharing URLs and initial editor file population in the webR application. See `src/examples/embed/` for an example of iframe embedding with `postMessage()`. (#554)
+
 # webR 0.5.3
 
 ## Bug Fixes
