@@ -1,7 +1,7 @@
 import React, { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
 import Terminal from './components/Terminal';
-import Editor from './components/Editor';
+import Editor, { EditorItem } from './components/Editor';
 import Plot from './components/Plot';
 import Files from './components/Files';
 import { Readline } from 'xterm-readline';
@@ -11,7 +11,7 @@ import { CanvasMessage, PagerMessage, ViewMessage, BrowseMessage } from '../webR
 import { Panel, PanelGroup, PanelResizeHandle, ImperativePanelHandle } from 'react-resizable-panels';
 import './App.css';
 import { NamedObject, WebRDataJsAtomic } from '../webR/robj';
-import { applyShareData } from './components/Share';
+import { applyShareData, applyShareString, isShareItems } from './components/Share';
 
 const webR = new WebR({
   RArgs: [],
@@ -32,7 +32,7 @@ export interface TerminalInterface {
 
 export interface FilesInterface {
   refreshFilesystem: () => Promise<void>;
-  openFilesInEditor: (openFiles: { name: string, path: string, readOnly?: boolean, forceRead?: boolean }[]) => Promise<void>;
+  openFilesInEditor: (openFiles: { name: string, path: string, readOnly?: boolean, forceRead?: boolean}[], replace?: boolean) => Promise<void>;
   openDataInEditor: (title: string, data: NamedObject<WebRDataJsAtomic<string>>) => void;
   openHtmlInEditor: (src: string, path: string) => void;
 }
@@ -159,8 +159,16 @@ function App() {
       const url = new URL(event.newURL);
       const shareHash = url.hash.match(/(code)=(.*)/);
       if (shareHash && shareHash[1] === 'code') {
-        void applyShareData(webR, filesInterface, shareHash[2]);
+        void applyShareString(webR, filesInterface, shareHash[2]);
       }
+    });
+
+    window.addEventListener("message", (event: MessageEvent<{ items: EditorItem[] }>) => {
+      const items = event.data.items;
+      if (!isShareItems(items)) {
+        throw new Error("Provided postMessage data does not contain a valid set of share files.");
+      }
+      void applyShareData(webR, filesInterface, items, true);
     });
   }, []);
 
@@ -169,7 +177,7 @@ function App() {
     const url = new URL(window.location.href);
     const shareHash = url.hash.match(/(code)=(.*)/);
     if (shareHash && shareHash[1] === 'code') {
-      void applyShareData(webR, filesInterface, shareHash[2]);
+      void applyShareString(webR, filesInterface, shareHash[2]);
     }
   }, []);
 

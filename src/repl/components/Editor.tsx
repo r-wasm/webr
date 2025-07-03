@@ -463,11 +463,11 @@ export function Editor({
       path: string,
       readOnly?: boolean;
       forceRead?: boolean
-    }[]) => {
+    }[], replace = false) => {
       // Dismiss sharing modal
       setShareModalOpen(false);
 
-      const updatedFiles: EditorItem[] = [...files];
+      const updatedFiles: EditorItem[] = replace ? [] : [...files];
       let index = null;
 
       for (const file of openFiles) {
@@ -478,7 +478,7 @@ export function Editor({
         };
 
         // If file is already open, switch to that tab
-        const existsIndex = files.findIndex((f) => "path" in f && f.path === file.path);
+        const existsIndex = updatedFiles.findIndex((f) => "path" in f && f.path === file.path);
         if (existsIndex >= 0 && !_options.forceRead) {
           index ??= existsIndex;
           continue;
