@@ -102,6 +102,7 @@ STAGE2_LDFLAGS += $(WASM_OPT)
 STAGE2_LDFLAGS += -L$(WASM)/lib
 STAGE2_LDFLAGS += -fwasm-exceptions
 STAGE2_LDFLAGS += -s SUPPORT_LONGJMP=wasm
+STAGE2_LDFLAGS += --use-port=freetype # See r-wasm/webr#504, 56069e2
 
 STAGE2_FFLAGS := $(STAGE2_FFLAGS)
 STAGE2_FFLAGS += --target=wasm32-unknown-emscripten
@@ -207,6 +208,10 @@ $(BUILD)/state/R-$(R_VERSION)/r-stage2: $(BUILD)/state/R-$(R_VERSION)/r-stage1 $
 	sed -i.bak -e ':m' -e 's/-lz//2' -e 't m' -e ':n' -e 's/-lpng16//2' -e 't n' \
 	  $(R_SOURCE)/build/src/library/grDevices/src/cairo/Makefile
 	rm $(R_SOURCE)/build/src/library/grDevices/src/cairo/Makefile.bak
+# -lz also provided by --use-port=freetype linking. See r-wasm/webr#504
+	sed -i.bak -e '/^LIBS =/s/-lz //' $(R_SOURCE)/build/Makeconf
+	rm $(R_SOURCE)/build/Makeconf.bak
+# Build R
 	cd $(STAGE2_BUILD) && $(MAKE_WASM) -j $(NPROCS) R
 	mkdir -p $(R_SOURCE)/build/doc
 	cd $(R_SOURCE)/build/doc && touch NEWS.pdf R.1 Rscript.1

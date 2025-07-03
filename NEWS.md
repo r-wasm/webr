@@ -1,5 +1,9 @@
 # webR (development version)
 
+## Bug Fixes
+
+* (Regression, again) Fix linking to the FreeType library when building webR (See #504 for details).
+
 # webR 0.5.3
 
 ## Bug Fixes
