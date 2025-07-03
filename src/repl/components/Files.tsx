@@ -165,7 +165,7 @@ export function Files({
       return;
     }
     const path = getNodePath(selectedNode);
-    await filesInterface.openFileInEditor(selectedNode.name, path, false);
+    await filesInterface.openFileInEditor(selectedNode.name, path, { readOnly: false });
   };
 
   const onNewDirectory = async () => {
