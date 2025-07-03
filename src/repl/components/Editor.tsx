@@ -14,15 +14,13 @@ import DataGrid from 'react-data-grid';
 import * as utils from './utils';
 import 'react-data-grid/lib/styles.css';
 import './Editor.css';
-import { deflate, inflate } from "pako";
-import { encode, decode } from '@msgpack/msgpack';
-import { bufferToBase64, base64ToBuffer } from '../../webR/utils';
+import { editorToShareData } from './share';
 
 const language = new Compartment();
 const tabSize = new Compartment();
 
 type EditorBase = { name: string, readOnly: boolean };
-type EditorData = EditorBase & {
+export type EditorData = EditorBase & {
   type: "data",
   data: {
     columns: { key: string, name: string }[];
@@ -30,14 +28,14 @@ type EditorData = EditorBase & {
   }
 };
 
-type EditorHtml = EditorBase & {
+export type EditorHtml = EditorBase & {
   path: string;
   type: "html",
   readOnly: boolean,
   frame: HTMLIFrameElement,
 };
 
-type EditorFile = EditorBase & {
+export type EditorFile = EditorBase & {
   path: string;
   type: "text",
   readOnly: boolean,
@@ -46,23 +44,6 @@ type EditorFile = EditorBase & {
   scrollTop?: number;
   scrollLeft?: number;
 };
-
-export interface ShareItem {
-  name: string;
-  path: string;
-  data: Uint8Array;
-}
-
-export function isShareItems(files: any): files is ShareItem[] {
-  return Array.isArray(files) && files.every((file) =>
-    'name' in file &&
-    typeof file.name === 'string' &&
-    'path' in file &&
-    typeof file.path === 'string' &&
-    'data' in file &&
-    file.data instanceof Uint8Array
-  )
-}
 
 export type EditorItem = EditorData | EditorHtml | EditorFile;
 
@@ -166,56 +147,8 @@ export function Editor({
     retrieveCompletions: RFunction;
   }>(null);
 
-  const editorToShareData = async (files: EditorItem[]): Promise<string> => {
-    const shareFiles: ShareItem[] = await Promise.all(
-      files.filter((file): file is EditorFile => file.type === "text" && !file.readOnly)
-        .map(async (file) => ({
-          name: file.name,
-          path: file.path,
-          data: await webR.FS.readFile(file.path)
-        }))
-    );
-    const compressed = deflate(encode(shareFiles));
-    return bufferToBase64(compressed);
-  };
-
-  const shareDataToEditorItems = async (data: string): Promise<EditorItem[]> => {
-    const buffer = base64ToBuffer(data);
-    const items = decode(inflate(buffer));
-    if (!isShareItems(items)) {
-      throw new Error("Provided URL data is not a valid set of share files.");
-    }
-
-    void Promise.all(items.map(async ({ path, data }) => await webR.FS.writeFile(path, data)));
-    return items.map((file) => {
-      const extensions = file.name.toLowerCase().endsWith('.r') ? scriptExtensions : editorExtensions;
-      const state = EditorState.create({
-        doc: new TextDecoder().decode(file.data),
-        extensions
-      });
-      return {
-        name: file.name,
-        readOnly: false,
-        path: file.path,
-        type: "text",
-        dirty: false,
-        editorState: state,
-      };
-    });
-  }
-
   React.useEffect(() => {
     let shelter: Shelter | null = null;
-
-    // Load files from URL, if a share code has been provided
-    const updateFilesFromURL = async (url: URL) => {
-      const shareHash = url.hash.match(/(code)=(.*)/);
-      if (shareHash && shareHash[1] === 'code') {
-      const items = await shareDataToEditorItems(shareHash[2]);
-      void filesInterface.refreshFilesystem();
-      setFiles(items);
-      }
-    }
 
     void webR.init().then(async () => {
       shelter = await new webR.Shelter();
@@ -228,15 +161,7 @@ export function Editor({
         completeToken: await shelter.evalR('utils:::.completeToken') as RFunction,
         retrieveCompletions: await shelter.evalR('utils:::.retrieveCompletions') as RFunction,
       };
-
-      const url = new URL(window.location.href);
-      updateFilesFromURL(url);
     });
-
-    addEventListener("hashchange", (event: HashChangeEvent) => {
-      const url = new URL(event.newURL);
-      updateFilesFromURL(url);
-    })
 
     return function cleanup() {
       if (shelter) void shelter.purge();
@@ -461,7 +386,7 @@ export function Editor({
   React.useEffect(() => {
     const shouldUpdate = files.filter((file): file is EditorFile => file.type === 'text').every((file) => !file.dirty);
     if (files.length > 0 && shouldUpdate) {
-      editorToShareData(files).then((shareData) => {
+      editorToShareData(webR, files).then((shareData) => {
         const url = new URL(window.location.href);
         url.hash = `code=${shareData}`;
         window.history.pushState({}, '', url.toString());
@@ -524,40 +449,58 @@ export function Editor({
       setActiveFileIdx(index - 1);
     };
 
-    filesInterface.openFileInEditor = (name: string, path: string, readOnly: boolean) => {
-      // Don't reopen the file if it's already open, switch to that tab instead
+    filesInterface.openFileInEditor = (
+      name: string,
+      path: string,
+      options: { readOnly?: boolean; forceRead?: boolean } = {}
+    ) => {
+      const _options = {
+        readOnly: false,
+        forceRead: false,
+        ...options,
+      }
+
+      // If file is already open, switch to that tab
       const existsIndex = files.findIndex((f) => "path" in f && f.path === path);
-      if (existsIndex >= 0) {
+      if (existsIndex >= 0 && !_options.forceRead) {
         setActiveFileIdx(existsIndex);
         return Promise.resolve();
       }
 
+      // Otherwise, read the file contents from the VFS
+      const updatedFiles: EditorItem[] = [...files];
       return webR.FS.readFile(path).then((data) => {
         syncActiveFileState();
-        const updatedFiles = [...files];
-        const extensions = name.toLowerCase().endsWith('.r') ? scriptExtensions : editorExtensions;
-        if (readOnly) extensions.push(EditorState.readOnly.of(true));
+        let extensions = name.toLowerCase().endsWith('.r') ? scriptExtensions : editorExtensions;
+        if (_options.readOnly) extensions = [EditorState.readOnly.of(true)];
 
         // Get file content, dealing with backspace characters until none remain
         let content = new TextDecoder().decode(data);
         while (content.match(/.[\b]/)) {
           content = content.replace(/.[\b]/g, '');
         }
-
-        // Add this new file content to the list of open files
-        const index = updatedFiles.push({
+        const newFile: EditorItem = {
           name,
           path,
           type: "text",
-          readOnly,
+          readOnly: _options.readOnly,
           dirty: false,
           editorState: EditorState.create({
             doc: content,
             extensions,
           }),
-        });
+        };
+
+        if (existsIndex >= 0) {
+          // Switch to and update existing tab content
+          updatedFiles[existsIndex] = newFile;
+          setActiveFileIdx(existsIndex);
+        } else {
+          // Add this new file content to the list of open files
+          const index = updatedFiles.push(newFile);
+          setActiveFileIdx(index - 1);
+        }
         setFiles(updatedFiles);
-        setActiveFileIdx(index - 1);
       });
     };
   }, [files, filesInterface]);
