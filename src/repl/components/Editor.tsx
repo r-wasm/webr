@@ -128,7 +128,7 @@ export function Editor({
   const saveCurrentFile = React.useRef((): void => {
     throw new Error('Unable to save file, editor not properly initialized.');
   });
-  const setCurrentFileDirty = React.useRef((_: boolean): void => {
+  const setCurrentFileDirty = React.useRef<(_: boolean) => void>((): void => {
     throw new Error('Unable to update file, editor not properly initialized.');
   });
 
@@ -292,7 +292,7 @@ export function Editor({
             scrollTop: editorView.scrollDOM.scrollTop,
             scrollLeft: editorView.scrollDOM.scrollLeft,
             dirty
-          }
+          };
         }
         return file;
       })
@@ -322,7 +322,7 @@ export function Editor({
     });
   }, [syncActiveFileState, editorView]);
 
-  const saveFile = React.useCallback(async () => {
+  const saveFile = React.useCallback(() => {
     if (!editorView || activeFile.type !== "text" || activeFile.readOnly) {
       return;
     }
@@ -331,20 +331,19 @@ export function Editor({
     const content = editorView.state.doc.toString();
     const data = new TextEncoder().encode(content);
 
-    try {
-      await webR.FS.writeFile(activeFile.path, data);
+    webR.FS.writeFile(activeFile.path, data).then(() => {
       void filesInterface.refreshFilesystem();
       setFileDirty(false);
-    } catch (err) {
-      setFileDirty(true)
-      console.error(err);
+    }, (reason) => {
+      setFileDirty(true);
+      console.error(reason);
       throw new Error(`Can't save editor contents. See the JavaScript console for details.`);
-    }
+    });
   }, [syncActiveFileState, editorView]);
 
   React.useEffect(() => {
     saveCurrentFile.current = (): void => {
-      saveFile();
+      void saveFile();
     };
   }, [saveFile, editorView, activeFile]);
 
@@ -386,7 +385,7 @@ export function Editor({
   React.useEffect(() => {
     const shouldUpdate = files.filter((file): file is EditorFile => file.type === 'text').every((file) => !file.dirty);
     if (files.length > 0 && shouldUpdate) {
-      editorToShareData(webR, files).then((shareData) => {
+      void editorToShareData(webR, files).then((shareData) => {
         const url = new URL(window.location.href);
         url.hash = `code=${shareData}`;
         window.history.pushState({}, '', url.toString());
@@ -458,7 +457,7 @@ export function Editor({
         readOnly: false,
         forceRead: false,
         ...options,
-      }
+      };
 
       // If file is already open, switch to that tab
       const existsIndex = files.findIndex((f) => "path" in f && f.path === path);

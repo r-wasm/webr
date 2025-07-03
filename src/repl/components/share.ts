@@ -19,10 +19,10 @@ export function isShareItems(files: any): files is ShareItem[] {
     typeof file.path === 'string' &&
     'data' in file &&
     file.data instanceof Uint8Array
-  )
+  );
 }
 
-export const applyShareData = async (webR: WebR, filesInterface: FilesInterface, data: string): Promise<void> => {
+export async function applyShareData(webR: WebR, filesInterface: FilesInterface, data: string): Promise<void> {
   const buffer = base64ToBuffer(data);
   const items = decode(inflate(buffer));
   if (!isShareItems(items)) {
@@ -32,7 +32,7 @@ export const applyShareData = async (webR: WebR, filesInterface: FilesInterface,
   await webR.init();
   await Promise.all(items.map(async ({ path, data }) => await webR.FS.writeFile(path, data)));
   void filesInterface.refreshFilesystem();
-  items.forEach((item) => filesInterface.openFileInEditor(item.name, item.path, { forceRead: true }));
+  items.forEach((item) => void filesInterface.openFileInEditor(item.name, item.path, { forceRead: true }));
 }
 
 export async function editorToShareData(webR: WebR, files: EditorItem[]): Promise<string> {
@@ -47,4 +47,4 @@ export async function editorToShareData(webR: WebR, files: EditorItem[]): Promis
 
   const compressed = deflate(encode(shareFiles));
   return bufferToBase64(compressed);
-};
+}
