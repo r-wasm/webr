@@ -11,7 +11,7 @@ import { CanvasMessage, PagerMessage, ViewMessage, BrowseMessage } from '../webR
 import { Panel, PanelGroup, PanelResizeHandle, ImperativePanelHandle } from 'react-resizable-panels';
 import './App.css';
 import { NamedObject, WebRDataJsAtomic } from '../webR/robj';
-import { applyShareData } from './components/share';
+import { applyShareData } from './components/Share';
 
 const webR = new WebR({
   RArgs: [],

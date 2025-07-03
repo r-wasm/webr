@@ -1,9 +1,13 @@
+
+import React, { useState, useEffect } from 'react';
+import { FaTimes } from 'react-icons/fa';
 import { inflate, deflate } from "pako";
 import { decode, encode } from '@msgpack/msgpack';
 import { base64ToBuffer, bufferToBase64 } from '../../webR/utils';
 import { FilesInterface } from "../App";
 import { WebR } from "../../webR/webr-main";
 import { EditorFile, EditorItem } from "./Editor";
+import './Share.css';
 
 export interface ShareItem {
   name: string;
@@ -48,3 +52,60 @@ export async function editorToShareData(webR: WebR, files: EditorItem[]): Promis
   const compressed = deflate(encode(shareFiles));
   return bufferToBase64(compressed);
 }
+
+interface ShareModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  shareUrl: string;
+}
+
+export function ShareModal({ isOpen, onClose, shareUrl }: ShareModalProps) {
+  const [copied, setCopied] = useState(false);
+  const urlBytes = new TextEncoder().encode(shareUrl).length;
+
+  useEffect(() => {
+    if (copied) {
+      const timer = setTimeout(() => setCopied(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [copied]);
+
+  const handleCopyClick = () => {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      setCopied(true);
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+    });
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="share-modal-overlay">
+      <div className="share-modal">
+        <button className="share-modal-close" onClick={onClose} aria-label="Close">
+          <FaTimes aria-hidden="true" />
+        </button>
+        <div className="share-modal-heading">Share URL ({urlBytes} bytes)</div>
+        <div className="share-modal-content">
+          <input
+            id="share-url"
+            type="text"
+            readOnly
+            value={shareUrl}
+            aria-label="Share URL"
+          />
+          <button
+            className="copy-button"
+            onClick={handleCopyClick}
+            aria-label="Copy URL to clipboard"
+          >
+            {copied ? "Copied!" : "Copy URL"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default ShareModal;

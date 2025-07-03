@@ -1,6 +1,6 @@
 import React from 'react';
 import { WebR, RFunction, Shelter } from '../../webR/webr-main';
-import { FaPlay, FaRegSave } from 'react-icons/fa';
+import { FaPlay, FaRegSave, FaShare } from 'react-icons/fa';
 import { basicSetup, EditorView } from 'codemirror';
 import { EditorState, Compartment, Prec } from '@codemirror/state';
 import { autocompletion, CompletionContext } from '@codemirror/autocomplete';
@@ -11,10 +11,10 @@ import { FilesInterface, TerminalInterface } from '../App';
 import { r } from 'codemirror-lang-r';
 import { NamedObject, WebRDataJsAtomic } from '../../webR/robj';
 import DataGrid from 'react-data-grid';
+import { editorToShareData, ShareModal } from './Share';
 import * as utils from './utils';
 import 'react-data-grid/lib/styles.css';
 import './Editor.css';
-import { editorToShareData } from './share';
 
 const language = new Compartment();
 const tabSize = new Compartment();
@@ -122,6 +122,9 @@ export function Editor({
   const [editorView, setEditorView] = React.useState<EditorView>();
   const [files, setFiles] = React.useState<EditorItem[]>([]);
   const [activeFileIdx, setActiveFileIdx] = React.useState(0);
+  const [shareModalOpen, setShareModalOpen] = React.useState(false);
+  const [shareUrl, setShareUrl] = React.useState(window.location.href);
+
   const runSelectedCode = React.useRef((): void => {
     throw new Error('Unable to run code, webR not initialised.');
   });
@@ -347,6 +350,13 @@ export function Editor({
     };
   }, [saveFile, editorView, activeFile]);
 
+  const share = React.useCallback(() => {
+    if (files.length === 0) return;
+    saveFile();
+    setShareUrl(window.location.href.toString());
+    setShareModalOpen(true);
+  }, [files, webR]);
+
   const focusEditor = React.useCallback(() => {
     if (editorView) {
       editorView.focus();
@@ -459,6 +469,9 @@ export function Editor({
         ...options,
       };
 
+      // Dismiss sharing modal
+      setShareModalOpen(false);
+
       // If file is already open, switch to that tab
       const existsIndex = files.findIndex((f) => "path" in f && f.path === path);
       if (existsIndex >= 0 && !_options.forceRead) {
@@ -544,65 +557,75 @@ export function Editor({
   }, [files, syncActiveFileState, activeFile, editorView]);
 
   return (
-    <Panel
-      id="editor"
-      role="region"
-      aria-label="Editor Pane"
-      order={1}
-      minSize={20}
-      className={files.length === 0 ? "d-none" : ""}
-    >
-      <div className="editor-header">
-        <FileTabs
-          files={files}
-          activeFileIdx={activeFileIdx}
-          setActiveFileIdx={setActiveFileIdx}
-          closeFile={closeFile}
-          focusEditor={focusEditor}
-        />
-      </div>
-      <div
-        aria-label="Editor"
-        aria-describedby="editor-desc"
-        className={`editor-container ${(isData || isHtml) ? "d-none" : ""}`}
-        ref={editorRef}
+    <>
+      <Panel
+        id="editor"
+        role="region"
+        aria-label="Editor Pane"
+        order={1}
+        minSize={20}
+        className={files.length === 0 ? "d-none" : ""}
       >
-      </div>
-      <p className="d-none" id="editor-desc">
-        This component is an instance of the <a href="https://codemirror.net/">CodeMirror</a> interactive text editor.
-        The editor has been configured so that the Tab key controls the indentation of code.
-        To move focus away from the editor, press the Escape key, and then press the Tab key directly after it.
-        Escape and then Shift-Tab can also be used to move focus backwards.
-      </p>
-      {(isData && activeFile.data) &&
-        <DataGrid
-          aria-label="Data viewer"
-          columns={activeFile.data.columns}
-          rows={activeFile.data.rows}
-          className="data-container"
-          defaultColumnOptions={{
-            sortable: true,
-            resizable: true
-          }}
-        />
-      }
-      <div
-        className={`html-viewer-container ${isHtml ? "" : "d-none"}`}
-        ref={htmlRef}
-      ></div>
-      <div
-        role="toolbar"
-        aria-label="Editor Toolbar"
-        className="editor-actions"
-      >
-        {isScript && <button onClick={runFile}>
-          <FaPlay aria-hidden="true" className="icon" /> Run
-        </button>}
-        {!isReadOnly && <button onClick={saveFile}>
-          <FaRegSave aria-hidden="true" className="icon" /> Save
-        </button>}
-      </div>
-    </Panel>
+        <div className="editor-header">
+          <FileTabs
+            files={files}
+            activeFileIdx={activeFileIdx}
+            setActiveFileIdx={setActiveFileIdx}
+            closeFile={closeFile}
+            focusEditor={focusEditor}
+          />
+        </div>
+        <div
+          aria-label="Editor"
+          aria-describedby="editor-desc"
+          className={`editor-container ${(isData || isHtml) ? "d-none" : ""}`}
+          ref={editorRef}
+        >
+        </div>
+        <p className="d-none" id="editor-desc">
+          This component is an instance of the <a href="https://codemirror.net/">CodeMirror</a> interactive text editor.
+          The editor has been configured so that the Tab key controls the indentation of code.
+          To move focus away from the editor, press the Escape key, and then press the Tab key directly after it.
+          Escape and then Shift-Tab can also be used to move focus backwards.
+        </p>
+        {(isData && activeFile.data) &&
+          <DataGrid
+            aria-label="Data viewer"
+            columns={activeFile.data.columns}
+            rows={activeFile.data.rows}
+            className="data-container"
+            defaultColumnOptions={{
+              sortable: true,
+              resizable: true
+            }}
+          />
+        }
+        <div
+          className={`html-viewer-container ${isHtml ? "" : "d-none"}`}
+          ref={htmlRef}
+        ></div>
+        <div
+          role="toolbar"
+          aria-label="Editor Toolbar"
+          className="editor-actions"
+        >
+          {isScript && <button onClick={runFile}>
+            <FaPlay aria-hidden="true" className="icon" /> Run
+          </button>}
+          {!isReadOnly && <button onClick={saveFile}>
+            <FaRegSave aria-hidden="true" className="icon" /> Save
+          </button>}
+          <button onClick={share}>
+            <FaShare aria-hidden="true" className="icon" /> Share
+          </button>
+        </div>
+      </Panel>
+      <ShareModal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        shareUrl={shareUrl}
+      />
+    </>
   );
 }
 
