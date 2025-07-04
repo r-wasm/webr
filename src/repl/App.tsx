@@ -1,7 +1,7 @@
 import React, { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
 import Terminal from './components/Terminal';
-import Editor from './components/Editor';
+import Editor, { EditorItem } from './components/Editor';
 import Plot from './components/Plot';
 import Files from './components/Files';
 import { Readline } from 'xterm-readline';
@@ -11,6 +11,7 @@ import { CanvasMessage, PagerMessage, ViewMessage, BrowseMessage } from '../webR
 import { Panel, PanelGroup, PanelResizeHandle, ImperativePanelHandle } from 'react-resizable-panels';
 import './App.css';
 import { NamedObject, WebRDataJsAtomic } from '../webR/robj';
+import { applyShareData, applyShareString, isShareItems } from './components/Share';
 
 const webR = new WebR({
   RArgs: [],
@@ -31,8 +32,8 @@ export interface TerminalInterface {
 
 export interface FilesInterface {
   refreshFilesystem: () => Promise<void>;
-  openFileInEditor: (name: string, path: string, readOnly: boolean) => Promise<void>;
-  openDataInEditor: (title: string, data: NamedObject<WebRDataJsAtomic<string>> ) => void;
+  openFilesInEditor: (openFiles: { name: string, path: string, readOnly?: boolean, forceRead?: boolean}[], replace?: boolean) => Promise<void>;
+  openDataInEditor: (title: string, data: NamedObject<WebRDataJsAtomic<string>>) => void;
   openHtmlInEditor: (src: string, path: string) => void;
 }
 
@@ -50,7 +51,7 @@ const terminalInterface: TerminalInterface = {
 
 const filesInterface: FilesInterface = {
   refreshFilesystem: () => Promise.resolve(),
-  openFileInEditor: () => { throw new Error('Unable to open file, editor not initialised.'); },
+  openFilesInEditor: () => { throw new Error('Unable to open file(s), editor not initialised.'); },
   openDataInEditor: () => { throw new Error('Unable to view data, editor not initialised.'); },
   openHtmlInEditor: () => { throw new Error('Unable to view HTML, editor not initialised.'); },
 };
@@ -73,7 +74,7 @@ function handleCanvasMessage(msg: CanvasMessage) {
 
 async function handlePagerMessage(msg: PagerMessage) {
   const { path, title, deleteFile } = msg.data;
-  await filesInterface.openFileInEditor(title, path, true);
+  await filesInterface.openFilesInEditor([{ name: title, path, readOnly: true }]);
   if (deleteFile) {
     await webR.FS.unlink(path);
   }
@@ -99,7 +100,7 @@ async function handleBrowseMessage(msg: BrowseMessage) {
    */
   const jsRegex = /<script.*src=["'`](.+\.js)["'`].*>.*<\/script>/g;
   const jsMatches = Array.from(content.matchAll(jsRegex) || []);
-  const jsContent: {[idx: number]: string} = {};
+  const jsContent: { [idx: number]: string } = {};
   await Promise.all(jsMatches.map((match, idx) => {
     return webR.FS.readFile(`${root}/${match[1]}`)
       .then((file) => bufferToBase64(file))
@@ -117,7 +118,7 @@ async function handleBrowseMessage(msg: BrowseMessage) {
   const cssBaseStyle = `<style>body{font-family: sans-serif;}</style>`;
   const cssRegex = /<link.*href=["'`](.+\.css)["'`].*>/g;
   const cssMatches = Array.from(content.matchAll(cssRegex) || []);
-  const cssContent: {[idx: number]: string} = {};
+  const cssContent: { [idx: number]: string } = {};
   await Promise.all(cssMatches.map((match, idx) => {
     return webR.FS.readFile(`${root}/${match[1]}`)
       .then((file) => bufferToBase64(file))
@@ -127,7 +128,7 @@ async function handleBrowseMessage(msg: BrowseMessage) {
   }));
   cssMatches.forEach((match, idx) => {
     let cssHtml = `<link rel="stylesheet" href="${cssContent[idx]}"/>`;
-    if (!injectedBaseStyle){
+    if (!injectedBaseStyle) {
       cssHtml = cssBaseStyle + cssHtml;
       injectedBaseStyle = true;
     }
@@ -153,31 +154,56 @@ function App() {
       if (!rightPanelRef.current) return;
       onPanelResize(rightPanelRef.current.getSize());
     });
+
+    window.addEventListener("hashchange", (event: HashChangeEvent) => {
+      const url = new URL(event.newURL);
+      const shareHash = url.hash.match(/(code)=(.*)/);
+      if (shareHash && shareHash[1] === 'code') {
+        void applyShareString(webR, filesInterface, shareHash[2]);
+      }
+    });
+
+    window.addEventListener("message", (event: MessageEvent<{ items: EditorItem[] }>) => {
+      const items = event.data.items;
+      if (!isShareItems(items)) {
+        throw new Error("Provided postMessage data does not contain a valid set of share files.");
+      }
+      void applyShareData(webR, filesInterface, items, true);
+    });
+  }, []);
+
+  // Show share content on initial load
+  React.useEffect(() => {
+    const url = new URL(window.location.href);
+    const shareHash = url.hash.match(/(code)=(.*)/);
+    if (shareHash && shareHash[1] === 'code') {
+      void applyShareString(webR, filesInterface, shareHash[2]);
+    }
   }, []);
 
   return (
     <div className='repl'>
-    <PanelGroup direction="horizontal">
-      <Panel defaultSize={50} minSize={10}>
-        <PanelGroup autoSaveId="conditional" direction="vertical">
-          <Editor
-            webR={webR}
-            terminalInterface={terminalInterface}
-            filesInterface={filesInterface}
-          />
-          <PanelResizeHandle />
-          <Terminal webR={webR} terminalInterface={terminalInterface} />
-        </PanelGroup>
-      </Panel>
-      <PanelResizeHandle />
-      <Panel ref={rightPanelRef} onResize={onPanelResize} minSize={10}>
-        <PanelGroup direction="vertical">
-          <Files webR={webR} filesInterface={filesInterface} />
-          <PanelResizeHandle />
-          <Plot webR={webR} plotInterface={plotInterface} />
-        </PanelGroup>
-      </Panel>
-    </PanelGroup>
+      <PanelGroup direction="horizontal">
+        <Panel defaultSize={50} minSize={10}>
+          <PanelGroup autoSaveId="conditional" direction="vertical">
+            <Editor
+              webR={webR}
+              terminalInterface={terminalInterface}
+              filesInterface={filesInterface}
+            />
+            <PanelResizeHandle />
+            <Terminal webR={webR} terminalInterface={terminalInterface} />
+          </PanelGroup>
+        </Panel>
+        <PanelResizeHandle />
+        <Panel ref={rightPanelRef} onResize={onPanelResize} minSize={10}>
+          <PanelGroup direction="vertical">
+            <Files webR={webR} filesInterface={filesInterface} />
+            <PanelResizeHandle />
+            <Plot webR={webR} plotInterface={plotInterface} />
+          </PanelGroup>
+        </Panel>
+      </PanelGroup>
     </div>
   );
 }
