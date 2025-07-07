@@ -11,7 +11,7 @@ import { FilesInterface, TerminalInterface } from '../App';
 import { r } from 'codemirror-lang-r';
 import { NamedObject, WebRDataJsAtomic } from '../../webR/robj';
 import DataGrid from 'react-data-grid';
-import { editorToShareData, ShareModal } from './Share';
+import { encodeShareData, ShareModal } from './Share';
 import * as utils from './utils';
 import 'react-data-grid/lib/styles.css';
 import './Editor.css';
@@ -395,10 +395,20 @@ export function Editor({
   React.useEffect(() => {
     const shouldUpdate = files.filter((file): file is EditorFile => file.type === 'text').every((file) => !file.dirty);
     if (files.length > 0 && shouldUpdate) {
-      void editorToShareData(webR, files).then((shareData) => {
+      Promise.all(
+        files.filter((file): file is EditorFile => file.type === "text" && !file.readOnly)
+          .map(async (file) => ({
+            name: file.name,
+            path: file.path,
+            data: await webR.FS.readFile(file.path)
+          }))
+      ).then(shareItems => {
+        const shareData = encodeShareData(shareItems);
         const url = new URL(window.location.href);
         url.hash = `code=${shareData}`;
         window.history.pushState({}, '', url.toString());
+      }, (reason: Error) => {
+        throw new Error(`Can't update share URL: ${reason.message}`);
       });
     }
   }, [files]);

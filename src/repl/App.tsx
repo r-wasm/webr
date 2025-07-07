@@ -11,7 +11,7 @@ import { CanvasMessage, PagerMessage, ViewMessage, BrowseMessage } from '../webR
 import { Panel, PanelGroup, PanelResizeHandle, ImperativePanelHandle } from 'react-resizable-panels';
 import './App.css';
 import { NamedObject, WebRDataJsAtomic } from '../webR/robj';
-import { applyShareData, applyShareString, isShareItems } from './components/Share';
+import { decodeShareData, isShareItems, ShareItem } from './components/Share';
 
 const webR = new WebR({
   RArgs: [],
@@ -23,6 +23,7 @@ const webR = new WebR({
   },
 });
 (globalThis as any).webR = webR;
+const encoder = new TextEncoder();
 
 export interface TerminalInterface {
   println: Readline['println'];
@@ -32,8 +33,8 @@ export interface TerminalInterface {
 
 export interface FilesInterface {
   refreshFilesystem: () => Promise<void>;
-  openFilesInEditor: (openFiles: { name: string, path: string, readOnly?: boolean, forceRead?: boolean}[], replace?: boolean) => Promise<void>;
-  openContentInEditor: (openFiles: { name: string, content: Uint8Array}[], replace?: boolean) => void;
+  openFilesInEditor: (openFiles: { name: string, path: string, readOnly?: boolean, forceRead?: boolean }[], replace?: boolean) => Promise<void>;
+  openContentInEditor: (openFiles: { name: string, content: Uint8Array }[], replace?: boolean) => void;
   openDataInEditor: (title: string, data: NamedObject<WebRDataJsAtomic<string>>) => void;
   openHtmlInEditor: (src: string, path: string) => void;
 }
@@ -151,36 +152,64 @@ const onPanelResize = (size: number) => {
 
 function App() {
   const rightPanelRef = React.useRef<ImperativePanelHandle | null>(null);
+
+  async function applyShareData(items: ShareItem[]): Promise<void> {
+    // Write files to VFS
+    await webR.init();
+    await Promise.all(items.map(async (item) => {
+      return webR.FS.writeFile(item.path, item.data ? item.data : encoder.encode(item.text));
+    }));
+
+    // Load saved files into editor
+    void filesInterface.refreshFilesystem();
+    void filesInterface.openFilesInEditor(items.map((item) => ({
+      name: item.name,
+      path: item.path,
+      forceRead: true
+    })), true);
+  }
+
+  function applyShareHash(hash: string): void {
+    const shareHash = hash.match(/(code)=([^&]+)(?:&(\w+))?/);
+    if (shareHash && shareHash[1] === 'code') {
+      const items = decodeShareData(shareHash[2], shareHash[3]);
+
+      // Load initial content into editor
+      void filesInterface.openContentInEditor(items.map((item) => ({
+        name: item.name,
+        content: item.data ? item.data : encoder.encode(item.text)
+      })), true);
+
+      void applyShareData(items);
+    }
+  }
+
   React.useEffect(() => {
     window.addEventListener("resize", () => {
       if (!rightPanelRef.current) return;
       onPanelResize(rightPanelRef.current.getSize());
     });
 
+    // Show share content whenever URL hash code changes
     window.addEventListener("hashchange", (event: HashChangeEvent) => {
       const url = new URL(event.newURL);
-      const shareHash = url.hash.match(/(code)=(.*)/);
-      if (shareHash && shareHash[1] === 'code') {
-        void applyShareString(webR, filesInterface, shareHash[2]);
-      }
+      applyShareHash(url.hash);
     });
 
+    // Listen for messages containing shared files data. See `encodeShareData()` for details.
     window.addEventListener("message", (event: MessageEvent<{ items: EditorItem[] }>) => {
       const items = event.data.items;
       if (!isShareItems(items)) {
         throw new Error("Provided postMessage data does not contain a valid set of share files.");
       }
-      void applyShareData(webR, filesInterface, items);
+      void applyShareData(items);
     });
   }, []);
 
   // Show share content on initial load
   React.useEffect(() => {
     const url = new URL(window.location.href);
-    const shareHash = url.hash.match(/(code)=(.*)/);
-    if (shareHash && shareHash[1] === 'code') {
-      void applyShareString(webR, filesInterface, shareHash[2]);
-    }
+    applyShareHash(url.hash);
   }, []);
 
   return (
