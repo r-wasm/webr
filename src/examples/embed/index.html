@@ -5,11 +5,16 @@
 </head>
 
 <body>
-  <p>The webR application will be embedded below. Some initial file data will be populated using a JavaScript
-    <code>postMessage()</code> command.
+  <p>The webR application will be embedded below.</p>
+  <p>
+    In the first example initial file data is populated via the URL.
+    In the second example initial file data is populated using a JavaScript <code>postMessage()</code> command.
   </p>
-  <iframe id="webr" width="100%" height="90%" src="https://webr.r-wasm.org/latest/"></iframe>
-  <script src="./send.js"></script>
+  <div style="height: 90%; display: flex;">
+    <iframe id="ex1" width="50%" src="https://webr.r-wasm.org/latest/#code=eJyb2LwkLzE3dWVqRWJuQU6qXtCSgsSSjB36Gfm5qfrlqUnxpcWpRfoI2ZTEksQj4gVFmXklGkrFGYlFqSkKZZmJCqFBPkqaAOxxHjs%3D"></iframe>
+    <iframe id="ex2" width="50%" src="https://webr.r-wasm.org/latest/"></iframe>
+  </div>
+  <script src="./embed.js"></script>
 </body>
 
 </html>

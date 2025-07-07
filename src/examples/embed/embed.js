@@ -12,7 +12,7 @@ const scriptFile = encoder.encode(`data <- read.csv("data.csv")
 plot(data, type = 'l')
 `);
 
-const iframe = document.getElementById('webr');
+const iframe = document.getElementById('ex2');
 iframe.addEventListener("load", function () {
   iframe.contentWindow.postMessage({
     items: [
@@ -29,5 +29,3 @@ iframe.addEventListener("load", function () {
     ]
   }, '*');
 });
-
-
