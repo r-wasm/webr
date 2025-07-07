@@ -458,6 +458,31 @@ export function Editor({
       setActiveFileIdx(index - 1);
     };
 
+    filesInterface.openContentInEditor = (openFiles: {
+      name: string,
+      content: Uint8Array,
+    }[], replace = false) => {
+      if (openFiles.length === 0) return;
+
+      const updatedFiles: EditorItem[] = replace ? [] : [...files];
+      openFiles.forEach((file) => {
+        updatedFiles.push({
+          name: file.name,
+          path: `/tmp/.webR${file.name}`,
+          type: "text",
+          readOnly: false,
+          dirty: true,
+          editorState: EditorState.create({
+            doc: utils.decodeTextOrBinaryContent(file.content),
+            extensions: file.name.toLowerCase().endsWith('.r') ? scriptExtensions : editorExtensions
+          }),
+        });
+      }
+      );
+      setFiles(updatedFiles);
+      setActiveFileIdx(0);
+    };
+
     filesInterface.openFilesInEditor = async (openFiles: {
       name: string,
       path: string,
@@ -490,19 +515,6 @@ export function Editor({
           let extensions = file.name.toLowerCase().endsWith('.r') ? scriptExtensions : editorExtensions;
           if (_options.readOnly) extensions = [EditorState.readOnly.of(true)];
 
-          let content = "";
-          try {
-            // Get file content, dealing with backspace characters until none remain
-            content = new TextDecoder("utf-8", { fatal: true }).decode(data);
-            while (content.match(/.[\b]/)) {
-              content = content.replace(/.[\b]/g, '');
-            }
-          } catch (err) {
-            // Deal with binary data
-            if (!(err instanceof TypeError)) throw err;
-            content = `<< ${data.byteLength} bytes of binary data >>`;
-          }
-
           const newFile: EditorItem = {
             name: file.name,
             path: file.path,
@@ -510,7 +522,7 @@ export function Editor({
             readOnly: _options.readOnly,
             dirty: false,
             editorState: EditorState.create({
-              doc: content,
+              doc: utils.decodeTextOrBinaryContent(data),
               extensions,
             }),
           };

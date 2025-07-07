@@ -33,6 +33,7 @@ export interface TerminalInterface {
 export interface FilesInterface {
   refreshFilesystem: () => Promise<void>;
   openFilesInEditor: (openFiles: { name: string, path: string, readOnly?: boolean, forceRead?: boolean}[], replace?: boolean) => Promise<void>;
+  openContentInEditor: (openFiles: { name: string, content: Uint8Array}[], replace?: boolean) => void;
   openDataInEditor: (title: string, data: NamedObject<WebRDataJsAtomic<string>>) => void;
   openHtmlInEditor: (src: string, path: string) => void;
 }
@@ -52,6 +53,7 @@ const terminalInterface: TerminalInterface = {
 const filesInterface: FilesInterface = {
   refreshFilesystem: () => Promise.resolve(),
   openFilesInEditor: () => { throw new Error('Unable to open file(s), editor not initialised.'); },
+  openContentInEditor: () => { throw new Error('Unable to show content, editor not initialised.'); },
   openDataInEditor: () => { throw new Error('Unable to view data, editor not initialised.'); },
   openHtmlInEditor: () => { throw new Error('Unable to view HTML, editor not initialised.'); },
 };
@@ -168,7 +170,7 @@ function App() {
       if (!isShareItems(items)) {
         throw new Error("Provided postMessage data does not contain a valid set of share files.");
       }
-      void applyShareData(webR, filesInterface, items, true);
+      void applyShareData(webR, filesInterface, items);
     });
   }, []);
 

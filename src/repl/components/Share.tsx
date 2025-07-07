@@ -26,11 +26,11 @@ export function isShareItems(files: any): files is ShareItem[] {
   );
 }
 
-export async function applyShareData(webR: WebR, filesInterface: FilesInterface, items: ShareItem[], replace: boolean): Promise<void> {
+export async function applyShareData(webR: WebR, filesInterface: FilesInterface, items: ShareItem[]): Promise<void> {
   await webR.init();
   await Promise.all(items.map(async ({ path, data }) => await webR.FS.writeFile(path, data)));
   void filesInterface.refreshFilesystem();
-  void filesInterface.openFilesInEditor(items.map((item) => ({ name: item.name, path: item.path, forceRead: true })), replace);
+  void filesInterface.openFilesInEditor(items.map((item) => ({ name: item.name, path: item.path, forceRead: true })), true);
 }
 
 export function applyShareString(webR: WebR, filesInterface: FilesInterface, data: string): Promise<void> {
@@ -39,7 +39,8 @@ export function applyShareString(webR: WebR, filesInterface: FilesInterface, dat
   if (!isShareItems(items)) {
     throw new Error("Provided URL data is not a valid set of share files.");
   }
-  return applyShareData(webR, filesInterface, items, false);
+  void filesInterface.openContentInEditor(items.map((item) => ({ name: item.name, content: item.data })), true);
+  return applyShareData(webR, filesInterface, items);
 }
 
 export async function editorToShareData(webR: WebR, files: EditorItem[]): Promise<string> {
