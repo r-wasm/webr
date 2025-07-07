@@ -54,3 +54,18 @@ export function moveCursorToNextLine(cmView: EditorView): void {
   const nextLineOffset = positionToOffset(cmState.doc, pos);
   cmView.dispatch({ selection: { anchor: nextLineOffset } });
 }
+
+export function decodeTextOrBinaryContent(data: Uint8Array): string {
+  try {
+    // Get file content, dealing with backspace characters until none remain
+    let text = new TextDecoder("utf-8", { fatal: true }).decode(data);
+    while (text.match(/.[\b]/)) {
+      text = text.replace(/.[\b]/g, '');
+    }
+    return text;
+  } catch (err) {
+    // Deal with binary data
+    if (!(err instanceof TypeError)) throw err;
+    return `<< ${data.byteLength} bytes of binary data >>`;
+  }
+}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { WebR, RFunction, Shelter } from '../../webR/webr-main';
-import { FaPlay, FaRegSave } from 'react-icons/fa';
+import { FaPlay, FaRegSave, FaShare } from 'react-icons/fa';
 import { basicSetup, EditorView } from 'codemirror';
 import { EditorState, Compartment, Prec } from '@codemirror/state';
 import { autocompletion, CompletionContext } from '@codemirror/autocomplete';
@@ -11,6 +11,7 @@ import { FilesInterface, TerminalInterface } from '../App';
 import { r } from 'codemirror-lang-r';
 import { NamedObject, WebRDataJsAtomic } from '../../webR/robj';
 import DataGrid from 'react-data-grid';
+import { encodeShareData, ShareModal } from './Share';
 import * as utils from './utils';
 import 'react-data-grid/lib/styles.css';
 import './Editor.css';
@@ -19,7 +20,7 @@ const language = new Compartment();
 const tabSize = new Compartment();
 
 type EditorBase = { name: string, readOnly: boolean };
-type EditorData = EditorBase & {
+export type EditorData = EditorBase & {
   type: "data",
   data: {
     columns: { key: string, name: string }[];
@@ -27,17 +28,18 @@ type EditorData = EditorBase & {
   }
 };
 
-type EditorHtml = EditorBase & {
+export type EditorHtml = EditorBase & {
   path: string;
   type: "html",
   readOnly: boolean,
   frame: HTMLIFrameElement,
 };
 
-type EditorFile = EditorBase & {
+export type EditorFile = EditorBase & {
   path: string;
   type: "text",
   readOnly: boolean,
+  dirty: boolean;
   editorState: EditorState;
   scrollTop?: number;
   scrollLeft?: number;
@@ -49,11 +51,13 @@ export function FileTabs({
   files,
   activeFileIdx,
   setActiveFileIdx,
-  closeFile
+  focusEditor,
+  closeFile,
 }: {
   files: EditorItem[];
   activeFileIdx: number;
   setActiveFileIdx: React.Dispatch<React.SetStateAction<number>>;
+  focusEditor: () => void;
   closeFile: (e: React.SyntheticEvent, index: number) => void;
 }) {
   return (
@@ -73,14 +77,17 @@ export function FileTabs({
           <button
             className="editor-switch"
             aria-label={`Switch to ${f.name}`}
-            onClick={() => setActiveFileIdx(index)}
+            onClick={() => {
+              setActiveFileIdx(index);
+              setTimeout(focusEditor, 0);
+            }}
           >
           </button>
           <div
             className="editor-filename"
             aria-hidden="true"
           >
-            {f.name}
+            {f.name}{f.type === "text" && !f.readOnly && f.dirty ? '*' : null}
           </div>
           <button
             className="editor-close"
@@ -115,8 +122,17 @@ export function Editor({
   const [editorView, setEditorView] = React.useState<EditorView>();
   const [files, setFiles] = React.useState<EditorItem[]>([]);
   const [activeFileIdx, setActiveFileIdx] = React.useState(0);
+  const [shareModalOpen, setShareModalOpen] = React.useState(false);
+  const [shareUrl, setShareUrl] = React.useState(window.location.href);
+
   const runSelectedCode = React.useRef((): void => {
     throw new Error('Unable to run code, webR not initialised.');
+  });
+  const saveCurrentFile = React.useRef((): void => {
+    throw new Error('Unable to save file, editor not properly initialized.');
+  });
+  const setCurrentFileDirty = React.useRef<(_: boolean) => void>((): void => {
+    throw new Error('Unable to update file, editor not properly initialized.');
   });
 
   const activeFile = files[activeFileIdx];
@@ -182,21 +198,40 @@ export function Editor({
 
   const editorExtensions = [
     basicSetup,
-    language.of(r()),
     tabSize.of(EditorState.tabSize.of(2)),
     Prec.high(
       keymap.of([
         indentWithTab,
         {
+          key: 'Mod-s',
+          run: () => {
+            saveCurrentFile.current();
+            return true;
+          },
+        },
+      ])
+    ),
+    EditorView.updateListener.of((update) => {
+      if (update.docChanged) {
+        setCurrentFileDirty.current(true);
+      }
+    }),
+  ];
+
+  const scriptExtensions = [
+    editorExtensions,
+    language.of(r()),
+    Prec.high(
+      keymap.of([
+        {
           key: 'Mod-Enter',
           run: () => {
-            if (!runSelectedCode.current) return false;
             runSelectedCode.current();
             return true;
           },
         },
-      ]
-      )),
+      ])
+    ),
     autocompletion({ override: [completion] })
   ];
 
@@ -248,6 +283,31 @@ export function Editor({
     }
   }, [activeFile, editorView]);
 
+  const setFileDirty = React.useCallback((dirty: boolean) => {
+    setFiles(prevFiles =>
+      prevFiles.map((file, index) => {
+        if (editorView && index === activeFileIdx && file.type === "text") {
+          file.scrollTop = editorView.scrollDOM.scrollTop;
+          file.scrollLeft = editorView.scrollDOM.scrollLeft;
+          return {
+            ...file,
+            editorState: editorView.state,
+            scrollTop: editorView.scrollDOM.scrollTop,
+            scrollLeft: editorView.scrollDOM.scrollLeft,
+            dirty
+          };
+        }
+        return file;
+      })
+    );
+  }, [activeFileIdx, editorView]);
+
+  React.useEffect(() => {
+    setCurrentFileDirty.current = (dirty: boolean): void => {
+      setFileDirty(dirty);
+    };
+  }, [setFileDirty, editorView, activeFile]);
+
   const runFile = React.useCallback(() => {
     if (!editorView) {
       return;
@@ -265,28 +325,49 @@ export function Editor({
     });
   }, [syncActiveFileState, editorView]);
 
-  const saveFile: React.MouseEventHandler<HTMLButtonElement> = React.useCallback(() => {
-    if (!editorView || activeFile.type !== "text") {
+  const saveFile = React.useCallback(() => {
+    if (!editorView || activeFile.type !== "text" || activeFile.readOnly) {
       return;
     }
 
     syncActiveFileState();
-    const code = editorView.state.doc.toString();
-    const data = new TextEncoder().encode(code);
+    const content = editorView.state.doc.toString();
+    const data = new TextEncoder().encode(content);
 
     webR.FS.writeFile(activeFile.path, data).then(() => {
       void filesInterface.refreshFilesystem();
+      setFileDirty(false);
     }, (reason) => {
+      setFileDirty(true);
       console.error(reason);
       throw new Error(`Can't save editor contents. See the JavaScript console for details.`);
     });
   }, [syncActiveFileState, editorView]);
 
   React.useEffect(() => {
+    saveCurrentFile.current = (): void => {
+      void saveFile();
+    };
+  }, [saveFile, editorView, activeFile]);
+
+  const share = React.useCallback(() => {
+    if (files.length === 0) return;
+    saveFile();
+    setShareUrl(window.location.href.toString());
+    setShareModalOpen(true);
+  }, [files, webR]);
+
+  const focusEditor = React.useCallback(() => {
+    if (editorView) {
+      editorView.focus();
+    }
+  }, [editorView]);
+
+  React.useEffect(() => {
     if (!editorRef.current) {
       return;
     }
-    const state = EditorState.create({ extensions: editorExtensions });
+    const state = EditorState.create({ extensions: scriptExtensions });
     const view = new EditorView({
       state,
       parent: editorRef.current,
@@ -298,6 +379,7 @@ export function Editor({
       path: '/home/web_user/Untitled1.R',
       type: 'text',
       readOnly: false,
+      dirty: true,
       editorState: state,
     }]);
 
@@ -305,6 +387,31 @@ export function Editor({
       view.destroy();
     };
   }, []);
+
+
+  /*
+   * Update the share URL as active files are saved
+   */
+  React.useEffect(() => {
+    const shouldUpdate = files.filter((file): file is EditorFile => file.type === 'text').every((file) => !file.dirty);
+    if (files.length > 0 && shouldUpdate) {
+      Promise.all(
+        files.filter((file): file is EditorFile => file.type === "text" && !file.readOnly)
+          .map(async (file) => ({
+            name: file.name,
+            path: file.path,
+            data: await webR.FS.readFile(file.path)
+          }))
+      ).then(shareItems => {
+        const shareData = encodeShareData(shareItems);
+        const url = new URL(window.location.href);
+        url.hash = `code=${shareData}`;
+        window.history.pushState({}, '', url.toString());
+      }, (reason: Error) => {
+        throw new Error(`Can't update share URL: ${reason.message}`);
+      });
+    }
+  }, [files]);
 
   /*
    * Register this component with the files interface so that when it comes to
@@ -322,7 +429,7 @@ export function Editor({
       syncActiveFileState();
 
       const columns = Object.keys(data).map((key) => {
-        return {key, name: key === "row.names" ? "" : key};
+        return { key, name: key === "row.names" ? "" : key };
       });
 
       const rows = Object.entries(data).reduce((a, entry) => {
@@ -361,40 +468,89 @@ export function Editor({
       setActiveFileIdx(index - 1);
     };
 
-    filesInterface.openFileInEditor = (name: string, path: string, readOnly: boolean) => {
-      // Don't reopen the file if it's already open, switch to that tab instead
-      const existsIndex = files.findIndex((f) => "path" in f && f.path === path);
-      if (existsIndex >= 0) {
-        setActiveFileIdx(existsIndex);
-        return Promise.resolve();
-      }
+    filesInterface.openContentInEditor = (openFiles: {
+      name: string,
+      content: Uint8Array,
+    }[], replace = false) => {
+      if (openFiles.length === 0) return;
 
-      return webR.FS.readFile(path).then((data) => {
-        syncActiveFileState();
-        const updatedFiles = [...files];
-        const extensions = name.toLowerCase().endsWith('.r') ? editorExtensions : [];
-        if (readOnly) extensions.push(EditorState.readOnly.of(true));
-
-        // Get file content, dealing with backspace characters until none remain
-        let content = new TextDecoder().decode(data);
-        while (content.match(/.[\b]/)) {
-          content = content.replace(/.[\b]/g, '');
-        }
-
-        // Add this new file content to the list of open files
-        const index = updatedFiles.push({
-          name,
-          path,
+      const updatedFiles: EditorItem[] = replace ? [] : [...files];
+      openFiles.forEach((file) => {
+        updatedFiles.push({
+          name: file.name,
+          path: `/tmp/.webR${file.name}`,
           type: "text",
-          readOnly,
+          readOnly: false,
+          dirty: true,
           editorState: EditorState.create({
-            doc: content,
-            extensions,
+            doc: utils.decodeTextOrBinaryContent(file.content),
+            extensions: file.name.toLowerCase().endsWith('.r') ? scriptExtensions : editorExtensions
           }),
         });
-        setFiles(updatedFiles);
-        setActiveFileIdx(index - 1);
-      });
+      }
+      );
+      setFiles(updatedFiles);
+      setActiveFileIdx(0);
+    };
+
+    filesInterface.openFilesInEditor = async (openFiles: {
+      name: string,
+      path: string,
+      readOnly?: boolean;
+      forceRead?: boolean
+    }[], replace = false) => {
+      // Dismiss sharing modal
+      setShareModalOpen(false);
+
+      const updatedFiles: EditorItem[] = replace ? [] : [...files];
+      let index = null;
+
+      for (const file of openFiles) {
+        const _options = {
+          readOnly: false,
+          forceRead: false,
+          ...file,
+        };
+
+        // If file is already open, switch to that tab
+        const existsIndex = updatedFiles.findIndex((f) => "path" in f && f.path === file.path);
+        if (existsIndex >= 0 && !_options.forceRead) {
+          index ??= existsIndex;
+          continue;
+        }
+
+        // Otherwise, read the file contents from the VFS
+        await webR.FS.readFile(file.path).then((data) => {
+          syncActiveFileState();
+          let extensions = file.name.toLowerCase().endsWith('.r') ? scriptExtensions : editorExtensions;
+          if (_options.readOnly) extensions = [EditorState.readOnly.of(true)];
+
+          const newFile: EditorItem = {
+            name: file.name,
+            path: file.path,
+            type: "text",
+            readOnly: _options.readOnly,
+            dirty: false,
+            editorState: EditorState.create({
+              doc: utils.decodeTextOrBinaryContent(data),
+              extensions,
+            }),
+          };
+
+          if (existsIndex >= 0) {
+            // Switch to and update existing tab content
+            updatedFiles[existsIndex] = newFile;
+            index ??= existsIndex;
+          } else {
+            // Add this new file content to the list of open files
+            const newIndex = updatedFiles.push(newFile);
+            index ??= newIndex - 1;
+          }
+        });
+      }
+
+      setFiles(updatedFiles);
+      setActiveFileIdx(index ?? 0);
     };
   }, [files, filesInterface]);
 
@@ -438,64 +594,75 @@ export function Editor({
   }, [files, syncActiveFileState, activeFile, editorView]);
 
   return (
-    <Panel
-      id="editor"
-      role="region"
-      aria-label="Editor Pane"
-      order={1}
-      minSize={20}
-      className={files.length === 0 ? "d-none" : ""}
-    >
-      <div className="editor-header">
-        <FileTabs
-          files={files}
-          activeFileIdx={activeFileIdx}
-          setActiveFileIdx={setActiveFileIdx}
-          closeFile={closeFile}
-        />
-      </div>
-      <div
-        aria-label="Editor"
-        aria-describedby="editor-desc"
-        className={`editor-container ${(isData || isHtml) ? "d-none" : ""}`}
-        ref={editorRef}
+    <>
+      <Panel
+        id="editor"
+        role="region"
+        aria-label="Editor Pane"
+        order={1}
+        minSize={20}
+        className={files.length === 0 ? "d-none" : ""}
       >
-      </div>
-      <p className="d-none" id="editor-desc">
-        This component is an instance of the <a href="https://codemirror.net/">CodeMirror</a> interactive text editor.
-        The editor has been configured so that the Tab key controls the indentation of code.
-        To move focus away from the editor, press the Escape key, and then press the Tab key directly after it.
-        Escape and then Shift-Tab can also be used to move focus backwards.
-      </p>
-      {(isData && activeFile.data) &&
-        <DataGrid
-          aria-label="Data viewer"
-          columns={activeFile.data.columns}
-          rows={activeFile.data.rows}
-          className="data-container"
-          defaultColumnOptions={{
-            sortable: true,
-            resizable: true
-          }}
-        />
-      }
-      <div
-        className={`html-viewer-container ${isHtml ? "" : "d-none"}`}
-        ref={htmlRef}
-      ></div>
-      <div
-        role="toolbar"
-        aria-label="Editor Toolbar"
-        className="editor-actions"
-      >
-        {isScript && <button onClick={runFile}>
-          <FaPlay aria-hidden="true" className="icon" /> Run
-        </button>}
-        {!isReadOnly && <button onClick={saveFile}>
-          <FaRegSave aria-hidden="true" className="icon" /> Save
-        </button>}
-      </div>
-    </Panel>
+        <div className="editor-header">
+          <FileTabs
+            files={files}
+            activeFileIdx={activeFileIdx}
+            setActiveFileIdx={setActiveFileIdx}
+            closeFile={closeFile}
+            focusEditor={focusEditor}
+          />
+        </div>
+        <div
+          aria-label="Editor"
+          aria-describedby="editor-desc"
+          className={`editor-container ${(isData || isHtml) ? "d-none" : ""}`}
+          ref={editorRef}
+        >
+        </div>
+        <p className="d-none" id="editor-desc">
+          This component is an instance of the <a href="https://codemirror.net/">CodeMirror</a> interactive text editor.
+          The editor has been configured so that the Tab key controls the indentation of code.
+          To move focus away from the editor, press the Escape key, and then press the Tab key directly after it.
+          Escape and then Shift-Tab can also be used to move focus backwards.
+        </p>
+        {(isData && activeFile.data) &&
+          <DataGrid
+            aria-label="Data viewer"
+            columns={activeFile.data.columns}
+            rows={activeFile.data.rows}
+            className="data-container"
+            defaultColumnOptions={{
+              sortable: true,
+              resizable: true
+            }}
+          />
+        }
+        <div
+          className={`html-viewer-container ${isHtml ? "" : "d-none"}`}
+          ref={htmlRef}
+        ></div>
+        <div
+          role="toolbar"
+          aria-label="Editor Toolbar"
+          className="editor-actions"
+        >
+          {isScript && <button onClick={runFile}>
+            <FaPlay aria-hidden="true" className="icon" /> Run
+          </button>}
+          {!isReadOnly && <button onClick={saveFile}>
+            <FaRegSave aria-hidden="true" className="icon" /> Save
+          </button>}
+          <button onClick={share}>
+            <FaShare aria-hidden="true" className="icon" /> Share
+          </button>
+        </div>
+      </Panel>
+      <ShareModal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        shareUrl={shareUrl}
+      />
+    </>
   );
 }
 
