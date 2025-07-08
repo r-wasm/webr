@@ -212,28 +212,51 @@ function App() {
     applyShareHash(url.hash);
   }, []);
 
+  // Select which panes to show
+  const urlParams = new URLSearchParams(window.location.search);
+  const appMode = urlParams.get("mode") || "editor-plot-terminal-files";
+
+  let hideEditor = !appMode.includes('editor');
+  let hideTerminal = !appMode.includes('terminal');
+  let hideFiles = !appMode.includes('files');
+  let hidePlot = !appMode.includes('plot');
+  if (hideEditor && hideTerminal && hideFiles && hidePlot) {
+    hideEditor = hideTerminal = hideFiles = hidePlot = false;
+  }
+
+  const group1 = <>
+    <Editor
+      hidden={hideEditor}
+      webR={webR}
+      terminalInterface={terminalInterface}
+      filesInterface={filesInterface}
+    />
+    <PanelResizeHandle hidden={hideEditor || hideTerminal} />
+    <Terminal hidden={hideTerminal} webR={webR} terminalInterface={terminalInterface} />
+  </>;
+
+  const group2 = <>
+    <Files hidden={hideFiles} webR={webR} filesInterface={filesInterface} />
+    <PanelResizeHandle hidden={hideFiles || hidePlot} />
+    <Plot hidden={hidePlot} webR={webR} plotInterface={plotInterface} />
+  </>;
+
   return (
     <div className='repl'>
       <PanelGroup direction="horizontal">
-        <Panel defaultSize={50} minSize={10}>
-          <PanelGroup autoSaveId="conditional" direction="vertical">
-            <Editor
-              webR={webR}
-              terminalInterface={terminalInterface}
-              filesInterface={filesInterface}
-            />
-            <PanelResizeHandle />
-            <Terminal webR={webR} terminalInterface={terminalInterface} />
-          </PanelGroup>
-        </Panel>
-        <PanelResizeHandle />
-        <Panel ref={rightPanelRef} onResize={onPanelResize} minSize={10}>
-          <PanelGroup direction="vertical">
-            <Files webR={webR} filesInterface={filesInterface} />
-            <PanelResizeHandle />
-            <Plot webR={webR} plotInterface={plotInterface} />
-          </PanelGroup>
-        </Panel>
+        {(hideFiles && hidePlot) ? group1 : <>
+          <Panel defaultSize={50} minSize={10}>
+            <PanelGroup autoSaveId="conditional" direction="vertical">
+              {group1}
+            </PanelGroup>
+          </Panel>
+          <PanelResizeHandle />
+          <Panel ref={rightPanelRef} onResize={onPanelResize} minSize={10}>
+            <PanelGroup direction="vertical">
+              {group2}
+            </PanelGroup>
+          </Panel>
+        </>}
       </PanelGroup>
     </div>
   );

@@ -8,15 +8,17 @@ import { WebR } from '../../webR/webr-main';
 export function Plot({
   webR,
   plotInterface,
+  hidden,
 }: {
   webR: WebR;
   plotInterface: PlotInterface;
+  hidden: boolean;
 }) {
   const plotContainerRef = React.useRef<HTMLDivElement | null>(null);
   const panelRef = React.useRef<ImperativePanelHandle | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const canvasElements = React.useRef<HTMLCanvasElement[]>([]);
-  const plotSize = React.useRef<{width: number, height: number}>({width: 1008, height: 1008});
+  const plotSize = React.useRef<{ width: number, height: number }>({ width: 1008, height: 1008 });
   const [selectedCanvas, setSelectedCanvas] = React.useState<number | null>(null);
 
   // Register the current canvas with the plotting interface so that when the
@@ -62,7 +64,7 @@ export function Plot({
     };
   }, [plotInterface]);
 
-  const onResize = (size:number) => plotInterface.resize("height", size * window.innerHeight / 100);
+  const onResize = (size: number) => plotInterface.resize("height", size * window.innerHeight / 100);
   React.useEffect(() => {
     window.addEventListener("resize", () => {
       if (!panelRef.current) return;
@@ -104,6 +106,7 @@ export function Plot({
   return (
     <Panel
       id="plot"
+      hidden={hidden}
       role="region"
       aria-label="Plotting Pane"
       minSize={20}

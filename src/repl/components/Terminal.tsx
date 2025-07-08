@@ -11,9 +11,11 @@ import '@xterm/xterm/css/xterm.css';
 export function Terminal({
   webR,
   terminalInterface,
+  hidden,
 }: {
   webR: WebR;
   terminalInterface: TerminalInterface;
+  hidden: boolean;
 }) {
   const divRef = React.useRef<HTMLDivElement | null>(null);
   const termRef = React.useRef<XTerminal | null>(null);
@@ -102,7 +104,7 @@ export function Terminal({
   }, [readline, terminalInterface]);
 
   return (
-    <Panel id="terminal" role="region" aria-label="Terminal Pane" order={2} minSize={20}>
+    <Panel id="terminal" hidden={hidden} role="region" aria-label="Terminal Pane" order={2} minSize={20}>
       <div className="terminal-container" ref={divRef}></div>
     </Panel>
   );

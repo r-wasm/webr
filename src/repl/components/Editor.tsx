@@ -112,10 +112,12 @@ export function Editor({
   webR,
   terminalInterface,
   filesInterface,
+  hidden,
 }: {
   webR: WebR
   terminalInterface: TerminalInterface;
   filesInterface: FilesInterface;
+  hidden: boolean;
 }) {
   const editorRef = React.useRef<HTMLDivElement | null>(null);
   const htmlRef = React.useRef<HTMLDivElement | null>(null);
@@ -597,6 +599,7 @@ export function Editor({
     <>
       <Panel
         id="editor"
+        hidden={hidden}
         role="region"
         aria-label="Editor Pane"
         order={1}

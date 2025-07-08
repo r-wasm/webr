@@ -44,9 +44,11 @@ const initialData = flattenTree({ name: '', children: [] });
 export function Files({
   webR,
   filesInterface,
+  hidden,
 }: {
   webR: WebR;
   filesInterface: FilesInterface;
+  hidden: boolean;
 }) {
   const [treeData, setTreeData] = React.useState<INode[]>(initialData);
   const [selectedNode, setSelectedNode] = React.useState<INode | null>();
@@ -271,7 +273,7 @@ export function Files({
   />;
 
   return (
-    <Panel id="files" role="region" aria-label="Files Pane" defaultSize={35} minSize={20}>
+    <Panel id="files" hidden={hidden} role="region" aria-label="Files Pane" defaultSize={35} minSize={20}>
       <div className="files-header">
         <div
           role="toolbar"

@@ -30,6 +30,6 @@ div[data-resize-handle] {
   background-color: var(--bg-secondary);
 }
 
-.d-none + div[data-resize-handle] {
+.d-none + div[data-resize-handle], div[hidden] {
   display: none !important;
 }
