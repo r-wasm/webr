@@ -24,6 +24,7 @@ const webR = new WebR({
 });
 (globalThis as any).webR = webR;
 const encoder = new TextEncoder();
+let currentHash: string | null = null;
 
 export interface TerminalInterface {
   println: Readline['println'];
@@ -33,7 +34,13 @@ export interface TerminalInterface {
 
 export interface FilesInterface {
   refreshFilesystem: () => Promise<void>;
-  openFilesInEditor: (openFiles: { name: string, path: string, readOnly?: boolean, forceRead?: boolean }[], replace?: boolean) => Promise<void>;
+  openFilesInEditor: (openFiles: {
+    name: string,
+    path: string,
+    readOnly?: boolean,
+    forceRead?: boolean,
+    execute?: boolean,
+  }[], replace?: boolean) => Promise<void>;
   openContentInEditor: (openFiles: { name: string, content: Uint8Array }[], replace?: boolean) => void;
   openDataInEditor: (title: string, data: NamedObject<WebRDataJsAtomic<string>>) => void;
   openHtmlInEditor: (src: string, path: string) => void;
@@ -165,11 +172,13 @@ function App() {
     void filesInterface.openFilesInEditor(items.map((item) => ({
       name: item.name,
       path: item.path,
-      forceRead: true
+      execute: item.autorun,
+      forceRead: true,
     })), true);
   }
 
   function applyShareHash(hash: string): void {
+    if (hash == currentHash) return;
     const shareHash = hash.match(/(code)=([^&]+)(?:&(\w+))?/);
     if (shareHash && shareHash[1] === 'code') {
       const items = decodeShareData(shareHash[2], shareHash[3]);
@@ -182,6 +191,8 @@ function App() {
 
       void applyShareData(items);
     }
+
+    currentHash = hash;
   }
 
   React.useEffect(() => {

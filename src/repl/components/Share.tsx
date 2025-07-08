@@ -11,6 +11,7 @@ export type ShareItem = {
   path: string;
   data?: Uint8Array;
   text?: string;
+  autorun?: boolean;
 };
 
 export enum ShareDataFlags {
@@ -18,6 +19,7 @@ export enum ShareDataFlags {
   ZLIB = 'z',
   MSGPACK = 'm',
   JSON = 'j',
+  AUTORUN = 'a',
 }
 
 export function isShareItems(files: any): files is ShareItem[] {
@@ -62,6 +64,7 @@ export function isShareItems(files: any): files is ShareItem[] {
  *  - 'z': zlib compressed
  *  - 'm': msgpack format
  *  - 'j': json format
+ *  - 'a': autorun R scripts
  * The default flags string is `&mz`.
  *
  * Sharing via `postMessage()`
@@ -108,7 +111,13 @@ export function decodeShareData(data: string, flags = 'mz'): ShareItem[] {
   if (!isShareItems(items)) {
     throw new Error("Provided URL data is not a valid set of share files.");
   }
-  return items;
+
+  let shareItems = items;
+  if (flags.includes(ShareDataFlags.AUTORUN)) {
+    shareItems = items.map((item) => item.name.toLowerCase().endsWith('.r') ? { ...item, autorun: true } : item);
+  }
+
+  return shareItems;
 }
 
 interface ShareModalProps {

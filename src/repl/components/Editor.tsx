@@ -499,7 +499,8 @@ export function Editor({
       name: string,
       path: string,
       readOnly?: boolean;
-      forceRead?: boolean
+      forceRead?: boolean;
+      execute?: boolean;
     }[], replace = false) => {
       // Dismiss sharing modal
       setShareModalOpen(false);
@@ -511,6 +512,7 @@ export function Editor({
         const _options = {
           readOnly: false,
           forceRead: false,
+          execute: false,
           ...file,
         };
 
@@ -522,33 +524,38 @@ export function Editor({
         }
 
         // Otherwise, read the file contents from the VFS
-        await webR.FS.readFile(file.path).then((data) => {
-          syncActiveFileState();
-          let extensions = file.name.toLowerCase().endsWith('.r') ? scriptExtensions : editorExtensions;
-          if (_options.readOnly) extensions = [EditorState.readOnly.of(true)];
+        const data = await webR.FS.readFile(file.path);
 
-          const newFile: EditorItem = {
-            name: file.name,
-            path: file.path,
-            type: "text",
-            readOnly: _options.readOnly,
-            dirty: false,
-            editorState: EditorState.create({
-              doc: utils.decodeTextOrBinaryContent(data),
-              extensions,
-            }),
-          };
+        syncActiveFileState();
+        let extensions = file.name.toLowerCase().endsWith('.r') ? scriptExtensions : editorExtensions;
+        if (_options.readOnly) extensions = [EditorState.readOnly.of(true)];
 
-          if (existsIndex >= 0) {
-            // Switch to and update existing tab content
-            updatedFiles[existsIndex] = newFile;
-            index ??= existsIndex;
-          } else {
-            // Add this new file content to the list of open files
-            const newIndex = updatedFiles.push(newFile);
-            index ??= newIndex - 1;
-          }
-        });
+        const newFile: EditorItem = {
+          name: file.name,
+          path: file.path,
+          type: "text",
+          readOnly: _options.readOnly,
+          dirty: false,
+          editorState: EditorState.create({
+            doc: utils.decodeTextOrBinaryContent(data),
+            extensions,
+          }),
+        };
+
+        if (existsIndex >= 0) {
+          // Switch to and update existing tab content
+          updatedFiles[existsIndex] = newFile;
+          index ??= existsIndex;
+        } else {
+          // Add this new file content to the list of open files
+          const newIndex = updatedFiles.push(newFile);
+          index ??= newIndex - 1;
+        }
+
+        // Execute R scripts
+        if (file.execute) {
+          webR.writeConsole(`source('${file.path}', echo = TRUE, max.deparse.length = Inf)`);
+        }
       }
 
       setFiles(updatedFiles);
