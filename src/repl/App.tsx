@@ -5,13 +5,16 @@ import Editor, { EditorItem } from './components/Editor';
 import Plot from './components/Plot';
 import Files from './components/Files';
 import { Readline } from 'xterm-readline';
-import { WebR } from '../webR/webr-main';
+import { ChannelType, WebR } from '../webR/webr-main';
 import { bufferToBase64, promiseHandles } from '../webR/utils';
 import { CanvasMessage, PagerMessage, ViewMessage, BrowseMessage } from '../webR/webr-chan';
 import { Panel, PanelGroup, PanelResizeHandle, ImperativePanelHandle } from 'react-resizable-panels';
 import './App.css';
 import { NamedObject, WebRDataJsAtomic } from '../webR/robj';
 import { decodeShareData, isShareItems, ShareItem } from './components/Share';
+
+const urlParams = new URLSearchParams(window.location.search);
+const channel = urlParams.get("channel") as keyof typeof ChannelType || "Automatic";
 
 const webR = new WebR({
   RArgs: [],
@@ -21,6 +24,7 @@ const webR = new WebR({
     R_ENABLE_JIT: '0',
     COLORTERM: 'truecolor',
   },
+  channelType: ChannelType[channel],
 });
 (globalThis as any).webR = webR;
 const encoder = new TextEncoder();
@@ -160,9 +164,7 @@ const onPanelResize = (size: number) => {
 };
 
 // Select which panes to show
-const urlParams = new URLSearchParams(window.location.search);
 const appMode = urlParams.get("mode") || "editor-plot-terminal-files";
-
 let hideEditor = !appMode.includes('editor');
 let hideTerminal = !appMode.includes('terminal');
 let hideFiles = !appMode.includes('files');
