@@ -611,6 +611,21 @@ export function Editor({
             closeFile={closeFile}
             focusEditor={focusEditor}
           />
+          <div
+            role="toolbar"
+            aria-label="Editor Toolbar"
+            className="editor-actions"
+          >
+            {isScript && <button onClick={runFile}>
+              <FaPlay aria-hidden="true" className="icon" /> Run
+            </button>}
+            {!isReadOnly && <button onClick={saveFile}>
+              <FaRegSave aria-hidden="true" className="icon" /> Save
+            </button>}
+            <button onClick={share}>
+              <FaShare aria-hidden="true" className="icon" /> Share
+            </button>
+          </div>
         </div>
         <div
           aria-label="Editor"
@@ -641,21 +656,6 @@ export function Editor({
           className={`html-viewer-container ${isHtml ? "" : "d-none"}`}
           ref={htmlRef}
         ></div>
-        <div
-          role="toolbar"
-          aria-label="Editor Toolbar"
-          className="editor-actions"
-        >
-          {isScript && <button onClick={runFile}>
-            <FaPlay aria-hidden="true" className="icon" /> Run
-          </button>}
-          {!isReadOnly && <button onClick={saveFile}>
-            <FaRegSave aria-hidden="true" className="icon" /> Save
-          </button>}
-          <button onClick={share}>
-            <FaShare aria-hidden="true" className="icon" /> Share
-          </button>
-        </div>
       </Panel>
       <ShareModal
         isOpen={shareModalOpen}
