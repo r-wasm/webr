@@ -1,4 +1,4 @@
-FC_VERSION = 2.12.5
+FC_VERSION = 2.14.0
 FC_TARBALL = $(DOWNLOAD)/fontconfig-$(FC_VERSION).tar.gz
 FC_URL = https://www.freedesktop.org/software/fontconfig/release/fontconfig-$(FC_VERSION).tar.gz
 
@@ -12,7 +12,7 @@ $(FC_TARBALL):
 $(FC_DEPS): $(FC_TARBALL) $(LIBXML2_WASM_LIB) $(EM_PKG_CONFIG_PATH)/freetype2.pc
 	rm -rf $(BUILD)/fontconfig-$(FC_VERSION)
 	mkdir -p $(BUILD)/fontconfig-$(FC_VERSION)/build
-	tar -C $(BUILD) -xf $(FC_TARBALL) --exclude=fcobjshash.h
+	tar -C $(BUILD) -xf $(FC_TARBALL)
 	cp -r "$(WEBR_ROOT)/patches/fontconfig-$(FC_VERSION)/." \
 	  "$(BUILD)/fontconfig-$(FC_VERSION)/patches"
 	cd $(BUILD)/fontconfig-$(FC_VERSION)/build && quilt push -a && \

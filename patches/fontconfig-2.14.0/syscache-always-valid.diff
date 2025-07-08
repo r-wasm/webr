@@ -1,13 +1,13 @@
-Index: fontconfig-2.12.5/src/fccache.c
+Index: fontconfig-2.14.0/src/fccache.c
 ===================================================================
---- fontconfig-2.12.5.orig/src/fccache.c
-+++ fontconfig-2.12.5/src/fccache.c
-@@ -584,7 +584,7 @@ FcCacheTimeValid (FcConfig *config, FcCache *cache, st
+--- fontconfig-2.14.0.orig/src/fccache.c
++++ fontconfig-2.14.0/src/fccache.c
+@@ -845,7 +845,7 @@ FcCacheTimeValid (FcConfig *config, FcCa
  	printf ("FcCacheTimeValid dir \"%s\" cache checksum %d dir checksum %d\n",
  		FcCacheDir (cache), cache->checksum, (int) dir_stat->st_mtime);
  #endif
 -
 +    if (strcmp(FcCacheDir(cache), "/usr/share/fonts") == 0) return FcTrue;
-     return cache->checksum == (int) dir_stat->st_mtime && fnano;
+     return dir_stat->st_mtime == 0 || (cache->checksum == (int) dir_stat->st_mtime && fnano);
  }
  
