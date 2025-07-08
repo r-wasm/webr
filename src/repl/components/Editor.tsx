@@ -489,8 +489,7 @@ export function Editor({
             extensions: file.name.toLowerCase().endsWith('.r') ? scriptExtensions : editorExtensions
           }),
         });
-      }
-      );
+      });
       setFiles(updatedFiles);
       setActiveFileIdx(0);
     };

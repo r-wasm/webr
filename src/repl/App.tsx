@@ -6,7 +6,7 @@ import Plot from './components/Plot';
 import Files from './components/Files';
 import { Readline } from 'xterm-readline';
 import { WebR } from '../webR/webr-main';
-import { bufferToBase64 } from '../webR/utils';
+import { bufferToBase64, promiseHandles } from '../webR/utils';
 import { CanvasMessage, PagerMessage, ViewMessage, BrowseMessage } from '../webR/webr-chan';
 import { Panel, PanelGroup, PanelResizeHandle, ImperativePanelHandle } from 'react-resizable-panels';
 import './App.css';
@@ -24,7 +24,7 @@ const webR = new WebR({
 });
 (globalThis as any).webR = webR;
 const encoder = new TextEncoder();
-let currentHash: string | null = null;
+const startup = promiseHandles();
 
 export interface TerminalInterface {
   println: Readline['println'];
@@ -157,6 +157,18 @@ const onPanelResize = (size: number) => {
   plotInterface.resize("width", size * window.innerWidth / 100);
 };
 
+// Select which panes to show
+const urlParams = new URLSearchParams(window.location.search);
+const appMode = urlParams.get("mode") || "editor-plot-terminal-files";
+
+let hideEditor = !appMode.includes('editor');
+let hideTerminal = !appMode.includes('terminal');
+let hideFiles = !appMode.includes('files');
+let hidePlot = !appMode.includes('plot');
+if (hideEditor && hideTerminal && hideFiles && hidePlot) {
+  hideEditor = hideTerminal = hideFiles = hidePlot = false;
+}
+
 function App() {
   const rightPanelRef = React.useRef<ImperativePanelHandle | null>(null);
 
@@ -168,6 +180,7 @@ function App() {
     }));
 
     // Load saved files into editor
+    await startup.promise;
     void filesInterface.refreshFilesystem();
     void filesInterface.openFilesInEditor(items.map((item) => ({
       name: item.name,
@@ -178,7 +191,6 @@ function App() {
   }
 
   function applyShareHash(hash: string): void {
-    if (hash == currentHash) return;
     const shareHash = hash.match(/(code)=([^&]+)(?:&(\w+))?/);
     if (shareHash && shareHash[1] === 'code') {
       const items = decodeShareData(shareHash[2], shareHash[3]);
@@ -191,8 +203,6 @@ function App() {
 
       void applyShareData(items);
     }
-
-    currentHash = hash;
   }
 
   React.useEffect(() => {
@@ -222,18 +232,6 @@ function App() {
     const url = new URL(window.location.href);
     applyShareHash(url.hash);
   }, []);
-
-  // Select which panes to show
-  const urlParams = new URLSearchParams(window.location.search);
-  const appMode = urlParams.get("mode") || "editor-plot-terminal-files";
-
-  let hideEditor = !appMode.includes('editor');
-  let hideTerminal = !appMode.includes('terminal');
-  let hideFiles = !appMode.includes('files');
-  let hidePlot = !appMode.includes('plot');
-  if (hideEditor && hideTerminal && hideFiles && hidePlot) {
-    hideEditor = hideTerminal = hideFiles = hidePlot = false;
-  }
 
   const group1 = <>
     <Editor
@@ -294,7 +292,7 @@ void (async () => {
   await webR.evalRVoid('webr::shim_install()');
 
   // If supported, show a menu when prompted for missing package installation
-  const showMenu = crossOriginIsolated;
+  const showMenu = crossOriginIsolated && !hideTerminal;
   await webR.evalRVoid('options(webr.show_menu = show_menu)', { env: { show_menu: !!showMenu } });
   await webR.evalRVoid('webr::global_prompt_install()', { withHandlers: false });
 
@@ -304,6 +302,7 @@ void (async () => {
   // Clear the loading message
   terminalInterface.write('\x1b[2K\r');
 
+  startup.resolve();
   for (; ;) {
     const output = await webR.read();
     switch (output.type) {
