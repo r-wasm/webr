@@ -23,7 +23,7 @@ HTML_DIST = $(addprefix $(DIST)/,$(HTML_TEMPLATES))
 $(DIST)/webr.mjs: $(TS_SOURCES) $(HTML_DIST) \
   Makefile webR/config.ts node_modules esbuild.ts
 	cp $(DIST)/$(HTML_INDEX) $(DIST)/index.html
-	npm run build
+	npm run build -- --prod
 
 $(DIST)/%.html: templates/%.html
 	sed -e "s|@@BASE_URL@@|$(BASE_URL)|" \

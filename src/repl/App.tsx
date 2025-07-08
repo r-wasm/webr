@@ -154,7 +154,9 @@ function handleViewMessage(msg: ViewMessage) {
 }
 
 const onPanelResize = (size: number) => {
-  plotInterface.resize("width", size * window.innerWidth / 100);
+  void webR.init().then(() => {
+    plotInterface.resize("width", size * window.innerWidth / 100);
+  });
 };
 
 // Select which panes to show
@@ -225,6 +227,12 @@ function App() {
       }
       void applyShareData(items);
     });
+  }, []);
+
+  // Set initial plot size
+  React.useLayoutEffect(() => {
+    if (!rightPanelRef.current) return;
+    onPanelResize(rightPanelRef.current.getSize());
   }, []);
 
   // Show share content on initial load
