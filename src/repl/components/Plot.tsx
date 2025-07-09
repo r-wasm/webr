@@ -72,6 +72,14 @@ export function Plot({
     });
   }, []);
 
+  // Set initial plot height
+  React.useLayoutEffect(() => {
+      void webR.init().then(() => {
+        if (!panelRef.current) return;
+        onResize(panelRef.current.getSize());
+      });
+  }, []);
+
   // Update the plot container to display the currently selected canvas element
   React.useEffect(() => {
     if (!plotContainerRef.current) {
