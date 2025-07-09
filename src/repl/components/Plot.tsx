@@ -8,10 +8,12 @@ import { WebR } from '../../webR/webr-main';
 export function Plot({
   webR,
   plotInterface,
+  maximize,
   hidden,
 }: {
   webR: WebR;
   plotInterface: PlotInterface;
+  maximize: boolean,
   hidden: boolean;
 }) {
   const plotContainerRef = React.useRef<HTMLDivElement | null>(null);
@@ -117,7 +119,8 @@ export function Plot({
       hidden={hidden}
       role="region"
       aria-label="Plotting Pane"
-      minSize={20}
+      minSize={maximize ? 100 : 20}
+      defaultSize={maximize ? 100 : 50}
       onResize={onResize}
       ref={panelRef}
     >

@@ -257,7 +257,7 @@ function App() {
   const group2 = <>
     <Files hidden={hideFiles} webR={webR} filesInterface={filesInterface} />
     <PanelResizeHandle hidden={hideFiles || hidePlot} />
-    <Plot hidden={hidePlot} webR={webR} plotInterface={plotInterface} />
+    <Plot hidden={hidePlot} maximize={hideFiles} webR={webR} plotInterface={plotInterface}/>
   </>;
 
   return (
