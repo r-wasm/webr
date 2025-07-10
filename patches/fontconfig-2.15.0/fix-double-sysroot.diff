@@ -1,8 +1,8 @@
-Index: fontconfig-2.14.0/src/fccfg.c
+Index: fontconfig-2.15.0/src/fccfg.c
 ===================================================================
---- fontconfig-2.14.0.orig/src/fccfg.c
-+++ fontconfig-2.14.0/src/fccfg.c
-@@ -2720,10 +2720,7 @@ FcConfigGetFilename (FcConfig      *conf
+--- fontconfig-2.15.0.orig/src/fccfg.c
++++ fontconfig-2.15.0/src/fccfg.c
+@@ -2716,10 +2716,7 @@ FcConfigGetFilename (FcConfig      *conf
  	{
  	    FcChar8 *s;
  

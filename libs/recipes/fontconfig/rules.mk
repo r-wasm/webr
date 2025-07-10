@@ -1,6 +1,6 @@
-FC_VERSION = 2.14.0
-FC_TARBALL = $(DOWNLOAD)/fontconfig-$(FC_VERSION).tar.gz
-FC_URL = https://www.freedesktop.org/software/fontconfig/release/fontconfig-$(FC_VERSION).tar.gz
+FC_VERSION = 2.15.0
+FC_TARBALL = $(DOWNLOAD)/fontconfig-$(FC_VERSION).tar.xz
+FC_URL = https://www.freedesktop.org/software/fontconfig/release/fontconfig-$(FC_VERSION).tar.xz
 
 .PHONY: fontconfig
 fontconfig: $(FC_DEPS)
