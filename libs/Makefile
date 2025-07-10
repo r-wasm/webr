@@ -61,11 +61,11 @@ $(EM_PKG_CONFIG_PATH)/%.pc: recipes/**/%.pc
 
 $(DEFAULT_WASM_BINS_INST): $(DEFAULT_WASM_LIBS)
 	@mkdir -p $(HOST)/bin
-	cp "$(patsubst $(HOST)/bin/%,$(WASM)/bin/%,$@)" "$@"
+	install "$(patsubst $(HOST)/bin/%,$(WASM)/bin/%,$@)" "$@"
 
 $(OPTIONAL_WASM_BINS_INST): $(OPTIONAL_WASM_LIBS)
 	@mkdir -p $(HOST)/bin
-	cp "$(patsubst $(HOST)/bin/%,$(WASM)/bin/%,$@)" "$@"
+	install "$(patsubst $(HOST)/bin/%,$(WASM)/bin/%,$@)" "$@"
 
 .PHONY: clean-bins
 clean-bins:
