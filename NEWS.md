@@ -1,12 +1,16 @@
 # webR (development version)
 
-## Bug Fixes
-
-* (Regression, again) Fix linking to the FreeType library when building webR (See #504 for details).
-
 ## New features
 
 * Support sharing URLs and initial editor file population in the webR application. See `src/examples/embed/` for an example of iframe embedding with `postMessage()`. (#554)
+
+## Breaking changes
+
+* Updated Fontconfig to version 2.15.0 (#544).
+
+## Bug Fixes
+
+* (Regression, again) Fix linking to the FreeType library when building webR (See #504 for details).
 
 # webR 0.5.3
 
