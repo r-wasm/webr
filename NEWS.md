@@ -1,5 +1,7 @@
 # webR (development version)
 
+# webR 0.5.4
+
 ## New features
 
 * Support sharing URLs and initial editor file population in the webR application. See `src/examples/embed/` for an example of iframe embedding with `postMessage()`. (#554)
