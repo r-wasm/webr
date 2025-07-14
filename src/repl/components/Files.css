@@ -1,5 +1,6 @@
 #files {
   padding: 5px 0;
+  background-color: var(--bg-primary);
 }
 
 .files-header {

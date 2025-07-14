@@ -1,5 +1,6 @@
 #editor {
   position: relative;
+  background-color: var(--bg-primary);
 }
 
 .editor-header {
