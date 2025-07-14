@@ -1,0 +1,2 @@
+CURL_WASM_LIB = $(WASM)/lib/libcurl.a
+OPTIONAL_WASM_LIBS += $(CURL_WASM_LIB)
