@@ -119,6 +119,22 @@ export class SharedBufferChannelMain extends ChannelMain {
             await syncResponse(worker, reqData, response);
             break;
           }
+          case 'eval-await': {
+            const src = payload.data as string;
+            const data = {} as { result?: any; error?: string };
+            try {
+              data.result = await (0, eval)(src) as unknown;
+              if (typeof data.result === 'function') {
+                // Don't try to transfer a function back to the worker thread
+                data.result = String(data.result);
+              }
+            } catch (_error) {
+              const error = _error as Error;
+              data.error = error.message;
+            }
+            await syncResponse(worker, reqData, { type: 'eval-response', data });
+            break;
+          }
           default:
             throw new WebRChannelError(`Unsupported request type '${payload.type}'.`);
         }
@@ -142,7 +158,7 @@ export class SharedBufferChannelWorker implements ChannelWorker {
   #dispatch: (msg: Message) => void = () => 0;
   #interruptBuffer = new Int32Array(new SharedArrayBuffer(4));
   #interrupt = () => { return; };
-  onMessageFromMainThread: (msg: Message) => void = () => { return; };
+  resolveRequest: (msg: Message) => void = () => { return; };
 
   constructor() {
     this.#ep = (IN_NODE ? require('worker_threads').parentPort : globalThis) as Endpoint;
@@ -162,10 +178,13 @@ export class SharedBufferChannelWorker implements ChannelWorker {
     this.#ep.postMessage({ type: 'system', data: msg }, transfer);
   }
 
-  read(): Message {
-    const msg = { type: 'read' } as Message;
-    const task = new SyncTask(this.#ep, msg);
+  syncRequest(msg: Message, transfer?: [Transferable]): Message {
+    const task = new SyncTask(this.#ep, msg, transfer);
     return task.syncify() as Message;
+  }
+
+  read(): Message {
+    return this.syncRequest({ type: 'read' });
   }
 
   inputOrDispatch(): number {
@@ -179,7 +198,7 @@ export class SharedBufferChannelWorker implements ChannelWorker {
   }
 
   run(args: string[]) {
-    try{
+    try {
       Module.callMain(args);
     } catch (e) {
       if (e instanceof WebAssembly.RuntimeError) {

@@ -24,7 +24,7 @@ export interface Response {
   type: 'response';
   data: {
     uuid: UUID;
-    resp: unknown;
+    resp: Message;
   };
 }
 
@@ -43,7 +43,7 @@ export function newRequest(msg: Message, transferables?: [Transferable]): Reques
 }
 
 /** @internal */
-export function newResponse(uuid: UUID, resp: unknown, transferables?: [Transferable]): Response {
+export function newResponse(uuid: UUID, resp: Message, transferables?: [Transferable]): Response {
   return newRequestResponseMessage(
     {
       type: 'response',
@@ -64,6 +64,17 @@ function newRequestResponseMessage<T>(msg: T, transferables?: [Transferable]): T
     transfer(msg, transferables);
   }
   return msg;
+}
+
+/** A webR communication channel `eval-response` message.
+ * @internal
+ */
+export interface EvalResponse {
+  type: 'eval-response';
+  data: {
+    result?: unknown;
+    error?: string;
+  };
 }
 
 /** A webR communication channel sync-request.

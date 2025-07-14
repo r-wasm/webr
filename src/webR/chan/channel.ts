@@ -34,7 +34,7 @@ export abstract class ChannelMain {
   outputQueue = new AsyncQueue<Message>();
   systemQueue = new AsyncQueue<Message>();
 
-  #parked = new Map<string, { resolve: ResolveFn; reject: RejectFn }>();
+  #parked = new Map<string, { resolve: ResolveFn<any>; reject: RejectFn }>();
   #closed = false;
 
   abstract initialised: Promise<unknown>;
@@ -67,11 +67,11 @@ export abstract class ChannelMain {
   async request(msg: Message, transferables?: [Transferable]): Promise<WebRPayload> {
     const req = newRequest(msg, transferables);
 
-    const { resolve, reject, promise } = promiseHandles();
+    const { resolve, reject, promise } = promiseHandles<WebRPayload>();
     this.#parked.set(req.data.uuid, { resolve, reject });
 
     this.write(req);
-    return promise as Promise<WebRPayload>;
+    return promise;
   }
 
   protected putClosedMessage(): void {
@@ -84,7 +84,7 @@ export abstract class ChannelMain {
     const handles = this.#parked.get(uuid);
 
     if (handles) {
-      const payload = msg.data.resp as WebRPayloadWorker;
+      const payload = msg.data.resp.data as WebRPayloadWorker;
       this.#parked.delete(uuid);
 
       if (payload.payloadType === 'err') {
@@ -102,13 +102,14 @@ export interface ChannelWorker {
   resolve(): void;
   write(msg: Message, transfer?: [Transferable]): void;
   writeSystem(msg: Message, transfer?: [Transferable]): void;
+  syncRequest(msg: Message, transfer?: [Transferable]): Message;
   read(): Message;
   handleInterrupt(): void;
   setInterrupt(interrupt: () => void): void;
   run(args: string[]): void;
   inputOrDispatch: () => number;
   setDispatchHandler: (dispatch: (msg: Message) => void) => void;
-  onMessageFromMainThread: (msg: Message) => void;
+  resolveRequest: (msg: Message) => void;
 }
 
 /**
