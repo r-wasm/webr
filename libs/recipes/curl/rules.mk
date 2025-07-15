@@ -28,7 +28,7 @@ $(CURL_WASM_LIB): $(CURL_TARBALL) $(NGHTTP2_WASM_LIB) $(OPENSSL_WASM_LIB)
 	    --disable-ntlm-wb \
 	    --enable-websockets \
 	    --disable-ftp \
-	    --disable-file \
+	    --enable-file \
 	    --disable-gopher \
 	    --disable-imap \
 	    --disable-mqtt \
