@@ -253,6 +253,11 @@ export class SharedBufferChannelWorker implements ChannelWorker {
             this.proxies.get(message.data.uuid)?._close(message.data.code, message.data.reason);
             break;
           }
+          case 'websocket-error': {
+            const message = response.data.msg as WebSocketMessage;
+            this.proxies.get(message.data.uuid)?._error();
+            break;
+          }
           default:
             throw new Error(`Unsupported event type '${response.data.msg.type}'.`);
         }
