@@ -1,6 +1,7 @@
 import { ChannelMain } from "./channel";
 import { SharedBufferChannelWorker } from "./channel-shared";
 import { generateUUID } from "./task-common";
+import { IN_NODE } from '../compat';
 
 export interface WebSocketProxy extends WebSocket {
   uuid: string;
@@ -10,12 +11,15 @@ export interface WebSocketProxy extends WebSocket {
 }
 
 export class WebSocketMap {
+  WebSocket: typeof WebSocket;
   #map = new Map<string, WebSocket>();
 
-  constructor(readonly chan: ChannelMain) { }
+  constructor(readonly chan: ChannelMain) {
+    this.WebSocket = IN_NODE ? require('ws').WebSocket as typeof WebSocket : WebSocket;
+  }
 
   new(uuid: string, url: string | URL, protocols?: string | string[]) {
-    const ws = new WebSocket(url, protocols);
+    const ws = new this.WebSocket(url, protocols);
     ws.binaryType = 'arraybuffer';
 
     ws.onopen = () => {
@@ -48,11 +52,11 @@ export class WebSocketMap {
 
 export class WebSocketProxyFactory {
   static proxy(chan: SharedBufferChannelWorker): typeof WebSocket {
-    return class extends EventTarget implements WebSocketProxy {
-      static readonly CONNECTING = WebSocket.CONNECTING;
-      static readonly OPEN = WebSocket.OPEN;
-      static readonly CLOSING = WebSocket.CLOSING;
-      static readonly CLOSED = WebSocket.CLOSED;
+    return class WebSocket extends EventTarget implements WebSocketProxy {
+      static readonly CONNECTING = 0;
+      static readonly OPEN = 1;
+      static readonly CLOSING = 2;
+      static readonly CLOSED = 3;
 
       readonly CONNECTING = WebSocket.CONNECTING;
       readonly OPEN = WebSocket.OPEN;

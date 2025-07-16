@@ -20,7 +20,7 @@ function build(input: string, output: string, platform: esbuild.Platform, minify
     assetNames: 'assets/[name]-[hash]',
     bundle: true,
     entryPoints: [input],
-    external: ['worker_threads', 'path', 'fs'],
+    external: ['worker_threads', 'path', 'fs', 'ws'],
     loader: {
       '.jpg': 'file',
       '.png': 'file',
