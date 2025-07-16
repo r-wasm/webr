@@ -112,6 +112,7 @@ export interface ChannelWorker {
   inputOrDispatch: () => number;
   setDispatchHandler: (dispatch: (msg: Message) => void) => void;
   resolveRequest: (msg: Message) => void;
+  WebSocketProxy?: typeof WebSocket;
 }
 
 /**

@@ -5,7 +5,7 @@
 
 import { ChannelMain } from './chan/channel';
 import { newChannelMain, ChannelType } from './chan/channel-common';
-import { Message } from './chan/message';
+import { CloseWebSocketMessage, Message, ProxyWebSocketMessage, SendWebSocketMessage } from './chan/message';
 import { BASE_URL, PKG_BASE_URL, WEBR_VERSION } from './config';
 import { EmPtr } from './emscripten';
 import { WebRPayloadPtr } from './payload';
@@ -36,6 +36,7 @@ import {
   FSRenameMessage,
   FSAnalyzePathMessage,
 } from './webr-chan';
+import { WebSocketMap } from './chan/websocket';
 
 export { Console, ConsoleCallbacks } from './console';
 export * from './robj-main';
@@ -229,6 +230,7 @@ const defaultOptions = {
  */
 export class WebR {
   #chan: ChannelMain;
+  #ws: WebSocketMap;
   #initialised: Promise<unknown>;
   globalShelter!: Shelter;
   version: string = WEBR_VERSION;
@@ -269,6 +271,7 @@ export class WebR {
       }
     };
     this.#chan = newChannelMain(config);
+    this.#ws = new WebSocketMap(this.#chan);
 
     this.objs = {} as typeof this.objs;
     this.Shelter = newShelterProxy(this.#chan);
@@ -330,6 +333,21 @@ export class WebR {
             msg.data.args
           );
           break;
+        case 'proxyWebSocket': {
+          const message = msg as ProxyWebSocketMessage;
+          this.#ws.new(message.data.uuid, message.data.url, message.data.protocol);
+          break;
+        }
+        case 'sendWebSocket': {
+          const message = msg as SendWebSocketMessage;
+          this.#ws.send(message.data.uuid, message.data.data);
+          break;
+        }
+        case 'closeWebSocket': {
+          const message = msg as CloseWebSocketMessage;
+          this.#ws.close(message.data.uuid, message.data.code, message.data.reason);
+          break;
+        }
         case 'console.log':
           console.log(msg.data);
           break;
@@ -370,7 +388,7 @@ export class WebR {
    * @yields {Promise<Message>} Output messages from the communication channel.
    */
   async *stream(): AsyncGenerator<Message, void> {
-    for (;;) {
+    for (; ;) {
       const output = await this.#chan.read();
       if (output.type === 'closed') {
         return;

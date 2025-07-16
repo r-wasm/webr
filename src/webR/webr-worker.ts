@@ -1003,6 +1003,12 @@ function init(config: Required<WebROptions>) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   (globalThis as any).Module = Module;
 
+  // Proxy WebSockets to main thread.
+  // Requires channel SyncRequest support for handling events.
+  if (chan?.WebSocketProxy) {
+    globalThis.WebSocket = chan.WebSocketProxy;
+  }
+
   // At the next tick, launch the REPL. This never returns.
   setTimeout(() => {
     const scriptSrc = `${_config.baseUrl}R.js`;

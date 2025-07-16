@@ -1,5 +1,5 @@
 import { promiseHandles, newCrossOriginWorker, isCrossOrigin } from '../utils';
-import { EventMessage, Message, Response, SyncRequest } from './message';
+import { EventMessage, Message, Response, SyncRequest, WebSocketCloseMessage, WebSocketMessage, WebSocketOpenMessage } from './message';
 import { Endpoint } from './task-common';
 import { syncResponse } from './task-main';
 import { ChannelMain, ChannelWorker } from './channel';
@@ -125,7 +125,7 @@ export class SharedBufferChannelMain extends ChannelMain {
             break;
           }
           case 'event': {
-            const response = await this.eventQueue.shift();
+            const response = this.eventQueue.shift();
             await syncResponse(worker, reqData, response);
             break;
           }
@@ -162,8 +162,11 @@ export class SharedBufferChannelMain extends ChannelMain {
 
 import { setEventBuffer, setEventsHandler, SyncTask } from './task-worker';
 import { Module } from '../emscripten';
+import { WebSocketProxy, WebSocketProxyFactory } from './websocket';
 
 export class SharedBufferChannelWorker implements ChannelWorker {
+  WebSocketProxy: typeof WebSocket;
+  proxies: Map<string, WebSocketProxy>;
   #ep: Endpoint;
   #dispatch: (msg: Message) => void = () => 0;
   #eventBuffer = new Int32Array(new SharedArrayBuffer(4));
@@ -174,6 +177,9 @@ export class SharedBufferChannelWorker implements ChannelWorker {
     this.#ep = (IN_NODE ? require('worker_threads').parentPort : globalThis) as Endpoint;
     setEventBuffer(this.#eventBuffer.buffer);
     setEventsHandler(() => this.handleEvents());
+
+    this.WebSocketProxy = WebSocketProxyFactory.proxy(this);
+    this.proxies = new Map();
   }
 
   resolve() {
@@ -225,13 +231,30 @@ export class SharedBufferChannelWorker implements ChannelWorker {
 
   handleEvents() {
     if (this.#eventBuffer[0] !== 0) {
-      while (true) {
+      for (; ;) {
         const response = this.syncRequest({ type: 'event' }) as EventMessage | undefined;
         if (!response) break;
         switch (response.data.msg.type) {
           case 'interrupt':
             this.#interrupt();
             break;
+          case 'websocket-open': {
+            const message = response.data.msg as WebSocketOpenMessage;
+            this.proxies.get(message.data.uuid)?._accept();
+            break;
+          }
+          case 'websocket-message': {
+            const message = response.data.msg as WebSocketMessage;
+            this.proxies.get(message.data.uuid)?._recieve(message.data.data);
+            break;
+          }
+          case 'websocket-close': {
+            const message = response.data.msg as WebSocketCloseMessage;
+            this.proxies.get(message.data.uuid)?._close(message.data.code, message.data.reason);
+            break;
+          }
+          default:
+            throw new Error(`Unsupported event type '${response.data.msg.type}'.`);
         }
       }
       this.#eventBuffer[0] = 0;
