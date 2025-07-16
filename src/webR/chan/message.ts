@@ -19,6 +19,14 @@ export interface Request {
   };
 }
 
+/** A webR communication channel event message. */
+export interface EventMessage {
+  type: 'event';
+  data: {
+    msg: Message;
+  };
+}
+
 /** A webR communication channel response. */
 export interface Response {
   type: 'response';

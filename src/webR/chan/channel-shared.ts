@@ -1,5 +1,5 @@
 import { promiseHandles, newCrossOriginWorker, isCrossOrigin } from '../utils';
-import { Message, Response, SyncRequest } from './message';
+import { EventMessage, Message, Response, SyncRequest } from './message';
 import { Endpoint } from './task-common';
 import { syncResponse } from './task-main';
 import { ChannelMain, ChannelWorker } from './channel';
@@ -16,7 +16,7 @@ if (IN_NODE) {
 // Main ----------------------------------------------------------------
 
 export class SharedBufferChannelMain extends ChannelMain {
-  #interruptBuffer?: Int32Array;
+  #eventBuffer?: Int32Array;
 
   initialised: Promise<unknown>;
   resolve: (_?: unknown) => void;
@@ -54,12 +54,17 @@ export class SharedBufferChannelMain extends ChannelMain {
     }
   }
 
-  interrupt() {
-    if (!this.#interruptBuffer) {
+  emit(msg: Message): void {
+    if (!this.#eventBuffer) {
       throw new WebRChannelError('Failed attempt to interrupt before initialising interruptBuffer');
     }
+    this.eventQueue.push({ type: 'event', data: { msg } });
+    this.#eventBuffer[0] = 1;
+  }
+
+  interrupt() {
     this.inputQueue.reset();
-    this.#interruptBuffer[0] = 1;
+    this.emit({ type: 'interrupt' });
   }
 
   #handleEventsFromWorker(worker: Worker) {
@@ -92,7 +97,7 @@ export class SharedBufferChannelMain extends ChannelMain {
 
     switch (message.type) {
       case 'resolve':
-        this.#interruptBuffer = new Int32Array(message.data as SharedArrayBuffer);
+        this.#eventBuffer = new Int32Array(message.data as SharedArrayBuffer);
         this.resolve();
         return;
 
@@ -116,6 +121,11 @@ export class SharedBufferChannelMain extends ChannelMain {
         switch (payload.type) {
           case 'read': {
             const response = await this.inputQueue.get();
+            await syncResponse(worker, reqData, response);
+            break;
+          }
+          case 'event': {
+            const response = await this.eventQueue.shift();
             await syncResponse(worker, reqData, response);
             break;
           }
@@ -150,24 +160,24 @@ export class SharedBufferChannelMain extends ChannelMain {
 
 // Worker --------------------------------------------------------------
 
-import { SyncTask, setInterruptHandler, setInterruptBuffer } from './task-worker';
+import { setEventBuffer, setEventsHandler, SyncTask } from './task-worker';
 import { Module } from '../emscripten';
 
 export class SharedBufferChannelWorker implements ChannelWorker {
   #ep: Endpoint;
   #dispatch: (msg: Message) => void = () => 0;
-  #interruptBuffer = new Int32Array(new SharedArrayBuffer(4));
+  #eventBuffer = new Int32Array(new SharedArrayBuffer(4));
   #interrupt = () => { return; };
   resolveRequest: (msg: Message) => void = () => { return; };
 
   constructor() {
     this.#ep = (IN_NODE ? require('worker_threads').parentPort : globalThis) as Endpoint;
-    setInterruptBuffer(this.#interruptBuffer.buffer);
-    setInterruptHandler(() => this.handleInterrupt());
+    setEventBuffer(this.#eventBuffer.buffer);
+    setEventsHandler(() => this.handleEvents());
   }
 
   resolve() {
-    this.write({ type: 'resolve', data: this.#interruptBuffer.buffer });
+    this.write({ type: 'resolve', data: this.#eventBuffer.buffer });
   }
 
   write(msg: Message, transfer?: [Transferable]) {
@@ -213,15 +223,23 @@ export class SharedBufferChannelWorker implements ChannelWorker {
     }
   }
 
-  setInterrupt(interrupt: () => void) {
-    this.#interrupt = interrupt;
+  handleEvents() {
+    if (this.#eventBuffer[0] !== 0) {
+      while (true) {
+        const response = this.syncRequest({ type: 'event' }) as EventMessage | undefined;
+        if (!response) break;
+        switch (response.data.msg.type) {
+          case 'interrupt':
+            this.#interrupt();
+            break;
+        }
+      }
+      this.#eventBuffer[0] = 0;
+    }
   }
 
-  handleInterrupt() {
-    if (this.#interruptBuffer[0] !== 0) {
-      this.#interruptBuffer[0] = 0;
-      this.#interrupt();
-    }
+  setInterrupt(interrupt: () => void) {
+    this.#interrupt = interrupt;
   }
 
   setDispatchHandler(dispatch: (msg: Message) => void) {

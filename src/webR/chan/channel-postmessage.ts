@@ -19,7 +19,8 @@ export class PostMessageChannelMain extends ChannelMain {
   initialised: Promise<unknown>;
   resolve: (_?: unknown) => void;
   reject: (message: string | Error) => void;
-  close: () => void = () => { return; };
+  close: ChannelMain['close'] = () => { return; };
+  emit: ChannelMain['emit'] = () => { return; };
   #worker?: Worker;
 
   constructor(config: Required<WebROptions>) {
@@ -219,7 +220,7 @@ export class PostMessageChannelWorker {
   }
 
   setInterrupt() { return; }
-  handleInterrupt() { return; }
+  handleEvents() { return; }
 
   resolveRequest(message: Message) {
     const msg = message as Response;

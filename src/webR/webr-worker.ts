@@ -934,7 +934,7 @@ function init(config: Required<WebROptions>) {
     },
 
     handleEvents: () => {
-      chan?.handleInterrupt();
+      chan?.handleEvents();
     },
 
     dataViewer: (ptr: RPtr, title: string) => {

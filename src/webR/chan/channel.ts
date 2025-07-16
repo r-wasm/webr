@@ -5,7 +5,7 @@
 
 import { promiseHandles, ResolveFn, RejectFn } from '../utils';
 import { AsyncQueue } from './queue';
-import { Message, newRequest, Response } from './message';
+import { EventMessage, Message, newRequest, Response } from './message';
 import { WebRPayload, WebRPayloadWorker, webRPayloadAsError } from '../payload';
 import { WebRChannelError } from '../error';
 
@@ -33,12 +33,14 @@ export abstract class ChannelMain {
   inputQueue = new AsyncQueue<Message>();
   outputQueue = new AsyncQueue<Message>();
   systemQueue = new AsyncQueue<Message>();
+  eventQueue = new Array<EventMessage>;
 
   #parked = new Map<string, { resolve: ResolveFn<any>; reject: RejectFn }>();
   #closed = false;
 
   abstract initialised: Promise<unknown>;
   abstract close(): void;
+  abstract emit(msg: Message): void;
   abstract interrupt(): void;
 
   async read(): Promise<Message> {
@@ -104,7 +106,7 @@ export interface ChannelWorker {
   writeSystem(msg: Message, transfer?: [Transferable]): void;
   syncRequest(msg: Message, transfer?: [Transferable]): Message;
   read(): Message;
-  handleInterrupt(): void;
+  handleEvents(): void;
   setInterrupt(interrupt: () => void): void;
   run(args: string[]): void;
   inputOrDispatch: () => number;
