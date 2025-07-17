@@ -1,10 +1,10 @@
 import { WebR } from '../../../webR/webr-main';
 import { RRaw } from '../../../webR/robj-main';
 import { ChannelType } from '../../../webR/chan/channel-common';
+import { WebSocketServer } from 'ws';
 
-const WebSocketServer = require('ws').WebSocketServer as any;
 const wss = new WebSocketServer({ port: 7780 });
-wss.on('connection', function connection(ws: any) {
+wss.on('connection', function connection(ws) {
   ws.on('message', function message() {
     ws.send([42]);
     ws.close();
