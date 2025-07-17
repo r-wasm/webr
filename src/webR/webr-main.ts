@@ -205,6 +205,7 @@ const defaultEnv = {
   FONTCONFIG_PATH: '/etc/fonts',
   R_HOME: '/usr/lib/R',
   R_ENABLE_JIT: '0',
+  ALL_PROXY: 'socks5h://localhost:8580',
   WEBR: '1',
   WEBR_VERSION: WEBR_VERSION,
 };
