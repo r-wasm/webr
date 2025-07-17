@@ -1,0 +1,132 @@
+---
+title: "Networking"
+format: html
+toc: true
+---
+
+## Networking under WebAssembly
+
+WebAssembly runs in a sandbox environment and doesn't support direct network socket connections for security reasons. This means that traditional R networking and file downloading approaches need some extra work to be used with webR.
+
+Luckily, webR provides two solutions to enable network connectivity:
+
+1. **Basic downloads** using base R's `download.file()`.
+2. **Advanced networking** with a WebSocket proxy, for packages like curl and httr2.
+
+## Basic downloads with `download.file()`
+
+For simple file downloads, webR patches the `download.file()` function to work inside a web browser. The patch works by intercepting requests and handling them using JavaScript APIs. This method is easy to use and in many cases is sufficient.
+
+### Limitations
+
+The approach works well for basic HTTP(S) downloads, but it does come with some limitations imposed by the security of the browser environment:
+
+- The server hosting the file must supply CORS ([Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS)) headers to permit cross-origin requests.
+
+- Only simple HTTP/HTTPS `GET` requests are supported. You cannot use `POST` requests or set certain HTTP headers.
+
+Many web APIs and servers don't supply CORS headers with their content, which is why you might need the WebSocket proxy method below.
+
+### Example
+
+```r
+# Download a file directly, no other setup required
+download.file("https://raw.githubusercontent.com/tidyverse/ggplot2/refs/heads/main/data-raw/diamonds.csv", "diamonds.csv")
+```
+
+## Advanced networking with a WebSocket proxy
+
+For more complex networking, webR can proxy network connections through WebSockets. This enables the curl and httr2 packages, along with database and other TCP connections.
+
+The functionality is provided by Emscripten, which emulates the underlying POSIX Socket APIs with communication over WebSockets. You can read more about this kind of networking support in the [Emscripten documentation](https://emscripten.org/docs/porting/networking.html#emulated-posix-tcp-sockets-over-websockets).
+
+### Limitations
+
+The main drawback of this approach is that it requires some setup outside of webR, which might not always be possible. Specifically, it requires the use of WebSocket-to-TCP proxy and a SOCKS proxy for HTTP(S) requests.
+
+### What You Need
+
+You'll need to set up two components outside of webR:
+
+1. **A WebSocket-to-TCP proxy** - We'll use [`websockify`](https://github.com/novnc/websockify).
+2. **A SOCKS proxy** - We'll use SSH to create a SOCKS5 proxy.
+
+#### Step 1: Install the WebSocket-to-TCP proxy
+
+Install `websockify` on your system. This can be done via `pip`, other Python environment tools, or your system's package manager.
+
+```bash
+# Using pip, with a Python virtual environment if needed
+source .venv/bin/activate 
+pip install websockify
+```
+
+```bash
+# You can start websockify directly if using uv
+uvx websockify [...]
+```
+
+#### Step 2: Setup a SOCKS proxy
+
+Create a SOCKS5 proxy using SSH. On Unix systems, you can usually do this with the following OpenSSH command:
+
+```bash
+# Replace `localhost` if you're not using a local SSH server
+ssh -N -D 8581 localhost
+```
+
+**What this does**: Creates a SOCKS5 proxy on port 8581 that routes traffic through the SSH connection.
+
+#### Step 3: Start websockify
+
+In a new terminal, start `websockify` to bridge WebSockets to your SOCKS5 proxy:
+
+```bash
+websockify localhost:8580 localhost:8581
+```
+
+**What this does**: Creates a WebSocket server on port 8580 that forwards connections to your SOCKS5 proxy on port 8581.
+
+### Using curl and httr2 in webR
+
+Once your proxy is set up, you can use the curl package with the proxy setting. The proxy setting may also be omitted if you are using the default WebSocket location and port.
+
+```r
+library(curl)
+
+# Set up the proxy
+handle <- new_handle(proxy = "socks5h://localhost:8580")
+
+# Make requests
+response <- curl_fetch_memory("https://hb.cran.dev/get", handle = handle)
+response
+```
+
+For httr2, use the `req_proxy()` function:
+
+```r
+library(httr2)
+library(jsonlite)
+
+# Create a request with proxy
+response <- request("https://hb.cran.dev/get") |>
+  req_proxy("socks5h://localhost:8580") |>
+  req_perform()
+
+# Extract the response
+data <- response |> resp_body_json()
+data
+```
+
+## Database and other TCP Connections
+
+**If the server supports WebSockets**: No additional setup needed, webR can connect directly.
+
+**If the server uses regular TCP**: Use websockify to proxy the connection:
+
+```bash
+# For a service running on port 8080
+websockify localhost:8580 target-server:8080
+```
+
+Then connect through the WebSocket proxy as shown in the examples above.
