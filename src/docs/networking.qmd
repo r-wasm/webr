@@ -36,7 +36,7 @@ download.file("https://raw.githubusercontent.com/tidyverse/ggplot2/refs/heads/ma
 
 ## Advanced networking with a WebSocket proxy
 
-For more complex networking, webR can proxy network connections through WebSockets. This enables the curl and httr2 packages, along with database and other TCP connections.
+For more complex networking, webR can proxy network connections through WebSockets. This enables the curl and httr2 packages, along with other TCP connections.
 
 The functionality is provided by Emscripten, which emulates the underlying POSIX Socket APIs with communication over WebSockets. You can read more about this kind of networking support in the [Emscripten documentation](https://emscripten.org/docs/porting/networking.html#emulated-posix-tcp-sockets-over-websockets).
 
@@ -99,7 +99,6 @@ handle <- new_handle(proxy = "socks5h://localhost:8580")
 
 # Make requests
 response <- curl_fetch_memory("https://hb.cran.dev/get", handle = handle)
-response
 ```
 
 For httr2, use the `req_proxy()` function:
@@ -115,18 +114,4 @@ response <- request("https://hb.cran.dev/get") |>
 
 # Extract the response
 data <- response |> resp_body_json()
-data
 ```
-
-## Database and other TCP Connections
-
-**If the server supports WebSockets**: No additional setup needed, webR can connect directly.
-
-**If the server uses regular TCP**: Use websockify to proxy the connection:
-
-```bash
-# For a service running on port 8080
-websockify localhost:8580 target-server:8080
-```
-
-Then connect through the WebSocket proxy as shown in the examples above.
