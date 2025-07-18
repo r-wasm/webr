@@ -19,7 +19,8 @@ export class PostMessageChannelMain extends ChannelMain {
   initialised: Promise<unknown>;
   resolve: (_?: unknown) => void;
   reject: (message: string | Error) => void;
-  close: () => void = () => { return; };
+  close: ChannelMain['close'] = () => { return; };
+  emit: ChannelMain['emit'] = () => { return; };
   #worker?: Worker;
 
   constructor(config: Required<WebROptions>) {
@@ -138,7 +139,7 @@ declare let Module: _Module;
 
 export class PostMessageChannelWorker {
   #ep: Endpoint;
-  #parked = new Map<string, ResolveFn>();
+  #parked = new Map<string, ResolveFn<Message>>();
   #dispatch: (msg: Message) => void = () => 0;
   #promptDepth = 0;
 
@@ -204,20 +205,24 @@ export class PostMessageChannelWorker {
     this.#dispatch = dispatch;
   }
 
-  async request(msg: Message, transferables?: [Transferable]): Promise<any> {
+  protected async request(msg: Message, transferables?: [Transferable]): Promise<Message> {
     const req = newRequest(msg, transferables);
 
-    const { resolve: resolve, promise: prom } = promiseHandles();
+    const { resolve: resolve, promise: prom } = promiseHandles<Message>();
     this.#parked.set(req.data.uuid, resolve);
 
-    this.write(req);
+    this.write(req, transferables);
     return prom;
   }
 
-  setInterrupt() { return; }
-  handleInterrupt() { return; }
+  syncRequest(): Message {
+    throw new Error('Unable to sync-request when using the `PostMessage` channel.');
+  }
 
-  onMessageFromMainThread(message: Message) {
+  setInterrupt() { return; }
+  handleEvents() { return; }
+
+  resolveRequest(message: Message) {
     const msg = message as Response;
     const uuid = msg.data.uuid;
     const resolve = this.#parked.get(uuid);
@@ -246,7 +251,7 @@ export class PostMessageChannelWorker {
     for (; ;) {
       try {
         this.#promptDepth = 0;
-        const msg = (await this.request({ type: 'read' })) as Message;
+        const msg = await this.request({ type: 'read' });
         if (msg.type === 'stdin') {
           // Copy the new input into WASM memory
           const str = Module.allocateUTF8(msg.data as string);

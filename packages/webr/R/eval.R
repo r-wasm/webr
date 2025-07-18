@@ -120,8 +120,12 @@ eval_r <- function(
   }
 
   # Ensure incomplete lines are flushed to output vector
-  if (isIncomplete(out$stdout)) cat(fill = TRUE, file = out$stdout)
-  if (isIncomplete(out$stderr)) cat(fill = TRUE, file = out$stderr)
+  if (isIncomplete(out$stdout)) {
+    cat(fill = TRUE, file = out$stdout)
+  }
+  if (isIncomplete(out$stderr)) {
+    cat(fill = TRUE, file = out$stderr)
+  }
 
   # Output vector out$vec expands exponentially, return only the valid subset
   list(result = res, output = utils::head(out$vec, out$n))
@@ -139,11 +143,19 @@ eval_r <- function(
 #' The JavaScript code is evaluated using `emscripten_run_script_int` from the
 #' Emscripten C API. In the event of a JavaScript exception an R error condition
 #' will be raised with the exception message.
+#' 
+#' If a JavaScript promise is returned, set `await = TRUE` to wait for the
+#' promise to resolve. The result of the promise is returned, or an error is
+#' raised if the promise is rejected.
+#' 
+#' When `await = TRUE`, the given JavaScript code is run on the main thread.
+#' Otherwise, the JavaScript code is run in the webR web worker context.
 #'
 #' This is an experimental function that may undergo a breaking changes in the
 #' future.
 #'
 #' @param code The JavaScript code to evaluate.
+#' @param await Wait for promises to resolve, defaults to `FALSE`.
 #'
 #' @return Result of evaluating the JavaScript code, returned as an R object.
 #' @examples
@@ -152,11 +164,12 @@ eval_r <- function(
 #' eval_js("Math.sin(1)")
 #' eval_js("true")
 #' eval_js("undefined")
+#' eval_js("Promise.resolve(123)")
 #' eval_js("(new Date()).toUTCString()")
 #' eval_js("new RList({ foo: 123, bar: 456, baz: ['a', 'b', 'c']})")
 #' }
 #' @export
 #' @useDynLib webr, .registration = TRUE
-eval_js <- function(code) {
-  .Call(ffi_eval_js, code)
+eval_js <- function(code, await = FALSE) {
+  .Call(ffi_eval_js, code, await)
 }

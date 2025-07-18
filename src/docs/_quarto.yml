@@ -26,6 +26,7 @@ website:
       - communication.qmd
       - evaluating.qmd
       - plotting.qmd
+      - networking.qmd
       - section: Working with R Objects
         contents:
           - objects.qmd

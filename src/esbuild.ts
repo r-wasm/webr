@@ -20,7 +20,7 @@ function build(input: string, output: string, platform: esbuild.Platform, minify
     assetNames: 'assets/[name]-[hash]',
     bundle: true,
     entryPoints: [input],
-    external: ['worker_threads', 'path', 'fs'],
+    external: ['worker_threads', 'path', 'fs', 'ws'],
     loader: {
       '.jpg': 'file',
       '.png': 'file',
@@ -46,13 +46,10 @@ function build(input: string, output: string, platform: esbuild.Platform, minify
 const outputs = {
   browser: [
     build('repl/App.tsx', '../dist/repl.mjs', 'browser', prod),
-    build('webR/chan/serviceworker.ts', '../dist/webr-serviceworker.js', 'browser', false),
     build('webR/webr-worker.ts', '../dist/webr-worker.js', 'node', true),
     build('webR/webr-main.ts', '../dist/webr.mjs', 'neutral', prod),
   ],
   npm: [
-    build('webR/chan/serviceworker.ts', './dist/webr-serviceworker.mjs', 'neutral', false),
-    build('webR/chan/serviceworker.ts', './dist/webr-serviceworker.js', 'browser', false),
     build('webR/webr-worker.ts', './dist/webr-worker.js', 'node', true),
     build('webR/webr-main.ts', './dist/webr.cjs', 'node', prod),
     build('webR/webr-main.ts', './dist/webr.mjs', 'neutral', prod),
