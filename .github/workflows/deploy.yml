@@ -72,7 +72,7 @@ jobs:
         run: cd src/docs && make
         shell: bash
       - name: Publish to npm
-        if: "!contains(github.ref_name, 'main')"
+        if: "!contains(github.ref_name, 'main') && !github.event_name == 'workflow_dispatch'"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: cd src && make publish

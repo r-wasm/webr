@@ -189,6 +189,11 @@ describe('Execute JavaScript code from R', () => {
     expect(await res6.toBoolean()).toBeTruthy();
 
   });
+
+  test('Await a JS Promise', async () => {
+    const res = (await webR.evalR('webr::eval_js("Promise.resolve(-42)", await = TRUE)')) as RInteger;
+    expect(await res.toNumber()).toEqual(-42);
+  });
 });
 
 afterAll(() => {

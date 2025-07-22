@@ -5,7 +5,7 @@
 
 import { promiseHandles, ResolveFn, RejectFn } from '../utils';
 import { AsyncQueue } from './queue';
-import { Message, newRequest, Response } from './message';
+import { EventMessage, Message, newRequest, Response } from './message';
 import { WebRPayload, WebRPayloadWorker, webRPayloadAsError } from '../payload';
 import { WebRChannelError } from '../error';
 
@@ -33,12 +33,14 @@ export abstract class ChannelMain {
   inputQueue = new AsyncQueue<Message>();
   outputQueue = new AsyncQueue<Message>();
   systemQueue = new AsyncQueue<Message>();
+  eventQueue = new Array<EventMessage>;
 
-  #parked = new Map<string, { resolve: ResolveFn; reject: RejectFn }>();
+  #parked = new Map<string, { resolve: ResolveFn<any>; reject: RejectFn }>();
   #closed = false;
 
   abstract initialised: Promise<unknown>;
   abstract close(): void;
+  abstract emit(msg: Message): void;
   abstract interrupt(): void;
 
   async read(): Promise<Message> {
@@ -67,11 +69,11 @@ export abstract class ChannelMain {
   async request(msg: Message, transferables?: [Transferable]): Promise<WebRPayload> {
     const req = newRequest(msg, transferables);
 
-    const { resolve, reject, promise } = promiseHandles();
+    const { resolve, reject, promise } = promiseHandles<WebRPayload>();
     this.#parked.set(req.data.uuid, { resolve, reject });
 
     this.write(req);
-    return promise as Promise<WebRPayload>;
+    return promise;
   }
 
   protected putClosedMessage(): void {
@@ -84,7 +86,7 @@ export abstract class ChannelMain {
     const handles = this.#parked.get(uuid);
 
     if (handles) {
-      const payload = msg.data.resp as WebRPayloadWorker;
+      const payload = msg.data.resp.data as WebRPayloadWorker;
       this.#parked.delete(uuid);
 
       if (payload.payloadType === 'err') {
@@ -102,13 +104,15 @@ export interface ChannelWorker {
   resolve(): void;
   write(msg: Message, transfer?: [Transferable]): void;
   writeSystem(msg: Message, transfer?: [Transferable]): void;
+  syncRequest(msg: Message, transfer?: [Transferable]): Message;
   read(): Message;
-  handleInterrupt(): void;
+  handleEvents(): void;
   setInterrupt(interrupt: () => void): void;
   run(args: string[]): void;
   inputOrDispatch: () => number;
   setDispatchHandler: (dispatch: (msg: Message) => void) => void;
-  onMessageFromMainThread: (msg: Message) => void;
+  resolveRequest: (msg: Message) => void;
+  WebSocketProxy?: typeof WebSocket;
 }
 
 /**

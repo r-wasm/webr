@@ -9,7 +9,7 @@ $(CURL_TARBALL):
 	mkdir -p $(DOWNLOAD)
 	wget $(CURL_URL) -O $@
 
-$(CURL_WASM_LIB): $(CURL_TARBALL) $(NGHTTP2_WASM_LIB) $(OPENSSL_WASM_LIB)
+$(CURL_WASM_LIB): $(CURL_TARBALL) $(NGHTTP2_WASM_LIB) $(OPENSSL_WASM_LIB) $(WASM)/etc/ssl/cert.pem
 	mkdir -p $(BUILD)/curl-$(CURL_VERSION)/build
 	tar -C $(BUILD) -xf $(CURL_TARBALL)
 	cd $(BUILD)/curl-$(CURL_VERSION)/build && \
@@ -17,6 +17,7 @@ $(CURL_WASM_LIB): $(CURL_TARBALL) $(NGHTTP2_WASM_LIB) $(OPENSSL_WASM_LIB)
 	    --enable-shared=no \
 	    --enable-static=yes \
 	    --prefix=$(WASM) \
+	    --with-ca-bundle=/etc/ssl/cert.pem \
 	    --with-openssl \
 	    --with-zlib \
 	    --with-nghttp2 \

@@ -148,8 +148,8 @@ class _Syncifier {
         case 'not-equal':
           return;
         case 'timed-out':
-          if (interruptBuffer[0] !== 0) {
-            handleInterrupt();
+          if (eventBuffer[0] !== 0) {
+            handleEvents();
           }
           break;
         default:
@@ -220,27 +220,27 @@ function releaseDataBuffer(buffer: Uint8Array) {
   dataBuffers[powerof2].push(buffer);
 }
 
-let interruptBuffer = new Int32Array(new ArrayBuffer(4));
+let eventBuffer = new Int32Array(new ArrayBuffer(4));
 
-let handleInterrupt = (): void => {
-  interruptBuffer[0] = 0;
-  throw new Error('Interrupted!');
+let handleEvents = (): void => {
+  eventBuffer[0] = 0;
+  throw new Error('No event handler.');
 };
 
 /**
- * Sets the interrupt handler. This is called when the computation is
- * interrupted. Should zero the interrupt buffer and throw an exception.
+ * Sets the events handler. This is called when the computation is
+ * interrupted by an event. Should zero the event buffer.
  * @internal
  */
-export function setInterruptHandler(handler: () => void) {
-  handleInterrupt = handler;
+export function setEventsHandler(handler: () => void) {
+  handleEvents = handler;
 }
 
 /**
- * Sets the interrupt buffer. Should be a shared array buffer. When element 0
- * is set non-zero it signals an interrupt.
+ * Sets the events buffer. Should be a shared array buffer. When element 0
+ * is set non-zero it signals an event has been emitted.
  * @internal
  */
-export function setInterruptBuffer(buffer: ArrayBufferLike) {
-  interruptBuffer = new Int32Array(buffer);
+export function setEventBuffer(buffer: ArrayBufferLike) {
+  eventBuffer = new Int32Array(buffer);
 }

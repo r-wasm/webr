@@ -19,12 +19,20 @@ export interface Request {
   };
 }
 
+/** A webR communication channel event message. */
+export interface EventMessage {
+  type: 'event';
+  data: {
+    msg: Message;
+  };
+}
+
 /** A webR communication channel response. */
 export interface Response {
   type: 'response';
   data: {
     uuid: UUID;
-    resp: unknown;
+    resp: Message;
   };
 }
 
@@ -43,7 +51,7 @@ export function newRequest(msg: Message, transferables?: [Transferable]): Reques
 }
 
 /** @internal */
-export function newResponse(uuid: UUID, resp: unknown, transferables?: [Transferable]): Response {
+export function newResponse(uuid: UUID, resp: Message, transferables?: [Transferable]): Response {
   return newRequestResponseMessage(
     {
       type: 'response',
@@ -64,6 +72,85 @@ function newRequestResponseMessage<T>(msg: T, transferables?: [Transferable]): T
     transfer(msg, transferables);
   }
   return msg;
+}
+
+/** A webR communication channel `eval-response` message.
+ * @internal
+ */
+export interface EvalResponse {
+  type: 'eval-response';
+  data: {
+    result?: unknown;
+    error?: string;
+  };
+}
+
+/** A webR communication channel `proxyWebSocket` message.
+ * @internal
+ */
+export interface ProxyWebSocketMessage {
+  type: 'proxyWebSocket';
+  data: {
+    uuid: string;
+    url: string;
+    protocol?: string;
+  };
+}
+
+/** A webR communication channel `sendWebSocket` message.
+ * @internal
+ */
+export interface SendWebSocketMessage {
+  type: 'sendWebSocket';
+  data: {
+    uuid: string;
+    data: string | ArrayBufferLike | Blob | ArrayBufferView;
+  };
+}
+
+/** A webR communication channel `closeWebSocket` message.
+ * @internal
+ */
+export interface CloseWebSocketMessage {
+  type: 'closeWebSocket';
+  data: {
+    uuid: string;
+    code?: number;
+    reason?: string;
+  };
+}
+
+/** A webR communication channel `websocket-message` message.
+ * @internal
+ */
+export interface WebSocketMessage {
+  type: 'websocket-message';
+  data: {
+    uuid: string;
+    data: string | ArrayBufferLike | Blob | ArrayBufferView;
+  };
+}
+
+/** A webR communication channel `websocket-open` message.
+ * @internal
+ */
+export interface WebSocketOpenMessage {
+  type: 'websocket-open';
+  data: {
+    uuid: string;
+  };
+}
+
+/** A webR communication channel `websocket-close` message.
+ * @internal
+ */
+export interface WebSocketCloseMessage {
+  type: 'websocket-close';
+  data: {
+    uuid: string;
+    code?: number;
+    reason?: string;
+  };
 }
 
 /** A webR communication channel sync-request.
