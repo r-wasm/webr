@@ -17,7 +17,7 @@ $(CURL_WASM_LIB): $(CURL_TARBALL) $(NGHTTP2_WASM_LIB) $(OPENSSL_WASM_LIB) $(WASM
 	    --enable-shared=no \
 	    --enable-static=yes \
 	    --prefix=$(WASM) \
-	    --with-ca-bundle=$(WASM)/etc/ssl/cert.pem \
+	    --with-ca-bundle=/etc/ssl/cert.pem \
 	    --with-openssl \
 	    --with-zlib \
 	    --with-nghttp2 \
