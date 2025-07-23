@@ -1,4 +1,4 @@
-OPENSSL_VERSION = 3.1.0
+OPENSSL_VERSION = 3.5.1
 OPENSSL_TARBALL = $(DOWNLOAD)/openssl-$(OPENSSL_VERSION).tar.gz
 OPENSSL_URL = https://github.com/openssl/openssl/archive/refs/tags/openssl-$(OPENSSL_VERSION).tar.gz
 
@@ -20,6 +20,7 @@ $(OPENSSL_WASM_LIB): $(OPENSSL_TARBALL)
 	    AR="ar" \
 	    RANLIB="ranlib" \
 	    -static \
+            -no-module \
 	    -no-sock \
 	    -no-tests \
 	    -no-asm \
@@ -27,4 +28,4 @@ $(OPENSSL_WASM_LIB): $(OPENSSL_TARBALL)
 	  sed -i.bak '/^CNF_CFLAGS=/d' $(BUILD)/openssl-openssl-$(OPENSSL_VERSION)/build/Makefile && \
 	  sed -i.bak '/^CNF_LDFLAGS=/d' $(BUILD)/openssl-openssl-$(OPENSSL_VERSION)/build/Makefile && \
 	  emmake $(MAKE) build_generated libssl.a libcrypto.a && \
-	  emmake $(MAKE) install
+	  emmake $(MAKE) install_sw
