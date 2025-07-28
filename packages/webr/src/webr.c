@@ -9,7 +9,7 @@
 #endif
 
 #define BUFSIZE 64
-SEXP ffi_eval_js(SEXP code) {
+SEXP ffi_eval_js(SEXP code, SEXP await) {
 #ifdef __EMSCRIPTEN__
   if (!Rf_isString(code) || LENGTH(code) != 1) {
     Rf_error("`code` must be a character string.");
@@ -19,9 +19,17 @@ SEXP ffi_eval_js(SEXP code) {
     Rf_error("`code` must not be `NA`.");
   }
 
-  const char *eval_template = "globalThis.Module.webr.evalJs(%p)";
+  if (!Rf_isLogical(await) || LENGTH(await) != 1) {
+    Rf_error("`await` must be a logical.");
+  }
+
+  if (LOGICAL(await)[0] == NA_LOGICAL){
+    Rf_error("`await` can't be `NA`.");
+  }
+
+  const char *eval_template = "globalThis.Module.webr.evalJs(%p, %d)";
   char eval_script[BUFSIZE];
-  snprintf(eval_script, BUFSIZE, eval_template, R_CHAR(STRING_ELT(code, 0)));
+  snprintf(eval_script, BUFSIZE, eval_template, R_CHAR(STRING_ELT(code, 0)), LOGICAL(await)[0]);
   return (SEXP) emscripten_run_script_int(eval_script);
 #else
     Rf_error("Function must be running under Emscripten.");

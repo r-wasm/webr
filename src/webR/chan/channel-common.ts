@@ -1,5 +1,4 @@
 import { SharedBufferChannelMain, SharedBufferChannelWorker } from './channel-shared';
-import { ServiceWorkerChannelMain, ServiceWorkerChannelWorker } from './channel-service';
 import { PostMessageChannelMain, PostMessageChannelWorker } from './channel-postmessage';
 import { WebROptions } from '../webr-main';
 import { WebRChannelError } from '../error';
@@ -11,7 +10,6 @@ import { WebRChannelError } from '../error';
 export const ChannelType = {
   Automatic: 0,
   SharedArrayBuffer: 1,
-  ServiceWorker: 2,
   PostMessage: 3,
 } as const;
 
@@ -32,8 +30,6 @@ export function newChannelMain(data: Required<WebROptions>) {
   switch (data.channelType) {
     case ChannelType.SharedArrayBuffer:
       return new SharedBufferChannelMain(data);
-    case ChannelType.ServiceWorker:
-      return new ServiceWorkerChannelMain(data);
     case ChannelType.PostMessage:
       return new PostMessageChannelMain(data);
     case ChannelType.Automatic:
@@ -50,8 +46,6 @@ export function newChannelWorker(msg: ChannelInitMessage) {
   switch (msg.data.channelType) {
     case ChannelType.SharedArrayBuffer:
       return new SharedBufferChannelWorker();
-    case ChannelType.ServiceWorker:
-      return new ServiceWorkerChannelWorker(msg.data);
     case ChannelType.PostMessage:
       return new PostMessageChannelWorker();
     default:

@@ -1,7 +1,7 @@
 import { loadScript } from './compat';
 import { ChannelWorker } from './chan/channel';
 import { newChannelWorker, ChannelInitMessage, ChannelType } from './chan/channel-common';
-import { Message, Request, newResponse } from './chan/message';
+import { EvalResponse, Message, Request, newResponse } from './chan/message';
 import { FSAnalyzeInfo, FSMountOptions, FSNode, WebROptions } from './webr-main';
 import { EmPtr, Module } from './emscripten';
 import { IN_NODE } from './compat';
@@ -103,7 +103,7 @@ const onWorkerMessage = function (msg: Message) {
     initialised = true;
     return;
   }
-  chan?.onMessageFromMainThread(msg);
+  chan?.resolveRequest(msg);
 };
 
 if (IN_NODE) {
@@ -131,7 +131,7 @@ function dispatch(msg: Message): void {
       const reqMsg = req.data.msg;
 
       const write = (resp: WebRPayloadWorker, transferables?: [Transferable]) =>
-        chan?.write(newResponse(req.data.uuid, resp, transferables));
+        chan?.write(newResponse(req.data.uuid, { type: 'payload', data: resp }, transferables));
       try {
         switch (reqMsg.type) {
           case 'analyzePath': {
@@ -934,7 +934,7 @@ function init(config: Required<WebROptions>) {
     },
 
     handleEvents: () => {
-      chan?.handleInterrupt();
+      chan?.handleEvents();
     },
 
     dataViewer: (ptr: RPtr, title: string) => {
@@ -942,10 +942,24 @@ function init(config: Required<WebROptions>) {
       chan?.write({ type: 'view', data: { data, title } });
     },
 
-    evalJs: (code: RPtr): RPtr => {
+    evalJs: (code: RPtr, await = false): RPtr => {
       try {
-        const js = (0, eval)(Module.UTF8ToString(code)) as WebRData;
-        return (new RObject(js)).ptr;
+        let result = null;
+        if (await) {
+          // Run JS on main thread and block until the result resolves
+          const response = chan?.syncRequest({ type: 'eval-await', data: Module.UTF8ToString(code) }) as EvalResponse;
+          if (!response) {
+            throw new Error('Empty sync response for `evalJs`.');
+          } else if (response.data.error) {
+            throw new Error(response?.data.error);
+          } else {
+            result = response?.data.result as WebRData;
+          }
+        } else {
+          // Run JS in the webR worker thread
+          result = (0, eval)(Module.UTF8ToString(code)) as WebRData;
+        }
+        return (new RObject(result)).ptr;
       } catch (e) {
         /* Capture continuation token and resume R's non-local transfer here.
          * By resuming here we avoid potentially unwinding a target intermediate
@@ -988,6 +1002,12 @@ function init(config: Required<WebROptions>) {
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   (globalThis as any).Module = Module;
+
+  // Proxy WebSockets to main thread.
+  // Requires channel SyncRequest support for handling events.
+  if (chan?.WebSocketProxy) {
+    globalThis.WebSocket = chan.WebSocketProxy;
+  }
 
   // At the next tick, launch the REPL. This never returns.
   setTimeout(() => {

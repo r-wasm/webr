@@ -14,7 +14,10 @@ const con = new Console(
     stderr,
     canvasNewPage,
     canvasImage,
-    prompt: (line: string) => waitForPrompt.resolve(prompt(line)),
+    prompt: (line: string) => {
+      prompt(line);
+      waitForPrompt.resolve();
+    }
   },
   {
     baseUrl: '../dist/',

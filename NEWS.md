@@ -1,5 +1,19 @@
 # webR (development version)
 
+## New features
+
+* Proxy WebSocket communication through the main thread when using the `SharedArrayBuffer` communication channel (#562).
+
+* Added support for `webr::eval_js(..., await = TRUE)`.
+
+* Added a SSL cacert bundle to the Emscripten VFS (#562).
+
+* Added support mechanism for running `curl` and `httr2` using a WebSocket proxy + SOCKS tunnel running outside the browser (#562).
+
+## Breaking changes
+
+* Removed the service worker communication channel. This channel has been deprecated for a while now, and was never chosen in `Automatic` mode (#562).
+
 # webR 0.5.4
 
 ## New features

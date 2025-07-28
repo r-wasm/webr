@@ -53,7 +53,7 @@ default: $(DEFAULT_WASM_LIBS) $(DEFAULT_WASM_BINS_INST)
 .DEFAULT_GOAL := default
 
 .PHONY: all
-all: default $(OPTIONAL_WASM_LIBS) $(OPTIONAL_WASM_BINS_INST) fonts
+all: default $(OPTIONAL_WASM_LIBS) $(OPTIONAL_WASM_BINS_INST) fonts cacert
 
 $(EM_PKG_CONFIG_PATH)/%.pc: recipes/**/%.pc
 	mkdir -p $(EM_PKG_CONFIG_PATH)

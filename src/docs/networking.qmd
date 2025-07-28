@@ -1,0 +1,134 @@
+---
+title: "Networking"
+format: html
+toc: true
+---
+
+## Networking under WebAssembly
+
+WebAssembly runs in a sandbox environment and doesn't support direct network socket connections for security reasons. This means that traditional R networking and file downloading approaches need some extra work to be used with webR.
+
+Luckily, webR provides two solutions to enable network connectivity:
+
+1. **Basic downloads** using base R's `download.file()`.
+2. **Advanced networking** using a WebSocket proxy, for packages like curl and httr2.
+
+## Basic downloads with `download.file()`
+
+For simple file downloads, webR patches the `download.file()` function to work inside a web browser. The patch works by intercepting requests and handling them using JavaScript APIs. This method is easy to use and in many cases is sufficient.
+
+### Limitations
+
+The approach works well for basic HTTP(S) downloads, but it does come with some limitations imposed by the security of the browser environment:
+
+- The server hosting the file must supply CORS ([Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS)) headers to permit cross-origin requests.
+
+- Only simple HTTP/HTTPS `GET` requests are supported. You cannot use another HTTP method, set headers, or use any of the advanced options available in curl/httr2.
+
+Many web APIs and servers don't supply CORS headers with their content, which is why you might need the WebSocket proxy method below.
+
+### Simple Download Example
+
+```r
+# Download a file directly, no other setup required
+download.file("https://raw.githubusercontent.com/tidyverse/ggplot2/refs/heads/main/data-raw/diamonds.csv", "diamonds.csv")
+```
+
+## Advanced networking with a WebSocket proxy
+
+For more complex networking, webR can proxy network connections through WebSockets. This enables the curl and httr2 packages, along with other TCP connections.
+
+The functionality is provided by Emscripten, which emulates the underlying POSIX Socket APIs with communication over WebSockets. You can read more about this kind of networking support in the [Emscripten documentation](https://emscripten.org/docs/porting/networking.html#emulated-posix-tcp-sockets-over-websockets).
+
+
+The main drawback of this approach is that it requires a special proxy server (outside of webR) which can route all our traffic over a websocket. Below it is explained how to setup such a proxy server.
+
+### Using curl and httr2 in webR
+
+If you have access to a SOCKS proxy with support for WebSocket-to-TCP connections, you can use standard proxy settings directly. Emscripten will convert the network connections into WebSocket connections automatically.
+
+For curl, set the `proxy` option:
+
+```r
+library(curl)
+
+# Set up the proxy
+handle <- new_handle(proxy = "socks5h://socks.example.com:443")
+
+# Make requests
+response <- curl_fetch_memory("https://hb.cran.dev/get", handle = handle)
+```
+
+For httr2, use the `req_proxy()` function:
+
+```r
+library(httr2)
+library(jsonlite)
+
+# Create a request with proxy
+response <- request("https://hb.cran.dev/get") |>
+  req_proxy("socks5h://socks.example.com:443") |>
+  req_perform()
+
+# Extract the response
+data <- response |> resp_body_json()
+```
+
+### Running a local WebSocket proxy
+
+If you don't have access to a SOCKS proxy with support for WebSocket-to-TCP connections, you may be able to start one locally on your device.
+
+You'll need to set up two components outside of webR:
+
+1. **A WebSocket-to-TCP proxy** - We'll use [`websockify`](https://github.com/novnc/websockify).
+2. **A SOCKS proxy** - We'll connect to an SSH server and use port forwarding to create a SOCKS proxy.
+
+#### Step 1: Install the WebSocket-to-TCP proxy
+
+Install `websockify` on your system. This can be done via `pip`, other Python environment tools, or your system's package manager.
+
+```bash
+# Using pip, with a Python virtual environment if needed
+source .venv/bin/activate 
+pip install websockify
+```
+
+```bash
+# You can start websockify directly if using uv
+uvx websockify [...]
+```
+
+#### Step 2: Setup a SOCKS proxy
+
+On Unix systems, you can usually start a SOCKS proxy with the following OpenSSH command:
+
+```bash
+# Replace `localhost` if you're not using a local SSH server
+ssh -N -D 8581 localhost
+```
+
+On Windows systems, a local SOCKS proxy can be started with [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/) in the [Tunnels panel](https://the.earth.li/~sgtatham/putty/0.83/htmldoc/Chapter4.html#config-ssh-portfwd).
+
+**What this does**: Creates a SOCKS proxy on port 8581 that routes traffic through the SSH connection.
+
+#### Step 3: Start websockify
+
+In a new terminal, start `websockify` to bridge WebSocket connections to your SOCKS proxy:
+
+```bash
+websockify localhost:8580 localhost:8581
+```
+
+**What this does**: Creates a WebSocket server on port 8580 that forwards connections to your SOCKS proxy on port 8581.
+
+#### Step 4: Setup webR
+
+Since we have started `websockify` without support for SSL, we must configure webR to connect to WebSockets over the `ws://` protocol.
+
+At the top of your script, before trying to connect to a HTTPS URL, first execute:
+
+```r
+webr::eval_js("SOCKFS.websocketArgs.url = 'ws://'")
+```
+
+Finally, once setup is complete, configure curl or httr2 in the previous section using `socks5h://localhost:8050` as your proxy URL.
