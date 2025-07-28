@@ -11,7 +11,7 @@ WebAssembly runs in a sandbox environment and doesn't support direct network soc
 Luckily, webR provides two solutions to enable network connectivity:
 
 1. **Basic downloads** using base R's `download.file()`.
-2. **Advanced networking** with a WebSocket proxy, for packages like curl and httr2.
+2. **Advanced networking** using a WebSocket proxy, for packages like curl and httr2.
 
 ## Basic downloads with `download.file()`
 
@@ -23,11 +23,11 @@ The approach works well for basic HTTP(S) downloads, but it does come with some 
 
 - The server hosting the file must supply CORS ([Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS)) headers to permit cross-origin requests.
 
-- Only simple HTTP/HTTPS `GET` requests are supported. You cannot use `POST` requests or set certain HTTP headers.
+- Only simple HTTP/HTTPS `GET` requests are supported. You cannot use another HTTP method, set headers, or use any of the advanced options available in curl/httr2.
 
 Many web APIs and servers don't supply CORS headers with their content, which is why you might need the WebSocket proxy method below.
 
-### Example
+### Simple Download Example
 
 ```r
 # Download a file directly, no other setup required
@@ -40,9 +40,8 @@ For more complex networking, webR can proxy network connections through WebSocke
 
 The functionality is provided by Emscripten, which emulates the underlying POSIX Socket APIs with communication over WebSockets. You can read more about this kind of networking support in the [Emscripten documentation](https://emscripten.org/docs/porting/networking.html#emulated-posix-tcp-sockets-over-websockets).
 
-### Limitations
 
-The main drawback of this approach is that it requires some setup outside of webR, which might not always be possible. Specifically, it requires the use of a WebSocket-to-TCP proxy to make network connections, and a SOCKS proxy for forwarding network requests.
+The main drawback of this approach is that it requires a special proxy server (outside of webR) which can route all our traffic over a websocket. Below it is explained how to setup such a proxy server.
 
 ### Using curl and httr2 in webR
 
