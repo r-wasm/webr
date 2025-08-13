@@ -11,11 +11,11 @@ website:
   repo-branch: main
   repo-subdir: src/docs
   repo-actions: [edit, issue]
-  favicon: images/webR.png
+  favicon: ../assets/webR.png
   page-navigation: true
   sidebar:
     title: "WebR {{< env WEBR_VERSION >}} Documentation"
-    logo: images/webR.png
+    logo: ../assets/webR.png
     contents:
       - index.qmd
       - section: Getting Started
