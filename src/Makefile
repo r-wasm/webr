@@ -23,6 +23,8 @@ HTML_DIST = $(addprefix $(DIST)/,$(HTML_TEMPLATES))
 $(DIST)/webr.mjs: $(TS_SOURCES) $(HTML_DIST) \
   Makefile webR/config.ts node_modules esbuild.ts
 	cp $(DIST)/$(HTML_INDEX) $(DIST)/index.html
+	mkdir -p $(DIST)/assets
+	cp -r assets/* $(DIST)/assets/
 	npm run build -- --prod
 
 $(DIST)/%.html: templates/%.html
