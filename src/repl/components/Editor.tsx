@@ -108,6 +108,30 @@ export function FileTabs({
   );
 }
 
+// An example R script analysing and plotting mtcars using base R
+const initialScript = `# Dataset overview and summary statistics
+head(mtcars)
+summary(mtcars)
+
+# Visualization: fuel efficiency vs vehicle weight
+plot(mtcars$wt, mtcars$mpg,
+     xlab = "Weight (1000 lbs)",
+     ylab = "Miles per Gallon",
+     main = "Fuel Efficiency vs Vehicle Weight",
+     pch = 19)
+
+# Fitted linear regression line
+trend <- lm(mpg ~ wt, data = mtcars)
+abline(trend, col = "red", lwd = 2)
+
+# Calculate correlation
+cor(mtcars$mpg, mtcars$wt)
+
+# Multiple linear regression model
+model <- lm(mpg ~ wt + hp + cyl, data = mtcars)
+summary(model)
+`;
+
 export function Editor({
   webR,
   terminalInterface,
@@ -369,7 +393,7 @@ export function Editor({
     if (!editorRef.current) {
       return;
     }
-    const state = EditorState.create({ extensions: scriptExtensions });
+    const state = EditorState.create({ extensions: scriptExtensions, doc: initialScript });
     const view = new EditorView({
       state,
       parent: editorRef.current,
