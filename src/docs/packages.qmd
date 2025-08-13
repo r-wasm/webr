@@ -20,7 +20,7 @@ The repository URL is set using the `repos` argument and the public build of web
 
 ### Example: Installing the Matrix package
 
-Run the following R code in a running webR session, such as the [webR REPL demo](https://webr.r-wasm.org/latest/),
+Run the following R code in a running webR session, such as the [webR REPL demo](https://webr.sh),
 
 ```{r eval=FALSE}
 webr::install("Matrix")
@@ -41,7 +41,7 @@ webr::shim_install()
 install.packages("Matrix")
 ```
 
-The [webR REPL demo](https://webr.r-wasm.org/latest/) performs this base R function replacement as part of its startup procedure.
+The [webR REPL demo](https://webr.sh) performs this base R function replacement as part of its startup procedure.
 
 ## Interactively installing packages
 

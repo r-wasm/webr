@@ -4,7 +4,7 @@
 This project aims to compile the statistical language R (https://www.r-project.org/) into WebAssembly for use with a browser, via Emscripten (https://emscripten.org/). The repo includes patches to R's source code so that it can work in the browser environment provided by Emscripten and also includes a web-based IDE through the use of [xterm.js](https://xtermjs.org/) and [CodeMirror](https://codemirror.net/).
 
 ## Demo
-A demo of the webR IDE can be found at https://webr.r-wasm.org/latest/. Please be patient as the Wasm runtime downloads and executes. R will display a banner message when it is ready to use.
+A demo of the webR IDE can be found at https://webr.sh. Please be patient as the Wasm runtime downloads and executes. R will display a banner message when it is ready to use.
 
 ## Documentation
 Documentation showing how to use webR in your own projects can be found at

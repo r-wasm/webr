@@ -23,7 +23,7 @@ Some browsers (especially mobile browsers) may place restrictive limits on the a
 
 ### WebR REPL
 
-Try a [demo of the webR REPL](https://webr.r-wasm.org/latest/) directly in your web browser, no installation required!
+Try a [demo of the webR REPL](https://webr.sh) directly in your web browser, no installation required!
 
 ### Interactive R code editor
 
