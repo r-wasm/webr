@@ -1,14 +1,20 @@
 # webR (development version)
 
+# webR 0.5.5
+
 ## New features
 
 * Proxy WebSocket communication through the main thread when using the `SharedArrayBuffer` communication channel (#562).
 
 * Added support for `webr::eval_js(..., await = TRUE)`.
 
+* Updated OpenSSL to version 3.5.1 (#564).
+
 * Added a SSL cacert bundle to the Emscripten VFS (#562).
 
 * Added support mechanism for running `curl` and `httr2` using a WebSocket proxy + SOCKS tunnel running outside the browser (#562).
+
+* Minor UI, favicon, and Open Graph metadata tweaks to the webR application.
 
 ## Breaking changes
 
