@@ -153,6 +153,72 @@ export interface WebSocketCloseMessage {
   };
 }
 
+/** A webR communication channel `proxyWorker` message.
+ * @internal
+ */
+export interface ProxyWorkerMessage {
+  type: 'proxyWorker';
+  data: {
+    uuid: string;
+    url: string;
+    options?: WorkerOptions;
+  };
+}
+
+/** A webR communication channel `postMessageWorker` message.
+ * @internal
+ */
+export interface PostMessageWorkerMessage {
+  type: 'postMessageWorker';
+  data: {
+    uuid: string;
+    data: any;
+    transfer?: Transferable[];
+  };
+}
+
+/** A webR communication channel `terminateWorker` message.
+ * @internal
+ */
+export interface TerminateWorkerMessage {
+  type: 'terminateWorker';
+  data: {
+    uuid: string;
+  };
+}
+
+/** A webR communication channel `worker-message` message.
+ * @internal
+ */
+export interface WorkerMessage {
+  type: 'worker-message';
+  data: {
+    uuid: string;
+    data: any;
+  };
+}
+
+/** A webR communication channel `worker-messageerror` message.
+ * @internal
+ */
+export interface WorkerMessageErrorMessage {
+  type: 'worker-messageerror';
+  data: {
+    uuid: string;
+    data: any;
+  };
+}
+
+/** A webR communication channel `worker-error` message.
+ * @internal
+ */
+export interface WorkerErrorMessage {
+  type: 'worker-error';
+  data: {
+    uuid: string;
+  };
+}
+
 /** A webR communication channel sync-request.
  * @internal
  */

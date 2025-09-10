@@ -1,5 +1,5 @@
 import { promiseHandles, newCrossOriginWorker, isCrossOrigin } from '../utils';
-import { EventMessage, Message, Response, SyncRequest, WebSocketCloseMessage, WebSocketMessage, WebSocketOpenMessage } from './message';
+import { EventMessage, Message, Response, SyncRequest, WebSocketCloseMessage, WebSocketMessage, WebSocketOpenMessage, WorkerErrorMessage, WorkerMessage, WorkerMessageErrorMessage } from './message';
 import { Endpoint } from './task-common';
 import { syncResponse } from './task-main';
 import { ChannelMain, ChannelWorker } from './channel';
@@ -162,11 +162,14 @@ export class SharedBufferChannelMain extends ChannelMain {
 
 import { setEventBuffer, setEventsHandler, SyncTask } from './task-worker';
 import { Module } from '../emscripten';
-import { WebSocketProxy, WebSocketProxyFactory } from './websocket';
+import { WebSocketProxy, WebSocketProxyFactory } from './proxy-websocket';
+import { WorkerProxy, WorkerProxyFactory } from './proxy-worker';
 
 export class SharedBufferChannelWorker implements ChannelWorker {
   WebSocketProxy: typeof WebSocket;
-  proxies: Map<string, WebSocketProxy>;
+  WorkerProxy: typeof Worker;
+  ws: Map<string, WebSocketProxy>;
+  workers: Map<string, WorkerProxy>;
   #ep: Endpoint;
   #dispatch: (msg: Message) => void = () => 0;
   #eventBuffer = new Int32Array(new SharedArrayBuffer(4));
@@ -178,23 +181,26 @@ export class SharedBufferChannelWorker implements ChannelWorker {
     setEventBuffer(this.#eventBuffer.buffer);
     setEventsHandler(() => this.handleEvents());
 
+    // Event functionality to be handled via proxy to main thread
     this.WebSocketProxy = WebSocketProxyFactory.proxy(this);
-    this.proxies = new Map();
+    this.ws = new Map();
+    this.WorkerProxy = WorkerProxyFactory.proxy(this);
+    this.workers = new Map();
   }
 
   resolve() {
     this.write({ type: 'resolve', data: this.#eventBuffer.buffer });
   }
 
-  write(msg: Message, transfer?: [Transferable]) {
+  write(msg: Message, transfer?: Transferable[]) {
     this.#ep.postMessage(msg, transfer);
   }
 
-  writeSystem(msg: Message, transfer?: [Transferable]) {
+  writeSystem(msg: Message, transfer?: Transferable[]) {
     this.#ep.postMessage({ type: 'system', data: msg }, transfer);
   }
 
-  syncRequest(msg: Message, transfer?: [Transferable]): Message {
+  syncRequest(msg: Message, transfer?: Transferable[]): Message {
     const task = new SyncTask(this.#ep, msg, transfer);
     return task.syncify() as Message;
   }
@@ -240,22 +246,37 @@ export class SharedBufferChannelWorker implements ChannelWorker {
             break;
           case 'websocket-open': {
             const message = response.data.msg as WebSocketOpenMessage;
-            this.proxies.get(message.data.uuid)?._accept();
+            this.ws.get(message.data.uuid)?._accept();
             break;
           }
           case 'websocket-message': {
             const message = response.data.msg as WebSocketMessage;
-            this.proxies.get(message.data.uuid)?._recieve(message.data.data);
+            this.ws.get(message.data.uuid)?._recieve(message.data.data);
             break;
           }
           case 'websocket-close': {
             const message = response.data.msg as WebSocketCloseMessage;
-            this.proxies.get(message.data.uuid)?._close(message.data.code, message.data.reason);
+            this.ws.get(message.data.uuid)?._close(message.data.code, message.data.reason);
             break;
           }
           case 'websocket-error': {
             const message = response.data.msg as WebSocketMessage;
-            this.proxies.get(message.data.uuid)?._error();
+            this.ws.get(message.data.uuid)?._error();
+            break;
+          }
+          case 'worker-message': {
+            const message = response.data.msg as WorkerMessage;
+            this.workers.get(message.data.uuid)?._message(message.data.data);
+            break;
+          }
+          case 'worker-messageerror': {
+            const message = response.data.msg as WorkerMessageErrorMessage;
+            this.workers.get(message.data.uuid)?._messageerror(message.data.data);
+            break;
+          }
+          case 'worker-error': {
+            const message = response.data.msg as WorkerErrorMessage;
+            this.workers.get(message.data.uuid)?._error();
             break;
           }
           default:

@@ -5,7 +5,7 @@
 
 import { ChannelMain } from './chan/channel';
 import { newChannelMain, ChannelType } from './chan/channel-common';
-import { CloseWebSocketMessage, Message, ProxyWebSocketMessage, SendWebSocketMessage } from './chan/message';
+import { CloseWebSocketMessage, Message, PostMessageWorkerMessage, ProxyWebSocketMessage, ProxyWorkerMessage, SendWebSocketMessage, TerminateWorkerMessage } from './chan/message';
 import { BASE_URL, PKG_BASE_URL, WEBR_VERSION } from './config';
 import { EmPtr } from './emscripten';
 import { WebRPayloadPtr } from './payload';
@@ -36,7 +36,8 @@ import {
   FSRenameMessage,
   FSAnalyzePathMessage,
 } from './webr-chan';
-import { WebSocketMap } from './chan/websocket';
+import { WebSocketMap } from './chan/proxy-websocket';
+import { WorkerMap } from './chan/proxy-worker';
 
 export { Console, ConsoleCallbacks } from './console';
 export * from './robj-main';
@@ -111,9 +112,9 @@ export type FSType = 'NODEFS' | 'WORKERFS' | 'IDBFS' | 'DRIVEFS';
 export type FSMountOptions<T extends FSType = FSType> =
   T extends 'DRIVEFS' ? { driveName?: string; browsingContextId?: string } :
   T extends 'NODEFS' ? { root: string } : {
-    blobs?: Array<{ name: string, data: Blob | ArrayBufferLike }>;
+    blobs?: Array<{ name: string, data: Blob | ArrayBufferLike | Uint8Array }>;
     files?: Array<File | FileList>;
-    packages?: Array<{ metadata: FSMetaData, blob: Blob | ArrayBufferLike }>;
+    packages?: Array<{ metadata: FSMetaData, blob: Blob | ArrayBufferLike | Uint8Array }>;
   };
 
 /**
@@ -232,6 +233,7 @@ const defaultOptions = {
 export class WebR {
   #chan: ChannelMain;
   #ws: WebSocketMap;
+  #workers: WorkerMap;
   #initialised: Promise<unknown>;
   globalShelter!: Shelter;
   version: string = WEBR_VERSION;
@@ -273,6 +275,7 @@ export class WebR {
     };
     this.#chan = newChannelMain(config);
     this.#ws = new WebSocketMap(this.#chan);
+    this.#workers = new WorkerMap(this.#chan);
 
     this.objs = {} as typeof this.objs;
     this.Shelter = newShelterProxy(this.#chan);
@@ -347,6 +350,21 @@ export class WebR {
         case 'closeWebSocket': {
           const message = msg as CloseWebSocketMessage;
           this.#ws.close(message.data.uuid, message.data.code, message.data.reason);
+          break;
+        }
+        case 'proxyWorker': {
+          const message = msg as ProxyWorkerMessage;
+          this.#workers.new(message.data.uuid, message.data.url, message.data.options);
+          break;
+        }
+        case 'postMessageWorker': {
+          const message = msg as PostMessageWorkerMessage;
+          this.#workers.postMessage(message.data.uuid, message.data.data, message.data.transfer || []);
+          break;
+        }
+        case 'terminateWorker': {
+          const message = msg as TerminateWorkerMessage;
+          this.#workers.terminate(message.data.uuid);
           break;
         }
         case 'console.log':
