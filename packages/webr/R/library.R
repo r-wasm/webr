@@ -54,3 +54,18 @@ require_shim <- function(pkg, ..., show_menu = getOption("webr.show_menu")) {
   args <- args[!duplicated(names(args))]
   do.call(base::require, args)
 }
+
+#' @rdname library_shim
+#' @export
+requireNamespace_shim <- function(package, ..., show_menu = getOption("webr.show_menu")) {
+  show_menu <- ifelse(is.null(show_menu), FALSE, show_menu)
+  if (length(find.package(package, quiet = TRUE)) == 0) {
+    if (!prompt_download(package, show_menu)) {
+      return(invisible(NULL))
+    }
+  }
+  args <- list(package = package, ...)
+  args <- args[!duplicated(names(args))]
+  do.call(base::requireNamespace, args)
+}
+
