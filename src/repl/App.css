@@ -14,6 +14,12 @@ body {
   --disabled: #AAA;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    filter: invert(100%) hue-rotate(180deg);
+  }
+}
+
 .repl {
   width: 100vw;
   height: 100vh; /* Fallback for dvh */
