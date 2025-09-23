@@ -1,5 +1,9 @@
 # webR (development version)
 
+## New features
+
+* Added shim for `requireNamespace` R function (#570).
+
 # webR 0.5.5
 
 ## New features
