@@ -16,5 +16,6 @@ The shimmed functions are:
 \item install.packages() - replaced by webr::install().
 \item library() - replaced by webr::library_shim().
 \item require() - replaced by webr::require_shim().
+\item requireNamespace() - replaced by webr::requireNamespace_shim().
 }
 }

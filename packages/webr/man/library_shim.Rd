@@ -3,11 +3,14 @@
 \name{library_shim}
 \alias{library_shim}
 \alias{require_shim}
+\alias{requireNamespace_shim}
 \title{Install missing packages from the default webR binary repo}
 \usage{
 library_shim(pkg, ..., show_menu = getOption("webr.show_menu"))
 
 require_shim(pkg, ..., show_menu = getOption("webr.show_menu"))
+
+requireNamespace_shim(pkg, ..., show_menu = getOption("webr.show_menu"))
 }
 \arguments{
 \item{pkg}{Character vector of package names}
