@@ -459,7 +459,7 @@ plotly_json(p, pretty = FALSE)
 
 ### Integrating webR with Observable
 
-Here are two examples of using webR with Observable using two different CDNS (content delivery networks):
+Below are two examples of using webR with Observable using two different CDNs (content delivery networks):
 
 * <https://observablehq.com/d/6936259b898a25ce> (Install from r-wasm.org)
 * <https://observablehq.com/d/6175b2e6f3d899a7> (Skypack)
