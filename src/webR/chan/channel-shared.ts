@@ -1,5 +1,5 @@
 import { promiseHandles, newCrossOriginWorker, isCrossOrigin } from '../utils';
-import { EventMessage, Message, Response, SyncRequest, WebSocketCloseMessage, WebSocketMessage, WebSocketOpenMessage, WorkerErrorMessage, WorkerMessage, WorkerMessageErrorMessage } from './message';
+import { EventMessage, Message, PostMessageWorkerMessage, Response, SyncRequest, WebSocketCloseMessage, WebSocketMessage, WebSocketOpenMessage, WorkerErrorMessage, WorkerMessage, WorkerMessageErrorMessage } from './message';
 import { Endpoint } from './task-common';
 import { syncResponse } from './task-main';
 import { ChannelMain, ChannelWorker } from './channel';
@@ -143,6 +143,25 @@ export class SharedBufferChannelMain extends ChannelMain {
               data.error = error.message;
             }
             await syncResponse(worker, reqData, { type: 'eval-response', data });
+            break;
+          }
+          case 'post-message-worker': {
+            const message = payload.data as PostMessageWorkerMessage['data'];
+            message.handles = promiseHandles();
+            this.systemQueue.put({ type: 'postMessageWorker', data: message });
+
+            if (message.async) {
+              await syncResponse(worker, reqData, { type: 'post-message-response' });
+            } else {
+              message.handles.promise.then(
+                (value) => {
+                  void syncResponse(worker, reqData, { type: 'post-message-response', data: { result: value } });
+                },
+                (error) => {
+                  void syncResponse(worker, reqData, { type: 'post-message-response', data: { error: String(error) } });
+                }
+              );
+            }
             break;
           }
           default:

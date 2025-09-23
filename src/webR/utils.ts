@@ -3,10 +3,15 @@ import { WebRError } from './error';
 import { isComplex, isWebRDataJs } from './robj';
 import { RObjectBase } from './robj-worker';
 
+export type PromiseHandles<T = void> = {
+    resolve: ResolveFn<T>;
+    reject: RejectFn;
+    promise: Promise<T>;
+};
 export type ResolveFn<T = unknown> = (value: T | PromiseLike<T>) => void;
 export type RejectFn = (_reason?: any) => void;
 
-export function promiseHandles<T = void>() {
+export function promiseHandles<T = void>(): PromiseHandles<T> {
   const out = {
     resolve: (() => { return; }) as ResolveFn<T>,
     reject: (() => { return; }) as RejectFn,

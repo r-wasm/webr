@@ -2,6 +2,7 @@
  * WebR communication channel messaging and request types.
  * @module Message
  */
+import { PromiseHandles } from '../utils';
 import { generateUUID, transfer, UUID } from './task-common';
 
 /** A webR communication channel message. */
@@ -172,8 +173,10 @@ export interface PostMessageWorkerMessage {
   type: 'postMessageWorker';
   data: {
     uuid: string;
-    data: any;
+    data: unknown;
+    async: boolean;
     transfer?: Transferable[];
+    handles?: PromiseHandles<unknown>;
   };
 }
 

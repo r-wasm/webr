@@ -359,7 +359,7 @@ export class WebR {
         }
         case 'postMessageWorker': {
           const message = msg as PostMessageWorkerMessage;
-          this.#workers.postMessage(message.data.uuid, message.data.data, message.data.transfer || []);
+          this.#workers.postMessage(message);
           break;
         }
         case 'terminateWorker': {

@@ -1,6 +1,7 @@
 import { newCrossOriginWorker } from "../utils";
 import { ChannelMain } from "./channel";
 import { SharedBufferChannelWorker } from "./channel-shared";
+import { PostMessageWorkerMessage } from "./message";
 import { generateUUID } from "./task-common";
 
 export interface WorkerProxy extends Worker {
@@ -41,9 +42,31 @@ export class WorkerMap {
     );
   }
 
-  postMessage(uuid: string, data: any, transfer: Transferable[]): void {
+  postMessage(message: PostMessageWorkerMessage): void {
+    const { uuid, async, handles, data, transfer } = message.data;
     const worker = this.#map.get(uuid);
-    worker?.postMessage(data, transfer);
+    if (!worker) {
+      throw new Error(`Worker with uuid ${uuid} not found`);
+    }
+
+    if (!async && handles) {
+      const handler = (ev: MessageEvent) => {
+        const _uuid = ev.data.uuid as string;
+        const result = ev.data.result as unknown;
+        const error = ev.data.error as string | undefined;
+        if (_uuid === uuid) {
+          if (error) {
+            handles.reject(new Error(error));
+          } else {
+            handles.resolve(result);
+          }
+          worker.removeEventListener('message', handler);
+        }
+      };
+      worker.addEventListener('message', handler);
+    }
+
+    worker.postMessage({ uuid, data }, { transfer: transfer });
   }
 
   terminate(uuid: string): void {
@@ -55,6 +78,10 @@ export class WorkerMap {
 
 
 // Worker --------------------------------------------------------------
+
+type WorkerProxyOptions = StructuredSerializeOptions & {
+  async?: boolean;
+};
 
 export class WorkerProxyFactory {
   static proxy(chan: SharedBufferChannelWorker): typeof Worker {
@@ -83,11 +110,16 @@ export class WorkerProxyFactory {
         chan.workers.set(this.uuid, this);
       }
 
-      postMessage(data: unknown, transfer?: Transferable[] | StructuredSerializeOptions): void {
-        if (transfer && !Array.isArray(transfer)) {
-          transfer = transfer.transfer;
-        }
-        chan.writeSystem({ type: 'postMessageWorker', data: { uuid: this.uuid, data, transfer } }, transfer);
+      postMessage(data: unknown, options: Transferable[] | WorkerProxyOptions = { async: true }): any {
+        const async = Array.isArray(options) ? true : options.async ?? true;
+        const transfer = Array.isArray(options) ? options : options.transfer ?? [];
+        const response = chan.syncRequest({ type: 'post-message-worker', data: {
+          uuid: this.uuid,
+          data,
+          async,
+          transfer
+        } });
+        return response.data;
       }
 
       terminate(): void {
