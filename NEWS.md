@@ -4,6 +4,8 @@
 
 * Added shim for `requireNamespace` R function (#570).
 
+* Added CSS media query for system dark mode (#572).
+
 # webR 0.5.5
 
 ## New features
