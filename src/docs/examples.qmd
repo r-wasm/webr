@@ -457,6 +457,13 @@ plotly_json(p, pretty = FALSE)
 </html>
 ```
 
+### Integrating webR with Observable
+
+Below are two examples of using webR with Observable using two different CDNs (content delivery networks):
+
+* <https://observablehq.com/d/6936259b898a25ce> (Install from r-wasm.org)
+* <https://observablehq.com/d/6175b2e6f3d899a7> (Skypack)
+
 ### Integrating webR with other frameworks
 
 See the example repositories below for examples of integrating webR into other JavaScript/TypeScript systems and frameworks.
