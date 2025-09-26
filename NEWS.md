@@ -8,6 +8,8 @@
 
 * Proxy Web Worker communication through the main thread when using the `SharedArrayBuffer` communication channel (#576).
 
+* The R version is now exposed at `webR.versionR` and as the `R_VERSION` environment variable (#577).
+
 # webR 0.5.5
 
 ## New features
