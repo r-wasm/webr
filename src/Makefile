@@ -18,6 +18,7 @@ TS_SOURCES = $(shell find $(ROOT) \
 BASE_URL ?= "./"
 PKG_BASE_URL ?= "https://repo.r-wasm.org"
 WEBR_VERSION ?= $(shell node -p "require('./package.json').version")
+R_VERSION = $(shell cat ../R/R-VERSION)
 
 HTML_DIST = $(addprefix $(DIST)/,$(HTML_TEMPLATES))
 $(DIST)/webr.mjs: $(TS_SOURCES) $(HTML_DIST) \
@@ -30,12 +31,14 @@ $(DIST)/webr.mjs: $(TS_SOURCES) $(HTML_DIST) \
 $(DIST)/%.html: templates/%.html
 	sed -e "s|@@BASE_URL@@|$(BASE_URL)|" \
 	  -e "s|@@PKG_BASE_URL@@|$(PKG_BASE_URL)|" \
-	  -e "s|@@WEBR_VERSION@@|$(WEBR_VERSION)|" $< > $@
+	  -e "s|@@WEBR_VERSION@@|$(WEBR_VERSION)|" \
+	  -e "s|@@R_VERSION@@|$(R_VERSION)|" $< > $@
 
 webR/config.ts: webR/config.ts.in
 	sed -e "s|@@BASE_URL@@|$(BASE_URL)|" \
 	  -e "s|@@PKG_BASE_URL@@|$(PKG_BASE_URL)|" \
-	  -e "s|@@WEBR_VERSION@@|$(WEBR_VERSION)|" webR/config.ts.in > webR/config.ts
+	  -e "s|@@WEBR_VERSION@@|$(WEBR_VERSION)|" \
+	  -e "s|@@R_VERSION@@|$(R_VERSION)|" webR/config.ts.in > webR/config.ts
 
 .PHONY: lint
 lint: $(DIST)

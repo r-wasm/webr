@@ -6,7 +6,7 @@
 import { ChannelMain } from './chan/channel';
 import { newChannelMain, ChannelType } from './chan/channel-common';
 import { CloseWebSocketMessage, Message, PostMessageWorkerMessage, ProxyWebSocketMessage, ProxyWorkerMessage, SendWebSocketMessage, TerminateWorkerMessage } from './chan/message';
-import { BASE_URL, PKG_BASE_URL, WEBR_VERSION } from './config';
+import { BASE_URL, PKG_BASE_URL, WEBR_VERSION, R_VERSION } from './config';
 import { EmPtr } from './emscripten';
 import { WebRPayloadPtr } from './payload';
 import { newRProxy, newRClassProxy } from './proxy';
@@ -209,6 +209,7 @@ const defaultEnv = {
   ALL_PROXY: 'socks5h://localhost:8580',
   WEBR: '1',
   WEBR_VERSION: WEBR_VERSION,
+  R_VERSION: R_VERSION,
 };
 
 const defaultOptions = {
@@ -237,6 +238,7 @@ export class WebR {
   #initialised: Promise<unknown>;
   globalShelter!: Shelter;
   version: string = WEBR_VERSION;
+  versionR: string = R_VERSION;
 
   RObject!: ReturnType<typeof newRClassProxy<typeof RWorker.RObject, RObject>>;
   RLogical!: ReturnType<typeof newRClassProxy<typeof RWorker.RLogical, RLogical>>;
