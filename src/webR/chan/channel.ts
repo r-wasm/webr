@@ -101,8 +101,8 @@ export abstract class ChannelMain {
 }
 
 export interface ChannelWorker {
-  WebSocketProxy: typeof WebSocket;
-  WorkerProxy: typeof Worker;
+  WebSocketProxy: typeof WebSocket | undefined;
+  WorkerProxy: typeof Worker | undefined;
   resolve(): void;
   write(msg: Message, transfer?: [Transferable]): void;
   writeSystem(msg: Message, transfer?: [Transferable]): void;

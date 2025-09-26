@@ -144,8 +144,8 @@ export class PostMessageChannelWorker {
   #promptDepth = 0;
   
   // Main thread proxies only work with SharedBufferChannelWorker for now
-  WebSocketProxy: typeof WebSocket = WebSocket;
-  WorkerProxy: typeof Worker = Worker;
+  WebSocketProxy = IN_NODE ? undefined : WebSocket;
+  WorkerProxy = IN_NODE ? undefined : Worker;
 
   constructor() {
     this.#ep = (IN_NODE ? require('worker_threads').parentPort : globalThis) as Endpoint;
