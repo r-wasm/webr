@@ -24,6 +24,7 @@ module.exports = {
     "esbuild.js",
     "jest.config.js",
     "tests/webr.config.js",
+    "tests/scripts/proxy-worker.worker.js",
     "tests/packages.config.js"
   ],
   plugins: ["@typescript-eslint", "jest", "jsdoc", "react"],

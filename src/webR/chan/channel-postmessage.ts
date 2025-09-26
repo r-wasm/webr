@@ -142,6 +142,10 @@ export class PostMessageChannelWorker {
   #parked = new Map<string, ResolveFn<Message>>();
   #dispatch: (msg: Message) => void = () => 0;
   #promptDepth = 0;
+  
+  // Main thread proxies only work with SharedBufferChannelWorker for now
+  WebSocketProxy = IN_NODE ? undefined : WebSocket;
+  WorkerProxy = IN_NODE ? undefined : Worker;
 
   constructor() {
     this.#ep = (IN_NODE ? require('worker_threads').parentPort : globalThis) as Endpoint;

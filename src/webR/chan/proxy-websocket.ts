@@ -97,7 +97,7 @@ export class WebSocketProxyFactory {
           type: 'proxyWebSocket',
           data: { uuid: this.uuid, url: this.url, protocol: this.protocol }
         });
-        chan.proxies.set(this.uuid, this);
+        chan.ws.set(this.uuid, this);
       }
 
       send(data: string | ArrayBufferLike | Blob | ArrayBufferView): void {
@@ -129,7 +129,7 @@ export class WebSocketProxyFactory {
         const ev = new CloseEvent('close', { code, reason });
         this.dispatchEvent(ev);
         this.onclose?.(ev);
-        chan.proxies.delete(this.uuid);
+        chan.ws.delete(this.uuid);
       }
 
       _error(): void {

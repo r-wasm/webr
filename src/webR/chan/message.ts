@@ -2,6 +2,7 @@
  * WebR communication channel messaging and request types.
  * @module Message
  */
+import { PromiseHandles } from '../utils';
 import { generateUUID, transfer, UUID } from './task-common';
 
 /** A webR communication channel message. */
@@ -150,6 +151,74 @@ export interface WebSocketCloseMessage {
     uuid: string;
     code?: number;
     reason?: string;
+  };
+}
+
+/** A webR communication channel `proxyWorker` message.
+ * @internal
+ */
+export interface ProxyWorkerMessage {
+  type: 'proxyWorker';
+  data: {
+    uuid: string;
+    url: string;
+    options?: WorkerOptions;
+  };
+}
+
+/** A webR communication channel `postMessageWorker` message.
+ * @internal
+ */
+export interface PostMessageWorkerMessage {
+  type: 'postMessageWorker';
+  data: {
+    uuid: string;
+    data: unknown;
+    async: boolean;
+    transfer?: Transferable[];
+    handles?: PromiseHandles<unknown>;
+  };
+}
+
+/** A webR communication channel `terminateWorker` message.
+ * @internal
+ */
+export interface TerminateWorkerMessage {
+  type: 'terminateWorker';
+  data: {
+    uuid: string;
+  };
+}
+
+/** A webR communication channel `worker-message` message.
+ * @internal
+ */
+export interface WorkerMessage {
+  type: 'worker-message';
+  data: {
+    uuid: string;
+    data: any;
+  };
+}
+
+/** A webR communication channel `worker-messageerror` message.
+ * @internal
+ */
+export interface WorkerMessageErrorMessage {
+  type: 'worker-messageerror';
+  data: {
+    uuid: string;
+    data: any;
+  };
+}
+
+/** A webR communication channel `worker-error` message.
+ * @internal
+ */
+export interface WorkerErrorMessage {
+  type: 'worker-error';
+  data: {
+    uuid: string;
   };
 }
 

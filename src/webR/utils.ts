@@ -3,10 +3,15 @@ import { WebRError } from './error';
 import { isComplex, isWebRDataJs } from './robj';
 import { RObjectBase } from './robj-worker';
 
+export type PromiseHandles<T = void> = {
+    resolve: ResolveFn<T>;
+    reject: RejectFn;
+    promise: Promise<T>;
+};
 export type ResolveFn<T = unknown> = (value: T | PromiseLike<T>) => void;
 export type RejectFn = (_reason?: any) => void;
 
-export function promiseHandles<T = void>() {
+export function promiseHandles<T = void>(): PromiseHandles<T> {
   const out = {
     resolve: (() => { return; }) as ResolveFn<T>,
     reject: (() => { return; }) as RejectFn,
@@ -74,13 +79,19 @@ export function replaceInObject<T>(
  * no longer cross-origin. In that case, the cross-origin restriction
  * bypass is not possible, and the script is permitted to be loaded.
  */
-export function newCrossOriginWorker(url: string, cb: (worker: Worker) => void, onError?: (error: Error) => void): void {
+export function newCrossOriginWorker(
+  url: string,
+  cb: (worker: Worker) => void,
+  onError?: (error: Error) => void,
+  options?: WorkerOptions,
+  async = true,
+): void {
   const req = new XMLHttpRequest();
-  req.open('get', url, true);
+  req.open('get', url, async);
   req.onload = () => {
     if (req.status >= 200 && req.status < 300) {
       try {
-        const worker = new Worker(URL.createObjectURL(new Blob([req.responseText])));
+        const worker = new Worker(URL.createObjectURL(new Blob([req.responseText])), options);
         cb(worker);
       } catch (error) {
         if (onError) {
