@@ -1,8 +1,10 @@
+import { IN_NODE } from "../compat";
 import { newCrossOriginWorker } from "../utils";
 import { ChannelMain } from "./channel";
 import { SharedBufferChannelWorker } from "./channel-shared";
 import { PostMessageWorkerMessage } from "./message";
 import { generateUUID } from "./task-common";
+import type { Worker as NodeWorker } from 'worker_threads';
 
 export interface WorkerProxy extends Worker {
   uuid: string;
@@ -16,30 +18,48 @@ export interface WorkerProxy extends Worker {
 export class WorkerMap {
   #map = new Map<string, Worker>();
 
-  constructor(readonly chan: ChannelMain) {}
+  constructor(readonly chan: ChannelMain) { }
 
   new(uuid: string, url: string, options?: WorkerOptions) {
-    newCrossOriginWorker(
-      url,
-      (worker: Worker) => {
-        worker.addEventListener('message', (ev: MessageEvent<unknown>) => {
-          this.chan.emit({ type: 'worker-message', data: { uuid, data: ev.data } });
-        });
-  
-        worker.addEventListener('messageerror', (ev: MessageEvent<unknown>) => {
-          this.chan.emit({ type: 'worker-messageerror', data: { uuid, data: ev.data } });
-        });
+    if (IN_NODE) {
+      const worker = new Worker(url, options);
+      const nodeWorker = worker as unknown as NodeWorker;
+      nodeWorker.on('message', (ev: MessageEvent<unknown>) => {
+        this.chan.emit({ type: 'worker-message', data: { uuid, data: ev } });
+      });
 
-        worker.addEventListener('error', () => {
-          this.chan.emit({ type: 'worker-error', data: { uuid } });
-        });
+      nodeWorker.on('messageerror', (ev: MessageEvent<unknown>) => {
+        this.chan.emit({ type: 'worker-messageerror', data: { uuid, data: ev } });
+      });
 
-        this.#map.set(uuid, worker);
-      },
-      (error: Error) => {throw error;},
-      options,
-      false
-    );
+      nodeWorker.on('error', () => {
+        this.chan.emit({ type: 'worker-error', data: { uuid } });
+      });
+
+      this.#map.set(uuid, worker);
+    } else {
+      newCrossOriginWorker(
+        url,
+        (worker: Worker) => {
+          worker.addEventListener('message', (ev: MessageEvent<unknown>) => {
+            this.chan.emit({ type: 'worker-message', data: { uuid, data: ev.data } });
+          });
+
+          worker.addEventListener('messageerror', (ev: MessageEvent<unknown>) => {
+            this.chan.emit({ type: 'worker-messageerror', data: { uuid, data: ev.data } });
+          });
+
+          worker.addEventListener('error', () => {
+            this.chan.emit({ type: 'worker-error', data: { uuid } });
+          });
+
+          this.#map.set(uuid, worker);
+        },
+        (error: Error) => { throw error; },
+        options,
+        false
+      );
+    }
   }
 
   postMessage(message: PostMessageWorkerMessage): void {
@@ -113,12 +133,14 @@ export class WorkerProxyFactory {
       postMessage(data: unknown, options: Transferable[] | WorkerProxyOptions = { async: true }): any {
         const async = Array.isArray(options) ? true : options.async ?? true;
         const transfer = Array.isArray(options) ? options : options.transfer ?? [];
-        const response = chan.syncRequest({ type: 'post-message-worker', data: {
-          uuid: this.uuid,
-          data,
-          async,
-          transfer
-        } });
+        const response = chan.syncRequest({
+          type: 'post-message-worker', data: {
+            uuid: this.uuid,
+            data,
+            async,
+            transfer
+          }
+        });
         return response.data;
       }
 
