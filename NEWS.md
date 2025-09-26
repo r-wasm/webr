@@ -6,6 +6,8 @@
 
 * Added CSS media query for system dark mode (#572).
 
+* Proxy Web Worker communication through the main thread when using the `SharedArrayBuffer` communication channel (#576).
+
 # webR 0.5.5
 
 ## New features
