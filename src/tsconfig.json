@@ -37,4 +37,5 @@
     "excludeInternal": true,
   },
   "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "dist", "tests/module/**/*.ts"]
 }

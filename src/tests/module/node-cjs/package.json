@@ -1,0 +1,19 @@
+{
+  "name": "webr-node-cjs-test",
+  "version": "0.0.1",
+  "description": "Test importing webR package using CommonJS",
+  "type": "commonjs",
+  "main": "index.js",
+  "dependencies": {
+    "webr": "file:../../.."
+  },
+  "scripts": {
+    "test": "node index.js"
+  },
+  "engines": {
+    "node": ">=17.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1"
+  }
+}

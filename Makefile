@@ -40,7 +40,7 @@ check: ## Run unit tests and calculate coverage
 
 .PHONY: check-pr
 check-pr: ## Run additional pull request tests, linter, and calculate coverage
-	cd src && $(MAKE) lint && $(MAKE) check && $(MAKE) check-packages
+	cd src && $(MAKE) lint && $(MAKE) check && $(MAKE) check-packages && $(MAKE) check-module
 
 .PHONY: clean
 clean: ## Remove Wasm R build

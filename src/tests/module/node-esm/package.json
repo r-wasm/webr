@@ -1,0 +1,16 @@
+{
+  "name": "webr-node-esm-test",
+  "version": "0.0.1",
+  "description": "Test importing webR package using ESM",
+  "type": "module",
+  "main": "index.js",
+  "dependencies": {
+    "webr": "file:../../.."
+  },
+  "scripts": {
+    "test": "node index.js"
+  },
+  "engines": {
+    "node": ">=17.0.0"
+  }
+}
