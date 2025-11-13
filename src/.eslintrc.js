@@ -25,7 +25,8 @@ module.exports = {
     "jest.config.js",
     "tests/webr.config.js",
     "tests/scripts/proxy-worker.worker.js",
-    "tests/packages.config.js"
+    "tests/packages.config.js",
+    "tests/module"
   ],
   plugins: ["@typescript-eslint", "jest", "jsdoc", "react"],
   rules: {
