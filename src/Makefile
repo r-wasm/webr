@@ -56,7 +56,7 @@ check-packages: $(DIST)
 
 .PHONY: check-module
 check-module: $(DIST)
-	node tests/module/test.js
+	npx node tests/module/test.js
 
 node_modules: package.json
 	npm ci
