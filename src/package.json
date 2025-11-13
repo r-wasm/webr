@@ -42,13 +42,9 @@
   "exports": {
     ".": {
       "types": "./dist/webR/webr-main.d.ts",
-      "node": "./dist/webr.cjs",
+      "require": "./dist/webr.cjs",
+      "import": "./dist/webr.mjs",
       "default": "./dist/webr.mjs"
-    },
-    "./chan/serviceworker": {
-      "types": "./dist/webR/chan/serviceworker.d.ts",
-      "browser": "./dist/webr-serviceworker.js",
-      "default": "./dist/webr-serviceworker.mjs"
     }
   },
   "engines": {

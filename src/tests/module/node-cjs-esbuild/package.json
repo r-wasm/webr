@@ -1,0 +1,20 @@
+{
+  "name": "webr-node-cjs-esbuild-test",
+  "version": "0.0.1",
+  "description": "Test importing webR package using CommonJS with esbuild",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "dependencies": {
+    "webr": "file:../../.."
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.9"
+  },
+  "scripts": {
+    "build": "esbuild index.js --bundle --platform=node --outfile=dist/index.js",
+    "test": "npm run build && node dist/index.js"
+  },
+  "engines": {
+    "node": ">=17.0.0"
+  }
+}

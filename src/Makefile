@@ -8,7 +8,8 @@ HTML_TEMPLATES = repl.html
 HTML_INDEX = repl.html
 
 TS_SOURCES = $(shell find $(ROOT) \
-  -not \( -path '$(ROOT)/node_modules' -prune \) \
+  -not \( -path '*/node_modules' -prune \) \
+  -not \( -path '*/tests/module' -prune \) \
   -not \( -path '$(PKG_DIST)' -prune \) \
   -name '*.ts' -o -name '*.tsx')
 
@@ -52,6 +53,10 @@ check: $(DIST)
 .PHONY: check-packages
 check-packages: $(DIST)
 	npx node ./node_modules/jest/bin/jest.js --config tests/packages.config.js
+
+.PHONY: check-module
+check-module: $(DIST)
+	npx node tests/module/test.js
 
 node_modules: package.json
 	npm ci

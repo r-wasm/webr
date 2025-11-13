@@ -1,0 +1,20 @@
+{
+  "name": "webr-node-esm-dynamic-esbuild-test",
+  "version": "0.0.1",
+  "description": "Test importing webR package using dynamic ESM import() with esbuild",
+  "type": "module",
+  "main": "dist/index.js",
+  "dependencies": {
+    "webr": "file:../../.."
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.9"
+  },
+  "scripts": {
+    "build": "esbuild index.js --bundle --platform=node --format=esm --outfile=dist/index.js",
+    "test": "npm run build && node dist/index.js"
+  },
+  "engines": {
+    "node": ">=17.0.0"
+  }
+}
