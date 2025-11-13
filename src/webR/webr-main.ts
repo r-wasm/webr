@@ -470,7 +470,7 @@ export class WebR {
    * Evaluate the given R code, returning a promise for no return data.
    * @param {string} code The R code to evaluate.
    * @param {EvalROptions} [options] Options for the execution environment.
-   * @returns {Promise<undefined>} A promise which fires when the R code completes, but returns no data.
+   * @returns {Promise<void>} A promise which fires when the R code completes, but returns no data.
    */
   async evalRVoid(code: string, options?: EvalROptions) {
     return this.evalRRaw(code, 'void', options);
@@ -480,7 +480,7 @@ export class WebR {
    * Evaluate the given R code, returning a promise for a boolean value. If the returned R value is not a boolean, an error will be thrown.
    * @param {string} code The R code to evaluate.
    * @param {EvalROptions} [options] Options for the execution environment.
-   * @returns {Promise<unknown>} The result of the computation.
+   * @returns {Promise<boolean>} The result of the computation.
    */
   async evalRBoolean(code: string, options?: EvalROptions) {
     return this.evalRRaw(code, 'boolean', options);
@@ -490,7 +490,7 @@ export class WebR {
    * Evaluate the given R code, returning a promise for a number. If the returned R value is not a number, an error will be thrown.
    * @param {string} code The R code to evaluate.
    * @param {EvalROptions} [options] Options for the execution environment.
-   * @returns {Promise<unknown>} The result of the computation.
+   * @returns {Promise<number>} The result of the computation.
    */
   async evalRNumber(code: string, options?: EvalROptions) {
     return this.evalRRaw(code, 'number', options);
@@ -500,7 +500,7 @@ export class WebR {
    * Evaluate the given R code, returning a promise for a string. If the returned R value is not a string, an error will be thrown.
    * @param {string} code The R code to evaluate.
    * @param {EvalROptions} [options] Options for the execution environment.
-   * @returns {Promise<unknown>} The result of the computation.
+   * @returns {Promise<string>} The result of the computation.
    */
   async evalRString(code: string, options?: EvalROptions) {
     return this.evalRRaw(code, 'string', options);
