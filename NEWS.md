@@ -1,5 +1,11 @@
 # webR (development version)
 
+# webR 0.5.7
+
+## Bug Fixes
+
+* Fixed importing webR ESM package in Node.js when running with `type: "module"` in `package.json` (#583).
+
 # webR 0.5.6
 
 ## New features
