@@ -42,6 +42,7 @@
   "exports": {
     ".": {
       "types": "./dist/webR/webr-main.d.ts",
+      "browser": "./dist/webr.js",
       "require": "./dist/webr.cjs",
       "import": "./dist/webr.mjs",
       "default": "./dist/webr.mjs"

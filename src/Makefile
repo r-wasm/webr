@@ -55,7 +55,7 @@ check-packages: $(DIST)
 	npx node ./node_modules/jest/bin/jest.js --config tests/packages.config.js
 
 .PHONY: check-module
-check-module: $(DIST)
+check-module: $(DIST) $(PKG_DIST)/webr.js
 	npx node tests/module/test.js
 
 node_modules: package.json
@@ -67,7 +67,7 @@ serve: esbuild.ts $(DIST)
 	npm run serve
 
 .PHONY: package
-package: $(PKG_DIST)/webr.mjs $(PKG_DIST)/vfs
+package: $(PKG_DIST)/webr.mjs $(PKG_DIST)/webr.js $(PKG_DIST)/vfs
 	npm pack
 	rm -rf "$(PKG_DIST)"
 
@@ -80,9 +80,10 @@ publish: $(PKG_DIST)/webr.mjs $(PKG_DIST)/vfs
 # Prepare the PKG_DIST directory for npm packaging and/or publication.
 # Builds the webR npm package for distribution, then copies the required R
 # binaries and lazy vfs into the npm package.
-$(PKG_DIST)/webr.mjs $(PKG_DIST)/vfs: webR/config.ts node_modules esbuild.ts
+$(PKG_DIST)/webr.mjs $(PKG_DIST)/webr.js $(PKG_DIST)/vfs: webR/config.ts node_modules esbuild.ts
 	npm run build -- --prod
-	cd "$(DIST)" && cp -r vfs R.* *.so "$(PKG_DIST)"
+	rm -rf "$(PKG_DIST)/repl" "$(PKG_DIST)/tests" "$(PKG_DIST)/esbuild.d.ts"
+	cd "$(DIST)" && cp -r vfs R.* *.so webr-worker.js "$(PKG_DIST)" && cp webr.mjs "$(PKG_DIST)/webr.js"
 
 clean:
 	rm -rf "$(PKG_DIST)"
