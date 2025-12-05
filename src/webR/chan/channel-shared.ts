@@ -73,18 +73,20 @@ export class SharedBufferChannelMain extends ChannelMain {
         void this.#onMessageFromWorker(worker, message);
       });
       (worker as unknown as NodeWorker).on('error', (ev: Event) => {
-        console.error(ev);
+        const message = ev instanceof Error ? ev.message : String(ev);
+        console.error(message);
         this.reject(new WebRWorkerError(
-          "An error occurred initialising the webR SharedBufferChannel worker."
+          `An error occurred initialising the webR SharedBufferChannel worker: ${message}.`
         ));
       });
     } else {
       worker.onmessage = (ev: MessageEvent) =>
         this.#onMessageFromWorker(worker, ev.data as Message);
       worker.onerror = (ev) => {
-        console.error(ev);
+        const message = ev instanceof Error ? ev.message : String(ev);
+        console.error(message);
         this.reject(new WebRWorkerError(
-          "An error occurred initialising the webR SharedBufferChannel worker."
+          `An error occurred initialising the webR SharedBufferChannel worker: ${message}.`
         ));
       };
     }

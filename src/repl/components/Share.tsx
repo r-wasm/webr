@@ -1,10 +1,9 @@
-
-import React, { useState, useEffect } from 'react';
-import { FaTimes } from 'react-icons/fa';
+import React, { useState, useEffect } from "react";
+import { FaTimes } from "react-icons/fa";
 import { inflate, deflate } from "pako";
-import { decode, encode } from '@msgpack/msgpack';
-import { base64ToBuffer, bufferToBase64 } from '../../webR/utils';
-import './Share.css';
+import { decode, encode } from "@msgpack/msgpack";
+import { base64ToBuffer, bufferToBase64 } from "../../webR/utils";
+import "./Share.css";
 
 export type ShareItem = {
   name: string;
@@ -15,20 +14,24 @@ export type ShareItem = {
 };
 
 export enum ShareDataFlags {
-  UNCOMPRESSED = 'u',
-  ZLIB = 'z',
-  MSGPACK = 'm',
-  JSON = 'j',
-  AUTORUN = 'a',
+  UNCOMPRESSED = "u",
+  ZLIB = "z",
+  MSGPACK = "m",
+  JSON = "j",
+  AUTORUN = "a",
 }
 
 export function isShareItems(files: any): files is ShareItem[] {
-  return Array.isArray(files) && files.every((file) =>
-    'name' in file && typeof file.name === 'string' &&
-    'path' in file && typeof file.path === 'string' &&
-    (
-      ('text' in file && typeof file.text === "string") ||
-      ('data' in file && file.data instanceof Uint8Array)
+  return (
+    Array.isArray(files) &&
+    files.every(
+      (file) =>
+        "name" in file &&
+        typeof file.name === "string" &&
+        "path" in file &&
+        typeof file.path === "string" &&
+        (("text" in file && typeof file.text === "string") ||
+          ("data" in file && file.data instanceof Uint8Array))
     )
   );
 }
@@ -80,7 +83,7 @@ export function isShareItems(files: any): files is ShareItem[] {
 export function encodeShareData(items: ShareItem[]): string {
   const encoded = encode(items); // msgpack format
   const compressed = deflate(encoded); // zlib deflate compressed
-  const base64 = bufferToBase64(compressed); // base64 encoded
+  const base64 = bufferToBase64(compressed.buffer); // base64 encoded
   const uri = encodeURIComponent(base64); // Encode special characters for URI
   return uri;
 }
@@ -96,7 +99,7 @@ export function encodeShareData(items: ShareItem[]): string {
  *   format and zlib compressed.
  * @returns {ShareItem[]} An array of shared file content.
  */
-export function decodeShareData(data: string, flags = 'mz'): ShareItem[] {
+export function decodeShareData(data: string, flags = "mz"): ShareItem[] {
   const base64 = decodeURIComponent(data); // Decode URI encoded characters
   const buffer = base64ToBuffer(base64); // Decode base64
 
@@ -105,7 +108,7 @@ export function decodeShareData(data: string, flags = 'mz'): ShareItem[] {
     : inflate(buffer); // zlib deflate compressed
 
   const items = flags.includes(ShareDataFlags.JSON)
-    ? JSON.parse(new TextDecoder().decode(encoded)) as unknown // JSON format
+    ? (JSON.parse(new TextDecoder().decode(encoded)) as unknown) // JSON format
     : decode(encoded); // msgpack format
 
   if (!isShareItems(items)) {
@@ -114,7 +117,9 @@ export function decodeShareData(data: string, flags = 'mz'): ShareItem[] {
 
   let shareItems = items;
   if (flags.includes(ShareDataFlags.AUTORUN)) {
-    shareItems = items.map((item) => item.name.toLowerCase().endsWith('.r') ? { ...item, autorun: true } : item);
+    shareItems = items.map((item) =>
+      item.name.toLowerCase().endsWith(".r") ? { ...item, autorun: true } : item
+    );
   }
 
   return shareItems;
@@ -138,11 +143,14 @@ export function ShareModal({ isOpen, onClose, shareUrl }: ShareModalProps) {
   }, [copied]);
 
   const handleCopyClick = () => {
-    navigator.clipboard.writeText(shareUrl).then(() => {
-      setCopied(true);
-    }).catch(err => {
-      console.error('Failed to copy: ', err);
-    });
+    navigator.clipboard
+      .writeText(shareUrl)
+      .then(() => {
+        setCopied(true);
+      })
+      .catch((err) => {
+        console.error("Failed to copy: ", err);
+      });
   };
 
   if (!isOpen) return null;
@@ -150,7 +158,11 @@ export function ShareModal({ isOpen, onClose, shareUrl }: ShareModalProps) {
   return (
     <div className="share-modal-overlay">
       <div className="share-modal">
-        <button className="share-modal-close" onClick={onClose} aria-label="Close">
+        <button
+          className="share-modal-close"
+          onClick={onClose}
+          aria-label="Close"
+        >
           <FaTimes aria-hidden="true" />
         </button>
         <div className="share-modal-heading">Share URL ({urlBytes} bytes)</div>

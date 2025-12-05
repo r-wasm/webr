@@ -83,7 +83,7 @@ describe('Mount filesystem using JS API', () => {
   });
 
   test('Mount filesystem image using Blob', async () => {
-    const data = new Blob([fs.readFileSync("tests/webR/data/test_image.data")]);
+    const data = new Blob([new Uint8Array(fs.readFileSync("tests/webR/data/test_image.data"))]);
     const buf = fs.readFileSync("tests/webR/data/test_image.js.metadata");
     const metadata = JSON.parse(new TextDecoder().decode(buf)) as FSMetaData;
     await expect(

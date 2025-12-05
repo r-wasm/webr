@@ -220,7 +220,7 @@ function releaseDataBuffer(buffer: Uint8Array) {
   dataBuffers[powerof2].push(buffer);
 }
 
-let eventBuffer = new Int32Array(new ArrayBuffer(4));
+let eventBuffer: Int32Array = new Int32Array(new ArrayBuffer(4));
 
 let handleEvents = (): void => {
   eventBuffer[0] = 0;

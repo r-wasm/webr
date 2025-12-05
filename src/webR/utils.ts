@@ -4,9 +4,9 @@ import { isComplex, isWebRDataJs } from './robj';
 import { RObjectBase } from './robj-worker';
 
 export type PromiseHandles<T = void> = {
-    resolve: ResolveFn<T>;
-    reject: RejectFn;
-    promise: Promise<T>;
+  resolve: ResolveFn<T>;
+  reject: RejectFn;
+  promise: Promise<T>;
 };
 export type ResolveFn<T = unknown> = (value: T | PromiseLike<T>) => void;
 export type RejectFn = (_reason?: any) => void;
@@ -140,7 +140,7 @@ export function throwUnreachable(context?: string) {
   throw new WebRError(msg);
 }
 
-export function isSimpleObject(value: any): value is {[key: string | number | symbol]: any} {
+export function isSimpleObject(value: any): value is { [key: string | number | symbol]: any } {
   return (
     typeof value === 'object' &&
     value !== null &&
@@ -157,7 +157,7 @@ export function isSimpleObject(value: any): value is {[key: string | number | sy
 }
 
 // From https://stackoverflow.com/a/9458996
-export function bufferToBase64(buffer: ArrayBuffer) {
+export function bufferToBase64(buffer: ArrayBufferLike): string {
   let binary = '';
   const bytes = new Uint8Array(buffer);
   const len = bytes.byteLength;
@@ -168,11 +168,11 @@ export function bufferToBase64(buffer: ArrayBuffer) {
 }
 
 // From https://stackoverflow.com/a/21797381
-export function base64ToBuffer(base64: string) {
-    const binaryString = window.atob(base64);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes.buffer;
+export function base64ToBuffer(base64: string): ArrayBuffer {
+  const binaryString = window.atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
 }

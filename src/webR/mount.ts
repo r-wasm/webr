@@ -11,7 +11,7 @@ import type { FSMountOptions, FSMetaData } from './webr-main';
 import type { readFileSync } from 'fs';
 
 type WorkerFileSystemType = Emscripten.FileSystemType & {
-  reader: { readAsArrayBuffer: (chunk: any) => ArrayBuffer },
+  reader: { readAsArrayBuffer: (chunk: Buffer) => ArrayBuffer },
   FILE_MODE: number
   createNode: (dir: FS.FSNode, file: string, mode: number, dev: number,
     contents: ArrayBufferView, mtime?: Date) => FS.FSNode;
@@ -31,7 +31,7 @@ export function mountFS(type: Emscripten.FileSystemType, opts: FSMountOptions, m
   // Otherwise, handle `packages` using our own internal mountImageData()
   if ('packages' in opts && opts.packages) {
     opts.packages.forEach((pkg) => {
-      mountImageData(pkg.blob as ArrayBufferLike, pkg.metadata, mountpoint);
+      mountImageData(pkg.blob as ArrayBuffer, pkg.metadata, mountpoint);
     });
   } else {
     // TODO: Handle `blobs` and `files` keys.
@@ -102,7 +102,7 @@ export function mountImageUrl(url: string, mountpoint: string) {
     // Decompress filesystem data, if required
     let data = dataResp.response as ArrayBuffer;
     if (metadata.gzip) {
-      data = ungzip(data).buffer;
+      data = ungzip(data).buffer as ArrayBuffer;
     }
     mountImageData(data, metadata, mountpoint);
   }
@@ -130,24 +130,25 @@ export function mountImagePath(path: string, mountpoint: string) {
     ) as FSMetaData;
 
     const ext = metadata.gzip ? '.data.gz' : '.data';
-    let data: ArrayBufferLike = fs.readFileSync(`${pathBase}${ext}`);
+    const fileData = fs.readFileSync(`${pathBase}${ext}`);
+    let data = new Uint8Array(fileData).buffer as ArrayBuffer;
 
     // Decompress filesystem data, if required
     if (metadata.gzip) {
-      data = ungzip(data).buffer;
+      data = ungzip(data).buffer as ArrayBuffer;
     }
     mountImageData(data, metadata, mountpoint);
   }
 }
 
 // Mount the filesystem image `data` and `metadata` to the VFS at `mountpoint`
-function mountImageData(data: ArrayBufferLike | Buffer, metadata: FSMetaData, mountpoint: string) {
+function mountImageData(data: ArrayBuffer, metadata: FSMetaData, mountpoint: string) {
   if (IN_NODE) {
     const buf = Buffer.from(data);
     const WORKERFS = Module.FS.filesystems.WORKERFS as WorkerFileSystemType;
 
     if (!WORKERFS.reader) WORKERFS.reader = {
-      readAsArrayBuffer: (chunk: Buffer) => new Uint8Array(chunk),
+      readAsArrayBuffer: (chunk: Buffer) => new Uint8Array(chunk).buffer,
     };
 
     metadata.files.forEach((f: { filename: string, start: number, end: number }) => {
@@ -181,8 +182,8 @@ function mountImageData(data: ArrayBufferLike | Buffer, metadata: FSMetaData, mo
 }
 
 // Decode archive data and metadata encoded in v2.0 VFS image
-function decodeVFSArchive(data: ArrayBufferLike) {
-  const buffer = ungzip(data).buffer;
+function decodeVFSArchive(data: ArrayBuffer | Buffer) {
+  const buffer = ungzip(new Uint8Array(data)).buffer as ArrayBuffer;
   const index = getArchiveMetadata(buffer) || findArchiveMetadata(buffer);
   if (!index) {
     throw new Error("Can't mount archive, no VFS metadata found.");

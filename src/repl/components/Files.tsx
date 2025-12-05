@@ -1,19 +1,26 @@
-import React, { ChangeEventHandler } from 'react';
-import * as Fa from 'react-icons/fa';
-import TreeView, { flattenTree, INode, ITreeViewProps } from 'react-accessible-treeview';
-import { Panel } from 'react-resizable-panels';
-import { WebR, WebRError } from '../../webR/webr-main';
-import type { FSNode } from '../../webR/webr-main';
-import { FilesInterface } from '../App';
-import JSZip from 'jszip';
-import './Files.css';
+import React, { ChangeEventHandler } from "react";
+import * as Fa from "react-icons/fa";
+import TreeView, {
+  flattenTree,
+  INode,
+  ITreeViewProps,
+} from "react-accessible-treeview";
+import { Panel } from "react-resizable-panels";
+import { WebR, WebRError } from "../../webR/webr-main";
+import type { FSNode } from "../../webR/webr-main";
+import { FilesInterface } from "../App";
+import JSZip from "jszip";
+import "./Files.css";
 
-const FolderIcon = ({ isOpen }: { isOpen: boolean }) => isOpen
-  ? <Fa.FaFolderOpen className="icon icon-folder" />
-  : <Fa.FaFolder className="icon icon-folder" />;
+const FolderIcon = ({ isOpen }: { isOpen: boolean }) =>
+  isOpen ? (
+    <Fa.FaFolderOpen className="icon icon-folder" />
+  ) : (
+    <Fa.FaFolder className="icon icon-folder" />
+  );
 
 interface ITreeNode {
-  id: number
+  id: number;
   name: string;
   children?: ITreeNode[];
   metadata?: { [x: string]: string | number | null | undefined };
@@ -26,20 +33,21 @@ export function createTreeFromFSNode(fsNode: FSNode): ITreeNode {
   const tree: ITreeNode = {
     id: fsNode.id,
     name: fsNode.name,
-    metadata: { type: fsNode.isFolder ? 'folder' : 'file' },
+    metadata: { type: fsNode.isFolder ? "folder" : "file" },
   };
   if (fsNode.isFolder && fsNode.contents) {
-    tree.children = Object.entries(fsNode.contents).map(([name, node]) => {
-      const child = (node.mounted === null) ? node : node.mounted.root;
-      child.name = name;
-      return createTreeFromFSNode(child);
-    }
-    ).sort((a, b) => a.name.localeCompare(b.name));
+    tree.children = Object.entries(fsNode.contents)
+      .map(([name, node]) => {
+        const child = node.mounted === null ? node : node.mounted.root;
+        child.name = name;
+        return createTreeFromFSNode(child);
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
   return tree;
 }
 
-const initialData = flattenTree({ name: '', children: [] });
+const initialData = flattenTree({ name: "", children: [] });
 
 export function Files({
   webR,
@@ -59,8 +67,8 @@ export function Files({
   const downloadButtonRef = React.useRef<HTMLButtonElement | null>(null);
 
   /* Take an `INode` selected from the tree in the UI and create a zip archive
-  * of the contents. Directories are added to the archive recursively.
-  */
+   * of the contents. Directories are added to the archive recursively.
+   */
   const zipFromFSNode = async (zip: JSZip, node: INode) => {
     if (!zip || !node || !treeData) {
       return;
@@ -68,53 +76,59 @@ export function Files({
 
     if (node.children && node.children.length > 0) {
       const dir = zip.folder(node.name);
-      await Promise.all(node.children.map((childId) => {
-        const child = treeData.find((value) => value.id === childId);
-        return zipFromFSNode(dir!, child!);
-      }));
+      await Promise.all(
+        node.children.map((childId) => {
+          const child = treeData.find((value) => value.id === childId);
+          return zipFromFSNode(dir!, child!);
+        })
+      );
     } else {
       const name = node.name;
       const path = getNodePath(node);
-      await webR.FS.readFile(path).then((data) => {
-        zip.file(name, data, { binary: true });
-      }).catch((error: Error) => {
-        console.warn(`Problem encountered when creating archive: "${error.message}".`);
-      });
+      await webR.FS.readFile(path)
+        .then((data) => {
+          zip.file(name, data, { binary: true });
+        })
+        .catch((error: Error) => {
+          console.warn(
+            `Problem encountered when creating archive: "${error.message}".`
+          );
+        });
     }
   };
 
-  const nodeRenderer: ITreeViewProps['nodeRenderer'] = ({
+  const nodeRenderer: ITreeViewProps["nodeRenderer"] = ({
     element,
     isExpanded,
     getNodeProps,
     level,
   }) => (
     <div {...getNodeProps()} style={{ paddingLeft: 2 + 20 * (level - 1) }}>
-      {
-        element.metadata!.type === 'folder'
-          ? <FolderIcon isOpen={isExpanded} />
-          : <Fa.FaRegFile className="icon" />
-      }
+      {element.metadata!.type === "folder" ? (
+        <FolderIcon isOpen={isExpanded} />
+      ) : (
+        <Fa.FaRegFile className="icon" />
+      )}
       {element.name}
     </div>
   );
 
   const getNodePath = (node?: INode): string => {
-    if (!node || !node.parent) return '';
+    if (!node || !node.parent) return "";
     const prefix = node.parent
       ? getNodePath(treeData.find((value) => value.id === node.parent))
-      : '';
+      : "";
     return `${prefix}/${node.name}`;
   };
 
-  const onNodeSelect: ITreeViewProps['onNodeSelect'] = ({ element }) => {
+  const onNodeSelect: ITreeViewProps["onNodeSelect"] = ({ element }) => {
     setSelectedNode(element);
-    setIsFileSelected(element.metadata!.type === 'file');
+    setIsFileSelected(element.metadata!.type === "file");
   };
 
-  const onExpand: ITreeViewProps['onExpand'] = ({ element }) => {
+  const onExpand: ITreeViewProps["onExpand"] = ({ element }) => {
     setSelectedNode(element);
-    setIsFileSelected(element.metadata!.type === 'file');
+    setIsFileSelected(element.metadata!.type === "file");
     setSelectedIds([Number(element.id)]);
   };
 
@@ -127,9 +141,9 @@ export function Files({
     const fr = new FileReader();
 
     fr.onload = async function () {
-      uploadRef.current!.value = '';
+      uploadRef.current!.value = "";
       const data = new Uint8Array(fr.result as ArrayBuffer);
-      await webR.FS.writeFile(path + '/' + file.name, data);
+      await webR.FS.writeFile(path + "/" + file.name, data);
       await filesInterface.refreshFilesystem();
     };
 
@@ -137,11 +151,13 @@ export function Files({
   };
 
   const onDownload: React.MouseEventHandler<HTMLButtonElement> = () => {
-    const doDownload = (filename: string, data: ArrayBufferView) => {
-      const blob = new Blob([data], { type: 'application/octet-stream' });
+    const doDownload = (filename: string, data: Uint8Array) => {
+      const blob = new Blob([new Uint8Array(data)], {
+        type: "application/octet-stream",
+      });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.download = filename.replace(/[/\\<>:"|?*]/, '_');
+      const link = document.createElement("a");
+      link.download = filename.replace(/[/\\<>:"|?*]/, "_");
       link.href = url;
       link.click();
       link.remove();
@@ -151,7 +167,9 @@ export function Files({
       return;
     } else if (isFileSelected) {
       const path = getNodePath(selectedNode);
-      void webR.FS.readFile(path).then((data) => doDownload(selectedNode.name, data));
+      void webR.FS.readFile(path).then((data) =>
+        doDownload(selectedNode.name, data)
+      );
     } else {
       void (async () => {
         const zip = new JSZip();
@@ -167,7 +185,9 @@ export function Files({
       return;
     }
     const path = getNodePath(selectedNode);
-    await filesInterface.openFilesInEditor([{ name: selectedNode.name, path, readOnly: false }]);
+    await filesInterface.openFilesInEditor([
+      { name: selectedNode.name, path, readOnly: false },
+    ]);
   };
 
   const onNewDirectory = async () => {
@@ -176,7 +196,7 @@ export function Files({
     }
 
     const path = getNodePath(selectedNode);
-    const name = prompt('Please enter the new directory name');
+    const name = prompt("Please enter the new directory name");
     if (!name) {
       return;
     }
@@ -198,7 +218,7 @@ export function Files({
     }
 
     const path = getNodePath(selectedNode);
-    const name = prompt('Please enter the new filename');
+    const name = prompt("Please enter the new filename");
     if (!name) {
       return;
     }
@@ -220,12 +240,12 @@ export function Files({
     }
 
     const path = getNodePath(selectedNode);
-    if (!confirm('Delete ' + selectedNode.name + '?')) {
+    if (!confirm("Delete " + selectedNode.name + "?")) {
       return;
     }
 
     try {
-      if (selectedNode.metadata!.type === 'folder') {
+      if (selectedNode.metadata!.type === "folder") {
         await webR.FS.rmdir(path);
       } else {
         await webR.FS.unlink(path);
@@ -244,16 +264,15 @@ export function Files({
 
   React.useEffect(() => {
     filesInterface.refreshFilesystem = async () => {
-      const node = await webR.FS.lookupPath('/');
+      const node = await webR.FS.lookupPath("/");
       const tree = createTreeFromFSNode(node);
       const data = flattenTree({
-        name: 'root',
+        name: "root",
         children: [tree],
-        metadata: { type: 'folder' }
-      }
-      );
+        metadata: { type: "folder" },
+      });
       data.forEach((node) => {
-        if (node.metadata!.type === 'folder' && node.children.length > 0) {
+        if (node.metadata!.type === "folder" && node.children.length > 0) {
           node.isBranch = true;
         }
       });
@@ -261,19 +280,28 @@ export function Files({
     };
   }, [filesInterface]);
 
-  const treeView = <TreeView
-    data={treeData}
-    defaultExpandedIds={[1]}
-    selectedIds={selectedIds}
-    aria-label="Directory Tree"
-    onNodeSelect={onNodeSelect}
-    onExpand={onExpand}
-    nodeRenderer={nodeRenderer}
-    expandOnKeyboardSelect={true}
-  />;
+  const treeView = (
+    <TreeView
+      data={treeData}
+      defaultExpandedIds={[1]}
+      selectedIds={selectedIds}
+      aria-label="Directory Tree"
+      onNodeSelect={onNodeSelect}
+      onExpand={onExpand}
+      nodeRenderer={nodeRenderer}
+      expandOnKeyboardSelect={true}
+    />
+  );
 
   return (
-    <Panel id="files" hidden={hidden} role="region" aria-label="Files Pane" defaultSize={35} minSize={20}>
+    <Panel
+      id="files"
+      hidden={hidden}
+      role="region"
+      aria-label="Files Pane"
+      defaultSize={35}
+      minSize={20}
+    >
       <div className="files-header">
         <div
           role="toolbar"
@@ -289,16 +317,21 @@ export function Files({
             <Fa.FaFileUpload aria-hidden="true" className="icon" /> Upload file
           </button>
           <button
-            onClick={() => { void onNewFile(); }}
+            onClick={() => {
+              void onNewFile();
+            }}
             disabled={!selectedNode || isFileSelected}
           >
             <Fa.FaFileAlt aria-hidden="true" className="icon" /> New file
           </button>
           <button
-            onClick={() => { void onNewDirectory(); }}
+            onClick={() => {
+              void onNewDirectory();
+            }}
             disabled={!selectedNode || isFileSelected}
           >
-            <Fa.FaFolderPlus aria-hidden="true" className="icon" /> New directory
+            <Fa.FaFolderPlus aria-hidden="true" className="icon" /> New
+            directory
           </button>
           <input onChange={onUpload} ref={uploadRef} type="file" />
           <button
@@ -311,13 +344,17 @@ export function Files({
             Download {isFileSelected ? "file" : "directory"}
           </button>
           <button
-            onClick={() => { void onOpen(); }}
+            onClick={() => {
+              void onOpen();
+            }}
             disabled={!selectedNode || !isFileSelected}
           >
             <Fa.FaFileCode aria-hidden="true" className="icon" /> Open in editor
           </button>
           <button
-            onClick={() => { void onDelete(); }}
+            onClick={() => {
+              void onDelete();
+            }}
             disabled={!selectedNode}
           >
             <Fa.FaTimesCircle aria-hidden="true" className="icon" /> Delete

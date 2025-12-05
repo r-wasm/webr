@@ -112,9 +112,9 @@ export type FSType = 'NODEFS' | 'WORKERFS' | 'IDBFS' | 'DRIVEFS';
 export type FSMountOptions<T extends FSType = FSType> =
   T extends 'DRIVEFS' ? { driveName?: string; browsingContextId?: string } :
   T extends 'NODEFS' ? { root: string } : {
-    blobs?: Array<{ name: string, data: Blob | ArrayBufferLike | Uint8Array }>;
+    blobs?: Array<{ name: string, data: Blob | Buffer | ArrayBufferLike | Uint8Array }>;
     files?: Array<File | FileList>;
-    packages?: Array<{ metadata: FSMetaData, blob: Blob | ArrayBufferLike | Uint8Array }>;
+    packages?: Array<{ metadata: FSMetaData, blob: Blob | Buffer | ArrayBufferLike | Uint8Array }>;
   };
 
 /**
