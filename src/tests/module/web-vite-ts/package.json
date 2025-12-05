@@ -1,0 +1,20 @@
+{
+  "name": "webr-web-vite-ts-test",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 3000",
+    "build": "tsc && vite build",
+    "test": "node test-server.js",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "webr": "file:../../.."
+  },
+  "devDependencies": {
+    "typescript": "^5.0.2",
+    "vite": "^6.4.1",
+    "vite-tsconfig-paths": "^5.1.4",
+    "playwright": "^1.40.0"
+  }
+}

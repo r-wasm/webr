@@ -1,0 +1,17 @@
+{
+  "name": "webr-web-esbuild-ts-test",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild index.ts --bundle --outfile=dist/bundle.js --format=esm",
+    "test": "node test-server.js"
+  },
+  "dependencies": {
+    "webr": "file:../../.."
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.9",
+    "typescript": "^5.0.2",
+    "playwright": "^1.40.0"
+  }
+}

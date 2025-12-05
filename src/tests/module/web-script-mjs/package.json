@@ -1,0 +1,11 @@
+{
+  "name": "webr-web-script-mjs-test",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "test": "node test-server.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.40.0"
+  }
+}

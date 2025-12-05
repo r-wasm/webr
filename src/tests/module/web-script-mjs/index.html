@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>webR Script Module Test</title>
+</head>
+<body>
+  <h1>webR Script Module Test</h1>
+  <div id="output"></div>
+
+  <script type="module">
+    import { WebR } from 'http://localhost:3003/webr.mjs';
+
+    async function main() {
+      console.log('Attempting to import webR from script tag...');
+
+      if (typeof WebR === 'function') {
+        console.log('✓ Successfully imported webR package using script type="module"');
+
+        try {
+          const webR = new WebR({ baseUrl: 'http://localhost:3003/' });
+          await webR.init();
+          console.log('✓ WebR instance created successfully');
+          const result = await webR.evalRNumber('123 + 456');
+          console.log('✓ R evaluation result:', result); // Should log: 579
+          webR.close();
+
+          // Signal success to test runner
+          document.body.dataset.testStatus = 'success';
+        } catch (error) {
+          console.error('WebR instantiation failed:', error.message);
+          document.body.dataset.testStatus = 'error';
+        }
+      } else {
+        console.error('✗ Failed to import WebR');
+        document.body.dataset.testStatus = 'error';
+      }
+    }
+
+    main().catch(error => {
+      console.error('Error:', error);
+      document.body.dataset.testStatus = 'error';
+    });
+  </script>
+</body>
+</html>

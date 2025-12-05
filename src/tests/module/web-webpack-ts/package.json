@@ -1,0 +1,19 @@
+{
+  "name": "webr-web-webpack-ts-test",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "build": "webpack --mode production",
+    "test": "node test-server.js"
+  },
+  "dependencies": {
+    "webr": "file:../../.."
+  },
+  "devDependencies": {
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.0.2",
+    "playwright": "^1.40.0"
+  }
+}

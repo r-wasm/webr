@@ -26,7 +26,7 @@ for (const dir of dirs) {
 
   try {
     // Run npm install
-    execSync('npm install', {
+    execSync('npm ci', {
       cwd: dirPath,
       stdio: 'inherit'
     });
