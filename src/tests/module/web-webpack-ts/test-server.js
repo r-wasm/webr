@@ -11,7 +11,7 @@ const PORT = 3001;
 
 // Install Playwright browsers if needed
 try {
-  execSync('npx playwright install chromium', { stdio: 'inherit' });
+  execSync('npx playwright install chromium --with-deps', { stdio: 'inherit' });
   console.log('\n');
 } catch (error) {
   console.error('Failed to install Playwright browsers');
