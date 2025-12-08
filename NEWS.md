@@ -1,5 +1,7 @@
 # webR (development version)
 
+# webR 0.5.8
+
 - Fixed bundling for browser with webR NPM package.
 
 # webR 0.5.7
