@@ -636,7 +636,19 @@ function downloadFileContent(url: string, headers: Array<string> = [], maxRedire
 
       if (location) {
         // Resolve relative URLs against the original URL
-        const redirectUrl = new URL(location, url).href;
+        let redirectUrl: string;
+        try {
+          redirectUrl = new URL(location, url).href;
+        } catch (error) {
+          let responseText: string;
+          if (error instanceof TypeError) {
+            responseText = "Invalid redirect URL format";
+          } else {
+            responseText = "Unexpected redirect URL error";
+          }
+          console.error(responseText + ":", error);
+          return { status: 400, response: responseText };
+        }
         return downloadFileContent(redirectUrl, headers, maxRedirects - 1);
       }
     }
