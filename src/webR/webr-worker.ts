@@ -593,7 +593,7 @@ function copyFSNode(obj: FSNode): FSNode {
 }
 
 function downloadFileContent(url: string, headers: Array<string> = [], maxRedirects: number = 10): XHRResponse {
-  if (maxRedirects == 0) {
+  if (maxRedirects <= 0) {
     return { status: 400, response: 'Too many redirects' };
   }
 
