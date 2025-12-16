@@ -616,41 +616,37 @@ function downloadFileContent(url: string, headers: Array<string> = [], maxRedire
     request.send(null);
 
     let status: number;
-    let responseHeaders: Record<string, string> | null = null;
 
     if (IN_NODE) {
       const parsed = JSON.parse(String(request.status)) as {
         data: { statusCode: number; headers: Record<string, string> }
       };
       status = parsed.data.statusCode;
-      responseHeaders = parsed.data.headers;
+
+      // Follow 3xx redirects
+      if (status >= 300 && status < 400) {
+        const location = parsed.data.headers?.location;
+
+        if (location) {
+          // Resolve relative URLs against the original URL
+          let redirectUrl: string;
+          try {
+            redirectUrl = new URL(location, url).href;
+          } catch (error) {
+            let responseText: string;
+            if (error instanceof TypeError) {
+              responseText = "Invalid redirect URL format";
+            } else {
+              responseText = "Unexpected redirect URL error";
+            }
+            console.error(responseText + ":", error);
+            return { status: 400, response: responseText };
+          }
+          return downloadFileContent(redirectUrl, headers, maxRedirects - 1);
+        }
+      }
     } else {
       status = request.status;
-    }
-
-    // Follow 3xx redirects
-    if (status >= 300 && status < 400) {
-      const location = IN_NODE
-        ? responseHeaders?.location
-        : request.getResponseHeader('Location');
-
-      if (location) {
-        // Resolve relative URLs against the original URL
-        let redirectUrl: string;
-        try {
-          redirectUrl = new URL(location, url).href;
-        } catch (error) {
-          let responseText: string;
-          if (error instanceof TypeError) {
-            responseText = "Invalid redirect URL format";
-          } else {
-            responseText = "Unexpected redirect URL error";
-          }
-          console.error(responseText + ":", error);
-          return { status: 400, response: responseText };
-        }
-        return downloadFileContent(redirectUrl, headers, maxRedirects - 1);
-      }
     }
 
     if (status >= 200 && status < 300) {
