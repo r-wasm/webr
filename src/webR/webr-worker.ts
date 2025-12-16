@@ -592,9 +592,13 @@ function copyFSNode(obj: FSNode): FSNode {
   return retObj;
 }
 
-function downloadFileContent(URL: string, headers: Array<string> = []): XHRResponse {
+function downloadFileContent(url: string, headers: Array<string> = [], maxRedirects: number = 10): XHRResponse {
+  if (maxRedirects == 0) {
+    return { status: 400, response: 'Too many redirects' };
+  }
+
   const request = new XMLHttpRequest();
-  request.open('GET', URL, false);
+  request.open('GET', url, false);
   request.responseType = 'arraybuffer';
 
   try {
@@ -610,15 +614,38 @@ function downloadFileContent(URL: string, headers: Array<string> = []): XHRRespo
 
   try {
     request.send(null);
-    const status = IN_NODE
-      ? (JSON.parse(String(request.status)) as { data: { statusCode: number } }).data.statusCode
-      : request.status;
+
+    let status: number;
+    let responseHeaders: Record<string, string> | null = null;
+
+    if (IN_NODE) {
+      const parsed = JSON.parse(String(request.status)) as {
+        data: { statusCode: number; headers: Record<string, string> }
+      };
+      status = parsed.data.statusCode;
+      responseHeaders = parsed.data.headers;
+    } else {
+      status = request.status;
+    }
+
+    // Follow 3xx redirects
+    if (status >= 300 && status < 400) {
+      const location = IN_NODE
+        ? responseHeaders?.location
+        : request.getResponseHeader('Location');
+
+      if (location) {
+        // Resolve relative URLs against the original URL
+        const redirectUrl = new URL(location, url).href;
+        return downloadFileContent(redirectUrl, headers, maxRedirects - 1);
+      }
+    }
 
     if (status >= 200 && status < 300) {
       return { status: status, response: request.response as ArrayBuffer };
     } else {
       const responseText = new TextDecoder().decode(request.response as ArrayBuffer);
-      console.error(`Error fetching ${URL} - ${responseText}`);
+      console.error(`Error fetching ${url} - ${responseText}`);
       return { status: status, response: responseText };
     }
   } catch {
