@@ -60,6 +60,18 @@ describe('Download and install binary webR packages', () => {
     expect(await pkg.toBoolean()).toEqual(true);
     warnSpy.mockRestore();
   });
+
+  test('Install packages from R-universe involving URL redirect', async () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => null);
+    const pkg = (await webR.evalR(`
+      stopifnot(! "boot" %in% installed.packages()[, "Package"])
+      webr::shim_install()
+      install.packages("boot", repos = "https://cran.r-universe.dev")
+      "boot" %in% installed.packages()[, "Package"]
+    `)) as RLogical;
+    expect(await pkg.toBoolean()).toEqual(true);
+    warnSpy.mockRestore();
+  });
 });
 
 describe('Test webR virtual filesystem', () => {
