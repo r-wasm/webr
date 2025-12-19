@@ -61,7 +61,7 @@ describe('Download and install binary webR packages', () => {
     warnSpy.mockRestore();
   });
 
-  test('Install packages from R-universe involving URL redirect', async () => {
+  test('Install packages from R-universe using shim', async () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => null);
     const pkg = (await webR.evalR(`
       stopifnot(! "boot" %in% installed.packages()[, "Package"])
@@ -73,6 +73,31 @@ describe('Download and install binary webR packages', () => {
     warnSpy.mockRestore();
   });
 });
+
+describe('Download files', () => {
+  test('download.file() without URL redirect', async () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => null);
+    const pkg = (await webR.evalR(`
+      tf <- tempfile()
+      utils::download.file("https://cran.r-project.org/web/packages/rlang/index.html", tf)
+      utils::file_test("-f", tf)
+    `)) as RLogical;
+    expect(await pkg.toBoolean()).toEqual(true);
+    warnSpy.mockRestore();
+  });
+
+  test('download.file() with URL redirect', async () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => null);
+    const pkg = (await webR.evalR(`
+      tf <- tempfile()
+      utils::download.file("https://cran.r-project.org/package=rlang", tf)
+      utils::file_test("-f", tf)
+    `)) as RLogical;
+    expect(await pkg.toBoolean()).toEqual(true);
+    warnSpy.mockRestore();
+  });
+});
+
 
 describe('Test webR virtual filesystem', () => {
   const testFileContents = new Uint8Array([1, 2, 4, 7, 11, 16, 22, 29, 37, 46]);
