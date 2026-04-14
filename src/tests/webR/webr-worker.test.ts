@@ -98,6 +98,23 @@ describe('Download files', () => {
   });
 });
 
+//This is the SOCKS5 hello greeting. This is needed for curl
+describe('Emulated POSIX TCP Sockets over WebSockets', () => {
+  test('Connect SOCKS5 server via implicit WebSocket', async () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => null);
+    const pkg = (await webR.evalR(`
+      con <- socketConnection("ws.r-universe.dev",443,open = "r+b",blocking = TRUE)
+      Sys.sleep(2)
+      writeBin(as.raw(c(05,01,00)), con)
+      Sys.sleep(2)
+      response <- readBin(con, what = "raw", n = 2)
+      close(con)
+      identical(response, as.raw(c(05, 255)))
+    `)) as RLogical;
+    expect(await pkg.toBoolean()).toEqual(true);
+    warnSpy.mockRestore();
+  });
+});
 
 describe('Test webR virtual filesystem', () => {
   const testFileContents = new Uint8Array([1, 2, 4, 7, 11, 16, 22, 29, 37, 46]);
