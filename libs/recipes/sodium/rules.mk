@@ -1,4 +1,4 @@
-LIBSODIUM_VERSION = 1.0.18
+LIBSODIUM_VERSION = 1.0.22
 LIBSODIUM_TARBALL = $(DOWNLOAD)/libsodium-$(LIBSODIUM_VERSION).tar.gz
 LIBSODIUM_URL = https://download.libsodium.org/libsodium/releases/libsodium-${LIBSODIUM_VERSION}.tar.gz
 
