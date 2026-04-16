@@ -16,7 +16,15 @@ export class WebSocketMap {
   #map = new Map<string, WebSocket>();
 
   constructor(readonly chan: ChannelMain) {
-    this.WebSocket = IN_NODE ? require('ws') as typeof WebSocket : WebSocket;
+    if (IN_NODE) {
+      // Use the built-in WebSocket if available (Node.js >= 21), otherwise
+      // fall back to the 'ws' npm package which must be installed separately.
+      this.WebSocket = ('WebSocket' in globalThis)
+        ? globalThis.WebSocket
+        : require('ws') as typeof WebSocket;
+    } else {
+      this.WebSocket = WebSocket;
+    }
   }
 
   new(uuid: string, url: string | URL, protocols?: string | string[]) {
@@ -136,6 +144,23 @@ export class WebSocketProxyFactory {
         const ev = new Event("error");
         this.dispatchEvent(ev);
         this.onerror?.(ev);
+      }
+
+      // Node.js EventEmitter-style .on() for Emscripten SOCKFS compatibility.
+      // In Node.js, SOCKFS registers socket events via .on() rather than
+      // .onopen/.onmessage etc., so we must support both APIs.
+      on(event: string, handler: (...args: unknown[]) => void): this {
+        if (event === 'message') {
+          // SOCKFS expects handler(data, isBinary) like the 'ws' npm package
+          this.addEventListener('message', (ev: Event) => {
+            const data = (ev as MessageEvent<unknown>).data;
+            const isBinary = !(typeof data === 'string');
+            handler(data, isBinary);
+          });
+        } else {
+          this.addEventListener(event, () => handler());
+        }
+        return this;
       }
     };
   }

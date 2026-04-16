@@ -14,7 +14,7 @@ if (process.argv.some((x) => x === '--prod')) {
 }
 
 // Node modules are imported only conditionally in browser -- stub them out during bundling
-const builtins = ['worker_threads', 'path', 'fs', 'ws', 'url', 'child_process', 'http', 'https', 'crypto'];
+const builtins = ['worker_threads', 'path', 'fs', 'ws', 'url', 'child_process', 'http', 'https', 'crypto', 'module'];
 const builtinList = builtins.reduce((prev, val, index) => (index > 0 ? `${prev}|${val}` : val));
 const builtinRegexp = new RegExp(`^(${builtinList})\\/?(.+)?`);
 const blankImportPlugin = {

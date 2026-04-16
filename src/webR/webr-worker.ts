@@ -1041,7 +1041,19 @@ function init(config: Required<WebROptions>) {
   // Proxy web APIs to main thread.
   // Requires channel SyncRequest support for handling events.
   if (chan?.WebSocketProxy) {
-    globalThis.WebSocket = chan.WebSocketProxy;
+    const wsProxy = chan.WebSocketProxy;
+    globalThis.WebSocket = wsProxy;
+    // In Node.js, Emscripten's SOCKFS always uses require('ws') regardless of
+    // globalThis.WebSocket. Intercept require('ws') at the Node.js module
+    // level so SOCKFS receives our proxy class instead.
+    if (IN_NODE) {
+      const nodeModule = require('module') as { _load: (...args: unknown[]) => unknown };
+      const origLoad = nodeModule._load.bind(nodeModule);
+      nodeModule._load = (id: unknown, ...rest: unknown[]) => {
+        if (id === 'ws') return wsProxy;
+        return origLoad(id, ...rest);
+      };
+    }
   }
   if (chan?.WorkerProxy) {
     globalThis.Worker = chan.WorkerProxy;

@@ -22,6 +22,11 @@ export interface Module extends EmscriptenModule {
   }
   createLazyFilesystem: () => void;
   monitorRunDependencies: (n: number) => void;
+  websocket?: {
+    url?: string;
+    WebSocket?: typeof WebSocket;
+    subprotocol?: string;
+  };
   noImageDecoding: boolean;
   noAudioDecoding: boolean;
   noWasmDecoding: boolean;
