@@ -1,0 +1,33 @@
+name: Build webR libraries
+
+on:
+  pull_request:
+    branches:
+      - "main"
+    paths:
+      - 'libs/**'
+  workflow_dispatch:
+
+jobs:
+  build-libs:
+    runs-on: ubuntu-latest
+    container: ghcr.io/r-wasm/flang-wasm:main
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+      - uses: actions/checkout@v4
+      - name: Configure webR for flang
+        env:
+          EMFC: /opt/flang/host/bin/flang
+        run: ./configure
+      - name: Setup Emscripten PATH
+        run: echo "/opt/emsdk:/opt/emsdk/upstream/emscripten" >> $GITHUB_PATH
+      - name: Set Emscripten EM_NODE_JS
+        run: echo "EM_NODE_JS=$(which node)" >> $GITHUB_ENV
+      - name: Build all libraries
+        env:
+          EMSDK: /opt/emsdk
+        run: cd libs && make all
+        shell: bash
