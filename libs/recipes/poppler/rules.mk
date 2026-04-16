@@ -40,6 +40,6 @@ $(POPPLER_WASM_LIB): $(POPPLER_TARBALL) $(POPPLER_DEPS) $(EM_PKG_CONFIG_PATH)/fr
 	    -DENABLE_GPGME=OFF \
 	    -DENABLE_NSS3=OFF \
 	    -DFONT_CONFIGURATION=fontconfig \
-	    -DTESTDATADIR="" \
+	    -DTESTDATADIR=/nonexistent \
 	    .. && \
 	  emmake make install
