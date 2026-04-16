@@ -114,6 +114,20 @@ describe('Emulated POSIX TCP Sockets over WebSockets', () => {
     expect(await pkg.toBoolean()).toEqual(true);
     warnSpy.mockRestore();
   });
+
+  //See https://github.com/r-wasm/ws-proxy
+  test('Curl over ws-proxy', async () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => null);
+    const pkg = (await webR.evalR(`
+      install.packages("curl")
+      Sys.setenv(ALL_PROXY="socks5h://test:yolo@ws.r-universe.dev:443")
+      h <- curl::new_handle(ssl_verifypeer = file.exists("/etc/ssl/cert.pem"))
+      req <- curl::curl_fetch_memory('https://google.com', handle = h)
+      req$status == 200
+    `)) as RLogical;
+    expect(await pkg.toBoolean()).toEqual(true);
+    warnSpy.mockRestore();
+  });
 });
 
 describe('Test webR virtual filesystem', () => {
