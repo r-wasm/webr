@@ -19,7 +19,7 @@ $(POPPLER_WASM_LIB): $(POPPLER_TARBALL) $(POPPLER_DEPS) $(EM_PKG_CONFIG_PATH)/fr
 	  LDFLAGS="$(LDFLAGS) --use-port=freetype" \
 	  emcmake cmake \
 	    -DCMAKE_BUILD_TYPE=Release \
-	    -DCMAKE_FIND_ROOT_PATH=$(WASM) \
+	    -DCMAKE_FIND_ROOT_PATH="$(WASM);$(shell em-config CACHE)/sysroot" \
 	    -DCMAKE_INSTALL_PREFIX:PATH=$(WASM) \
 	    -DBUILD_SHARED_LIBS=OFF \
 	    -DBUILD_GTK_TESTS=OFF \
