@@ -19,8 +19,10 @@ $(POPPLER_WASM_LIB): $(POPPLER_TARBALL) $(POPPLER_DEPS) $(EM_PKG_CONFIG_PATH)/fr
 	  LDFLAGS="$(LDFLAGS) --use-port=freetype" \
 	  emcmake cmake \
 	    -DCMAKE_BUILD_TYPE=Release \
-	    -DCMAKE_FIND_ROOT_PATH="$(WASM);$(shell em-config CACHE)/sysroot" \
+	    -DCMAKE_FIND_ROOT_PATH=$(WASM) \
 	    -DCMAKE_INSTALL_PREFIX:PATH=$(WASM) \
+	    -DFREETYPE_INCLUDE_DIRS="$(shell em-config CACHE)/sysroot/include/freetype2" \
+	    -DFREETYPE_LIBRARY="$(shell em-config CACHE)/sysroot/lib/wasm32-emscripten/libfreetype.a" \
 	    -DBUILD_SHARED_LIBS=OFF \
 	    -DBUILD_GTK_TESTS=OFF \
 	    -DBUILD_QT5_TESTS=OFF \
