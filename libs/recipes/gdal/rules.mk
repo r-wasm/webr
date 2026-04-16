@@ -26,7 +26,7 @@ $(GDAL_TARBALL):
 # flag. This directory contains non-fPIC libraries. Not sure why the
 # `pic` subfolder isn't selected.
 
-$(GDAL_WASM_LIB): $(GDAL_TARBALL) $(PROJ_WASM_LIB) $(GEOS_WASM_LIB)
+$(GDAL_WASM_LIB): $(GDAL_TARBALL) $(PROJ_WASM_LIB) $(GEOS_WASM_LIB) $(ZSTD_WASM_LIB)
 	mkdir -p $(BUILD)/gdal-$(GDAL_VERSION)/build
 	tar -C $(BUILD) -xf $(GDAL_TARBALL)
 	cd $(BUILD)/gdal-$(GDAL_VERSION)/build && \

@@ -1,0 +1,47 @@
+POPPLER_VERSION = 24.12.0
+POPPLER_TARBALL = $(DOWNLOAD)/poppler-$(POPPLER_VERSION).tar.xz
+POPPLER_URL = https://poppler.freedesktop.org/poppler-$(POPPLER_VERSION).tar.xz
+
+POPPLER_DEPS = $(FC_DEPS) $(LIBJPEG_WASM_LIB) $(LIBPNG_WASM_LIB) $(LIBTIFF_WASM_LIB) $(CAIRO_WASM_LIB)
+
+.PHONY: poppler
+poppler: $(POPPLER_WASM_LIB)
+
+$(POPPLER_TARBALL):
+	mkdir -p $(DOWNLOAD)
+	wget -q -O $@ $(POPPLER_URL)
+
+$(POPPLER_WASM_LIB): $(POPPLER_TARBALL) $(POPPLER_DEPS) $(EM_PKG_CONFIG_PATH)/freetype2.pc
+	rm -rf $(BUILD)/poppler-$(POPPLER_VERSION)
+	mkdir -p $(BUILD)/poppler-$(POPPLER_VERSION)/build
+	tar -C $(BUILD) -xf $(POPPLER_TARBALL)
+	cd $(BUILD)/poppler-$(POPPLER_VERSION)/build && \
+	  LDFLAGS="$(LDFLAGS) --use-port=freetype" \
+	  emcmake cmake \
+	    -DCMAKE_BUILD_TYPE=Release \
+	    -DCMAKE_FIND_ROOT_PATH=$(WASM) \
+	    -DCMAKE_INSTALL_PREFIX:PATH=$(WASM) \
+	    -DFREETYPE_INCLUDE_DIRS="$(shell em-config CACHE)/sysroot/include/freetype2" \
+	    -DFREETYPE_LIBRARY="$(shell em-config CACHE)/sysroot/lib/wasm32-emscripten/libfreetype.a" \
+	    -DBUILD_SHARED_LIBS=OFF \
+	    -DBUILD_GTK_TESTS=OFF \
+	    -DBUILD_QT5_TESTS=OFF \
+	    -DBUILD_QT6_TESTS=OFF \
+	    -DBUILD_CPP_TESTS=OFF \
+	    -DBUILD_MANUAL_TESTS=OFF \
+	    -DENABLE_CPP=ON \
+	    -DENABLE_UTILS=OFF \
+	    -DENABLE_GLIB=OFF \
+	    -DENABLE_GOBJECT_INTROSPECTION=OFF \
+	    -DENABLE_QT5=OFF \
+	    -DENABLE_QT6=OFF \
+	    -DENABLE_LIBOPENJPEG=none \
+	    -DENABLE_BOOST=OFF \
+	    -DENABLE_LCMS=OFF \
+	    -DENABLE_LIBCURL=OFF \
+	    -DENABLE_GPGME=OFF \
+	    -DENABLE_NSS3=OFF \
+	    -DFONT_CONFIGURATION=fontconfig \
+	    -DTESTDATADIR=/nonexistent \
+	    .. && \
+	  emmake make install
