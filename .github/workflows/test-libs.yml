@@ -18,6 +18,8 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Configure webR for flang
         env:
           EMFC: /opt/flang/host/bin/flang
@@ -26,8 +28,34 @@ jobs:
         run: echo "/opt/emsdk:/opt/emsdk/upstream/emscripten" >> $GITHUB_PATH
       - name: Set Emscripten EM_NODE_JS
         run: echo "EM_NODE_JS=$(which node)" >> $GITHUB_ENV
-      - name: Build all libraries
+      - name: Detect changed library targets
+        id: targets
+        run: |
+          CHANGED_DIRS=$(
+            git diff --name-only origin/main...HEAD -- libs/recipes/ \
+              | cut -d/ -f3 | sort -u
+          )
+          TARGETS=""
+          for dir in $CHANGED_DIRS; do
+            RULES="libs/recipes/$dir/rules.mk"
+            if [ -f "$RULES" ]; then
+              TARGET=$(grep -m1 '^\.PHONY:' "$RULES" | sed 's/\.PHONY: *//')
+              if [ -n "$TARGET" ]; then
+                TARGETS="$TARGETS $TARGET"
+              fi
+            fi
+          done
+          echo "targets=$TARGETS" >> $GITHUB_OUTPUT
+          echo "Changed library targets:$TARGETS"
+      - name: Build default libraries
+        if: steps.targets.outputs.targets != ''
         env:
           EMSDK: /opt/emsdk
-        run: cd libs && make poppler
+        run: cd libs && make
+        shell: bash
+      - name: Build changed libraries
+        if: steps.targets.outputs.targets != ''
+        env:
+          EMSDK: /opt/emsdk
+        run: cd libs && make ${{ steps.targets.outputs.targets }}
         shell: bash
