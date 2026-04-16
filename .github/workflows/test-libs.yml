@@ -31,8 +31,9 @@ jobs:
       - name: Detect changed library targets
         id: targets
         run: |
+          git fetch origin ${{ github.base_ref }} --depth=1
           CHANGED_DIRS=$(
-            git diff --name-only origin/main...HEAD -- libs/recipes/ \
+            git diff --name-only FETCH_HEAD...HEAD -- libs/recipes/ \
               | cut -d/ -f3 | sort -u
           )
           TARGETS=""
