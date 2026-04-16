@@ -28,6 +28,8 @@ jobs:
         run: echo "/opt/emsdk:/opt/emsdk/upstream/emscripten" >> $GITHUB_PATH
       - name: Set Emscripten EM_NODE_JS
         run: echo "EM_NODE_JS=$(which node)" >> $GITHUB_ENV
+      - name: Workaround for container git ownership check
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Detect changed library targets
         id: targets
         run: |
