@@ -29,5 +29,5 @@ jobs:
       - name: Build all libraries
         env:
           EMSDK: /opt/emsdk
-        run: cd libs && make all
+        run: cd libs && make poppler
         shell: bash
