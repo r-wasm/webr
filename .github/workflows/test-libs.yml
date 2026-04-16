@@ -50,12 +50,6 @@ jobs:
           done
           echo "targets=$TARGETS" >> $GITHUB_OUTPUT
           echo "Changed library targets:$TARGETS"
-      - name: Build default libraries
-        if: steps.targets.outputs.targets != ''
-        env:
-          EMSDK: /opt/emsdk
-        run: cd libs && make
-        shell: bash
       - name: Build changed libraries
         if: steps.targets.outputs.targets != ''
         env:
