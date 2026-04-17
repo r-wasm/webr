@@ -8,10 +8,15 @@ on:
       - "v*.*"
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   build:
     name: Build webR
     runs-on: ubuntu-latest
+    environment: deploy
     container: ghcr.io/r-wasm/flang-wasm:main
     steps:
       - uses: actions/checkout@v4
@@ -73,8 +78,6 @@ jobs:
         shell: bash
       - name: Publish to npm
         if: "!contains(github.ref_name, 'main')"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: cd src && make publish
       - name: Workaround for codecov/feedback#263
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
