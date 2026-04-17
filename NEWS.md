@@ -1,5 +1,17 @@
 # webR (development version)
 
+## New features
+
+ - Update libsodium to v1.0.22 (#595)
+ - Update libtiff to v4.7.1 (#593)
+ - Add libpoppler recipe for pdftools (#593)
+ - Add libuv from fs package (#598)
+
+## Bug Fixes
+
+ - Follow URL redirects in `downloadFileContent()` under Node (#585)
+ - Fix WebSocket proxy on NodeJS (#594)
+
 # webR 0.5.8
 
 - Fixed bundling for browser with webR NPM package.
