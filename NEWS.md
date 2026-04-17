@@ -1,5 +1,7 @@
 # webR (development version)
 
+# webR 0.5.9
+
 ## New features
 
  - Update libsodium to v1.0.22 (#595)
