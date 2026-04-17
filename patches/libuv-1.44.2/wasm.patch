@@ -1,0 +1,1652 @@
+diff --git a/Makefile.am b/Makefile.am
+index 0c6d965..8dec398 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -467,6 +467,17 @@ libuv_la_SOURCES += src/unix/bsd-ifaddrs.c \
+                     src/unix/hurd.c
+ endif
+ 
++if EMSCRIPTEN
++uvinclude_HEADERS += include/uv/posix.h
++libuv_la_SOURCES += src/unix/no-fsevents.c \
++                    src/unix/no-proctitle.c \
++                    src/unix/posix-hrtime.c \
++                    src/unix/emscripten-poll.c \
++                    src/unix/bsd/setmode.c \
++                    src/unix/bsd/strmode.c \
++                    src/unix/bsd/reallocarray.c
++endif
++
+ if KFREEBSD
+ libuv_la_CFLAGS += -D_GNU_SOURCE
+ endif
+diff --git a/Makefile.in b/Makefile.in
+index e6ca78f..dd29fa5 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -290,10 +290,19 @@ check_PROGRAMS = test/run-tests$(EXEEXT)
+ @HURD_TRUE@                    src/unix/posix-poll.c \
+ @HURD_TRUE@                    src/unix/hurd.c
+ 
+-@KFREEBSD_TRUE@am__append_43 = -D_GNU_SOURCE
+-@LINUX_TRUE@am__append_44 = include/uv/linux.h
+-@LINUX_TRUE@am__append_45 = -D_GNU_SOURCE
+-@LINUX_TRUE@am__append_46 = src/unix/linux-core.c \
++@EMSCRIPTEN_TRUE@am__append_43 = include/uv/posix.h
++@EMSCRIPTEN_TRUE@am__append_44 = src/unix/no-fsevents.c \
++@EMSCRIPTEN_TRUE@                    src/unix/no-proctitle.c \
++@EMSCRIPTEN_TRUE@                    src/unix/posix-hrtime.c \
++@EMSCRIPTEN_TRUE@                    src/unix/emscripten-poll.c \
++@EMSCRIPTEN_TRUE@                    src/unix/bsd/setmode.c \
++@EMSCRIPTEN_TRUE@                    src/unix/bsd/strmode.c \
++@EMSCRIPTEN_TRUE@                    src/unix/bsd/reallocarray.c
++
++@KFREEBSD_TRUE@am__append_45 = -D_GNU_SOURCE
++@LINUX_TRUE@am__append_46 = include/uv/linux.h
++@LINUX_TRUE@am__append_47 = -D_GNU_SOURCE
++@LINUX_TRUE@am__append_48 = src/unix/linux-core.c \
+ @LINUX_TRUE@                    src/unix/linux-inotify.c \
+ @LINUX_TRUE@                    src/unix/linux-syscalls.c \
+ @LINUX_TRUE@                    src/unix/linux-syscalls.h \
+@@ -303,9 +312,9 @@ check_PROGRAMS = test/run-tests$(EXEEXT)
+ @LINUX_TRUE@                    src/unix/random-sysctl-linux.c \
+ @LINUX_TRUE@                    src/unix/epoll.c
+ 
+-@LINUX_TRUE@am__append_47 = -lutil
+-@MSYS_TRUE@am__append_48 = -D_GNU_SOURCE
+-@MSYS_TRUE@am__append_49 = src/unix/cygwin.c \
++@LINUX_TRUE@am__append_49 = -lutil
++@MSYS_TRUE@am__append_50 = -D_GNU_SOURCE
++@MSYS_TRUE@am__append_51 = src/unix/cygwin.c \
+ @MSYS_TRUE@                    src/unix/bsd-ifaddrs.c \
+ @MSYS_TRUE@                    src/unix/no-fsevents.c \
+ @MSYS_TRUE@                    src/unix/no-proctitle.c \
+@@ -315,32 +324,32 @@ check_PROGRAMS = test/run-tests$(EXEEXT)
+ @MSYS_TRUE@                    src/unix/sysinfo-loadavg.c \
+ @MSYS_TRUE@                    src/unix/sysinfo-memory.c
+ 
+-@NETBSD_TRUE@am__append_50 = include/uv/bsd.h
+-@NETBSD_TRUE@am__append_51 = src/unix/bsd-ifaddrs.c \
++@NETBSD_TRUE@am__append_52 = include/uv/bsd.h
++@NETBSD_TRUE@am__append_53 = src/unix/bsd-ifaddrs.c \
+ @NETBSD_TRUE@                    src/unix/bsd-proctitle.c \
+ @NETBSD_TRUE@                    src/unix/kqueue.c \
+ @NETBSD_TRUE@                    src/unix/netbsd.c \
+ @NETBSD_TRUE@                    src/unix/posix-hrtime.c
+ 
+-@NETBSD_TRUE@am__append_52 = -lutil
+-@OPENBSD_TRUE@am__append_53 = include/uv/bsd.h
+-@OPENBSD_TRUE@am__append_54 = src/unix/bsd-ifaddrs.c \
++@NETBSD_TRUE@am__append_54 = -lutil
++@OPENBSD_TRUE@am__append_55 = include/uv/bsd.h
++@OPENBSD_TRUE@am__append_56 = src/unix/bsd-ifaddrs.c \
+ @OPENBSD_TRUE@                    src/unix/bsd-proctitle.c \
+ @OPENBSD_TRUE@                    src/unix/kqueue.c \
+ @OPENBSD_TRUE@                    src/unix/openbsd.c \
+ @OPENBSD_TRUE@                    src/unix/posix-hrtime.c \
+ @OPENBSD_TRUE@                    src/unix/random-getentropy.c
+ 
+-@OPENBSD_TRUE@am__append_55 = -lutil
+-@SUNOS_TRUE@am__append_56 = include/uv/sunos.h
+-@SUNOS_TRUE@am__append_57 = -D__EXTENSIONS__ \
++@OPENBSD_TRUE@am__append_57 = -lutil
++@SUNOS_TRUE@am__append_58 = include/uv/sunos.h
++@SUNOS_TRUE@am__append_59 = -D__EXTENSIONS__ \
+ @SUNOS_TRUE@                   -D_XOPEN_SOURCE=500 \
+ @SUNOS_TRUE@                   -D_REENTRANT
+ 
+-@SUNOS_TRUE@am__append_58 = src/unix/no-proctitle.c \
++@SUNOS_TRUE@am__append_60 = src/unix/no-proctitle.c \
+ @SUNOS_TRUE@                    src/unix/sunos.c
+ 
+-@OS390_TRUE@am__append_59 = -D_UNIX03_THREADS \
++@OS390_TRUE@am__append_61 = -D_UNIX03_THREADS \
+ @OS390_TRUE@                   -D_UNIX03_SOURCE \
+ @OS390_TRUE@                   -D_OPEN_SYS_IF_EXT=1 \
+ @OS390_TRUE@                   -D_OPEN_MSGQ_EXT \
+@@ -356,8 +365,8 @@ check_PROGRAMS = test/run-tests$(EXEEXT)
+ @OS390_TRUE@                   -qXPLINK \
+ @OS390_TRUE@                   -qFLOAT=IEEE
+ 
+-@OS390_TRUE@am__append_60 = -qXPLINK
+-@OS390_TRUE@am__append_61 = src/unix/pthread-fixes.c \
++@OS390_TRUE@am__append_62 = -qXPLINK
++@OS390_TRUE@am__append_63 = src/unix/pthread-fixes.c \
+ @OS390_TRUE@                    src/unix/os390.c \
+ @OS390_TRUE@                    src/unix/os390-syscalls.c \
+ @OS390_TRUE@                    src/unix/proctitle.c
+@@ -446,7 +455,9 @@ am__libuv_la_SOURCES_DIST = src/fs-poll.c src/heap-inl.h src/idna.c \
+ 	src/unix/kqueue.c src/unix/proctitle.c \
+ 	src/unix/random-getentropy.c src/unix/bsd-proctitle.c \
+ 	src/unix/freebsd.c src/unix/random-getrandom.c \
+-	src/unix/haiku.c src/unix/hurd.c src/unix/linux-core.c \
++	src/unix/haiku.c src/unix/hurd.c src/unix/emscripten-poll.c \
++	src/unix/bsd/setmode.c src/unix/bsd/strmode.c \
++	src/unix/bsd/reallocarray.c src/unix/linux-core.c \
+ 	src/unix/linux-inotify.c src/unix/linux-syscalls.c \
+ 	src/unix/linux-syscalls.h src/unix/random-sysctl-linux.c \
+ 	src/unix/epoll.c src/unix/netbsd.c src/unix/openbsd.c \
+@@ -533,7 +544,14 @@ am__dirstamp = $(am__leading_dot)dirstamp
+ @HURD_TRUE@	src/unix/libuv_la-posix-hrtime.lo \
+ @HURD_TRUE@	src/unix/libuv_la-posix-poll.lo \
+ @HURD_TRUE@	src/unix/libuv_la-hurd.lo
+-@LINUX_TRUE@am__objects_12 = src/unix/libuv_la-linux-core.lo \
++@EMSCRIPTEN_TRUE@am__objects_12 = src/unix/libuv_la-no-fsevents.lo \
++@EMSCRIPTEN_TRUE@	src/unix/libuv_la-no-proctitle.lo \
++@EMSCRIPTEN_TRUE@	src/unix/libuv_la-posix-hrtime.lo \
++@EMSCRIPTEN_TRUE@	src/unix/libuv_la-emscripten-poll.lo \
++@EMSCRIPTEN_TRUE@	src/unix/bsd/libuv_la-setmode.lo \
++@EMSCRIPTEN_TRUE@	src/unix/bsd/libuv_la-strmode.lo \
++@EMSCRIPTEN_TRUE@	src/unix/bsd/libuv_la-reallocarray.lo
++@LINUX_TRUE@am__objects_13 = src/unix/libuv_la-linux-core.lo \
+ @LINUX_TRUE@	src/unix/libuv_la-linux-inotify.lo \
+ @LINUX_TRUE@	src/unix/libuv_la-linux-syscalls.lo \
+ @LINUX_TRUE@	src/unix/libuv_la-procfs-exepath.lo \
+@@ -541,7 +559,7 @@ am__dirstamp = $(am__leading_dot)dirstamp
+ @LINUX_TRUE@	src/unix/libuv_la-random-getrandom.lo \
+ @LINUX_TRUE@	src/unix/libuv_la-random-sysctl-linux.lo \
+ @LINUX_TRUE@	src/unix/libuv_la-epoll.lo
+-@MSYS_TRUE@am__objects_13 = src/unix/libuv_la-cygwin.lo \
++@MSYS_TRUE@am__objects_14 = src/unix/libuv_la-cygwin.lo \
+ @MSYS_TRUE@	src/unix/libuv_la-bsd-ifaddrs.lo \
+ @MSYS_TRUE@	src/unix/libuv_la-no-fsevents.lo \
+ @MSYS_TRUE@	src/unix/libuv_la-no-proctitle.lo \
+@@ -550,20 +568,20 @@ am__dirstamp = $(am__leading_dot)dirstamp
+ @MSYS_TRUE@	src/unix/libuv_la-procfs-exepath.lo \
+ @MSYS_TRUE@	src/unix/libuv_la-sysinfo-loadavg.lo \
+ @MSYS_TRUE@	src/unix/libuv_la-sysinfo-memory.lo
+-@NETBSD_TRUE@am__objects_14 = src/unix/libuv_la-bsd-ifaddrs.lo \
++@NETBSD_TRUE@am__objects_15 = src/unix/libuv_la-bsd-ifaddrs.lo \
+ @NETBSD_TRUE@	src/unix/libuv_la-bsd-proctitle.lo \
+ @NETBSD_TRUE@	src/unix/libuv_la-kqueue.lo \
+ @NETBSD_TRUE@	src/unix/libuv_la-netbsd.lo \
+ @NETBSD_TRUE@	src/unix/libuv_la-posix-hrtime.lo
+-@OPENBSD_TRUE@am__objects_15 = src/unix/libuv_la-bsd-ifaddrs.lo \
++@OPENBSD_TRUE@am__objects_16 = src/unix/libuv_la-bsd-ifaddrs.lo \
+ @OPENBSD_TRUE@	src/unix/libuv_la-bsd-proctitle.lo \
+ @OPENBSD_TRUE@	src/unix/libuv_la-kqueue.lo \
+ @OPENBSD_TRUE@	src/unix/libuv_la-openbsd.lo \
+ @OPENBSD_TRUE@	src/unix/libuv_la-posix-hrtime.lo \
+ @OPENBSD_TRUE@	src/unix/libuv_la-random-getentropy.lo
+-@SUNOS_TRUE@am__objects_16 = src/unix/libuv_la-no-proctitle.lo \
++@SUNOS_TRUE@am__objects_17 = src/unix/libuv_la-no-proctitle.lo \
+ @SUNOS_TRUE@	src/unix/libuv_la-sunos.lo
+-@OS390_TRUE@am__objects_17 = src/unix/libuv_la-pthread-fixes.lo \
++@OS390_TRUE@am__objects_18 = src/unix/libuv_la-pthread-fixes.lo \
+ @OS390_TRUE@	src/unix/libuv_la-os390.lo \
+ @OS390_TRUE@	src/unix/libuv_la-os390-syscalls.lo \
+ @OS390_TRUE@	src/unix/libuv_la-proctitle.lo
+@@ -577,7 +595,8 @@ am_libuv_la_OBJECTS = src/libuv_la-fs-poll.lo src/libuv_la-idna.lo \
+ 	$(am__objects_6) $(am__objects_7) $(am__objects_8) \
+ 	$(am__objects_9) $(am__objects_10) $(am__objects_11) \
+ 	$(am__objects_12) $(am__objects_13) $(am__objects_14) \
+-	$(am__objects_15) $(am__objects_16) $(am__objects_17)
++	$(am__objects_15) $(am__objects_16) $(am__objects_17) \
++	$(am__objects_18)
+ libuv_la_OBJECTS = $(am_libuv_la_OBJECTS)
+ AM_V_lt = $(am__v_lt_@AM_V@)
+ am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
+@@ -681,8 +700,8 @@ am__test_run_tests_SOURCES_DIST = test/blackhole-server.c \
+ 	test/test-uname.c test/test-walk-handles.c \
+ 	test/test-watcher-cross-stop.c test/runner-win.c \
+ 	test/runner-win.h test/runner-unix.c test/runner-unix.h
+-@WINNT_TRUE@am__objects_18 = test/run_tests-runner-win.$(OBJEXT)
+-@WINNT_FALSE@am__objects_19 = test/run_tests-runner-unix.$(OBJEXT)
++@WINNT_TRUE@am__objects_19 = test/run_tests-runner-win.$(OBJEXT)
++@WINNT_FALSE@am__objects_20 = test/run_tests-runner-unix.$(OBJEXT)
+ am_test_run_tests_OBJECTS = test/run_tests-blackhole-server.$(OBJEXT) \
+ 	test/run_tests-echo-server.$(OBJEXT) \
+ 	test/run_tests-run-tests.$(OBJEXT) \
+@@ -854,7 +873,7 @@ am_test_run_tests_OBJECTS = test/run_tests-blackhole-server.$(OBJEXT) \
+ 	test/run_tests-test-uname.$(OBJEXT) \
+ 	test/run_tests-test-walk-handles.$(OBJEXT) \
+ 	test/run_tests-test-watcher-cross-stop.$(OBJEXT) \
+-	$(am__objects_18) $(am__objects_19)
++	$(am__objects_19) $(am__objects_20)
+ test_run_tests_OBJECTS = $(am_test_run_tests_OBJECTS)
+ test_run_tests_DEPENDENCIES = libuv.la
+ test_run_tests_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+@@ -897,6 +916,7 @@ am__depfiles_remade = src/$(DEPDIR)/libuv_la-fs-poll.Plo \
+ 	src/unix/$(DEPDIR)/libuv_la-darwin-proctitle.Plo \
+ 	src/unix/$(DEPDIR)/libuv_la-darwin.Plo \
+ 	src/unix/$(DEPDIR)/libuv_la-dl.Plo \
++	src/unix/$(DEPDIR)/libuv_la-emscripten-poll.Plo \
+ 	src/unix/$(DEPDIR)/libuv_la-epoll.Plo \
+ 	src/unix/$(DEPDIR)/libuv_la-freebsd.Plo \
+ 	src/unix/$(DEPDIR)/libuv_la-fs.Plo \
+@@ -939,6 +959,9 @@ am__depfiles_remade = src/$(DEPDIR)/libuv_la-fs-poll.Plo \
+ 	src/unix/$(DEPDIR)/libuv_la-thread.Plo \
+ 	src/unix/$(DEPDIR)/libuv_la-tty.Plo \
+ 	src/unix/$(DEPDIR)/libuv_la-udp.Plo \
++	src/unix/bsd/$(DEPDIR)/libuv_la-reallocarray.Plo \
++	src/unix/bsd/$(DEPDIR)/libuv_la-setmode.Plo \
++	src/unix/bsd/$(DEPDIR)/libuv_la-strmode.Plo \
+ 	src/win/$(DEPDIR)/libuv_la-async.Plo \
+ 	src/win/$(DEPDIR)/libuv_la-core.Plo \
+ 	src/win/$(DEPDIR)/libuv_la-detect-wakeup.Plo \
+@@ -1369,17 +1392,18 @@ uvinclude_HEADERS = include/uv/errno.h include/uv/threadpool.h \
+ 	include/uv/version.h $(am__append_2) $(am__append_5) \
+ 	$(am__append_18) $(am__append_21) $(am__append_25) \
+ 	$(am__append_28) $(am__append_32) $(am__append_35) \
+-	$(am__append_38) $(am__append_41) $(am__append_44) \
+-	$(am__append_50) $(am__append_53) $(am__append_56)
++	$(am__append_38) $(am__append_41) $(am__append_43) \
++	$(am__append_46) $(am__append_52) $(am__append_55) \
++	$(am__append_58)
+ CLEANFILES = 
+ lib_LTLIBRARIES = libuv.la
+ libuv_la_CFLAGS = $(AM_CFLAGS) $(am__append_1) $(am__append_17) \
+ 	$(am__append_20) $(am__append_23) $(am__append_26) \
+-	$(am__append_29) $(am__append_39) $(am__append_43) \
+-	$(am__append_45) $(am__append_48) $(am__append_57) \
+-	$(am__append_59)
++	$(am__append_29) $(am__append_39) $(am__append_45) \
++	$(am__append_47) $(am__append_50) $(am__append_59) \
++	$(am__append_61)
+ libuv_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined -version-info 1:0:0 \
+-	$(am__append_60)
++	$(am__append_62)
+ libuv_la_SOURCES = src/fs-poll.c src/heap-inl.h src/idna.c src/idna.h \
+ 	src/inet.c src/queue.h src/random.c src/strscpy.c \
+ 	src/strscpy.h src/threadpool.c src/timer.c \
+@@ -1388,9 +1412,9 @@ libuv_la_SOURCES = src/fs-poll.c src/heap-inl.h src/idna.c src/idna.h \
+ 	$(am__append_7) $(am__append_19) $(am__append_22) \
+ 	$(am__append_24) $(am__append_27) $(am__append_30) \
+ 	$(am__append_33) $(am__append_36) $(am__append_40) \
+-	$(am__append_42) $(am__append_46) $(am__append_49) \
+-	$(am__append_51) $(am__append_54) $(am__append_58) \
+-	$(am__append_61)
++	$(am__append_42) $(am__append_44) $(am__append_48) \
++	$(am__append_51) $(am__append_53) $(am__append_56) \
++	$(am__append_60) $(am__append_63)
+ EXTRA_DIST = test/fixtures/empty_file \
+              test/fixtures/load_error.node \
+              test/fixtures/lorem_ipsum.txt \
+@@ -1405,8 +1429,8 @@ test_run_tests_CFLAGS = $(AM_CFLAGS) $(am__append_8) $(am__append_11) \
+ 	$(am__append_12) $(am__append_13) $(am__append_14) \
+ 	$(am__append_15) $(am__append_16)
+ test_run_tests_LDFLAGS = $(AM_LDFLAGS) $(am__append_31) \
+-	$(am__append_34) $(am__append_37) $(am__append_47) \
+-	$(am__append_52) $(am__append_55)
++	$(am__append_34) $(am__append_37) $(am__append_49) \
++	$(am__append_54) $(am__append_57)
+ test_run_tests_SOURCES = test/blackhole-server.c test/echo-server.c \
+ 	test/run-tests.c test/runner.c test/runner.h test/task.h \
+ 	test/test-active.c test/test-async.c test/test-async-null-cb.c \
+@@ -1759,6 +1783,20 @@ src/unix/libuv_la-haiku.lo: src/unix/$(am__dirstamp) \
+ 	src/unix/$(DEPDIR)/$(am__dirstamp)
+ src/unix/libuv_la-hurd.lo: src/unix/$(am__dirstamp) \
+ 	src/unix/$(DEPDIR)/$(am__dirstamp)
++src/unix/libuv_la-emscripten-poll.lo: src/unix/$(am__dirstamp) \
++	src/unix/$(DEPDIR)/$(am__dirstamp)
++src/unix/bsd/$(am__dirstamp):
++	@$(MKDIR_P) src/unix/bsd
++	@: > src/unix/bsd/$(am__dirstamp)
++src/unix/bsd/$(DEPDIR)/$(am__dirstamp):
++	@$(MKDIR_P) src/unix/bsd/$(DEPDIR)
++	@: > src/unix/bsd/$(DEPDIR)/$(am__dirstamp)
++src/unix/bsd/libuv_la-setmode.lo: src/unix/bsd/$(am__dirstamp) \
++	src/unix/bsd/$(DEPDIR)/$(am__dirstamp)
++src/unix/bsd/libuv_la-strmode.lo: src/unix/bsd/$(am__dirstamp) \
++	src/unix/bsd/$(DEPDIR)/$(am__dirstamp)
++src/unix/bsd/libuv_la-reallocarray.lo: src/unix/bsd/$(am__dirstamp) \
++	src/unix/bsd/$(DEPDIR)/$(am__dirstamp)
+ src/unix/libuv_la-linux-core.lo: src/unix/$(am__dirstamp) \
+ 	src/unix/$(DEPDIR)/$(am__dirstamp)
+ src/unix/libuv_la-linux-inotify.lo: src/unix/$(am__dirstamp) \
+@@ -2145,6 +2183,8 @@ mostlyclean-compile:
+ 	-rm -f src/*.lo
+ 	-rm -f src/unix/*.$(OBJEXT)
+ 	-rm -f src/unix/*.lo
++	-rm -f src/unix/bsd/*.$(OBJEXT)
++	-rm -f src/unix/bsd/*.lo
+ 	-rm -f src/win/*.$(OBJEXT)
+ 	-rm -f src/win/*.lo
+ 	-rm -f test/*.$(OBJEXT)
+@@ -2173,6 +2213,7 @@ distclean-compile:
+ @AMDEP_TRUE@@am__include@ @am__quote@src/unix/$(DEPDIR)/libuv_la-darwin-proctitle.Plo@am__quote@ # am--include-marker
+ @AMDEP_TRUE@@am__include@ @am__quote@src/unix/$(DEPDIR)/libuv_la-darwin.Plo@am__quote@ # am--include-marker
+ @AMDEP_TRUE@@am__include@ @am__quote@src/unix/$(DEPDIR)/libuv_la-dl.Plo@am__quote@ # am--include-marker
++@AMDEP_TRUE@@am__include@ @am__quote@src/unix/$(DEPDIR)/libuv_la-emscripten-poll.Plo@am__quote@ # am--include-marker
+ @AMDEP_TRUE@@am__include@ @am__quote@src/unix/$(DEPDIR)/libuv_la-epoll.Plo@am__quote@ # am--include-marker
+ @AMDEP_TRUE@@am__include@ @am__quote@src/unix/$(DEPDIR)/libuv_la-freebsd.Plo@am__quote@ # am--include-marker
+ @AMDEP_TRUE@@am__include@ @am__quote@src/unix/$(DEPDIR)/libuv_la-fs.Plo@am__quote@ # am--include-marker
+@@ -2215,6 +2256,9 @@ distclean-compile:
+ @AMDEP_TRUE@@am__include@ @am__quote@src/unix/$(DEPDIR)/libuv_la-thread.Plo@am__quote@ # am--include-marker
+ @AMDEP_TRUE@@am__include@ @am__quote@src/unix/$(DEPDIR)/libuv_la-tty.Plo@am__quote@ # am--include-marker
+ @AMDEP_TRUE@@am__include@ @am__quote@src/unix/$(DEPDIR)/libuv_la-udp.Plo@am__quote@ # am--include-marker
++@AMDEP_TRUE@@am__include@ @am__quote@src/unix/bsd/$(DEPDIR)/libuv_la-reallocarray.Plo@am__quote@ # am--include-marker
++@AMDEP_TRUE@@am__include@ @am__quote@src/unix/bsd/$(DEPDIR)/libuv_la-setmode.Plo@am__quote@ # am--include-marker
++@AMDEP_TRUE@@am__include@ @am__quote@src/unix/bsd/$(DEPDIR)/libuv_la-strmode.Plo@am__quote@ # am--include-marker
+ @AMDEP_TRUE@@am__include@ @am__quote@src/win/$(DEPDIR)/libuv_la-async.Plo@am__quote@ # am--include-marker
+ @AMDEP_TRUE@@am__include@ @am__quote@src/win/$(DEPDIR)/libuv_la-core.Plo@am__quote@ # am--include-marker
+ @AMDEP_TRUE@@am__include@ @am__quote@src/win/$(DEPDIR)/libuv_la-detect-wakeup.Plo@am__quote@ # am--include-marker
+@@ -2982,6 +3026,34 @@ src/unix/libuv_la-hurd.lo: src/unix/hurd.c
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libuv_la_CFLAGS) $(CFLAGS) -c -o src/unix/libuv_la-hurd.lo `test -f 'src/unix/hurd.c' || echo '$(srcdir)/'`src/unix/hurd.c
+ 
++src/unix/libuv_la-emscripten-poll.lo: src/unix/emscripten-poll.c
++@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libuv_la_CFLAGS) $(CFLAGS) -MT src/unix/libuv_la-emscripten-poll.lo -MD -MP -MF src/unix/$(DEPDIR)/libuv_la-emscripten-poll.Tpo -c -o src/unix/libuv_la-emscripten-poll.lo `test -f 'src/unix/emscripten-poll.c' || echo '$(srcdir)/'`src/unix/emscripten-poll.c
++@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/unix/$(DEPDIR)/libuv_la-emscripten-poll.Tpo src/unix/$(DEPDIR)/libuv_la-emscripten-poll.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/unix/emscripten-poll.c' object='src/unix/libuv_la-emscripten-poll.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libuv_la_CFLAGS) $(CFLAGS) -c -o src/unix/libuv_la-emscripten-poll.lo `test -f 'src/unix/emscripten-poll.c' || echo '$(srcdir)/'`src/unix/emscripten-poll.c
++
++src/unix/bsd/libuv_la-setmode.lo: src/unix/bsd/setmode.c
++@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libuv_la_CFLAGS) $(CFLAGS) -MT src/unix/bsd/libuv_la-setmode.lo -MD -MP -MF src/unix/bsd/$(DEPDIR)/libuv_la-setmode.Tpo -c -o src/unix/bsd/libuv_la-setmode.lo `test -f 'src/unix/bsd/setmode.c' || echo '$(srcdir)/'`src/unix/bsd/setmode.c
++@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/unix/bsd/$(DEPDIR)/libuv_la-setmode.Tpo src/unix/bsd/$(DEPDIR)/libuv_la-setmode.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/unix/bsd/setmode.c' object='src/unix/bsd/libuv_la-setmode.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libuv_la_CFLAGS) $(CFLAGS) -c -o src/unix/bsd/libuv_la-setmode.lo `test -f 'src/unix/bsd/setmode.c' || echo '$(srcdir)/'`src/unix/bsd/setmode.c
++
++src/unix/bsd/libuv_la-strmode.lo: src/unix/bsd/strmode.c
++@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libuv_la_CFLAGS) $(CFLAGS) -MT src/unix/bsd/libuv_la-strmode.lo -MD -MP -MF src/unix/bsd/$(DEPDIR)/libuv_la-strmode.Tpo -c -o src/unix/bsd/libuv_la-strmode.lo `test -f 'src/unix/bsd/strmode.c' || echo '$(srcdir)/'`src/unix/bsd/strmode.c
++@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/unix/bsd/$(DEPDIR)/libuv_la-strmode.Tpo src/unix/bsd/$(DEPDIR)/libuv_la-strmode.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/unix/bsd/strmode.c' object='src/unix/bsd/libuv_la-strmode.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libuv_la_CFLAGS) $(CFLAGS) -c -o src/unix/bsd/libuv_la-strmode.lo `test -f 'src/unix/bsd/strmode.c' || echo '$(srcdir)/'`src/unix/bsd/strmode.c
++
++src/unix/bsd/libuv_la-reallocarray.lo: src/unix/bsd/reallocarray.c
++@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libuv_la_CFLAGS) $(CFLAGS) -MT src/unix/bsd/libuv_la-reallocarray.lo -MD -MP -MF src/unix/bsd/$(DEPDIR)/libuv_la-reallocarray.Tpo -c -o src/unix/bsd/libuv_la-reallocarray.lo `test -f 'src/unix/bsd/reallocarray.c' || echo '$(srcdir)/'`src/unix/bsd/reallocarray.c
++@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/unix/bsd/$(DEPDIR)/libuv_la-reallocarray.Tpo src/unix/bsd/$(DEPDIR)/libuv_la-reallocarray.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/unix/bsd/reallocarray.c' object='src/unix/bsd/libuv_la-reallocarray.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libuv_la_CFLAGS) $(CFLAGS) -c -o src/unix/bsd/libuv_la-reallocarray.lo `test -f 'src/unix/bsd/reallocarray.c' || echo '$(srcdir)/'`src/unix/bsd/reallocarray.c
++
+ src/unix/libuv_la-linux-core.lo: src/unix/linux-core.c
+ @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libuv_la_CFLAGS) $(CFLAGS) -MT src/unix/libuv_la-linux-core.lo -MD -MP -MF src/unix/$(DEPDIR)/libuv_la-linux-core.Tpo -c -o src/unix/libuv_la-linux-core.lo `test -f 'src/unix/linux-core.c' || echo '$(srcdir)/'`src/unix/linux-core.c
+ @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/unix/$(DEPDIR)/libuv_la-linux-core.Tpo src/unix/$(DEPDIR)/libuv_la-linux-core.Plo
+@@ -5481,6 +5553,7 @@ clean-libtool:
+ 	-rm -rf .libs _libs
+ 	-rm -rf src/.libs src/_libs
+ 	-rm -rf src/unix/.libs src/unix/_libs
++	-rm -rf src/unix/bsd/.libs src/unix/bsd/_libs
+ 	-rm -rf src/win/.libs src/win/_libs
+ 	-rm -rf test/.libs test/_libs
+ 
+@@ -5915,6 +5988,8 @@ distclean-generic:
+ 	-rm -f src/$(am__dirstamp)
+ 	-rm -f src/unix/$(DEPDIR)/$(am__dirstamp)
+ 	-rm -f src/unix/$(am__dirstamp)
++	-rm -f src/unix/bsd/$(DEPDIR)/$(am__dirstamp)
++	-rm -f src/unix/bsd/$(am__dirstamp)
+ 	-rm -f src/win/$(DEPDIR)/$(am__dirstamp)
+ 	-rm -f src/win/$(am__dirstamp)
+ 	-rm -f test/$(DEPDIR)/$(am__dirstamp)
+@@ -5951,6 +6026,7 @@ distclean: distclean-am
+ 	-rm -f src/unix/$(DEPDIR)/libuv_la-darwin-proctitle.Plo
+ 	-rm -f src/unix/$(DEPDIR)/libuv_la-darwin.Plo
+ 	-rm -f src/unix/$(DEPDIR)/libuv_la-dl.Plo
++	-rm -f src/unix/$(DEPDIR)/libuv_la-emscripten-poll.Plo
+ 	-rm -f src/unix/$(DEPDIR)/libuv_la-epoll.Plo
+ 	-rm -f src/unix/$(DEPDIR)/libuv_la-freebsd.Plo
+ 	-rm -f src/unix/$(DEPDIR)/libuv_la-fs.Plo
+@@ -5993,6 +6069,9 @@ distclean: distclean-am
+ 	-rm -f src/unix/$(DEPDIR)/libuv_la-thread.Plo
+ 	-rm -f src/unix/$(DEPDIR)/libuv_la-tty.Plo
+ 	-rm -f src/unix/$(DEPDIR)/libuv_la-udp.Plo
++	-rm -f src/unix/bsd/$(DEPDIR)/libuv_la-reallocarray.Plo
++	-rm -f src/unix/bsd/$(DEPDIR)/libuv_la-setmode.Plo
++	-rm -f src/unix/bsd/$(DEPDIR)/libuv_la-strmode.Plo
+ 	-rm -f src/win/$(DEPDIR)/libuv_la-async.Plo
+ 	-rm -f src/win/$(DEPDIR)/libuv_la-core.Plo
+ 	-rm -f src/win/$(DEPDIR)/libuv_la-detect-wakeup.Plo
+@@ -6259,6 +6338,7 @@ maintainer-clean: maintainer-clean-am
+ 	-rm -f src/unix/$(DEPDIR)/libuv_la-darwin-proctitle.Plo
+ 	-rm -f src/unix/$(DEPDIR)/libuv_la-darwin.Plo
+ 	-rm -f src/unix/$(DEPDIR)/libuv_la-dl.Plo
++	-rm -f src/unix/$(DEPDIR)/libuv_la-emscripten-poll.Plo
+ 	-rm -f src/unix/$(DEPDIR)/libuv_la-epoll.Plo
+ 	-rm -f src/unix/$(DEPDIR)/libuv_la-freebsd.Plo
+ 	-rm -f src/unix/$(DEPDIR)/libuv_la-fs.Plo
+@@ -6301,6 +6381,9 @@ maintainer-clean: maintainer-clean-am
+ 	-rm -f src/unix/$(DEPDIR)/libuv_la-thread.Plo
+ 	-rm -f src/unix/$(DEPDIR)/libuv_la-tty.Plo
+ 	-rm -f src/unix/$(DEPDIR)/libuv_la-udp.Plo
++	-rm -f src/unix/bsd/$(DEPDIR)/libuv_la-reallocarray.Plo
++	-rm -f src/unix/bsd/$(DEPDIR)/libuv_la-setmode.Plo
++	-rm -f src/unix/bsd/$(DEPDIR)/libuv_la-strmode.Plo
+ 	-rm -f src/win/$(DEPDIR)/libuv_la-async.Plo
+ 	-rm -f src/win/$(DEPDIR)/libuv_la-core.Plo
+ 	-rm -f src/win/$(DEPDIR)/libuv_la-detect-wakeup.Plo
+diff --git a/Makefile.mingw b/Makefile.mingw
+new file mode 100644
+index 0000000..37f6207
+--- /dev/null
++++ b/Makefile.mingw
+@@ -0,0 +1,26 @@
++CC ?= gcc
++
++CFLAGS += -Wall \
++          -Wextra \
++          -Wno-unused-parameter \
++          -Wstrict-prototypes \
++          -Iinclude \
++          -Isrc \
++          -Isrc/win \
++          -DWIN32_LEAN_AND_MEAN \
++          -D_WIN32_WINNT=0x0600
++
++INCLUDES := $(wildcard include/*.h) $(wildcard include/uv/*.h) $(wildcard src/*.h) $(wildcard src/win/*.h)
++SOURCES := $(wildcard src/*.c) $(wildcard src/win/*.c)
++OBJS := $(patsubst %.c, %.o, $(SOURCES))
++
++all: libuv.a
++
++clean:
++	-$(RM) $(OBJS) libuv.a
++
++libuv.a: $(OBJS)
++	$(AR) crs $@ $^
++
++$(OBJS): %.o : %.c $(INCLUDES)
++	$(CC) $(CFLAGS) -c -o $@ $<
+diff --git a/configure b/configure
+index 61b703c..0001bfb 100755
+--- a/configure
++++ b/configure
+@@ -659,6 +659,8 @@ ac_subst_vars='am__EXEEXT_FALSE
+ am__EXEEXT_TRUE
+ LTLIBOBJS
+ LIBOBJS
++EMSCRIPTEN_FALSE
++EMSCRIPTEN_TRUE
+ WINNT_FALSE
+ WINNT_TRUE
+ SUNOS_FALSE
+@@ -15136,6 +15138,17 @@ else
+   WINNT_FALSE=
+ fi
+ 
++ if case $host_os in
++  emscripten*) true ;;
++  *) false ;;
++esac; then
++  EMSCRIPTEN_TRUE=
++  EMSCRIPTEN_FALSE='#'
++else
++  EMSCRIPTEN_TRUE='#'
++  EMSCRIPTEN_FALSE=
++fi
++
+ case $host_os in
+   mingw*)
+     LIBS="$LIBS -lws2_32 -lpsapi -liphlpapi -lshell32 -luserenv -luser32"
+@@ -15448,6 +15461,10 @@ if test -z "${WINNT_TRUE}" && test -z "${WINNT_FALSE}"; then
+   as_fn_error $? "conditional \"WINNT\" was never defined.
+ Usually this means the macro was only invoked conditionally." "$LINENO" 5
+ fi
++if test -z "${EMSCRIPTEN_TRUE}" && test -z "${EMSCRIPTEN_FALSE}"; then
++  as_fn_error $? "conditional \"EMSCRIPTEN\" was never defined.
++Usually this means the macro was only invoked conditionally." "$LINENO" 5
++fi
+ 
+ : "${CONFIG_STATUS=./config.status}"
+ ac_write_fail=0
+diff --git a/configure.ac b/configure.ac
+index 82d1640..f0a1a3e 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -73,6 +73,7 @@ AM_CONDITIONAL([OS390],    [AS_CASE([$host_os],[openedition*],  [true], [false])
+ AM_CONDITIONAL([OS400],    [AS_CASE([$host_os],[os400],         [true], [false])])
+ AM_CONDITIONAL([SUNOS],    [AS_CASE([$host_os],[solaris*],      [true], [false])])
+ AM_CONDITIONAL([WINNT],    [AS_CASE([$host_os],[mingw*],        [true], [false])])
++AM_CONDITIONAL([EMSCRIPTEN], [AS_CASE([$host_os],[emscripten*], [true], [false])])
+ AS_CASE([$host_os],[mingw*], [
+     LIBS="$LIBS -lws2_32 -lpsapi -liphlpapi -lshell32 -luserenv -luser32"
+ ])
+diff --git a/m4/lt-obsolete.m4 b/m4/lt-obsolete.m4
+new file mode 100644
+index 0000000..b80d621
+--- /dev/null
++++ b/m4/lt-obsolete.m4
+@@ -0,0 +1,99 @@
++# lt-obsolete.m4 -- aclocal satisfying obsolete definitions.    -*-Autoconf-*-
++#
++#   Copyright (C) 2004-2005, 2007, 2009, 2011-2019, 2021-2022 Free
++#   Software Foundation, Inc.
++#   Written by Scott James Remnant, 2004.
++#
++# This file is free software; the Free Software Foundation gives
++# unlimited permission to copy and/or distribute it, with or without
++# modifications, as long as this notice is preserved.
++
++# serial 5 lt-obsolete.m4
++
++# These exist entirely to fool aclocal when bootstrapping libtool.
++#
++# In the past libtool.m4 has provided macros via AC_DEFUN (or AU_DEFUN),
++# which have later been changed to m4_define as they aren't part of the
++# exported API, or moved to Autoconf or Automake where they belong.
++#
++# The trouble is, aclocal is a bit thick.  It'll see the old AC_DEFUN
++# in /usr/share/aclocal/libtool.m4 and remember it, then when it sees us
++# using a macro with the same name in our local m4/libtool.m4 it'll
++# pull the old libtool.m4 in (it doesn't see our shiny new m4_define
++# and doesn't know about Autoconf macros at all.)
++#
++# So we provide this file, which has a silly filename so it's always
++# included after everything else.  This provides aclocal with the
++# AC_DEFUNs it wants, but when m4 processes it, it doesn't do anything
++# because those macros already exist, or will be overwritten later.
++# We use AC_DEFUN over AU_DEFUN for compatibility with aclocal-1.6.
++#
++# Anytime we withdraw an AC_DEFUN or AU_DEFUN, remember to add it here.
++# Yes, that means every name once taken will need to remain here until
++# we give up compatibility with versions before 1.7, at which point
++# we need to keep only those names which we still refer to.
++
++# This is to help aclocal find these macros, as it can't see m4_define.
++AC_DEFUN([LTOBSOLETE_VERSION], [m4_if([1])])
++
++m4_ifndef([AC_LIBTOOL_LINKER_OPTION],	[AC_DEFUN([AC_LIBTOOL_LINKER_OPTION])])
++m4_ifndef([AC_PROG_EGREP],		[AC_DEFUN([AC_PROG_EGREP])])
++m4_ifndef([_LT_AC_PROG_ECHO_BACKSLASH],	[AC_DEFUN([_LT_AC_PROG_ECHO_BACKSLASH])])
++m4_ifndef([_LT_AC_SHELL_INIT],		[AC_DEFUN([_LT_AC_SHELL_INIT])])
++m4_ifndef([_LT_AC_SYS_LIBPATH_AIX],	[AC_DEFUN([_LT_AC_SYS_LIBPATH_AIX])])
++m4_ifndef([_LT_PROG_LTMAIN],		[AC_DEFUN([_LT_PROG_LTMAIN])])
++m4_ifndef([_LT_AC_TAGVAR],		[AC_DEFUN([_LT_AC_TAGVAR])])
++m4_ifndef([AC_LTDL_ENABLE_INSTALL],	[AC_DEFUN([AC_LTDL_ENABLE_INSTALL])])
++m4_ifndef([AC_LTDL_PREOPEN],		[AC_DEFUN([AC_LTDL_PREOPEN])])
++m4_ifndef([_LT_AC_SYS_COMPILER],	[AC_DEFUN([_LT_AC_SYS_COMPILER])])
++m4_ifndef([_LT_AC_LOCK],		[AC_DEFUN([_LT_AC_LOCK])])
++m4_ifndef([AC_LIBTOOL_SYS_OLD_ARCHIVE],	[AC_DEFUN([AC_LIBTOOL_SYS_OLD_ARCHIVE])])
++m4_ifndef([_LT_AC_TRY_DLOPEN_SELF],	[AC_DEFUN([_LT_AC_TRY_DLOPEN_SELF])])
++m4_ifndef([AC_LIBTOOL_PROG_CC_C_O],	[AC_DEFUN([AC_LIBTOOL_PROG_CC_C_O])])
++m4_ifndef([AC_LIBTOOL_SYS_HARD_LINK_LOCKS], [AC_DEFUN([AC_LIBTOOL_SYS_HARD_LINK_LOCKS])])
++m4_ifndef([AC_LIBTOOL_OBJDIR],		[AC_DEFUN([AC_LIBTOOL_OBJDIR])])
++m4_ifndef([AC_LTDL_OBJDIR],		[AC_DEFUN([AC_LTDL_OBJDIR])])
++m4_ifndef([AC_LIBTOOL_PROG_LD_HARDCODE_LIBPATH], [AC_DEFUN([AC_LIBTOOL_PROG_LD_HARDCODE_LIBPATH])])
++m4_ifndef([AC_LIBTOOL_SYS_LIB_STRIP],	[AC_DEFUN([AC_LIBTOOL_SYS_LIB_STRIP])])
++m4_ifndef([AC_PATH_MAGIC],		[AC_DEFUN([AC_PATH_MAGIC])])
++m4_ifndef([AC_PROG_LD_GNU],		[AC_DEFUN([AC_PROG_LD_GNU])])
++m4_ifndef([AC_PROG_LD_RELOAD_FLAG],	[AC_DEFUN([AC_PROG_LD_RELOAD_FLAG])])
++m4_ifndef([AC_DEPLIBS_CHECK_METHOD],	[AC_DEFUN([AC_DEPLIBS_CHECK_METHOD])])
++m4_ifndef([AC_LIBTOOL_PROG_COMPILER_NO_RTTI], [AC_DEFUN([AC_LIBTOOL_PROG_COMPILER_NO_RTTI])])
++m4_ifndef([AC_LIBTOOL_SYS_GLOBAL_SYMBOL_PIPE], [AC_DEFUN([AC_LIBTOOL_SYS_GLOBAL_SYMBOL_PIPE])])
++m4_ifndef([AC_LIBTOOL_PROG_COMPILER_PIC], [AC_DEFUN([AC_LIBTOOL_PROG_COMPILER_PIC])])
++m4_ifndef([AC_LIBTOOL_PROG_LD_SHLIBS],	[AC_DEFUN([AC_LIBTOOL_PROG_LD_SHLIBS])])
++m4_ifndef([AC_LIBTOOL_POSTDEP_PREDEP],	[AC_DEFUN([AC_LIBTOOL_POSTDEP_PREDEP])])
++m4_ifndef([LT_AC_PROG_EGREP],		[AC_DEFUN([LT_AC_PROG_EGREP])])
++m4_ifndef([LT_AC_PROG_SED],		[AC_DEFUN([LT_AC_PROG_SED])])
++m4_ifndef([_LT_CC_BASENAME],		[AC_DEFUN([_LT_CC_BASENAME])])
++m4_ifndef([_LT_COMPILER_BOILERPLATE],	[AC_DEFUN([_LT_COMPILER_BOILERPLATE])])
++m4_ifndef([_LT_LINKER_BOILERPLATE],	[AC_DEFUN([_LT_LINKER_BOILERPLATE])])
++m4_ifndef([_AC_PROG_LIBTOOL],		[AC_DEFUN([_AC_PROG_LIBTOOL])])
++m4_ifndef([AC_LIBTOOL_SETUP],		[AC_DEFUN([AC_LIBTOOL_SETUP])])
++m4_ifndef([_LT_AC_CHECK_DLFCN],		[AC_DEFUN([_LT_AC_CHECK_DLFCN])])
++m4_ifndef([AC_LIBTOOL_SYS_DYNAMIC_LINKER],	[AC_DEFUN([AC_LIBTOOL_SYS_DYNAMIC_LINKER])])
++m4_ifndef([_LT_AC_TAGCONFIG],		[AC_DEFUN([_LT_AC_TAGCONFIG])])
++m4_ifndef([AC_DISABLE_FAST_INSTALL],	[AC_DEFUN([AC_DISABLE_FAST_INSTALL])])
++m4_ifndef([_LT_AC_LANG_CXX],		[AC_DEFUN([_LT_AC_LANG_CXX])])
++m4_ifndef([_LT_AC_LANG_F77],		[AC_DEFUN([_LT_AC_LANG_F77])])
++m4_ifndef([_LT_AC_LANG_GCJ],		[AC_DEFUN([_LT_AC_LANG_GCJ])])
++m4_ifndef([AC_LIBTOOL_LANG_C_CONFIG],	[AC_DEFUN([AC_LIBTOOL_LANG_C_CONFIG])])
++m4_ifndef([_LT_AC_LANG_C_CONFIG],	[AC_DEFUN([_LT_AC_LANG_C_CONFIG])])
++m4_ifndef([AC_LIBTOOL_LANG_CXX_CONFIG],	[AC_DEFUN([AC_LIBTOOL_LANG_CXX_CONFIG])])
++m4_ifndef([_LT_AC_LANG_CXX_CONFIG],	[AC_DEFUN([_LT_AC_LANG_CXX_CONFIG])])
++m4_ifndef([AC_LIBTOOL_LANG_F77_CONFIG],	[AC_DEFUN([AC_LIBTOOL_LANG_F77_CONFIG])])
++m4_ifndef([_LT_AC_LANG_F77_CONFIG],	[AC_DEFUN([_LT_AC_LANG_F77_CONFIG])])
++m4_ifndef([AC_LIBTOOL_LANG_GCJ_CONFIG],	[AC_DEFUN([AC_LIBTOOL_LANG_GCJ_CONFIG])])
++m4_ifndef([_LT_AC_LANG_GCJ_CONFIG],	[AC_DEFUN([_LT_AC_LANG_GCJ_CONFIG])])
++m4_ifndef([AC_LIBTOOL_LANG_RC_CONFIG],	[AC_DEFUN([AC_LIBTOOL_LANG_RC_CONFIG])])
++m4_ifndef([_LT_AC_LANG_RC_CONFIG],	[AC_DEFUN([_LT_AC_LANG_RC_CONFIG])])
++m4_ifndef([AC_LIBTOOL_CONFIG],		[AC_DEFUN([AC_LIBTOOL_CONFIG])])
++m4_ifndef([_LT_AC_FILE_LTDLL_C],	[AC_DEFUN([_LT_AC_FILE_LTDLL_C])])
++m4_ifndef([_LT_REQUIRED_DARWIN_CHECKS],	[AC_DEFUN([_LT_REQUIRED_DARWIN_CHECKS])])
++m4_ifndef([_LT_AC_PROG_CXXCPP],		[AC_DEFUN([_LT_AC_PROG_CXXCPP])])
++m4_ifndef([_LT_PREPARE_SED_QUOTE_VARS],	[AC_DEFUN([_LT_PREPARE_SED_QUOTE_VARS])])
++m4_ifndef([_LT_PROG_ECHO_BACKSLASH],	[AC_DEFUN([_LT_PROG_ECHO_BACKSLASH])])
++m4_ifndef([_LT_PROG_F77],		[AC_DEFUN([_LT_PROG_F77])])
++m4_ifndef([_LT_PROG_FC],		[AC_DEFUN([_LT_PROG_FC])])
++m4_ifndef([_LT_PROG_CXX],		[AC_DEFUN([_LT_PROG_CXX])])
+diff --git a/src/unix/bsd/cdefs.h b/src/unix/bsd/cdefs.h
+new file mode 100644
+index 0000000..9d54228
+--- /dev/null
++++ b/src/unix/bsd/cdefs.h
+@@ -0,0 +1,7 @@
++#if defined(__cplusplus)
++#define __BEGIN_DECLS extern "C" {
++#define __END_DECLS }
++#else
++#define __BEGIN_DECLS
++#define __END_DECLS
++#endif
+diff --git a/src/unix/bsd/reallocarray.c b/src/unix/bsd/reallocarray.c
+new file mode 100644
+index 0000000..7accd99
+--- /dev/null
++++ b/src/unix/bsd/reallocarray.c
+@@ -0,0 +1,38 @@
++/*	$OpenBSD: reallocarray.c,v 1.1 2014/05/08 21:43:49 deraadt Exp $	*/
++/*
++ * Copyright (c) 2008 Otto Moerbeek <otto@drijf.net>
++ *
++ * Permission to use, copy, modify, and distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <sys/types.h>
++#include <errno.h>
++#include <stdint.h>
++#include <stdlib.h>
++
++/*
++ * This is sqrt(SIZE_MAX+1), as s1*s2 <= SIZE_MAX
++ * if both s1 < MUL_NO_OVERFLOW and s2 < MUL_NO_OVERFLOW
++ */
++#define MUL_NO_OVERFLOW	(1UL << (sizeof(size_t) * 4))
++
++void *
++reallocarray(void *optr, size_t nmemb, size_t size)
++{
++	if ((nmemb >= MUL_NO_OVERFLOW || size >= MUL_NO_OVERFLOW) &&
++	    nmemb > 0 && SIZE_MAX / nmemb < size) {
++		errno = ENOMEM;
++		return NULL;
++	}
++	return realloc(optr, size * nmemb);
++}
+diff --git a/src/unix/bsd/setmode.c b/src/unix/bsd/setmode.c
+new file mode 100644
+index 0000000..22bf610
+--- /dev/null
++++ b/src/unix/bsd/setmode.c
+@@ -0,0 +1,472 @@
++/* clang-format off */
++/*	$NetBSD: setmode.c,v 1.34 2012/06/25 22:32:43 abs Exp $	*/
++
++/*
++ * Copyright (c) 1989, 1993, 1994
++ *	The Regents of the University of California.  All rights reserved.
++ *
++ * This code is derived from software contributed to Berkeley by
++ * Dave Borman at Cray Research, Inc.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. Neither the name of the University nor the names of its contributors
++ *    may be used to endorse or promote products derived from this software
++ *    without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
++ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
++ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++ * SUCH DAMAGE.
++ */
++
++#include "bsd/cdefs.h"
++#include <sys/stat.h>
++#include <sys/types.h>
++
++#include <ctype.h>
++#include <errno.h>
++#include <limits.h>
++#include <signal.h>
++#include <stdlib.h>
++#include <unistd.h>
++
++#ifdef SETMODE_DEBUG
++#include <stdio.h>
++#endif
++
++#define	SET_LEN	6		/* initial # of bitcmd struct to malloc */
++#define	SET_LEN_INCR 4		/* # of bitcmd structs to add as needed */
++
++void *reallocarray(void *ptr, size_t nmemb, size_t size);
++
++#ifndef S_ISTXT
++#define S_ISTXT S_ISVTX
++#endif
++
++typedef struct bitcmd {
++	char	cmd;
++	char	cmd2;
++	mode_t	bits;
++} BITCMD;
++
++#define	CMD2_CLR	0x01
++#define	CMD2_SET	0x02
++#define	CMD2_GBITS	0x04
++#define	CMD2_OBITS	0x08
++#define	CMD2_UBITS	0x10
++
++static BITCMD	*addcmd(BITCMD *, mode_t, mode_t, mode_t, mode_t);
++static void	 compress_mode(BITCMD *);
++#ifdef SETMODE_DEBUG
++static void	 dumpmode(BITCMD *);
++#endif
++
++/*
++ * Given the old mode and an array of bitcmd structures, apply the operations
++ * described in the bitcmd structures to the old mode, and return the new mode.
++ * Note that there is no '=' command; a strict assignment is just a '-' (clear
++ * bits) followed by a '+' (set bits).
++ */
++mode_t
++getmode(const void *bbox, mode_t omode)
++{
++	const BITCMD *set;
++	mode_t clrval, newmode, value;
++
++	set = (const BITCMD *)bbox;
++	newmode = omode;
++	for (value = 0;; set++)
++		switch(set->cmd) {
++		/*
++		 * When copying the user, group or other bits around, we "know"
++		 * where the bits are in the mode so that we can do shifts to
++		 * copy them around.  If we don't use shifts, it gets real
++		 * grundgy with lots of single bit checks and bit sets.
++		 */
++		case 'u':
++			value = (newmode & S_IRWXU) >> 6;
++			goto common;
++
++		case 'g':
++			value = (newmode & S_IRWXG) >> 3;
++			goto common;
++
++		case 'o':
++			value = newmode & S_IRWXO;
++common:			if (set->cmd2 & CMD2_CLR) {
++				clrval =
++				    (set->cmd2 & CMD2_SET) ?  S_IRWXO : value;
++				if (set->cmd2 & CMD2_UBITS)
++					newmode &= ~((clrval<<6) & set->bits);
++				if (set->cmd2 & CMD2_GBITS)
++					newmode &= ~((clrval<<3) & set->bits);
++				if (set->cmd2 & CMD2_OBITS)
++					newmode &= ~(clrval & set->bits);
++			}
++			if (set->cmd2 & CMD2_SET) {
++				if (set->cmd2 & CMD2_UBITS)
++					newmode |= (value<<6) & set->bits;
++				if (set->cmd2 & CMD2_GBITS)
++					newmode |= (value<<3) & set->bits;
++				if (set->cmd2 & CMD2_OBITS)
++					newmode |= value & set->bits;
++			}
++			break;
++
++		case '+':
++			newmode |= set->bits;
++			break;
++
++		case '-':
++			newmode &= ~set->bits;
++			break;
++
++		case 'X':
++			if (omode & (S_IFDIR|S_IXUSR|S_IXGRP|S_IXOTH))
++				newmode |= set->bits;
++			break;
++
++		case '\0':
++		default:
++#ifdef SETMODE_DEBUG
++			(void)printf("getmode:%04o -> %04o\n", omode, newmode);
++#endif
++			return (newmode);
++		}
++}
++
++#define	ADDCMD(a, b, c, d) do {						\
++	if (set >= endset) {						\
++		BITCMD *newset;						\
++		setlen += SET_LEN_INCR;					\
++		newset = (BITCMD*) reallocarray(saveset, setlen, sizeof(BITCMD));	\
++		if (newset == NULL)					\
++			goto out;					\
++		set = newset + (set - saveset);				\
++		saveset = newset;					\
++		endset = newset + (setlen - 2);				\
++	}								\
++	set = addcmd(set, (mode_t)(a), (mode_t)(b), (mode_t)(c), (d));	\
++} while (/*CONSTCOND*/0)
++
++#define	STANDARD_BITS	(S_ISUID|S_ISGID|S_IRWXU|S_IRWXG|S_IRWXO)
++
++void *
++setmode(const char *p)
++{
++	int serrno;
++	char op, *ep;
++	BITCMD *set, *saveset, *endset;
++	sigset_t signset, sigoset;
++	mode_t mask, perm, permXbits, who;
++	long lval;
++	int equalopdone = 0;	/* pacify gcc */
++	int setlen;
++
++	if (!*p) {
++		errno = EINVAL;
++		return NULL;
++	}
++
++	/*
++	 * Get a copy of the mask for the permissions that are mask relative.
++	 * Flip the bits, we want what's not set.  Since it's possible that
++	 * the caller is opening files inside a signal handler, protect them
++	 * as best we can.
++	 */
++#ifndef __MINGW32__
++	sigfillset(&signset);
++	(void)sigprocmask(SIG_BLOCK, &signset, &sigoset);
++#endif
++	(void)umask(mask = umask(0));
++	mask = ~mask;
++#ifndef __MINGW32__
++	(void)sigprocmask(SIG_SETMASK, &sigoset, NULL);
++#endif
++
++	setlen = SET_LEN + 2;
++
++	set = (BITCMD*) reallocarray(NULL, setlen, sizeof(BITCMD));
++	if (set == NULL)
++		return (NULL);
++	saveset = set;
++	endset = set + (setlen - 2);
++
++	/*
++	 * If an absolute number, get it and return; disallow non-octal digits
++	 * or illegal bits.
++	 */
++	if (isdigit((unsigned char)*p)) {
++		errno = 0;
++		lval = strtol(p, &ep, 8);
++		if (*ep) {
++			errno = EINVAL;
++			goto out;
++		}
++		if (errno == ERANGE && (lval == LONG_MAX || lval == LONG_MIN))
++			goto out;
++		if (lval & ~(STANDARD_BITS|S_ISTXT)) {
++			errno = EINVAL;
++			goto out;
++		}
++		perm = (mode_t)lval;
++		ADDCMD('=', (STANDARD_BITS|S_ISTXT), perm, mask);
++		set->cmd = 0;
++		return (saveset);
++	}
++
++	/*
++	 * Build list of structures to set/clear/copy bits as described by
++	 * each clause of the symbolic mode.
++	 */
++	for (;;) {
++		/* First, find out which bits might be modified. */
++		for (who = 0;; ++p) {
++			switch (*p) {
++			case 'a':
++				who |= STANDARD_BITS;
++				break;
++			case 'u':
++				who |= S_ISUID|S_IRWXU;
++				break;
++			case 'g':
++				who |= S_ISGID|S_IRWXG;
++				break;
++			case 'o':
++				who |= S_IRWXO;
++				break;
++			default:
++				goto getop;
++			}
++		}
++
++getop:		if ((op = *p++) != '+' && op != '-' && op != '=') {
++			errno = EINVAL;
++			goto out;
++		}
++		if (op == '=')
++			equalopdone = 0;
++
++		who &= ~S_ISTXT;
++		for (perm = 0, permXbits = 0;; ++p) {
++			switch (*p) {
++			case 'r':
++				perm |= S_IRUSR|S_IRGRP|S_IROTH;
++				break;
++			case 's':
++				/*
++				 * If specific bits where requested and
++				 * only "other" bits ignore set-id.
++				 */
++				if (who == 0 || (who & ~S_IRWXO))
++					perm |= S_ISUID|S_ISGID;
++				break;
++			case 't':
++				/*
++				 * If specific bits where requested and
++				 * only "other" bits ignore set-id.
++				 */
++				if (who == 0 || (who & ~S_IRWXO)) {
++					who |= S_ISTXT;
++					perm |= S_ISTXT;
++				}
++				break;
++			case 'w':
++				perm |= S_IWUSR|S_IWGRP|S_IWOTH;
++				break;
++			case 'X':
++				permXbits = S_IXUSR|S_IXGRP|S_IXOTH;
++				break;
++			case 'x':
++				perm |= S_IXUSR|S_IXGRP|S_IXOTH;
++				break;
++			case 'u':
++			case 'g':
++			case 'o':
++				/*
++				 * When ever we hit 'u', 'g', or 'o', we have
++				 * to flush out any partial mode that we have,
++				 * and then do the copying of the mode bits.
++				 */
++				if (perm) {
++					ADDCMD(op, who, perm, mask);
++					perm = 0;
++				}
++				if (op == '=')
++					equalopdone = 1;
++				if (op == '+' && permXbits) {
++					ADDCMD('X', who, permXbits, mask);
++					permXbits = 0;
++				}
++				ADDCMD(*p, who, op, mask);
++				break;
++
++			default:
++				/*
++				 * Add any permissions that we haven't already
++				 * done.
++				 */
++				if (perm || (op == '=' && !equalopdone)) {
++					if (op == '=')
++						equalopdone = 1;
++					ADDCMD(op, who, perm, mask);
++					perm = 0;
++				}
++				if (permXbits) {
++					ADDCMD('X', who, permXbits, mask);
++					permXbits = 0;
++				}
++				goto apply;
++			}
++		}
++
++apply:		if (!*p)
++			break;
++		if (*p != ',')
++			goto getop;
++		++p;
++	}
++	set->cmd = 0;
++#ifdef SETMODE_DEBUG
++	(void)printf("Before compress_mode()\n");
++	dumpmode(saveset);
++#endif
++	compress_mode(saveset);
++#ifdef SETMODE_DEBUG
++	(void)printf("After compress_mode()\n");
++	dumpmode(saveset);
++#endif
++	return (saveset);
++out:
++	serrno = errno;
++	free(saveset);
++	errno = serrno;
++	return NULL;
++}
++
++static BITCMD *
++addcmd(BITCMD *set, mode_t op, mode_t who, mode_t oparg, mode_t mask)
++{
++	switch (op) {
++	case '=':
++		set->cmd = '-';
++		set->bits = who ? who : STANDARD_BITS;
++		set++;
++
++		op = '+';
++		/* FALLTHROUGH */
++	case '+':
++	case '-':
++	case 'X':
++		set->cmd = op;
++		set->bits = (who ? who : mask) & oparg;
++		break;
++
++	case 'u':
++	case 'g':
++	case 'o':
++		set->cmd = op;
++		if (who) {
++			set->cmd2 = ((who & S_IRUSR) ? CMD2_UBITS : 0) |
++				    ((who & S_IRGRP) ? CMD2_GBITS : 0) |
++				    ((who & S_IROTH) ? CMD2_OBITS : 0);
++			set->bits = (mode_t)~0;
++		} else {
++			set->cmd2 = CMD2_UBITS | CMD2_GBITS | CMD2_OBITS;
++			set->bits = mask;
++		}
++
++		if (oparg == '+')
++			set->cmd2 |= CMD2_SET;
++		else if (oparg == '-')
++			set->cmd2 |= CMD2_CLR;
++		else if (oparg == '=')
++			set->cmd2 |= CMD2_SET|CMD2_CLR;
++		break;
++	}
++	return (set + 1);
++}
++
++#ifdef SETMODE_DEBUG
++static void
++dumpmode(BITCMD *set)
++{
++	for (; set->cmd; ++set)
++		(void)printf("cmd: '%c' bits %04o%s%s%s%s%s%s\n",
++		    set->cmd, set->bits, set->cmd2 ? " cmd2:" : "",
++		    set->cmd2 & CMD2_CLR ? " CLR" : "",
++		    set->cmd2 & CMD2_SET ? " SET" : "",
++		    set->cmd2 & CMD2_UBITS ? " UBITS" : "",
++		    set->cmd2 & CMD2_GBITS ? " GBITS" : "",
++		    set->cmd2 & CMD2_OBITS ? " OBITS" : "");
++}
++#endif
++
++/*
++ * Given an array of bitcmd structures, compress by compacting consecutive
++ * '+', '-' and 'X' commands into at most 3 commands, one of each.  The 'u',
++ * 'g' and 'o' commands continue to be separate.  They could probably be
++ * compacted, but it's not worth the effort.
++ */
++static void
++compress_mode(BITCMD *set)
++{
++	BITCMD *nset;
++	int setbits, clrbits, Xbits, op;
++
++	for (nset = set;;) {
++		/* Copy over any 'u', 'g' and 'o' commands. */
++		while ((op = nset->cmd) != '+' && op != '-' && op != 'X') {
++			*set++ = *nset++;
++			if (!op)
++				return;
++		}
++
++		for (setbits = clrbits = Xbits = 0;; nset++) {
++			if ((op = nset->cmd) == '-') {
++				clrbits |= nset->bits;
++				setbits &= ~nset->bits;
++				Xbits &= ~nset->bits;
++			} else if (op == '+') {
++				setbits |= nset->bits;
++				clrbits &= ~nset->bits;
++				Xbits &= ~nset->bits;
++			} else if (op == 'X')
++				Xbits |= nset->bits & ~setbits;
++			else
++				break;
++		}
++		if (clrbits) {
++			set->cmd = '-';
++			set->cmd2 = 0;
++			set->bits = clrbits;
++			set++;
++		}
++		if (setbits) {
++			set->cmd = '+';
++			set->cmd2 = 0;
++			set->bits = setbits;
++			set++;
++		}
++		if (Xbits) {
++			set->cmd = 'X';
++			set->cmd2 = 0;
++			set->bits = Xbits;
++			set++;
++		}
++	}
++}
+diff --git a/src/unix/bsd/string.h b/src/unix/bsd/string.h
+new file mode 100644
+index 0000000..c36be7e
+--- /dev/null
++++ b/src/unix/bsd/string.h
+@@ -0,0 +1,47 @@
++/* clang-format off */
++/*
++ * Copyright © 2004, 2005, 2009, 2011 Guillem Jover <guillem@hadrons.org>
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
++ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
++ * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
++ * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
++ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
++ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
++ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
++ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifdef LIBBSD_OVERLAY
++#include_next <string.h>
++#else
++#include <string.h>
++#endif
++
++#ifndef LIBBSD_STRING_H
++#define LIBBSD_STRING_H
++
++#include "bsd/cdefs.h"
++#include <sys/types.h>
++
++__BEGIN_DECLS
++size_t strlcpy(char *dst, const char *src, size_t siz);
++size_t strlcat(char *dst, const char *src, size_t siz);
++char *strnstr(const char *str, const char *find, size_t str_len);
++void strmode(mode_t mode, char *str);
++__END_DECLS
++
++#endif
+diff --git a/src/unix/bsd/strmode.c b/src/unix/bsd/strmode.c
+new file mode 100644
+index 0000000..6dac776
+--- /dev/null
++++ b/src/unix/bsd/strmode.c
+@@ -0,0 +1,153 @@
++/* clang-format off */
++/*-
++ * Copyright (c) 1990, 1993
++ *	The Regents of the University of California.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 4. Neither the name of the University nor the names of its contributors
++ *    may be used to endorse or promote products derived from this software
++ *    without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
++ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
++ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++ * SUCH DAMAGE.
++ */
++
++#include "bsd/cdefs.h"
++
++#include <string.h>
++#include <sys/stat.h>
++#include <sys/types.h>
++
++void
++strmode(mode_t mode, char *p)
++{
++	 /* print type */
++	switch (mode & S_IFMT) {
++	case S_IFDIR:			/* directory */
++		*p++ = 'd';
++		break;
++	case S_IFCHR:			/* character special */
++		*p++ = 'c';
++		break;
++	case S_IFBLK:			/* block special */
++		*p++ = 'b';
++		break;
++	case S_IFREG:			/* regular */
++		*p++ = '-';
++		break;
++	case S_IFLNK:			/* symbolic link */
++		*p++ = 'l';
++		break;
++#ifdef S_IFSOCK
++	case S_IFSOCK:			/* socket */
++		*p++ = 's';
++		break;
++#endif
++#ifdef S_IFIFO
++	case S_IFIFO:			/* fifo */
++		*p++ = 'p';
++		break;
++#endif
++#ifdef S_IFWHT
++	case S_IFWHT:			/* whiteout */
++		*p++ = 'w';
++		break;
++#endif
++	default:			/* unknown */
++		*p++ = '?';
++		break;
++	}
++	/* usr */
++	if (mode & S_IRUSR)
++		*p++ = 'r';
++	else
++		*p++ = '-';
++	if (mode & S_IWUSR)
++		*p++ = 'w';
++	else
++		*p++ = '-';
++	switch (mode & (S_IXUSR | S_ISUID)) {
++	case 0:
++		*p++ = '-';
++		break;
++	case S_IXUSR:
++		*p++ = 'x';
++		break;
++	case S_ISUID:
++		*p++ = 'S';
++		break;
++	case S_IXUSR | S_ISUID:
++		*p++ = 's';
++		break;
++	}
++	/* group */
++	if (mode & S_IRGRP)
++		*p++ = 'r';
++	else
++		*p++ = '-';
++	if (mode & S_IWGRP)
++		*p++ = 'w';
++	else
++		*p++ = '-';
++	switch (mode & (S_IXGRP | S_ISGID)) {
++	case 0:
++		*p++ = '-';
++		break;
++#ifndef __WIN32
++	case S_IXGRP:
++		*p++ = 'x';
++		break;
++#endif
++	case S_ISGID:
++		*p++ = 'S';
++		break;
++#ifndef __WIN32
++	case S_IXGRP | S_ISGID:
++		*p++ = 's';
++		break;
++#endif
++	}
++	/* other */
++	if (mode & S_IROTH)
++		*p++ = 'r';
++	else
++		*p++ = '-';
++	if (mode & S_IWOTH)
++		*p++ = 'w';
++	else
++		*p++ = '-';
++	switch (mode & (S_IXOTH | S_ISVTX)) {
++	case 0:
++		*p++ = '-';
++		break;
++#ifndef __WIN32
++	case S_IXOTH:
++		*p++ = 'x';
++		break;
++	case S_ISVTX:
++		*p++ = 'T';
++		break;
++	case S_IXOTH | S_ISVTX:
++		*p++ = 't';
++		break;
++#endif
++	}
++	*p++ = ' ';		/* will be a '+' if ACL's implemented */
++	*p = '\0';
++}
+diff --git a/src/unix/bsd/unistd.h b/src/unix/bsd/unistd.h
+new file mode 100644
+index 0000000..00813ab
+--- /dev/null
++++ b/src/unix/bsd/unistd.h
+@@ -0,0 +1,68 @@
++/* clang-format off */
++/*
++ * Copyright © 2006 Robert Millan
++ * Copyright © 2008-2011 Guillem Jover <guillem@hadrons.org>
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
++ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
++ * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
++ * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
++ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
++ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
++ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
++ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifdef LIBBSD_OVERLAY
++#include_next <unistd.h>
++#else
++#include <unistd.h>
++#endif
++
++#ifndef LIBBSD_UNISTD_H
++#define LIBBSD_UNISTD_H
++
++#include "bsd/cdefs.h"
++#include <sys/stat.h>
++
++#ifndef S_ISTXT
++#define S_ISTXT S_ISVTX
++#endif
++
++__BEGIN_DECLS
++extern int optreset;
++
++#ifdef LIBBSD_OVERLAY
++#undef getopt
++#define getopt(argc, argv, optstr) bsd_getopt(argc, argv, optstr)
++#endif
++
++int bsd_getopt(int argc, char * const argv[], const char *shortopts);
++
++mode_t getmode(const void *set, mode_t mode);
++void *setmode(const char *mode_str);
++
++void closefrom(int lowfd);
++
++/* Compatibility with sendmail implementations. */
++#define initsetproctitle(c, a, e) setproctitle_init((c), (a), (e))
++
++void setproctitle_init(int argc, char *argv[], char *envp[]);
++void setproctitle(const char *fmt, ...);
++
++__END_DECLS
++
++#endif
+diff --git a/src/unix/core.c b/src/unix/core.c
+index 54c769f..95d1427 100644
+--- a/src/unix/core.c
++++ b/src/unix/core.c
+@@ -555,8 +555,8 @@ int uv__accept(int sockfd) {
+  */
+ int uv__close_nocancel(int fd) {
+ #if defined(__APPLE__)
+-#pragma GCC diagnostic push
+-#pragma GCC diagnostic ignored "-Wdollar-in-identifier-extension"
++# pragma GCC diagnostic push
++# pragma GCC diagnostic ignored "-Wdollar-in-identifier-extension"
+ #if defined(__LP64__) || TARGET_OS_IPHONE
+   extern int close$NOCANCEL(int);
+   return close$NOCANCEL(fd);
+diff --git a/src/unix/emscripten-poll.c b/src/unix/emscripten-poll.c
+new file mode 100644
+index 0000000..407e805
+--- /dev/null
++++ b/src/unix/emscripten-poll.c
+@@ -0,0 +1,24 @@
++#include "uv.h"
++#include "internal.h"
++#include <assert.h>
++#include <stddef.h>
++#include <stdint.h>
++#include <errno.h>
++#include <unistd.h>
++
++int uv__platform_loop_init(uv_loop_t* loop) {
++  return 0;
++}
++
++void uv__platform_loop_delete(uv_loop_t* loop) {
++}
++
++int uv__io_fork(uv_loop_t* loop) {
++  uv__platform_loop_delete(loop);
++  return uv__platform_loop_init(loop);
++}
++
++void uv__io_poll(uv_loop_t* loop, int timeout) {
++  fprintf(stderr, "io_poll is not available under Emscripten\n");
++  abort();
++}
+diff --git a/src/win/fs-fd-hash-inl.h b/src/win/fs-fd-hash-inl.h
+new file mode 100644
+index 0000000..7a203d2
+--- /dev/null
++++ b/src/win/fs-fd-hash-inl.h
+@@ -0,0 +1,178 @@
++#ifndef UV_WIN_FS_FD_HASH_INL_H_
++#define UV_WIN_FS_FD_HASH_INL_H_
++
++#include "uv.h"
++#include "internal.h"
++
++/* Files are only inserted in uv__fd_hash when the UV_FS_O_FILEMAP flag is
++ * specified. Thus, when uv__fd_hash_get returns true, the file mapping in the
++ * info structure should be used for read/write operations.
++ *
++ * If the file is empty, the mapping field will be set to
++ * INVALID_HANDLE_VALUE. This is not an issue since the file mapping needs to
++ * be created anyway when the file size changes.
++ *
++ * Since file descriptors are sequential integers, the modulo operator is used
++ * as hashing function. For each bucket, a single linked list of arrays is
++ * kept to minimize allocations. A statically allocated memory buffer is kept
++ * for the first array in each bucket. */
++
++
++#define UV__FD_HASH_SIZE 256
++#define UV__FD_HASH_GROUP_SIZE 16
++
++struct uv__fd_info_s {
++  int flags;
++  BOOLEAN is_directory;
++  HANDLE mapping;
++  LARGE_INTEGER size;
++  LARGE_INTEGER current_pos;
++};
++
++struct uv__fd_hash_entry_s {
++  uv_file fd;
++  struct uv__fd_info_s info;
++};
++
++struct uv__fd_hash_entry_group_s {
++  struct uv__fd_hash_entry_s entries[UV__FD_HASH_GROUP_SIZE];
++  struct uv__fd_hash_entry_group_s* next;
++};
++
++struct uv__fd_hash_bucket_s {
++  size_t size;
++  struct uv__fd_hash_entry_group_s* data;
++};
++
++
++static uv_mutex_t uv__fd_hash_mutex;
++
++static struct uv__fd_hash_entry_group_s
++  uv__fd_hash_entry_initial[UV__FD_HASH_SIZE * UV__FD_HASH_GROUP_SIZE];
++static struct uv__fd_hash_bucket_s uv__fd_hash[UV__FD_HASH_SIZE];
++
++
++INLINE static void uv__fd_hash_init(void) {
++  int i, err;
++
++  err = uv_mutex_init(&uv__fd_hash_mutex);
++  if (err) {
++    uv_fatal_error(err, "uv_mutex_init");
++  }
++
++  for (i = 0; i < ARRAY_SIZE(uv__fd_hash); ++i) {
++    uv__fd_hash[i].size = 0;
++    uv__fd_hash[i].data =
++        uv__fd_hash_entry_initial + i * UV__FD_HASH_GROUP_SIZE;
++  }
++}
++
++#define FIND_COMMON_VARIABLES                                                \
++  unsigned i;                                                                \
++  unsigned bucket = fd % ARRAY_SIZE(uv__fd_hash);                            \
++  struct uv__fd_hash_entry_s* entry_ptr = NULL;                              \
++  struct uv__fd_hash_entry_group_s* group_ptr;                               \
++  struct uv__fd_hash_bucket_s* bucket_ptr = &uv__fd_hash[bucket];
++
++#define FIND_IN_GROUP_PTR(group_size)                                        \
++  do {                                                                       \
++    for (i = 0; i < group_size; ++i) {                                       \
++      if (group_ptr->entries[i].fd == fd) {                                  \
++        entry_ptr = &group_ptr->entries[i];                                  \
++        break;                                                               \
++      }                                                                      \
++    }                                                                        \
++  } while (0)
++
++#define FIND_IN_BUCKET_PTR()                                                 \
++  do {                                                                       \
++    size_t first_group_size = bucket_ptr->size % UV__FD_HASH_GROUP_SIZE;     \
++    if (bucket_ptr->size != 0 && first_group_size == 0)                      \
++      first_group_size = UV__FD_HASH_GROUP_SIZE;                             \
++    group_ptr = bucket_ptr->data;                                            \
++    FIND_IN_GROUP_PTR(first_group_size);                                     \
++    for (group_ptr = group_ptr->next;                                        \
++         group_ptr != NULL && entry_ptr == NULL;                             \
++         group_ptr = group_ptr->next)                                        \
++      FIND_IN_GROUP_PTR(UV__FD_HASH_GROUP_SIZE);                             \
++  } while (0)
++
++INLINE static int uv__fd_hash_get(int fd, struct uv__fd_info_s* info) {
++  FIND_COMMON_VARIABLES
++
++  uv_mutex_lock(&uv__fd_hash_mutex);
++
++  FIND_IN_BUCKET_PTR();
++
++  if (entry_ptr != NULL) {
++    *info = entry_ptr->info;
++  }
++
++  uv_mutex_unlock(&uv__fd_hash_mutex);
++  return entry_ptr != NULL;
++}
++
++INLINE static void uv__fd_hash_add(int fd, struct uv__fd_info_s* info) {
++  FIND_COMMON_VARIABLES
++
++  uv_mutex_lock(&uv__fd_hash_mutex);
++
++  FIND_IN_BUCKET_PTR();
++
++  if (entry_ptr == NULL) {
++    i = bucket_ptr->size % UV__FD_HASH_GROUP_SIZE;
++
++    if (bucket_ptr->size != 0 && i == 0) {
++      struct uv__fd_hash_entry_group_s* new_group_ptr =
++        uv__malloc(sizeof(*new_group_ptr));
++      if (new_group_ptr == NULL) {
++        uv_fatal_error(ERROR_OUTOFMEMORY, "uv__malloc");
++      }
++      new_group_ptr->next = bucket_ptr->data;
++      bucket_ptr->data = new_group_ptr;
++    }
++
++    bucket_ptr->size += 1;
++    entry_ptr = &bucket_ptr->data->entries[i];
++    entry_ptr->fd = fd;
++  }
++
++  entry_ptr->info = *info;
++
++  uv_mutex_unlock(&uv__fd_hash_mutex);
++}
++
++INLINE static int uv__fd_hash_remove(int fd, struct uv__fd_info_s* info) {
++  FIND_COMMON_VARIABLES
++
++  uv_mutex_lock(&uv__fd_hash_mutex);
++
++  FIND_IN_BUCKET_PTR();
++
++  if (entry_ptr != NULL) {
++    *info = entry_ptr->info;
++
++    bucket_ptr->size -= 1;
++
++    i = bucket_ptr->size % UV__FD_HASH_GROUP_SIZE;
++    if (entry_ptr != &bucket_ptr->data->entries[i]) {
++      *entry_ptr = bucket_ptr->data->entries[i];
++    }
++
++    if (bucket_ptr->size != 0 &&
++        bucket_ptr->size % UV__FD_HASH_GROUP_SIZE == 0) {
++      struct uv__fd_hash_entry_group_s* old_group_ptr = bucket_ptr->data;
++      bucket_ptr->data = old_group_ptr->next;
++      uv__free(old_group_ptr);
++    }
++  }
++
++  uv_mutex_unlock(&uv__fd_hash_mutex);
++  return entry_ptr != NULL;
++}
++
++#undef FIND_COMMON_VARIABLES
++#undef FIND_IN_GROUP_PTR
++#undef FIND_IN_BUCKET_PTR
++
++#endif /* UV_WIN_FS_FD_HASH_INL_H_ */
