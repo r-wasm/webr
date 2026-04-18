@@ -67,7 +67,14 @@ jobs:
       - name: Build all optional wasm libs
         env:
           EMSDK: /opt/emsdk
-        run: cd libs && make all
+        # Retry: upstream source fetches occasionally fail transiently.
+        run: |
+          cd libs
+          for i in 1 2 3 4; do
+            make all && exit 0
+            sleep 30
+          done
+          exit 1
       - name: Build webR
         env:
           EMSDK: /opt/emsdk
