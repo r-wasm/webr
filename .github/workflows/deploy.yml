@@ -72,6 +72,7 @@ jobs:
           cd libs
           for i in 1 2 3 4; do
             make all && exit 0
+            rm -rf download
             sleep 30
           done
           exit 1
