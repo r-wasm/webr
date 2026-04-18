@@ -95,6 +95,7 @@ ARG MAKE_LIBS_TARGET="all"
 RUN cd libs && \
     for i in 1 2 3 4; do \
       make ${MAKE_LIBS_TARGET} && exit 0; \
+      rm -rf download; \
       sleep 30; \
     done; \
     exit 1
