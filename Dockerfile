@@ -91,7 +91,13 @@ RUN R CMD INSTALL packages/webr
 
 # Build webR with supporting Wasm libs
 ARG MAKE_LIBS_TARGET="all"
-RUN cd libs && make ${MAKE_LIBS_TARGET}
+# Retry: upstream source fetches occasionally fail transiently.
+RUN cd libs && \
+    for i in 1 2 3 4; do \
+      make ${MAKE_LIBS_TARGET} && exit 0; \
+      sleep 30; \
+    done; \
+    exit 1
 RUN make
 
 # Cleanup
