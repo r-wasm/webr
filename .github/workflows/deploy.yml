@@ -24,6 +24,8 @@ jobs:
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
+      - name: Update npm to latest for OIDC support
+        run: npm install -g npm@latest
       - name: Set npm dist-tag to "next" if pre-release version
         if: contains(github.ref_name, '-dev') || contains(github.ref_name, '-rc')
         run: echo "DIST_TAG=next" >> $GITHUB_ENV
@@ -70,10 +72,10 @@ jobs:
         # Retry: upstream source fetches occasionally fail transiently.
         run: |
           cd libs
-          for i in 1 2 3 4; do
+          for i in 1 2 3 4 5; do
             make all && exit 0
             rm -rf download
-            sleep 30
+            sleep 300
           done
           exit 1
       - name: Build webR

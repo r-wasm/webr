@@ -93,10 +93,10 @@ RUN R CMD INSTALL packages/webr
 ARG MAKE_LIBS_TARGET="all"
 # Retry: upstream source fetches occasionally fail transiently.
 RUN cd libs && \
-    for i in 1 2 3 4; do \
+    for i in 1 2 3 4 5; do \
       make ${MAKE_LIBS_TARGET} && exit 0; \
       rm -rf download; \
-      sleep 30; \
+      sleep 300; \
     done; \
     exit 1
 RUN make
