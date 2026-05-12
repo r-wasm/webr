@@ -1,7 +1,7 @@
-Index: R-4.5.0/src/unix/system.c
+Index: R-4.6.0/src/unix/system.c
 ===================================================================
---- R-4.5.0.orig/src/unix/system.c
-+++ R-4.5.0/src/unix/system.c
+--- R-4.6.0.orig/src/unix/system.c
++++ R-4.6.0/src/unix/system.c
 @@ -115,6 +115,23 @@ void R_FlushConsole(void) {
  }
  #endif
