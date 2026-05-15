@@ -61,7 +61,9 @@ describe('Download and install binary webR packages', () => {
     warnSpy.mockRestore();
   });
 
-  test('Install packages from R-universe using shim', async () => {
+  // Temporarily disable until R-universe has R 4.6
+  // eslint-disable-next-line jest/no-disabled-tests
+  test.skip('Install packages from R-universe using shim', async () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => null);
     const pkg = (await webR.evalR(`
       stopifnot(! "boot" %in% installed.packages()[, "Package"])

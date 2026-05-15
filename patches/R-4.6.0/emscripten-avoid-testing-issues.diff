@@ -328,3 +328,24 @@ Index: R-4.6.0/src/library/tools/man/R.Rd
  e$value
  }
 +}
+Index: R-4.6.0/src/library/utils/man/debugger.Rd
+===================================================================
+--- R-4.6.0.orig/src/library/utils/man/debugger.Rd
++++ R-4.6.0/src/library/utils/man/debugger.Rd
+@@ -90,6 +90,7 @@ limitedLabels(value, maxwidth = getOptio
+   \code{debugger} but directly after the error occurs.
+ }
+ \examples{
++\dontrun{
+ op <- options(error = dump.frames)
+ 
+ f <- function() {
+@@ -100,7 +101,7 @@ f()   # will generate a dump in object "
+ str(last.dump)
+ 
+ options(op)  # reset (error = NULL)
+-
++}
+ \dontrun{
+ ### Example of debugger() interaction with 'last.dump'
+ 
