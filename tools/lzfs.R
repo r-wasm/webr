@@ -1,7 +1,8 @@
 args <- commandArgs(trailingOnly = TRUE)
 
 usage <- function() {
-    message(r"(
+    message(
+        r"(
 Create pre.js file setting up a lazy filesystem for Emscripten.
 
 Usage:
@@ -17,21 +18,31 @@ Arguments:
   -o file         If provided, write output to 'file' rather than stdout.
   -u, --URL       If provided, set a prefix for backing URLs.
   -v, --verbose   Verbose mode. Output directory names as they are handled.
-)")
+)"
+    )
     quit(status = 1)
 }
 
 list_files <- function(src_path, full = TRUE, ...) {
-    if (dir.exists(src_path)) list.files(src_path, full.names = full, ...)
-    else if (full) src_path
-    else basename(src_path)
+    if (dir.exists(src_path)) {
+        list.files(src_path, full.names = full, ...)
+    } else if (full) {
+        src_path
+    } else {
+        basename(src_path)
+    }
 }
 
 list_dirs <- function(src_path, full = TRUE, ...) {
-    if (!file.exists(src_path)) character(0)
-    else if (dir.exists(src_path)) list.dirs(src_path, full.names = full, ...)
-    else if (full) dirname(src_path)
-    else ""
+    if (!file.exists(src_path)) {
+        character(0)
+    } else if (dir.exists(src_path)) {
+        list.dirs(src_path, full.names = full, ...)
+    } else if (full) {
+        dirname(src_path)
+    } else {
+        ""
+    }
 }
 
 run_with_check <- function(command, args) {
@@ -56,7 +67,8 @@ path_vec <- character(0)
 image_vec <- character(0)
 
 while (length(args) > 0) {
-    switch(args[1],
+    switch(
+        args[1],
         `--help` = ,
         `-h` = usage(),
         `--URL` = ,
@@ -123,7 +135,7 @@ let loadImage = function(dir, file, src, mountpoint) {
   let node = FS.createFile(dir, file, { isDevice: false } , true, true);
 
   let forceLoadFile = function() {
-    if (node.isDevice || node.isFolder || node.link || node.contents) {
+    if (node.isDevice || node.isFolder || node.link || node.size !== undefined) {
       return true;
     }
 
@@ -172,7 +184,9 @@ for (paths in strsplit(path_vec, "@")) {
     if (!file.exists(paths[1])) {
         next
     }
-    if (verbose) message(paste("Adding", paths[1]))
+    if (verbose) {
+        message(paste("Adding", paths[1]))
+    }
 
     for (src_path in paths[1]) {
         # Create directory structure
@@ -180,19 +194,25 @@ for (paths in strsplit(path_vec, "@")) {
         new_dirs <- file.path(dest_dir, list_dirs(src_path, full = FALSE))
 
         # Create lazy files
-        files <- file.path(dest_dir,
+        files <- file.path(
+            dest_dir,
             list_files(src_path, full = FALSE, recursive = TRUE)
         )
         parents <- gsub("^/", "", dirname(files))
         files <- basename(files)
-        files_out <- append(files_out,
-            sprintf(file_tmpl, parents, files,
+        files_out <- append(
+            files_out,
+            sprintf(
+                file_tmpl,
+                parents,
+                files,
                 file.path(gsub("/$", "", url), parents, files)
             )
         )
 
         # Copy source files to destination
-        lapply(file.path(dest, new_dirs),
+        lapply(
+            file.path(dest, new_dirs),
             dir.create,
             showWarnings = FALSE,
             recursive = TRUE
@@ -209,12 +229,15 @@ for (paths in strsplit(image_vec, "@")) {
     if (!file.exists(paths[1])) {
         next
     }
-    if (verbose) message(paste("Adding", paths[1], "(as image)"))
+    if (verbose) {
+        message(paste("Adding", paths[1], "(as image)"))
+    }
 
     for (src_path in paths[1]) {
         # Create lazy files
         dest_dir <- gsub("/$", "", paths[2])
-        files <- file.path(dest_dir,
+        files <- file.path(
+            dest_dir,
             list_files(src_path, full = FALSE, recursive = TRUE)
         )
         parents <- gsub("^/", "", dirname(files))
@@ -224,13 +247,17 @@ for (paths in strsplit(image_vec, "@")) {
         meta_file <- paste0(gsub("^/", "", dest_dir), '.js.metadata')
         data_url <- file.path(gsub("/$", "", url), paste0(data_file, '.gz'))
 
-        files_out <- append(files_out,
+        files_out <- append(
+            files_out,
             sprintf(image_tmpl, parents, files, data_url, paths[2])
         )
 
         # Build image from source files
-        dir.create(file.path(dest, dirname(js_file)),
-            showWarnings = FALSE, recursive = TRUE)
+        dir.create(
+            file.path(dest, dirname(js_file)),
+            showWarnings = FALSE,
+            recursive = TRUE
+        )
         emscripten_root <- dirname(Sys.which("emcc")[[1]])
         if (dir.exists(file.path(emscripten_root, "tools"))) {
             emscripten_tools <- file.path(emscripten_root, "tools")
@@ -238,14 +265,20 @@ for (paths in strsplit(image_vec, "@")) {
             # With nix, emcc is in bin/, file_packager is in
             # share/emscripten/tools/
             emscripten_tools <- file.path(
-                dirname(emscripten_root), "share", "emscripten", "tools"
+                dirname(emscripten_root),
+                "share",
+                "emscripten",
+                "tools"
             )
         }
         file_packager <- file.path(emscripten_tools, "file_packager")
 
-        run_with_check(file_packager,
-            args = c(file.path(dest, data_file),
-                "--preload", sprintf("'%s@/'", src_path),
+        run_with_check(
+            file_packager,
+            args = c(
+                file.path(dest, data_file),
+                "--preload",
+                sprintf("'%s@/'", src_path),
                 "--separate-metadata",
                 sprintf("--js-output='%s'", file.path(dest, js_file))
             )
