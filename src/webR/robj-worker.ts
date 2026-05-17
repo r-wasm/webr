@@ -1072,7 +1072,7 @@ export class RLogical extends RVectorAtomic<boolean> {
     const data = Module._LOGICAL(ptr);
     const naLogical = Module.getValue(Module._R_NaInt, 'i32');
     return (v: null | boolean, i: number) => {
-      Module.setValue(data + 4 * i, v === null ? naLogical : Boolean(v), 'i32');
+      Module.setValue(data + 4 * i, v === null ? naLogical : Number(v), 'i32');
     };
   };
 

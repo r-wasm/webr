@@ -218,7 +218,7 @@ void canvasClose(pDevDesc RGD)
     canvasDesc *cGD = (canvasDesc *)RGD->deviceSpecific;
 
     // Set device as closed in info environment
-    SEXP closed = Rf_findVarInFrame(cGD->env, Rf_install("is_closed"));
+    SEXP closed = R_getVar(Rf_install("is_closed"), cGD->env, FALSE);
     LOGICAL(closed)[0] = TRUE;
 
     // If not capturing, clean up the canvas cache
@@ -315,7 +315,7 @@ void canvasNewPage(const pGEcontext gc, pDevDesc RGD)
     if (cGD->capture) {
         cGD->canvas_id = canvas_id++;
         SEXP canvas_symbol = Rf_install("canvas_ids");
-        SEXP canvas_ids = Rf_findVar(canvas_symbol, cGD->env);
+        SEXP canvas_ids = R_getVar(canvas_symbol, cGD->env, TRUE);
         int n = Rf_length(canvas_ids);
         canvas_ids = Rf_lengthgets(canvas_ids, n + 1);
         Rf_defineVar(canvas_symbol, canvas_ids, cGD->env);
