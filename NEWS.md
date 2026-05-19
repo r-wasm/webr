@@ -1,5 +1,7 @@
 # webR (development version)
 
+# webR 0.6.0
+
 ## Breaking changes
 
 - Updated to R v4.6.0.
