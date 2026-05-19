@@ -1,5 +1,13 @@
 # webR (development version)
 
+## Breaking changes
+
+- Updated to R v4.6.0.
+
+- Updated to Emscripten v4.0.8. R packages build for previous versions of webR will not be binary compatible (#603).
+
+- Updated the base LLVM distribution, rebasing our Fortran for WebAssembly patches on v21.1.8. An additional patch new to this release fixes the Fortran allocatable arrays feature.
+
 # webR 0.5.9
 
 ## New features
