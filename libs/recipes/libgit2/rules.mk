@@ -15,6 +15,7 @@ $(LIBGIT2_WASM_LIB): $(LIBGIT2_TARBALL)
 	cd $(BUILD)/libgit2-$(LIBGIT2_VERSION)/build && \
 	  emcmake cmake --debug-find \
 	    -DCMAKE_C_FLAGS="-Wno-error=incompatible-pointer-types" \
+	    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
 	    -DCMAKE_BUILD_TYPE=Release \
 	    -DCMAKE_FIND_ROOT_PATH=$(WASM) \
 	    -DCMAKE_INSTALL_PREFIX:PATH=$(WASM) \
