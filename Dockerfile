@@ -76,7 +76,7 @@ RUN /opt/R/current/bin/R -q -e 'pak::pak("r-wasm/rwasm", lib = .Library)'
 RUN /opt/R/current/bin/R -q -e 'pak::pak("r-lib/pkgdepends@v0.9.0", lib = .Library)'
 
 # Setup P3M
-RUN echo 'options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/noble/latest"))' >> /root/.Rprofile
+RUN echo 'options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/resolute/latest"))' >> /root/.Rprofile
 
 # Download webR and configure for LLVM flang
 ARG WEBRCI_REPO="https://github.com/r-wasm/webr.git"
