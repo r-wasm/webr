@@ -1,0 +1,28 @@
+Skip glib's GIO networking checks (res_query, C_IN, etc.) when targeting
+Emscripten. Wasm doesn't have a working DNS resolver in libc, so the
+configure-time link tests all fail and abort the build. webR doesn't use
+GIO networking; treating "emscripten" the same as "windows" here keeps
+GIO's name-resolution code disabled at compile time.
+
+Index: glib-2.84.4/gio/meson.build
+===================================================================
+--- glib-2.84.4.orig/gio/meson.build
++++ glib-2.84.4/gio/meson.build
+@@ -18,7 +18,7 @@ have_func_dlsym = false
+
+ gnetworking_h_nameser_compat_include = ''
+
+-if host_system not in ['windows', 'android']
++if host_system not in ['windows', 'android', 'emscripten']
+   # Don't check for C_IN on Android since it does not define it in public
+   # headers, we define it ourselves wherever necessary
+   if not cc.compiles('''#include <sys/types.h>
+@@ -39,7 +39,7 @@ endif
+
+ network_libs = [ ]
+ network_args = [ ]
+-if host_system != 'windows'
++if host_system != 'windows' and host_system != 'emscripten'
+   # res_query()
+   res_query_test = '''#include <resolv.h>
+                       int main (int argc, char ** argv) {
