@@ -73,7 +73,7 @@ RUN /opt/R/current/bin/R -q -e 'install.packages("pak", lib = .Library)'
 RUN /opt/R/current/bin/R -q -e 'pak::pak("r-wasm/rwasm", lib = .Library)'
 # Temporary workaround for https://github.com/r-lib/pkgdepends/issues/462
 # TODO: Remove this once a fixed version of pkgdepends has released
-RUN /opt/R/current/bin/R -q -e 'pak::pak("r-lib/pkgdepends@v0.9.0", lib = .Library)'
+RUN /opt/R/current/bin/R -q -e 'pak::pak("r-lib/pkgdepends@v0.9.0-patched", lib = .Library)'
 
 # Setup P3M
 RUN echo 'options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/resolute/latest"))' >> /root/.Rprofile
