@@ -1,11 +1,11 @@
-Index: fontconfig-2.15.0/src/fccfg.c
+Index: fontconfig-2.17.1/src/fccfg.c
 ===================================================================
---- fontconfig-2.15.0.orig/src/fccfg.c
-+++ fontconfig-2.15.0/src/fccfg.c
-@@ -2716,10 +2716,7 @@ FcConfigGetFilename (FcConfig      *conf
- 	{
+--- fontconfig-2.17.1.orig/src/fccfg.c
++++ fontconfig-2.17.1/src/fccfg.c
+@@ -2634,10 +2634,7 @@ FcConfigGetFilename (FcConfig      *conf
+ 	for (p = path; *p; p++) {
  	    FcChar8 *s;
- 
+
 -	    if (sysroot)
 -		s = FcStrBuildFilename (sysroot, *p, NULL);
 -	    else

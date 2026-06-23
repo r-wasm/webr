@@ -1,6 +1,7 @@
-EXPAT_VERSION = 2.5.0
-EXPAT_TARBALL = $(DOWNLOAD)/expat-$(EXPAT_VERSION).tar.gz
-EXPAT_URL = https://github.com/libexpat/libexpat/releases/download/R_2_5_0/expat-$(EXPAT_VERSION).tar.bz2
+EXPAT_VERSION = 2.7.2
+EXPAT_VERSION_TAG = R_$(subst .,_,$(EXPAT_VERSION))
+EXPAT_TARBALL = $(DOWNLOAD)/expat-$(EXPAT_VERSION).tar.bz2
+EXPAT_URL = https://github.com/libexpat/libexpat/releases/download/$(EXPAT_VERSION_TAG)/expat-$(EXPAT_VERSION).tar.bz2
 
 .PHONY: expat
 expat: $(EXPAT_WASM_LIB)
@@ -14,6 +15,7 @@ $(EXPAT_TARBALL):
 # patch out the check before installing expat. Without this any build using
 # cmake fails after installation, even if expat isn't required.
 $(EXPAT_WASM_LIB): $(EXPAT_TARBALL)
+	rm -rf $(BUILD)/expat-$(EXPAT_VERSION)
 	mkdir -p $(BUILD)/expat-$(EXPAT_VERSION)/build
 	tar -C $(BUILD) -xf $(EXPAT_TARBALL)
 	cd $(BUILD)/expat-$(EXPAT_VERSION)/build && \
@@ -24,5 +26,9 @@ $(EXPAT_WASM_LIB): $(EXPAT_TARBALL)
 	  emconfigure ../configure \
 	    --enable-shared=no \
 	    --enable-static=yes \
+	    --without-docbook \
+	    --without-tests \
+	    --without-examples \
+	    --without-xmlwf \
 	    --prefix=$(WASM) && \
 	  emmake make install

@@ -1,0 +1,59 @@
+Drop the res_query / res_ninit code path on Emscripten.
+
+The default do_lookup_records() body is gated on G_OS_UNIX and calls
+res_query() (or res_nquery() when HAVE_RES_NQUERY is set). Neither
+res_query nor res_init are in Emscripten's libc, so libgio-2.0.a ends
+up with an unresolved external that breaks every downstream link.
+
+Restructure the conditional from a binary `#if G_OS_UNIX / #else
+(Windows)` into a 3-way branch with an explicit `#else` arm that
+returns G_RESOLVER_ERROR_NOT_FOUND. The other resolver entry points
+(g_resolver_lookup_by_name etc.) keep using getaddrinfo/getnameinfo,
+which link fine even though they return ENOSYS at runtime under
+emscripten -- DNS isn't expected to work in webR anyway.
+
+Index: glib-2.84.4/gio/gthreadedresolver.c
+===================================================================
+--- glib-2.84.4.orig/gio/gthreadedresolver.c
++++ glib-2.84.4/gio/gthreadedresolver.c
+@@ -1258,7 +1258,7 @@ free_records (GList *records)
+   g_list_free_full (records, (GDestroyNotify) g_variant_unref);
+ }
+
+-#if defined(G_OS_UNIX)
++#if defined(G_OS_UNIX) && !defined(__EMSCRIPTEN__)
+ #ifdef __BIONIC__
+ #ifndef C_IN
+ #define C_IN 1
+@@ -1275,7 +1275,7 @@ do_lookup_records (const gchar
+ {
+   GList *records;
+
+-#if defined(G_OS_UNIX)
++#if defined(G_OS_UNIX) && !defined(__EMSCRIPTEN__)
+   gint len = 512;
+   gint herr;
+   GByteArray *answer;
+@@ -1340,7 +1340,7 @@ do_lookup_records (const gchar
+
+ #endif  /* HAVE_RES_NQUERY */
+
+-#else
++#elif defined(G_OS_WIN32)
+
+   DNS_STATUS status;
+   DNS_RECORDA *results = NULL;
+@@ -1359,6 +1359,13 @@ do_lookup_records (const gchar
+   if (results != NULL)
+     DnsRecordListFree (results, DnsFreeRecordList);
+
++#else
++
++  /* No system resolver (e.g. Emscripten): return a clean error. */
++  g_set_error_literal (error, G_RESOLVER_ERROR, G_RESOLVER_ERROR_NOT_FOUND,
++                       _("DNS resolution is not supported"));
++  records = NULL;
++
+ #endif
+
+   return g_steal_pointer (&records);
