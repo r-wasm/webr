@@ -14,6 +14,7 @@ $(LIBWEBP_WASM_LIB): $(LIBWEBP_TARBALL)
 	tar -C $(BUILD) -xf $(LIBWEBP_TARBALL)
 	cd $(BUILD)/libwebp-$(LIBWEBP_VERSION)/build && \
 	  emcmake cmake --debug-find \
+	    -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
 	    -DCMAKE_BUILD_TYPE=Release \
 	    -DCMAKE_FIND_ROOT_PATH=$(WASM) \
 	    -DCMAKE_INSTALL_PREFIX:PATH=$(WASM) \

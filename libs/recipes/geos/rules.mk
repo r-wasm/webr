@@ -14,6 +14,7 @@ $(GEOS_WASM_LIB): $(GEOS_TARBALL)
 	tar -C $(BUILD) -xf $(GEOS_TARBALL)
 	cd $(BUILD)/geos-$(GEOS_VERSION)/build && \
 	  emcmake cmake --debug-find \
+	    -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
 	    -DCMAKE_BUILD_TYPE=Release \
 	    -DCMAKE_FIND_ROOT_PATH=$(WASM) \
 	    -DCMAKE_INSTALL_PREFIX:PATH=$(WASM) \

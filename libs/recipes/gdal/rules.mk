@@ -31,6 +31,7 @@ $(GDAL_WASM_LIB): $(GDAL_TARBALL) $(PROJ_WASM_LIB) $(GEOS_WASM_LIB) $(ZSTD_WASM_
 	tar -C $(BUILD) -xf $(GDAL_TARBALL)
 	cd $(BUILD)/gdal-$(GDAL_VERSION)/build && \
 	  emcmake cmake --debug-find \
+	    -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
 	    -DCMAKE_BUILD_TYPE=Release \
 	    -DCMAKE_FIND_ROOT_PATH=$(WASM) \
 	    -DCMAKE_INSTALL_PREFIX:PATH=$(WASM) \

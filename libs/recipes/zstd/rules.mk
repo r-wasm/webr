@@ -14,6 +14,7 @@ $(ZSTD_WASM_LIB): $(ZSTD_TARBALL)
 	tar -C $(BUILD) -xf $(ZSTD_TARBALL)
 	cd $(BUILD)/zstd-$(ZSTD_VERSION)/mybuild && \
 	  emcmake cmake --debug-find \
+	    -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
 	    -DCMAKE_BUILD_TYPE=Release \
 	    -DCMAKE_FIND_ROOT_PATH=$(WASM) \
 	    -DCMAKE_INSTALL_PREFIX:PATH=$(WASM) \
