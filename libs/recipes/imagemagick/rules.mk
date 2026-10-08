@@ -1,6 +1,6 @@
 IMAGEMAGICK_VERSION = 6.9.13-1
 IMAGEMAGICK_TARBALL = $(DOWNLOAD)/imagemagick-$(IMAGEMAGICK_VERSION).tar.gz
-IMAGEMAGICK_URL = https://imagemagick.org/archive/releases/ImageMagick-$(IMAGEMAGICK_VERSION).tar.xz
+IMAGEMAGICK_URL = https://download.imagemagick.org/archive/releases/ImageMagick-$(IMAGEMAGICK_VERSION).tar.xz
 
 .PHONY: imagemagick
 imagemagick: $(IMAGEMAGICK_WASM_LIB)
