@@ -600,6 +600,7 @@ function downloadFileContent(url: string, headers: Array<string> = [], maxRedire
   const request = new XMLHttpRequest();
   request.open('GET', url, false);
   request.responseType = 'arraybuffer';
+  request.timeout = _config.downloadTimeout;
 
   try {
     headers.forEach((header) => {

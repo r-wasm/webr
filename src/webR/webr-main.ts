@@ -178,6 +178,13 @@ export interface WebROptions {
   serviceWorkerUrl?: string;
 
   /**
+   * Timeout in milliseconds for each package/file download request. Prevents an
+   * unreachable repo from hanging the worker thread. `0` disables the timeout.
+   * Default: `0`.
+   */
+  downloadTimeout?: number;
+
+  /**
    * The WebAssembly user's home directory and initial working directory.
    * Default: `'/home/web_user'`
    */
@@ -218,6 +225,7 @@ const defaultOptions = {
   baseUrl: BASE_URL,
   serviceWorkerUrl: '',
   repoUrl: PKG_BASE_URL,
+  downloadTimeout: 0,
   homedir: '/home/web_user',
   interactive: true,
   channelType: ChannelType.Automatic,
