@@ -122,7 +122,7 @@ export function newCrossOriginWorker(
 export function isCrossOrigin(urlString: string) {
   if (IN_NODE) return false;
   const url1 = new URL(location.href);
-  const url2 = new URL(urlString, location.origin);
+  const url2 = new URL(urlString);
   if (url1.host === url2.host && url1.port === url2.port && url1.protocol === url2.protocol) {
     return false;
   }
