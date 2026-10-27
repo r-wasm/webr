@@ -1,0 +1,52 @@
+Make glib's libc-feature probes do real link tests on Emscripten.
+
+The default probes use cc.has_header_symbol() for pthread_getname_np,
+pthread_getaffinity_np and pthread_cond_timedwait_relative_np, which
+only checks that the function is *declared*. Emscripten's musl-derived
+pthread.h declares all of them, but without -sUSE_PTHREADS=1 the
+implementations aren't in libc and any call leaves an unresolved
+external in the resulting .a archive. That bites downstream consumers
+(R, pango, magick) at their final link step.
+
+Switching to cc.has_function() does an actual link test, so on
+Emscripten the HAVE_PTHREAD_*_NP macros stay undefined and the
+unconditional source uses in gthread-posix.c (currently guarded by
+those macros) drop out entirely.
+
+The posix_spawn probe already uses cc.has_function and succeeds on
+emscripten -- but glib's gspawn-posix.c also calls posix_spawnp, and
+*that* isn't in emscripten libc. Tighten the probe to require both
+symbols so HAVE_POSIX_SPAWN turns off on platforms missing
+posix_spawnp, and glib falls back to its fork+exec path.
+
+Index: glib-2.84.4/meson.build
+===================================================================
+--- glib-2.84.4.orig/meson.build
++++ glib-2.84.4/meson.build
+@@ -870,7 +870,8 @@ if host_system != 'windows' and cc.has_f
+ endif
+
+ # Check that posix_spawn() is usable; must use header
+-if cc.has_function('posix_spawn', prefix : '#include <spawn.h>')
++if cc.has_function('posix_spawn', prefix : '#include <spawn.h>') and \
++   cc.has_function('posix_spawnp', prefix : '#include <spawn.h>')
+   glib_conf.set('HAVE_POSIX_SPAWN', 1)
+ endif
+
+@@ -2134,13 +2135,13 @@ else
+   if cc.has_header_symbol('pthread.h', 'pthread_condattr_setclock')
+     glib_conf.set('HAVE_PTHREAD_CONDATTR_SETCLOCK', 1)
+   endif
+-  if cc.has_header_symbol('pthread.h', 'pthread_cond_timedwait_relative_np')
++  if cc.has_function('pthread_cond_timedwait_relative_np', prefix : pthread_prefix, dependencies : thread_dep)
+     glib_conf.set('HAVE_PTHREAD_COND_TIMEDWAIT_RELATIVE_NP', 1)
+   endif
+-  if cc.has_header_symbol('pthread.h', 'pthread_getname_np', prefix : pthread_prefix)
++  if cc.has_function('pthread_getname_np', prefix : pthread_prefix, dependencies : thread_dep)
+     glib_conf.set('HAVE_PTHREAD_GETNAME_NP', 1)
+   endif
+-  if cc.has_header_symbol('pthread.h', 'pthread_getaffinity_np', prefix : pthread_prefix)
++  if cc.has_function('pthread_getaffinity_np', prefix : pthread_prefix, dependencies : thread_dep)
+     glib_conf.set('HAVE_PTHREAD_GETAFFINITY_NP', 1)
+   endif
+

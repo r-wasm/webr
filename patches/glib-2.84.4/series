@@ -1,0 +1,3 @@
+skip-network-checks-on-emscripten.diff
+force-link-test-pthread-and-spawn-probes.diff
+stub-resolver-on-emscripten.diff
