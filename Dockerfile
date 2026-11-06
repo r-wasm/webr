@@ -26,9 +26,10 @@ RUN mkdir /opt/fake_rust/ && \
 
 # Step 2: Do the necessary setups
 FROM webr AS webr_scratch
-# Install nodejs
+# Install nodejs, meson and ninja-build. The latter two are required by the
+# pango/cairo/glib/harfbuzz/pixman/fribidi recipes, which all use meson.
 RUN apt-get update && \
-    apt-get install nodejs npm -y
+    apt-get install nodejs npm meson ninja-build -y
 
 # Install Rust; these lines are based on the official Rust docker image:
 # https://github.com/rust-lang/docker-rust/blob/master/Dockerfile-debian.template
