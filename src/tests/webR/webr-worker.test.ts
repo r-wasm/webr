@@ -81,7 +81,7 @@ describe('Download files', () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => null);
     const pkg = (await webR.evalR(`
       tf <- tempfile()
-      utils::download.file("https://cran.r-project.org/web/packages/rlang/index.html", tf)
+      utils::download.file("https://cran.r-universe.dev/rlang", tf)
       utils::file_test("-f", tf)
     `)) as RLogical;
     expect(await pkg.toBoolean()).toEqual(true);
@@ -92,7 +92,7 @@ describe('Download files', () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => null);
     const pkg = (await webR.evalR(`
       tf <- tempfile()
-      utils::download.file("https://cran.r-project.org/package=rlang", tf)
+      utils::download.file("https://cran.r-universe.dev/rlang/", tf)
       utils::file_test("-f", tf)
     `)) as RLogical;
     expect(await pkg.toBoolean()).toEqual(true);
