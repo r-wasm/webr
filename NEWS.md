@@ -1,5 +1,28 @@
 # webR (development version)
 
+# webR 0.6.1
+
+## New features
+
+- Add recipe for protobuf (#609)
+- Add libxslt, update libxml2 (#610)
+- Add libjq recipe (#611)
+- Add htslib recipe (#626)
+- Update libhdf5 and enable cxx lib (#630)
+- Configurable downloading timeout (#616)
+
+## Breaking changes
+
+- CI: Required updates for Ubuntu 26.04 (#612)
+- CI: Use Node 24; pin react-data-grid (#627)
+- Update flang-wasm submodule for LLVM 23 (#631)
+
+## Bug Fixes
+
+- Build libgit2 system library with PIC
+- Set CMAKE_POLICY_VERSION_MINIMUM in recipes
+- fix imagemagick url (#617)
+
 # webR 0.6.0
 
 ## Breaking changes
